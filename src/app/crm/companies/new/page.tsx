@@ -86,7 +86,7 @@ export default async function NewCompanyPage() {
         <div>
           <label className="block text-sm font-medium mb-1">Company logo</label>
           <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" className="w-full text-sm" />
-          <p className="text-[11px] text-gray-500 mt-1">PNG, JPG or WebP. 2 MB max. Shown on the company list after save.</p>
+          <p className="text-[11px] text-gray-500 mt-1">PNG, JPG or WebP. 2 MB max. If this company matches an existing record, its logo may be reused — you can still upload your own.</p>
         </div>
 
         <div>

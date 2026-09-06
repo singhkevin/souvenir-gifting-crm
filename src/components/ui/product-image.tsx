@@ -8,10 +8,10 @@ type Size = 'xs' | 'sm' | 'md' | 'lg' | 'hero'
 
 const sizeWrap: Record<Size, string> = {
   xs: 'w-8 h-8',
-  sm: 'w-10 h-10',
-  md: 'h-48 w-full',
+  sm: 'w-14 h-14',
+  md: 'aspect-square w-full h-auto min-h-48',
   lg: 'w-32 h-32',
-  hero: 'w-full min-h-64',
+  hero: 'w-full aspect-square min-h-64',
 }
 
 function usableSrc(src?: string | null): string | null {

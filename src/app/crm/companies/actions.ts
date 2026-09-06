@@ -6,6 +6,7 @@ import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateTemporaryPassword, SERVICE_ROLE_MISSING, validateNewPassword } from '@/lib/auth/password'
+import { findReusableLogo } from '@/lib/companies/identity'
 
 const LOGO_BUCKET = 'company-logos'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
@@ -15,6 +16,52 @@ const ALLOWED_LOGO_TYPES: Record<string, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/webp': 'webp',
+}
+
+async function logoPathStillUsed(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  path: string,
+  exceptCompanyId?: string,
+) {
+  let query = supabase.from('companies').select('id').eq('logo_path', path)
+  if (exceptCompanyId) query = query.neq('id', exceptCompanyId)
+  const { data } = await query.limit(1)
+  return Boolean(data?.length)
+}
+
+async function copyLogoToCompany(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  sourcePath: string,
+  companyId: string,
+) {
+  const { data, error } = await supabase.storage.from(LOGO_BUCKET).download(sourcePath)
+  if (error || !data) return null
+  const ext = sourcePath.split('.').pop()?.replace(/[^a-z0-9]/gi, '') || 'png'
+  const objectPath = `${companyId}/inherited-${Date.now()}.${ext}`
+  const { error: uploadError } = await supabase.storage.from(LOGO_BUCKET).upload(objectPath, data, {
+    contentType: data.type || 'image/png',
+    upsert: false,
+  })
+  if (uploadError) return null
+  return objectPath
+}
+
+async function inheritLogoIfMissing(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  company: { id: string; name: string; website?: string | null; logo_path?: string | null },
+) {
+  if (company.logo_path) return company.logo_path
+  const { data: others } = await supabase
+    .from('companies')
+    .select('id, name, website, logo_path')
+    .not('logo_path', 'is', null)
+  const match = findReusableLogo(company, others || [])
+  if (!match?.company.logo_path) return null
+  const copied = await copyLogoToCompany(supabase, match.company.logo_path, company.id)
+  const nextPath = copied || match.company.logo_path
+  const { error } = await supabase.from('companies').update({ logo_path: nextPath }).eq('id', company.id)
+  if (error) return null
+  return nextPath
 }
 
 async function requireCompanyEditor() {
@@ -63,6 +110,12 @@ export async function createCompany(formData: FormData) {
         await supabase.from('companies').update({ logo_path: objectPath }).eq('id', data.id)
       }
     }
+  } else {
+    await inheritLogoIfMissing(supabase, {
+      id: data.id,
+      name: String(formData.get('name') || ''),
+      website: (formData.get('website') as string) || null,
+    })
   }
 
   await writeAudit(supabase, {
@@ -91,6 +144,15 @@ export async function updateCompany(companyId: string, formData: FormData) {
     notes: formData.get('notes') as string || null,
   }).eq('id', companyId)
   if (error) return { error: error.message }
+
+  const { data: current } = await supabase
+    .from('companies')
+    .select('id, name, website, logo_path')
+    .eq('id', companyId)
+    .maybeSingle()
+  if (current && !current.logo_path) {
+    await inheritLogoIfMissing(supabase, current)
+  }
   await writeAudit(supabase, {
     action: 'update',
     entity: 'companies',
@@ -139,7 +201,10 @@ export async function uploadCompanyLogo(formData: FormData) {
   }
 
   if (company.logo_path && company.logo_path !== objectPath) {
-    await supabase.storage.from(LOGO_BUCKET).remove([company.logo_path])
+    const stillUsed = await logoPathStillUsed(supabase, company.logo_path, companyId)
+    if (!stillUsed) {
+      await supabase.storage.from(LOGO_BUCKET).remove([company.logo_path])
+    }
   }
 
   await writeAudit(supabase, {
@@ -175,7 +240,10 @@ export async function removeCompanyLogo(formData: FormData) {
   if (error) return { error: error.message }
 
   if (company.logo_path) {
-    await supabase.storage.from(LOGO_BUCKET).remove([company.logo_path])
+    const stillUsed = await logoPathStillUsed(supabase, company.logo_path, companyId)
+    if (!stillUsed) {
+      await supabase.storage.from(LOGO_BUCKET).remove([company.logo_path])
+    }
   }
 
   await writeAudit(supabase, {
@@ -190,6 +258,22 @@ export async function removeCompanyLogo(formData: FormData) {
   revalidatePath(`/crm/companies/${companyId}`)
   revalidatePath('/crm/companies')
   return { success: true }
+}
+
+export async function backfillMissingCompanyLogos() {
+  const access = await requireCompanyEditor()
+  if ('error' in access) return { error: access.error }
+
+  const supabase = await createClient()
+  const { data: companies } = await supabase.from('companies').select('id, name, website, logo_path')
+  const missing = (companies || []).filter((company) => !company.logo_path)
+  let inherited = 0
+  for (const company of missing) {
+    const next = await inheritLogoIfMissing(supabase, company)
+    if (next) inherited += 1
+  }
+  revalidatePath('/crm/companies')
+  return { success: true, scanned: missing.length, inherited }
 }
 
 export async function createPortalClient(formData: FormData) {

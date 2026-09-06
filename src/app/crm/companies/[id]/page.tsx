@@ -140,7 +140,7 @@ export default async function CompanyDetailPage({
                   className="text-[11px] file:mr-2 file:px-2 file:py-1 file:rounded-md file:border file:border-gray-200 file:bg-white file:text-[11px] file:font-medium"
                 />
                 <button className="px-2.5 py-1 text-[11px] font-medium rounded-md border border-gray-200 hover:bg-gray-50">
-                  {company.logo_path ? 'Replace logo' : 'Upload logo'}
+                  {company.logo_path ? 'Change logo' : 'Upload logo'}
                 </button>
               </form>
               {company.logo_path && (

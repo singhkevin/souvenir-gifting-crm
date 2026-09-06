@@ -27,7 +27,7 @@ function isNextRedirect(err: unknown) {
   return digest.startsWith('NEXT_REDIRECT')
 }
 
-export function LoginForm({ next = '' }: { next?: string }) {
+export function LoginForm({ next = '', resetSuccess = false }: { next?: string; resetSuccess?: boolean }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -93,6 +93,11 @@ export function LoginForm({ next = '' }: { next?: string }) {
           <p className="text-sm text-[#5A5248] mb-6 text-center">Sign in to GIFFTER</p>
           <form onSubmit={handleSubmit} className="space-y-5">
             {next ? <input type="hidden" name="next" value={next} /> : null}
+            {resetSuccess && !error && (
+              <div className="p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
+                Password updated successfully. Please sign in with your new password.
+              </div>
+            )}
             {error && (
               <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
                 {error}

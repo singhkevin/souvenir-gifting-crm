@@ -147,8 +147,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                 <tr key={p.id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-4 py-3">
                     <Link href={`/crm/products/${p.id}`} className="flex items-center gap-3 group">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                        <ProductImage src={p.image_url} alt={p.name} size="sm" className="rounded-lg border border-gray-200" />
+                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-[#FAF7F2]">
+                        <ProductImage src={p.image_url} alt={p.name} size="sm" className="rounded-xl border border-gray-200" />
                       </div>
                       <div>
                         <p className="font-bold text-gray-900 group-hover:text-[#4A235A] transition-colors">

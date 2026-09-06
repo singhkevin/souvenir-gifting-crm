@@ -1,7 +1,7 @@
 'use client'
 
 import { useLayoutEffect, useEffect, type ReactNode } from 'react'
-import { TAB_HEADER, TAB_QUERY, TAB_STORAGE_KEY, createTabId, isAuthCallbackLocation, isLegacySupabaseAuthCookie } from '@/lib/auth/tab'
+import { TAB_HEADER, TAB_QUERY, TAB_STORAGE_KEY, createTabId, isAuthCallbackLocation, isLegacySupabaseAuthCookie, isPasswordRecoveryLocation, resetPasswordLocation } from '@/lib/auth/tab'
 import { createClient, getTabId } from '@/lib/supabase/client'
 
 function withTabQuery(url: string, tabId: string) {
@@ -68,6 +68,14 @@ function installHistoryPatch() {
 
 export function TabSessionProvider({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
+    const href = window.location.href
+    if (
+      isPasswordRecoveryLocation(href) &&
+      !window.location.pathname.startsWith('/reset-password')
+    ) {
+      window.location.replace(resetPasswordLocation(href))
+      return
+    }
     if (!sessionStorage.getItem(TAB_STORAGE_KEY)) {
       sessionStorage.setItem(TAB_STORAGE_KEY, createTabId())
     }

@@ -192,7 +192,7 @@ export default async function PortalCataloguePage({
               <Link
                 key={product.id}
                 href={`/portal/catalogue/product/${product.id}`}
-                className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col hover:border-[var(--color-primary)] transition-colors"
+                className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col hover:border-[var(--color-primary)] hover:shadow-sm transition-all"
               >
                 <ProductImage src={product.image_url} alt={product.name} />
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-3">

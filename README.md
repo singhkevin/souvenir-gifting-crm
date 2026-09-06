@@ -20,7 +20,7 @@ Admin-created portal client logins also require the **server-only** variable `SU
 
 Password recovery uses the request host (`http://localhost:3000` locally, `https://giffter.vercel.app` in production) and redirects to `/reset-password`. In the Supabase dashboard, Authentication → URL Configuration must include:
 
-- Site URL: `https://giffter.vercel.app`
+- Site URL: `https://giffter.vercel.app` (the site origin, not `/login`)
 - Redirect URLs: `http://localhost:3000/**` and `https://giffter.vercel.app/**`
 
 Open http://localhost:3000
