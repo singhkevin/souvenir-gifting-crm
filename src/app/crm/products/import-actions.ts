@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
 import { parseCsv, splitCompanyNames } from '@/lib/csv'
 import { revalidatePath } from 'next/cache'
+import { PRODUCT_CATEGORY_ALIASES } from '@/lib/products/categories'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const IMAGE_BUCKET = 'product-images'
@@ -88,6 +89,10 @@ export async function importCatalogueCsv(formData: FormData): Promise<ImportSumm
   ])
 
   const categoryByName = new Map((categories || []).map((c) => [c.name.trim().toLowerCase(), c.id]))
+  for (const [alias, canonical] of Object.entries(PRODUCT_CATEGORY_ALIASES)) {
+    const id = categoryByName.get(canonical.toLowerCase())
+    if (id && !categoryByName.has(alias)) categoryByName.set(alias, id)
+  }
   const supplierByName = new Map((suppliers || []).map((s) => [s.name.trim().toLowerCase(), s.id]))
   const companyByName = new Map((companies || []).map((c) => [c.name.trim().toLowerCase(), c.id]))
   const existingSkus = new Set((existingProducts || []).map((p) => p.sku.trim().toUpperCase()))

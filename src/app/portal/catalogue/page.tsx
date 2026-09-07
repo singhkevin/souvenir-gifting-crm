@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { OfferingActions } from './OfferingActions'
-import { formatCurrency, asRows } from '@/lib/utils'
+import { formatCurrency, asRows, isUuid } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
 import { Package, Search } from 'lucide-react'
+import { sortProductCategories } from '@/lib/products/categories'
 
 const PAGE_SIZE = 24
 
@@ -101,14 +102,15 @@ export default async function PortalCataloguePage({
   const currentPage = Math.max(1, Number.parseInt(page, 10) || 1)
   const from = (currentPage - 1) * PAGE_SIZE
   const search = sanitiseSearch(q)
+  const categoryFilter = isUuid(category) ? category : ''
 
   let query = supabase.from('client_products').select('*', { count: 'exact' })
 
   if (search) {
     query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`)
   }
-  if (category) {
-    query = query.eq('category_id', category)
+  if (categoryFilter) {
+    query = query.eq('category_id', categoryFilter)
   }
 
   if (sort === 'price_low') query = query.order('price', { ascending: true })
@@ -120,13 +122,15 @@ export default async function PortalCataloguePage({
     supabase.from('client_products').select('category_id, category_name').not('category_id', 'is', null),
   ])
 
-  const categories = Array.from(
-    new Map(
-      (categoryRows || [])
-        .filter((r) => r.category_id && r.category_name)
-        .map((r) => [r.category_id as string, r.category_name as string])
-    ).entries()
-  ).sort((a, b) => a[1].localeCompare(b[1]))
+  const categories = sortProductCategories(
+    Array.from(
+      new Map(
+        (categoryRows || [])
+          .filter((r) => r.category_id && r.category_name)
+          .map((r) => [r.category_id as string, r.category_name as string])
+      ).entries()
+    ).map(([id, name]) => ({ id, name }))
+  )
 
   const total = count || 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -134,9 +138,18 @@ export default async function PortalCataloguePage({
   const pageHref = (nextPage: number) => {
     const params = new URLSearchParams()
     if (q) params.set('q', q)
-    if (category) params.set('category', category)
+    if (categoryFilter) params.set('category', categoryFilter)
     if (sort && sort !== 'name') params.set('sort', sort)
     if (nextPage > 1) params.set('page', String(nextPage))
+    const qs = params.toString()
+    return `/portal/catalogue${qs ? `?${qs}` : ''}`
+  }
+
+  const categoryHref = (nextCategory: string) => {
+    const params = new URLSearchParams()
+    if (q) params.set('q', q)
+    if (nextCategory) params.set('category', nextCategory)
+    if (sort && sort !== 'name') params.set('sort', sort)
     const qs = params.toString()
     return `/portal/catalogue${qs ? `?${qs}` : ''}`
   }
@@ -148,32 +161,53 @@ export default async function PortalCataloguePage({
         <p className="text-sm text-gray-500 mt-1">Curated corporate gifting for your team, ready to personalise.</p>
       </div>
 
-      <form className="flex flex-col sm:flex-row gap-3 bg-white border border-gray-200 rounded-lg p-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
-          <input
-            name="q"
-            defaultValue={q}
-            placeholder="Search gifts"
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md"
-          />
+      <form className="flex flex-col gap-3 bg-white border border-gray-200 rounded-lg p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+            <input
+              name="q"
+              defaultValue={q}
+              placeholder="Search gifts"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md"
+            />
+          </div>
+          <select name="sort" defaultValue={sort} className="text-sm border border-gray-200 rounded-md px-3 py-2 bg-white">
+            <option value="name">Sort: A–Z</option>
+            <option value="price_low">Price: low to high</option>
+            <option value="price_high">Price: high to low</option>
+          </select>
+          <button type="submit" className="px-4 py-2 text-sm font-medium rounded-md bg-[var(--color-primary)] text-white hover:text-white hover:opacity-90">
+            Apply
+          </button>
         </div>
-        <select name="category" defaultValue={category} className="text-sm border border-gray-200 rounded-md px-3 py-2 bg-white">
-          <option value="">All categories</option>
-          {categories.map(([id, name]) => (
-            <option key={id} value={id}>
-              {name}
-            </option>
-          ))}
-        </select>
-        <select name="sort" defaultValue={sort} className="text-sm border border-gray-200 rounded-md px-3 py-2 bg-white">
-          <option value="name">Sort: A–Z</option>
-          <option value="price_low">Price: low to high</option>
-          <option value="price_high">Price: high to low</option>
-        </select>
-        <button type="submit" className="px-4 py-2 text-sm font-medium rounded-md bg-[var(--color-primary)] text-white hover:text-white hover:opacity-90">
-          Apply
-        </button>
+        {categories.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-100">
+            <span className="text-xs text-gray-400 font-medium">Category:</span>
+            <Link
+              href={categoryHref('')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                !categoryFilter ? 'bg-[var(--color-primary)] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              All Products
+            </Link>
+            {categories.map((item) => (
+              <Link
+                key={item.id}
+                href={categoryHref(item.id)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  categoryFilter === item.id
+                    ? 'bg-[var(--color-primary)] text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+        )}
       </form>
 
       {!products?.length ? (
@@ -187,14 +221,16 @@ export default async function PortalCataloguePage({
             Showing {from + 1}–{Math.min(from + PAGE_SIZE, total)} of {total}
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {products.map((product) => (
               <Link
                 key={product.id}
                 href={`/portal/catalogue/product/${product.id}`}
                 className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col hover:border-[var(--color-primary)] hover:shadow-sm transition-all"
               >
-                <ProductImage src={product.image_url} alt={product.name} />
+                <div className="aspect-square bg-[#FAF7F2] border-b border-gray-100">
+                  <ProductImage src={product.image_url} alt={product.name} size="md" className="min-h-0 h-full" />
+                </div>
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
                   <div>
                     {product.category_name && (

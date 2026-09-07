@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, isUuid } from '@/lib/utils'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { sortProductCategories } from '@/lib/products/categories'
 import { BackButton } from '@/components/ui/back-button'
 import { updateProduct, removeProduct } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
@@ -15,12 +16,12 @@ export default async function ProductDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ removed?: string }>
+  searchParams: Promise<{ removed?: string; image?: string; error?: string }>
 }) {
   const profile = await requireStaff(['admin', 'sales', 'management', 'operations'])
   const showCost = canSeeCosts(profile.role)
   const { id } = await params
-  const { removed } = await searchParams
+  const { removed, image, error } = await searchParams
   if (!isUuid(id)) notFound()
   const supabase = await createClient()
 
@@ -33,7 +34,7 @@ export default async function ProductDetailPage({
     { data: accessRecords },
   ] = await Promise.all([
     supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
-    supabase.from('categories').select('id, name').order('name'),
+    supabase.from('categories').select('id, name'),
     supabase.from('brands').select('id, name').order('name'),
     supabase.from('suppliers').select('id, name').order('name'),
     supabase.from('companies').select('id, name, logo_path').eq('status', 'active').order('name'),
@@ -46,7 +47,10 @@ export default async function ProductDetailPage({
 
   const handleUpdate = async (formData: FormData) => {
     'use server'
-    await updateProduct(product.id, formData)
+    const result = await updateProduct(product.id, formData)
+    if (result && typeof result === 'object' && 'error' in result && result.error) {
+      redirect(`/crm/products/${product.id}?error=${encodeURIComponent(result.error)}`)
+    }
   }
 
   return (
@@ -56,6 +60,19 @@ export default async function ProductDetailPage({
       {removed === 'archived' && (
         <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
           This product cannot be permanently deleted because it is used on orders or quotations. It was discontinued instead.
+        </div>
+      )}
+      {error && (
+        <div className="p-3 bg-red-50 text-red-800 text-xs rounded-xl border border-red-200">{error}</div>
+      )}
+      {image === 'needed' && !product.image_url && (
+        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
+          This product was saved without a photo. Upload one below so it displays correctly in the catalogue.
+        </div>
+      )}
+      {image === 'upload-failed' && (
+        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
+          The product was saved, but the image could not be uploaded. Try again with a JPG, PNG or WebP under 5 MB.
         </div>
       )}
 
@@ -220,14 +237,15 @@ export default async function ProductDetailPage({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Category</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Category *</label>
                 <select
                   name="category_id"
                   defaultValue={product.category_id || ''}
+                  required
                   className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg bg-white"
                 >
                   <option value="">Select Category</option>
-                  {categories?.map((c) => (
+                  {sortProductCategories(categories || []).map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>

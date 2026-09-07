@@ -32,9 +32,9 @@ export async function createProduct(formData: FormData) {
   }
 
   const supabase = await createClient()
-  const name = formData.get('name') as string
-  const sku = formData.get('sku') as string
-  const category_id = (formData.get('category_id') as string) || null
+  const name = ((formData.get('name') as string) || '').trim()
+  const sku = ((formData.get('sku') as string) || '').trim()
+  const category_id = ((formData.get('category_id') as string) || '').trim() || null
   const brand_id = (formData.get('brand_id') as string) || null
   const supplier_id = (formData.get('supplier_id') as string) || null
   const description = (formData.get('description') as string) || null
@@ -42,7 +42,7 @@ export async function createProduct(formData: FormData) {
   const supplier_cost = formData.get('supplier_cost') ? parseFloat(formData.get('supplier_cost') as string) : null
   const internal_margin = formData.get('internal_margin') ? parseFloat(formData.get('internal_margin') as string) : null
   const moq = parseInt(formData.get('moq') as string, 10) || 1
-  const image_url = (formData.get('image_url') as string) || null
+  const image_url = ((formData.get('image_url') as string) || '').trim() || null
   const hsn_code = ((formData.get('hsn_code') as string) || '').trim() || null
   const status = (formData.get('status') as string) || 'active'
   const catalogue_access =
@@ -53,8 +53,27 @@ export async function createProduct(formData: FormData) {
     ),
   ]
 
-  if (!name || !sku) {
-    return { error: 'Product name and SKU are required' }
+  if (!name) {
+    return { error: 'Product name is required' }
+  }
+  if (!sku) {
+    return { error: 'SKU is required' }
+  }
+  if (!category_id) {
+    return { error: 'Please select a category' }
+  }
+  if (image_url && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\b/i.test(image_url)) {
+    return { error: 'Image URLs cannot point to localhost. Upload a product photo instead.' }
+  }
+
+  const imageFile = formData.get('image')
+  if (imageFile instanceof File && imageFile.size > 0) {
+    if (!ALLOWED_IMAGE_TYPES[imageFile.type]) {
+      return { error: 'Please upload a JPG, PNG or WebP image.' }
+    }
+    if (imageFile.size > MAX_IMAGE_BYTES) {
+      return { error: 'Please upload an image smaller than 5 MB.' }
+    }
   }
   if (!['all', 'selected', 'none'].includes(catalogue_access)) {
     return { error: 'Invalid catalogue visibility' }
@@ -102,21 +121,28 @@ export async function createProduct(formData: FormData) {
     }
   }
 
-  const imageFile = formData.get('image')
+  let imageHint = ''
   if (imageFile instanceof File && imageFile.size > 0) {
     const extension = ALLOWED_IMAGE_TYPES[imageFile.type]
-    if (extension && imageFile.size <= MAX_IMAGE_BYTES) {
+    if (!extension) {
+      imageHint = 'upload-failed'
+    } else {
       const objectPath = `${product.id}/${Date.now()}.${extension}`
       const { error: uploadError } = await supabase.storage
         .from(IMAGE_BUCKET)
         .upload(objectPath, imageFile, { contentType: imageFile.type, upsert: false })
-      if (!uploadError) {
-        await supabase
+      if (uploadError) {
+        imageHint = 'upload-failed'
+      } else {
+        const { error: imageUpdateError } = await supabase
           .from('products')
           .update({ image_url: publicImageUrl(objectPath) })
           .eq('id', product.id)
+        if (imageUpdateError) imageHint = 'upload-failed'
       }
     }
+  } else if (!image_url) {
+    imageHint = 'needed'
   }
 
   const colour = ((formData.get('colour') as string) || '').trim() || null
@@ -138,7 +164,7 @@ export async function createProduct(formData: FormData) {
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
   selectedCompanies.forEach((companyId) => revalidatePath('/crm/companies/' + companyId))
-  redirect('/crm/products/' + product.id)
+  redirect('/crm/products/' + product.id + (imageHint ? `?image=${imageHint}` : ''))
 }
 
 export async function updateProduct(productId: string, formData: FormData) {
@@ -179,6 +205,9 @@ export async function updateProduct(productId: string, formData: FormData) {
   text('description')
   text('image_url')
   text('category_id')
+  if (formData.has('category_id') && !update.category_id) {
+    return { error: 'Please select a category' }
+  }
   text('brand_id')
   text('subcategory_id')
   text('supplier_id')
@@ -216,6 +245,9 @@ export async function updateProduct(productId: string, formData: FormData) {
 
   if (formData.has('name') && !update.name) {
     return { error: 'Product name is required' }
+  }
+  if (typeof update.image_url === 'string' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\b/i.test(update.image_url)) {
+    return { error: 'Image URLs cannot point to localhost. Upload a product photo instead.' }
   }
 
   const { error } = await supabase.from('products').update(update).eq('id', productId)

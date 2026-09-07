@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation'
 import { BackButton } from '@/components/ui/back-button'
 import { createProduct } from '../actions'
 import { Package, Globe, Lock, EyeOff } from 'lucide-react'
+import { sortProductCategories } from '@/lib/products/categories'
+import { ProductImageField } from '@/components/products/product-image-field'
 
 export default async function NewProductPage({
   searchParams,
@@ -76,13 +78,14 @@ export default async function NewProductPage({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Category</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Category *</label>
               <select
                 name="category_id"
+                required
                 className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none bg-white"
               >
                 <option value="">Select Category</option>
-                {categories?.map((c) => (
+                {sortProductCategories(categories || []).map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
@@ -169,25 +172,17 @@ export default async function NewProductPage({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Product photo</label>
-            <input
-              type="file"
-              name="image"
-              accept="image/png,image/jpeg,image/webp"
-              className="text-xs file:mr-2 file:px-3 file:py-1.5 file:rounded-md file:border file:border-gray-200 file:bg-white file:text-xs"
-            />
-            <p className="text-[11px] text-gray-500 mt-1">PNG, JPG or WebP · max 5 MB. Stored in the existing product-images bucket.</p>
-          </div>
+          <ProductImageField />
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Product Image URL</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Stored image URL (optional)</label>
             <input
               type="url"
               name="image_url"
-              placeholder="https://images.unsplash.com/... or Supabase storage URL"
+              placeholder="Only if the photo is already in product-images storage"
               className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none"
             />
+            <p className="text-[11px] text-gray-400 mt-1">Prefer uploading a photo above. Do not use localhost or unrelated stock URLs.</p>
           </div>
 
           <div>
