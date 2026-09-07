@@ -142,6 +142,8 @@ export async function updateCompany(companyId: string, formData: FormData) {
     country: formData.get('country') as string || null,
     address: formData.get('address') as string || null,
     notes: formData.get('notes') as string || null,
+    gst_number: (formData.get('gst_number') as string) || null,
+    status: (formData.get('status') as string) || undefined,
   }).eq('id', companyId)
   if (error) return { error: error.message }
 
@@ -410,4 +412,91 @@ export async function resetPortalClientPassword(formData: FormData) {
     email: client.email,
     temporaryPassword: password,
   }
+}
+
+export async function removeCompany(formData: FormData) {
+  const access = await requireCompanyEditor()
+  if ('error' in access) return { error: access.error }
+  if (access.profile.role !== 'admin') {
+    return { error: 'Only an admin can remove a company' }
+  }
+
+  const companyId = String(formData.get('company_id') || '')
+  if (!companyId) return { error: 'Company is required' }
+
+  const supabase = await createClient()
+  const { data: company } = await supabase
+    .from('companies')
+    .select('id, name, logo_path, status')
+    .eq('id', companyId)
+    .maybeSingle()
+  if (!company) return { error: 'Company not found' }
+
+  const [
+    { count: orderCount },
+    { count: invoiceCount },
+    { count: quotationCount },
+    { count: requirementCount },
+    { count: leadCount },
+    { count: campaignCount },
+    { count: clientCount },
+    { count: contactCount },
+    { count: reviewCount },
+  ] = await Promise.all([
+    supabase.from('orders').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
+    supabase.from('invoices').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
+    supabase.from('quotations').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
+    supabase.from('requirements').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
+    supabase.from('leads').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
+    supabase.from('campaigns').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('company_id', companyId).in('role', ['client_admin', 'client_user']),
+    supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
+    supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
+  ])
+
+  const hasHistory = Boolean(
+    orderCount || invoiceCount || quotationCount || requirementCount || leadCount || campaignCount || clientCount || contactCount || reviewCount,
+  )
+
+  if (hasHistory) {
+    const { error } = await supabase.from('companies').update({ status: 'inactive' }).eq('id', companyId)
+    if (error) return { error: error.message }
+    await writeAudit(supabase, {
+      action: 'update',
+      entity: 'companies',
+      entityId: companyId,
+      previous: { status: company.status },
+      next: { status: 'inactive', archived: true },
+      userId: access.profile.id,
+    })
+    revalidatePath('/crm/companies')
+    revalidatePath(`/crm/companies/${companyId}`)
+    redirect(`/crm/companies/${companyId}?removed=archived`)
+  }
+
+  if (company.logo_path) {
+    const stillUsed = await logoPathStillUsed(supabase, company.logo_path, companyId)
+    if (!stillUsed) {
+      await supabase.storage.from(LOGO_BUCKET).remove([company.logo_path])
+    }
+  }
+
+  const { error } = await supabase.from('companies').delete().eq('id', companyId)
+  if (error) {
+    await supabase.from('companies').update({ status: 'inactive' }).eq('id', companyId)
+    revalidatePath('/crm/companies')
+    return {
+      error: 'This company cannot be permanently deleted because related records still exist. It was archived instead.',
+    }
+  }
+
+  await writeAudit(supabase, {
+    action: 'delete',
+    entity: 'companies',
+    entityId: companyId,
+    previous: { name: company.name },
+    userId: access.profile.id,
+  })
+  revalidatePath('/crm/companies')
+  redirect('/crm/companies?removed=deleted')
 }

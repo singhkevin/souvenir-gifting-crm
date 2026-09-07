@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatDate, asRows, oneRelation } from '@/lib/utils'
 import Link from 'next/link'
-import { registerMockup } from './actions'
+import { registerMockup, updateMockup, removeMockup } from './actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
 import { requireStaff, applyOwnerScope, applyOrderScope } from '@/lib/auth'
 import { asFormAction } from '@/lib/form-action'
 
@@ -84,6 +85,7 @@ export default async function MockupsPage() {
                 <th className="p-3">Order</th>
                 <th className="p-3">Visibility</th>
                 <th className="p-3">Uploaded</th>
+                <th className="p-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -118,6 +120,27 @@ export default async function MockupsPage() {
                     </td>
                     <td className="p-3 capitalize">{mockup.status === 'shared' ? 'Client-facing' : mockup.status || 'internal'}</td>
                     <td className="p-3">{uploader?.full_name || '—'} · {formatDate(mockup.created_at)}</td>
+                    <td className="p-3 text-xs space-y-2">
+                      <form action={asFormAction(updateMockup)} className="flex gap-2 items-center">
+                        <input type="hidden" name="id" value={mockup.id} />
+                        <select name="status" defaultValue={mockup.status || 'draft'} className="border rounded px-2 py-1">
+                          <option value="draft">Internal</option>
+                          <option value="shared">Client-facing</option>
+                          <option value="approved">Approved</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                        <button className="underline">Save</button>
+                      </form>
+                      <ConfirmAction
+                        title="Delete mockup?"
+                        confirmLabel="Delete"
+                        action={asFormAction(removeMockup)}
+                        hiddenFields={{ id: mockup.id }}
+                        description={<p>File: <span className="font-semibold">{mockup.file_name}</span></p>}
+                      >
+                        Delete
+                      </ConfirmAction>
+                    </td>
                   </tr>
                 )
               })}

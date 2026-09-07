@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createReview } from './actions'
+import { createReview, updateReview, removeReview } from './actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
 import { asFormAction } from '@/lib/form-action'
 
 export default async function ReviewsPage() {
@@ -57,6 +58,7 @@ export default async function ReviewsPage() {
                 <th className="p-3">Order</th>
                 <th className="p-3">Rating</th>
                 <th className="p-3">Feedback</th>
+                <th className="p-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -76,6 +78,27 @@ export default async function ReviewsPage() {
                     </td>
                     <td className="p-3 text-amber-500">{'★'.repeat(review.rating || 0)}{'☆'.repeat(5 - (review.rating || 0))}</td>
                     <td className="p-3">{review.feedback || '—'}</td>
+                    <td className="p-3 text-xs space-y-2">
+                      <form action={asFormAction(updateReview)} className="flex flex-col gap-1">
+                        <input type="hidden" name="id" value={review.id} />
+                        <select name="rating" defaultValue={review.rating || 5} className="border rounded px-2 py-1">
+                          {[5, 4, 3, 2, 1].map((n) => (
+                            <option key={n} value={n}>{n} stars</option>
+                          ))}
+                        </select>
+                        <input name="feedback" defaultValue={review.feedback || ''} className="border rounded px-2 py-1" />
+                        <button className="underline text-left">Save</button>
+                      </form>
+                      <ConfirmAction
+                        title="Delete review?"
+                        confirmLabel="Delete"
+                        action={asFormAction(removeReview)}
+                        hiddenFields={{ id: review.id }}
+                        description={<p>This removes the logged review for {company?.name || 'this company'}.</p>}
+                      >
+                        Delete
+                      </ConfirmAction>
+                    </td>
                   </tr>
                 )
               })}

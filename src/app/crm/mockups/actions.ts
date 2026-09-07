@@ -34,3 +34,34 @@ export async function registerMockup(formData: FormData) {
   revalidatePath('/portal/documents')
   return { success: true }
 }
+
+export async function updateMockup(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = String(formData.get('id') || '')
+  const status = String(formData.get('status') || 'draft')
+  if (!id) return { error: 'Mockup is required' }
+  if (!['draft', 'shared', 'approved', 'rejected'].includes(status)) return { error: 'Invalid status' }
+
+  const { error } = await supabase.from('mockups').update({ status }).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/crm/mockups')
+  revalidatePath('/portal/documents')
+  return { success: true }
+}
+
+export async function removeMockup(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = String(formData.get('id') || '')
+  if (!id) return { error: 'Mockup is required' }
+  const { error } = await supabase.from('mockups').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/crm/mockups')
+  revalidatePath('/portal/documents')
+  return { success: true }
+}

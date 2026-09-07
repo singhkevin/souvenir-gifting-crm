@@ -5,17 +5,20 @@ import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid } from '@/lib/utils'
 import { ClipboardList, Building2, User, Calendar, DollarSign, Package } from 'lucide-react'
 import { requireStaff } from '@/lib/auth'
+import { updateRequirementForm, removeRequirement } from '../actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
+import { asFormAction } from '@/lib/form-action'
 
 export default async function RequirementDetailPage({
   params,
   searchParams
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ tab?: string }>
+  searchParams: Promise<{ tab?: string; removed?: string }>
 }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const { tab = 'overview' } = await searchParams
+  const { tab = 'overview', removed } = await searchParams
   await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
 
@@ -45,6 +48,11 @@ export default async function RequirementDetailPage({
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <BackButton href="/crm/requirements" label="Back to Requirements" />
+      {removed === 'archived' && (
+        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
+          This requirement cannot be permanently deleted because it has quotations or orders. It was closed instead.
+        </div>
+      )}
 
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -74,6 +82,15 @@ export default async function RequirementDetailPage({
             <p className="text-xl font-bold text-gray-900">{req.quantity || '?'} units</p>
           </div>
         </div>
+        <ConfirmAction
+          title="Remove requirement?"
+          confirmLabel="Delete"
+          action={asFormAction(removeRequirement)}
+          hiddenFields={{ id: req.id }}
+          description={<p>Requirement: <span className="font-semibold">{req.name}</span>. If quotations or orders exist it will be closed instead of deleted.</p>}
+        >
+          Delete
+        </ConfirmAction>
       </div>
 
       <div className="border-b border-gray-200">
@@ -100,6 +117,26 @@ export default async function RequirementDetailPage({
               <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                 {req.description || 'No detailed description provided.'}
               </p>
+              <form action={asFormAction(updateRequirementForm)} className="grid md:grid-cols-2 gap-3 pt-3 border-t">
+                <input type="hidden" name="id" value={req.id} />
+                <input name="name" required defaultValue={req.name} className="border rounded-lg px-2 py-2 md:col-span-2" />
+                <input name="quantity" type="number" min="1" defaultValue={req.quantity || 1} className="border rounded-lg px-2 py-2" />
+                <input name="budget" type="number" step="0.01" defaultValue={req.budget || ''} placeholder="Budget" className="border rounded-lg px-2 py-2" />
+                <input name="purpose" defaultValue={req.purpose || ''} placeholder="Purpose" className="border rounded-lg px-2 py-2" />
+                <input name="delivery_city" defaultValue={req.delivery_city || ''} placeholder="Delivery city" className="border rounded-lg px-2 py-2" />
+                <input name="payment_terms" defaultValue={req.payment_terms || ''} placeholder="Payment terms" className="border rounded-lg px-2 py-2" />
+                <input name="deadline" type="date" defaultValue={req.deadline || ''} className="border rounded-lg px-2 py-2" />
+                <select name="status" defaultValue={req.status} className="border rounded-lg px-2 py-2">
+                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
+                  <option value="quoted">Quoted</option>
+                  <option value="won">Won</option>
+                  <option value="lost">Lost</option>
+                  <option value="closed">Closed</option>
+                </select>
+                <textarea name="description" rows={3} defaultValue={req.description || ''} className="md:col-span-2 border rounded-lg px-2 py-2" />
+                <button className="md:col-span-2 px-3 py-2 rounded-lg text-white bg-[#4A235A] font-semibold">Save requirement</button>
+              </form>
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-gray-200 text-xs space-y-3">

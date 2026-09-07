@@ -77,6 +77,10 @@ export function TabSessionProvider({ children }: { children: ReactNode }) {
         return
       }
     }
+    const path = window.location.pathname
+    if (path.startsWith('/reset-password') || path.startsWith('/auth/confirm')) {
+      return
+    }
     if (!sessionStorage.getItem(TAB_STORAGE_KEY)) {
       sessionStorage.setItem(TAB_STORAGE_KEY, createTabId())
     }
@@ -99,7 +103,7 @@ export function TabSessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     clearLegacyAuthCookies()
-    if (!isAuthCallbackLocation(window.location.href)) {
+    if (!isAuthCallbackLocation(window.location.href) && !window.location.pathname.startsWith('/reset-password')) {
       void createClient().auth.getSession()
     }
   }, [])

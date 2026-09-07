@@ -7,7 +7,7 @@ import { requireStaff, canSeeCosts } from '@/lib/auth'
 
 const PAGE_SIZE = 50
 
-export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; access?: string; page?: string }> }) {
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string; access?: string; page?: string; removed?: string }> }) {
   const profile = await requireStaff(['admin', 'sales', 'management', 'operations'])
   const showCost = canSeeCosts(profile.role)
   const params = await searchParams
@@ -80,6 +80,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
         </div>
         )}
       </div>
+
+      {params.removed === 'deleted' && (
+        <div className="p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
+          Product removed.
+        </div>
+      )}
 
       <div className="bg-white p-4 rounded-xl border border-gray-200 flex flex-wrap items-center justify-between gap-3">
         <form className="flex-1 max-w-sm flex gap-2">

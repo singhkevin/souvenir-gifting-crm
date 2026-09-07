@@ -1,13 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { formatCurrency, isUuid } from '@/lib/utils'
-import { addCampaignProduct, setCampaignProductVisibility, removeCampaignProduct } from '../actions'
+import { addCampaignProduct, setCampaignProductVisibility, removeCampaignProduct, updateCampaign, removeCampaign } from '../actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
 import { BackButton } from '@/components/ui/back-button'
 import { asFormAction } from '@/lib/form-action'
 import { requireStaff } from '@/lib/auth'
 
-export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CampaignDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ removed?: string }>
+}) {
   const { id } = await params
+  const { removed } = await searchParams
   if (!isUuid(id)) notFound()
   await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
@@ -27,13 +35,40 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <BackButton href="/crm/campaigns" label="Back to campaigns" />
+      {removed === 'archived' && (
+        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
+          This campaign cannot be permanently deleted because it has existing orders. It was closed instead.
+        </div>
+      )}
       <div>
         <h1 className="font-serif text-2xl">{campaign.name}</h1>
         <p className="text-xs text-[#7A7267] mt-1">
           {company?.name} · {campaign.employee_quantity?.toLocaleString('en-IN')} employees · {formatCurrency(campaign.budget_per_employee)} / person · {formatCurrency(campaign.total_budget)} total
         </p>
         <p className="text-xs mt-1">Status: {campaign.status} · Client catalogue: {campaign.published_to_client_at ? 'published' : 'not published'}</p>
+        <div className="mt-3">
+          <ConfirmAction
+            title="Remove campaign?"
+            confirmLabel="Delete"
+            action={asFormAction(removeCampaign)}
+            hiddenFields={{ id: campaign.id }}
+            description={<p>Campaign: <span className="font-semibold">{campaign.name}</span>. If it has orders it will be closed instead of deleted.</p>}
+          >
+            Delete campaign
+          </ConfirmAction>
+        </div>
       </div>
+
+      <form action={asFormAction(updateCampaign)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-3 gap-3 text-xs">
+        <input type="hidden" name="id" value={campaign.id} />
+        <input name="name" required defaultValue={campaign.name} className="border rounded-lg px-3 py-2" />
+        <input name="occasion" defaultValue={campaign.occasion || ''} placeholder="Occasion" className="border rounded-lg px-3 py-2" />
+        <input name="employee_quantity" type="number" min="1" defaultValue={campaign.employee_quantity || 1} className="border rounded-lg px-3 py-2" />
+        <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={campaign.budget_per_employee || 0} className="border rounded-lg px-3 py-2" />
+        <input name="required_delivery_date" type="date" defaultValue={campaign.required_delivery_date || ''} className="border rounded-lg px-3 py-2" />
+        <input name="description" defaultValue={campaign.description || ''} placeholder="Notes" className="border rounded-lg px-3 py-2" />
+        <button className="bg-[#1A3022] text-white rounded-lg font-semibold">Save campaign</button>
+      </form>
 
       <form action={asFormAction(addCampaignProduct)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-3 gap-3 text-xs">
         <input type="hidden" name="campaign_id" value={campaign.id} />

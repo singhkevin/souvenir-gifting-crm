@@ -2,16 +2,25 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { notFound } from 'next/navigation'
 import { BackButton } from '@/components/ui/back-button'
-import { updateProduct } from '../actions'
+import { updateProduct, removeProduct } from '../actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
+import { asFormAction } from '@/lib/form-action'
 import { Globe, Lock, EyeOff } from 'lucide-react'
 import { ProductImageEditor } from '@/components/products/product-image-editor'
 import { CatalogueVisibilityEditor } from '@/components/products/catalogue-visibility-editor'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ProductDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ removed?: string }>
+}) {
   const profile = await requireStaff(['admin', 'sales', 'management', 'operations'])
   const showCost = canSeeCosts(profile.role)
   const { id } = await params
+  const { removed } = await searchParams
   if (!isUuid(id)) notFound()
   const supabase = await createClient()
 
@@ -43,6 +52,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <BackButton href="/crm/products" label="Back to Products" />
+
+      {removed === 'archived' && (
+        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
+          This product cannot be permanently deleted because it is used on orders or quotations. It was discontinued instead.
+        </div>
+      )}
 
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-6 items-start">
         <ProductImageEditor productId={product.id} imageUrl={product.image_url} name={product.name} />
@@ -80,6 +95,28 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             {product.brand && <> ? Brand: <span className="font-semibold text-gray-700">{(product.brand as any)?.name}</span></>}
             {product.supplier && <> ? Supplier: <span className="font-semibold text-gray-700">{(product.supplier as any)?.name}</span></>}
           </p>
+          {profile.role === 'admin' && (
+            <div className="mt-3">
+              <ConfirmAction
+                title="Delete product?"
+                confirmLabel="Delete"
+                action={asFormAction(removeProduct)}
+                hiddenFields={{ product_id: product.id }}
+                description={
+                  <>
+                    <p>
+                      Product: <span className="font-semibold text-gray-900">{product.name}</span>
+                    </p>
+                    <p>
+                      If this product appears on orders, quotations, or sample history it will be discontinued instead of permanently deleted. Images shared with other products are kept.
+                    </p>
+                  </>
+                }
+              >
+                Delete Product
+              </ConfirmAction>
+            </div>
+          )}
 
           <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-100">
             <div>

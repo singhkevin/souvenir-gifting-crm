@@ -31,3 +31,36 @@ export async function logActivity(formData: FormData) {
   if (relatedType === 'requirement' && relatedId) revalidatePath(`/crm/requirements/${relatedId}`)
   return { success: true }
 }
+
+export async function updateActivity(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = String(formData.get('id') || '')
+  const title = String(formData.get('title') || '').trim()
+  if (!id || !title) return { error: 'Title is required' }
+
+  const { error } = await supabase.from('activities').update({
+    title,
+    type: String(formData.get('type') || 'follow_up'),
+    notes: String(formData.get('notes') || '') || null,
+    status: String(formData.get('status') || 'upcoming'),
+  }).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/crm/activities')
+  return { success: true }
+}
+
+export async function removeActivity(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = String(formData.get('id') || '')
+  if (!id) return { error: 'Activity is required' }
+  const { error } = await supabase.from('activities').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/crm/activities')
+  return { success: true }
+}

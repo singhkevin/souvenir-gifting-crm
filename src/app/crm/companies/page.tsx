@@ -18,13 +18,14 @@ type CompanyRow = {
   owner?: CompanyOwner | CompanyOwner[] | null
 }
 
-export default async function Companies(props: { searchParams: Promise<{ q?: string; status?: string }> }) {
+export default async function Companies(props: { searchParams: Promise<{ q?: string; status?: string; removed?: string }> }) {
   const profile = await requireStaff()
   const searchParams = await props.searchParams;
   const supabase = await createClient();
 
   const q = searchParams?.q || '';
   const status = searchParams?.status || '';
+  const removed = searchParams?.removed || '';
 
   let query = supabase.from('companies').select('*, owner:profiles!owner_id(full_name)').order('created_at', { ascending: false }).limit(50);
   query = applyCompanyScope(query, profile)
@@ -51,6 +52,12 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
           Add Company
         </Link>
       </div>
+
+      {removed === 'deleted' && (
+        <div className="mb-4 p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
+          Company removed.
+        </div>
+      )}
 
       <div className="mb-6 flex gap-4">
         <form className="flex-1 flex gap-2">
@@ -101,7 +108,15 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
                     </span>
                   </td>
                   <td className="p-4 text-gray-500">{formatDate(c.created_at)}</td>
-                  <td className="p-4"><Link href={`/crm/companies/${c.id}`} className="text-blue-600 hover:underline">View</Link></td>
+                  <td className="p-4">
+                    <Link href={`/crm/companies/${c.id}`} className="text-blue-600 hover:underline">View</Link>
+                    {(profile.role === 'admin' || profile.role === 'sales') && (
+                      <>
+                        {' · '}
+                        <Link href={`/crm/companies/${c.id}?tab=overview`} className="text-blue-600 hover:underline">Edit</Link>
+                      </>
+                    )}
+                  </td>
                 </tr>
                 )
               })}

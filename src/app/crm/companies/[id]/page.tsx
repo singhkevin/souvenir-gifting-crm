@@ -5,7 +5,8 @@ import { BackButton } from '@/components/ui/back-button'
 import { CompanyAvatar } from '@/components/ui/avatar'
 import { ProductImage } from '@/components/ui/product-image'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
-import { uploadCompanyLogo, removeCompanyLogo } from '../actions'
+import { uploadCompanyLogo, removeCompanyLogo, updateCompany, removeCompany } from '../actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
 import { formatCurrency, formatDate, isUuid } from '@/lib/utils'
 import { Plus, Trash2 } from 'lucide-react'
 import { grantCompanyProductAccess, revokeCompanyProductAccess } from '@/app/crm/products/actions'
@@ -21,13 +22,14 @@ export default async function CompanyDetailPage({
   searchParams
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ tab?: string }>
+  searchParams: Promise<{ tab?: string; removed?: string }>
 }) {
   const profile = await requireStaff()
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const { tab = 'overview' } = await searchParams
+  const { tab = 'overview', removed } = await searchParams
   const canManageVisibility = profile.role === 'admin'
+  const canEdit = profile.role === 'admin' || profile.role === 'sales'
 
   const supabase = await createClient()
 
@@ -84,6 +86,11 @@ export default async function CompanyDetailPage({
   const removeLogoAction = async (formData: FormData) => {
     'use server'
     await removeCompanyLogo(formData)
+  }
+
+  const saveCompanyAction = async (formData: FormData) => {
+    'use server'
+    await updateCompany(id, formData)
   }
 
   const tabs = [
@@ -155,10 +162,41 @@ export default async function CompanyDetailPage({
             </div>
           </div>
         </div>
-        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold capitalize">
-          {company.status}
-        </span>
+        <div className="flex flex-col items-end gap-2">
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+            company.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
+          }`}>
+            {company.status}
+          </span>
+          {profile.role === 'admin' && (
+            <ConfirmAction
+              title="Remove company?"
+              confirmLabel="Delete"
+              action={asFormAction(removeCompany)}
+              hiddenFields={{ company_id: company.id }}
+              description={
+                <>
+                  <p>
+                    Company: <span className="font-semibold text-gray-900">{company.name}</span>
+                  </p>
+                  <p>
+                    Related records such as orders, invoices, payments, and portal users will not be destroyed.
+                    If this company has history it will be archived (set inactive) instead of permanently deleted.
+                  </p>
+                </>
+              }
+            >
+              Delete Company
+            </ConfirmAction>
+          )}
+        </div>
       </div>
+
+      {removed === 'archived' && (
+        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
+          This company cannot be permanently deleted because it has existing orders/financial records. It was archived instead.
+        </div>
+      )}
 
       <div className="border-b border-gray-200">
         <nav className="flex space-x-6 overflow-x-auto">
@@ -177,6 +215,66 @@ export default async function CompanyDetailPage({
       </div>
 
       {tab === 'overview' && (
+        canEdit ? (
+          <form action={saveCompanyAction} className="bg-white p-6 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <h2 className="font-bold text-sm text-gray-900 md:col-span-2">Edit Company</h2>
+            <label className="block">
+              <span className="font-semibold text-gray-500">Name</span>
+              <input name="name" required defaultValue={company.name} className="mt-1 w-full border rounded-lg px-3 py-2" />
+            </label>
+            <label className="block">
+              <span className="font-semibold text-gray-500">Industry</span>
+              <select name="industry" defaultValue={company.industry || ''} className="mt-1 w-full border rounded-lg px-3 py-2 bg-white">
+                <option value="">Select Industry</option>
+                {['IT', 'Finance', 'Healthcare', 'Retail', 'Manufacturing', 'Other'].map((industry) => (
+                  <option key={industry} value={industry}>{industry}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="font-semibold text-gray-500">Website</span>
+              <input name="website" type="url" defaultValue={company.website || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
+            </label>
+            <label className="block">
+              <span className="font-semibold text-gray-500">GST</span>
+              <input name="gst_number" defaultValue={company.gst_number || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
+            </label>
+            <label className="block">
+              <span className="font-semibold text-gray-500">City</span>
+              <input name="city" defaultValue={company.city || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
+            </label>
+            <label className="block">
+              <span className="font-semibold text-gray-500">State</span>
+              <input name="state" defaultValue={company.state || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
+            </label>
+            <label className="block">
+              <span className="font-semibold text-gray-500">Country</span>
+              <input name="country" defaultValue={company.country || 'India'} className="mt-1 w-full border rounded-lg px-3 py-2" />
+            </label>
+            <label className="block">
+              <span className="font-semibold text-gray-500">Status</span>
+              <select name="status" defaultValue={company.status} className="mt-1 w-full border rounded-lg px-3 py-2 bg-white">
+                <option value="prospect">Prospect</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>
+            <label className="block md:col-span-2">
+              <span className="font-semibold text-gray-500">Address</span>
+              <textarea name="address" rows={2} defaultValue={company.address || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
+            </label>
+            <label className="block md:col-span-2">
+              <span className="font-semibold text-gray-500">Notes</span>
+              <textarea name="notes" rows={3} defaultValue={company.notes || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
+            </label>
+            <p className="text-[11px] text-gray-500 md:col-span-2">
+              Owner: {(company.owner as { full_name?: string } | null)?.full_name || 'Unassigned'}
+            </p>
+            <button type="submit" className="md:col-span-2 px-4 py-2 text-xs font-semibold rounded-lg text-white bg-[#4A235A]">
+              Save company
+            </button>
+          </form>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-xl border border-gray-200 text-xs space-y-3">
             <h2 className="font-bold text-sm text-gray-900 pb-2 border-b">Company Information</h2>
@@ -191,6 +289,7 @@ export default async function CompanyDetailPage({
             <p className="text-gray-700 whitespace-pre-wrap">{company.notes || 'No notes added for this company yet.'}</p>
           </div>
         </div>
+        )
       )}
 
       {tab === 'catalogue' && (

@@ -92,3 +92,55 @@ export async function removeCampaignProduct(formData: FormData) {
   revalidatePath(`/crm/campaigns/${campaignId}`)
   return { success: true }
 }
+
+export async function updateCampaign(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = String(formData.get('id') || '')
+  const name = String(formData.get('name') || '').trim()
+  if (!id || !name) return { error: 'Campaign name is required' }
+
+  const employeeQuantity = Number(formData.get('employee_quantity') || 0)
+  const budgetPerEmployee = Number(formData.get('budget_per_employee') || 0)
+  const { error } = await supabase.from('campaigns').update({
+    name,
+    occasion: String(formData.get('occasion') || '') || null,
+    description: String(formData.get('description') || '') || null,
+    employee_quantity: employeeQuantity || 1,
+    budget_per_employee: budgetPerEmployee || 0,
+    total_budget: (employeeQuantity || 1) * (budgetPerEmployee || 0),
+    required_delivery_date: String(formData.get('required_delivery_date') || '') || null,
+  }).eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/crm/campaigns')
+  revalidatePath(`/crm/campaigns/${id}`)
+  return { success: true }
+}
+
+export async function removeCampaign(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = String(formData.get('id') || '')
+  if (!id) return { error: 'Campaign is required' }
+
+  const { count: orderCount } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('campaign_id', id)
+  if (orderCount) {
+    const { error } = await supabase.from('campaigns').update({ status: 'closed' }).eq('id', id)
+    if (error) return { error: error.message }
+    revalidatePath('/crm/campaigns')
+    revalidatePath(`/crm/campaigns/${id}`)
+    redirect(`/crm/campaigns/${id}?removed=archived`)
+  }
+
+  const { error } = await supabase.from('campaigns').delete().eq('id', id)
+  if (error) {
+    await supabase.from('campaigns').update({ status: 'closed' }).eq('id', id)
+    return { error: 'This campaign could not be deleted. It was closed instead.' }
+  }
+  revalidatePath('/crm/campaigns')
+  redirect('/crm/campaigns')
+}

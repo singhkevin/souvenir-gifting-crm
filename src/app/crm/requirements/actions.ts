@@ -143,8 +143,57 @@ export async function addProductToRequirement(formData: FormData) {
 
 export async function updateRequirement(id: string, data: Record<string, unknown>) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
   const { error } = await supabase.from('requirements').update(data).eq('id', id)
   if (error) return { error: error.message }
   revalidatePath(`/crm/requirements/${id}`)
   return { success: true }
+}
+
+export async function updateRequirementForm(formData: FormData) {
+  const id = String(formData.get('id') || '')
+  if (!id) return { error: 'Requirement is required' }
+  const budget = formData.get('budget') ? Number(formData.get('budget')) : null
+  return updateRequirement(id, {
+    name: String(formData.get('name') || '').trim(),
+    quantity: Number(formData.get('quantity') || 1) || 1,
+    budget,
+    revenue_opportunity: budget || 0,
+    deadline: String(formData.get('deadline') || '') || null,
+    delivery_city: String(formData.get('delivery_city') || '') || null,
+    purpose: String(formData.get('purpose') || '') || null,
+    payment_terms: String(formData.get('payment_terms') || '') || null,
+    description: String(formData.get('description') || '') || null,
+    status: String(formData.get('status') || 'active'),
+  })
+}
+
+export async function removeRequirement(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = String(formData.get('id') || '')
+  if (!id) return { error: 'Requirement is required' }
+
+  const [{ count: quotes }, { count: orders }] = await Promise.all([
+    supabase.from('quotations').select('id', { count: 'exact', head: true }).eq('requirement_id', id),
+    supabase.from('orders').select('id', { count: 'exact', head: true }).eq('requirement_id', id),
+  ])
+  if (quotes || orders) {
+    const { error } = await supabase.from('requirements').update({ status: 'closed' }).eq('id', id)
+    if (error) return { error: error.message }
+    revalidatePath('/crm/requirements')
+    revalidatePath(`/crm/requirements/${id}`)
+    redirect(`/crm/requirements/${id}?removed=archived`)
+  }
+
+  const { error } = await supabase.from('requirements').delete().eq('id', id)
+  if (error) {
+    await supabase.from('requirements').update({ status: 'closed' }).eq('id', id)
+    return { error: 'This requirement could not be deleted. It was closed instead.' }
+  }
+  revalidatePath('/crm/requirements')
+  redirect('/crm/requirements')
 }

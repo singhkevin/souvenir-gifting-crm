@@ -9,5 +9,5 @@ export async function requestOrigin() {
 }
 
 export async function recoveryRedirectTo() {
-  return `${await requestOrigin()}/reset-password`
+  return `${await requestOrigin()}/auth/confirm`
 }

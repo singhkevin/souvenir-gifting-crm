@@ -230,7 +230,7 @@ export async function updateProduct(productId: string, formData: FormData) {
   return { success: true }
 }
 
-function isStoredProductImage(url: string | null | undefined) {
+function isStoredProductImage(url: string | null | undefined): url is string {
   return Boolean(url && url.includes(`/storage/v1/object/public/${IMAGE_BUCKET}/`))
 }
 
@@ -454,4 +454,88 @@ export async function revokeCompanyProductAccess(productId: string, companyId: s
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
   return { success: true }
+}
+
+export async function removeProduct(formData: FormData) {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (profile.role !== 'admin') return { error: 'Only an admin can remove a product' }
+
+  const productId = String(formData.get('product_id') || '')
+  if (!productId) return { error: 'Product is required' }
+
+  const supabase = await createClient()
+  const { data: product } = await supabase
+    .from('products')
+    .select('id, name, image_url, status')
+    .eq('id', productId)
+    .maybeSingle()
+  if (!product) return { error: 'Product not found' }
+
+  const [
+    { count: orderItems },
+    { count: quotationItems },
+    { count: requirementProducts },
+    { count: campaignProducts },
+    { count: sampleMoves },
+  ] = await Promise.all([
+    supabase.from('order_items').select('id', { count: 'exact', head: true }).eq('product_id', productId),
+    supabase.from('quotation_items').select('id', { count: 'exact', head: true }).eq('product_id', productId),
+    supabase.from('requirement_products').select('id', { count: 'exact', head: true }).eq('product_id', productId),
+    supabase.from('campaign_products').select('id', { count: 'exact', head: true }).eq('product_id', productId),
+    supabase.from('sample_movements').select('id', { count: 'exact', head: true }).eq('product_id', productId),
+  ])
+
+  const hasHistory = Boolean(orderItems || quotationItems || requirementProducts || campaignProducts || sampleMoves)
+
+  if (hasHistory) {
+    const { error } = await supabase
+      .from('products')
+      .update({ status: 'discontinued', updated_at: new Date().toISOString() })
+      .eq('id', productId)
+    if (error) return { error: error.message }
+    await writeAudit(supabase, {
+      action: 'update',
+      entity: 'products',
+      entityId: productId,
+      previous: { status: product.status },
+      next: { status: 'discontinued', archived: true },
+      userId: profile.id,
+    })
+    revalidatePath('/crm/products')
+    revalidatePath(`/crm/products/${productId}`)
+    revalidatePath('/portal/catalogue')
+    redirect(`/crm/products/${productId}?removed=archived`)
+  }
+
+  const imageUrl = product.image_url
+  const { error } = await supabase.from('products').delete().eq('id', productId)
+  if (error) {
+    await supabase.from('products').update({ status: 'discontinued' }).eq('id', productId)
+    return {
+      error: 'This product cannot be permanently deleted because related records still exist. It was discontinued instead.',
+    }
+  }
+
+  if (isStoredProductImage(imageUrl)) {
+    const { count: shared } = await supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('image_url', imageUrl)
+    if (!shared) {
+      const objectPath = objectPathFromUrl(imageUrl)
+      if (objectPath) await supabase.storage.from(IMAGE_BUCKET).remove([objectPath])
+    }
+  }
+
+  await writeAudit(supabase, {
+    action: 'delete',
+    entity: 'products',
+    entityId: productId,
+    previous: { name: product.name },
+    userId: profile.id,
+  })
+  revalidatePath('/crm/products')
+  revalidatePath('/portal/catalogue')
+  redirect('/crm/products?removed=deleted')
 }

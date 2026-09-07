@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
-import { updateLeadStage } from '../actions'
+import { updateLeadStage, updateLead, removeLead } from '../actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
+import { asFormAction } from '@/lib/form-action'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
@@ -9,15 +11,18 @@ import { requireStaff } from '@/lib/auth'
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  await requireStaff(['admin', 'sales', 'management'])
+  const profile = await requireStaff(['admin', 'sales', 'management'])
   if (!isUuid(id)) notFound()
   const supabase = await createClient()
 
-  const { data: lead } = await supabase
-    .from('leads')
-    .select('*, company:companies(*), contact:contacts(*), owner:profiles!leads_owner_id_fkey(full_name)')
-    .eq('id', id)
-    .maybeSingle()
+  const [{ data: lead }, { data: contacts }] = await Promise.all([
+    supabase
+      .from('leads')
+      .select('*, company:companies(*), contact:contacts(*), owner:profiles!leads_owner_id_fkey(full_name)')
+      .eq('id', id)
+      .maybeSingle(),
+    supabase.from('contacts').select('id, full_name, company_id').order('full_name'),
+  ])
 
   if (!lead) notFound()
 
@@ -58,6 +63,19 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <p className="text-2xl font-bold text-[#4A235A]">
             {lead.estimated_value ? formatCurrency(lead.estimated_value) : '?'}
           </p>
+          {['admin', 'sales'].includes(profile.role) && (
+            <div className="mt-3">
+              <ConfirmAction
+                title="Delete lead?"
+                confirmLabel="Delete"
+                action={asFormAction(removeLead)}
+                hiddenFields={{ id: lead.id }}
+                description={<p>Lead for <span className="font-semibold">{company?.name || 'this company'}</span> will be removed if it has no linked requirements.</p>}
+              >
+                Delete lead
+              </ConfirmAction>
+            </div>
+          )}
         </div>
       </div>
 
@@ -137,10 +155,28 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-2">
-          <h2 className="font-bold text-sm text-gray-900">Engagement & Opportunity Notes</h2>
-          <p className="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {lead.notes || 'No notes added for this lead yet.'}
-          </p>
+          <h2 className="font-bold text-sm text-gray-900">Edit lead</h2>
+          <form action={asFormAction(updateLead)} className="grid md:grid-cols-2 gap-3 text-xs">
+            <input type="hidden" name="id" value={lead.id} />
+            <select name="contact_id" defaultValue={lead.contact_id || ''} className="border rounded-lg px-2 py-2">
+              <option value="">No contact</option>
+              {(contacts || []).filter((c) => c.company_id === lead.company_id).map((c) => (
+                <option key={c.id} value={c.id}>{c.full_name}</option>
+              ))}
+            </select>
+            <select name="source" defaultValue={lead.source || 'other'} className="border rounded-lg px-2 py-2">
+              <option value="inbound">Inbound</option>
+              <option value="referral">Referral</option>
+              <option value="event">Event</option>
+              <option value="outbound">Outbound</option>
+              <option value="website">Website</option>
+              <option value="other">Other</option>
+            </select>
+            <input name="estimated_value" type="number" min="0" step="0.01" defaultValue={lead.estimated_value || 0} className="border rounded-lg px-2 py-2" />
+            <input name="next_follow_up_at" type="date" defaultValue={lead.next_follow_up_at ? String(lead.next_follow_up_at).slice(0, 10) : ''} className="border rounded-lg px-2 py-2" />
+            <textarea name="notes" rows={3} defaultValue={lead.notes || ''} className="md:col-span-2 border rounded-lg px-2 py-2" />
+            <button className="md:col-span-2 px-4 py-2 rounded-lg text-white bg-[#4A235A] font-semibold">Save lead</button>
+          </form>
         </div>
       </div>
     </div>

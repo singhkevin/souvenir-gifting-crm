@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { createContact } from './actions'
+import { createContact, updateContact, removeContact } from './actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
 import { requireStaff } from '@/lib/auth'
 import { CompanyAvatar } from '@/components/ui/avatar'
 import { asFormAction } from '@/lib/form-action'
@@ -12,13 +13,17 @@ type ContactRow = {
   full_name: string
   email: string | null
   phone: string | null
+  designation?: string | null
+  contact_type?: string | null
+  company_id?: string
   company?: CompanyOption | CompanyOption[] | null
 }
 
-export default async function ContactsPage(props: { searchParams: Promise<{ search?: string }> }) {
+export default async function ContactsPage(props: { searchParams: Promise<{ search?: string; error?: string }> }) {
   const profile = await requireStaff(['admin', 'sales', 'management'])
   const searchParams = await props.searchParams
   const search = searchParams.search || ''
+  const error = searchParams.error || ''
 
   const supabase = await createClient()
   const companiesQuery = supabase.from('companies').select('id, name, logo_path').order('name')
@@ -33,7 +38,7 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
   const companyRows = asRows<CompanyOption>(companies)
   const companyIds = companyRows.map((c: CompanyOption) => c.id)
 
-  const contactsSelect = 'id, full_name, email, phone, company:companies(id, name, logo_path)'
+  const contactsSelect = 'id, full_name, email, phone, designation, contact_type, company_id, company:companies(id, name, logo_path)'
   const contactsByCompany = companyIds.length > 0
     ? supabase.from('contacts').select(contactsSelect).order('full_name').in('company_id', companyIds)
     : supabase.from('contacts').select(contactsSelect).order('full_name').eq('company_id', '00000000-0000-0000-0000-000000000000')
@@ -47,6 +52,10 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-[var(--color-primary)]">Contacts</h1>
       </div>
+
+      {error && (
+        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">{error}</div>
+      )}
 
       <form action={asFormAction(createContact)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-3 gap-3 text-xs">
         <input name="full_name" required placeholder="Full name" className="border rounded-lg px-2 py-2" />
@@ -81,6 +90,7 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
               <th className="p-3">Company</th>
               <th className="p-3">Email</th>
               <th className="p-3">Phone</th>
+              <th className="p-3">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -99,11 +109,41 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
                   </td>
                   <td className="p-3 text-gray-600">{c.email || '—'}</td>
                   <td className="p-3 text-gray-600">{c.phone || '—'}</td>
+                  <td className="p-3 text-xs space-y-2">
+                    <form action={asFormAction(updateContact)} className="grid gap-1 max-w-xs">
+                      <input type="hidden" name="id" value={c.id} />
+                      <input name="full_name" defaultValue={c.full_name} required className="border rounded px-2 py-1" />
+                      <select name="company_id" defaultValue={c.company_id || company?.id || ''} className="border rounded px-2 py-1">
+                        {companyRows.map((companyOption: CompanyOption) => (
+                          <option key={companyOption.id} value={companyOption.id}>{companyOption.name}</option>
+                        ))}
+                      </select>
+                      <input name="email" defaultValue={c.email || ''} className="border rounded px-2 py-1" />
+                      <input name="phone" defaultValue={c.phone || ''} className="border rounded px-2 py-1" />
+                      <input name="designation" defaultValue={c.designation || ''} placeholder="Designation" className="border rounded px-2 py-1" />
+                      <select name="contact_type" defaultValue={c.contact_type || 'primary'} className="border rounded px-2 py-1">
+                        <option value="primary">Primary</option>
+                        <option value="billing">Billing</option>
+                        <option value="procurement">Procurement</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <button className="text-[#1A3022] font-semibold underline text-left">Save</button>
+                    </form>
+                    <ConfirmAction
+                      title="Delete contact?"
+                      confirmLabel="Delete"
+                      action={asFormAction(removeContact)}
+                      hiddenFields={{ id: c.id }}
+                      description={<p>Contact: <span className="font-semibold">{c.full_name}</span></p>}
+                    >
+                      Delete
+                    </ConfirmAction>
+                  </td>
                 </tr>
               )
             })}
             {contactRows.length === 0 && (
-              <tr><td colSpan={4} className="p-8 text-center text-gray-500">No contacts in your assigned companies.</td></tr>
+              <tr><td colSpan={5} className="p-8 text-center text-gray-500">No contacts in your assigned companies.</td></tr>
             )}
           </tbody>
         </table>

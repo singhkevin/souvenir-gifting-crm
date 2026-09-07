@@ -22,21 +22,34 @@ function stripRecoveryParams() {
   window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}`)
 }
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({
+  hasServerSession,
+  markedInvalid,
+}: {
+  hasServerSession: boolean
+  markedInvalid: boolean
+}) {
   const router = useRouter()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [ready, setReady] = useState(false)
-  const [hasSession, setHasSession] = useState(false)
+  const [ready, setReady] = useState(hasServerSession)
+  const [hasSession, setHasSession] = useState(hasServerSession)
 
   useEffect(() => {
+    if (hasServerSession) {
+      stripRecoveryParams()
+      setHasSession(true)
+      setReady(true)
+      setError(null)
+      return
+    }
+
     const supabase = createRecoveryBrowserClient()
     let cancelled = false
 
     const run = async () => {
-      const params = new URLSearchParams(window.location.search)
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
       const accessToken = hash.get('access_token')
       const refreshToken = hash.get('refresh_token')
@@ -46,35 +59,29 @@ export function ResetPasswordForm() {
           access_token: accessToken,
           refresh_token: refreshToken,
         })
-        if (sessionError && !cancelled) {
-          setError(INVALID_LINK)
-        }
-      } else if (params.get('code') || params.get('token_hash')) {
-        const confirmUrl = new URL('/auth/confirm', window.location.origin)
-        if (params.get('code')) confirmUrl.searchParams.set('code', params.get('code') as string)
-        if (params.get('token_hash')) confirmUrl.searchParams.set('token_hash', params.get('token_hash') as string)
-        if (params.get('type')) confirmUrl.searchParams.set('type', params.get('type') as string)
-        window.location.replace(`${confirmUrl.pathname}${confirmUrl.search}`)
-        return
-      } else if (params.get('error') === 'invalid') {
-        if (!cancelled) {
+        if (cancelled) return
+        if (sessionError) {
           setHasSession(false)
           setError(INVALID_LINK)
           setReady(true)
+          return
         }
-        return
-      }
-
-      const { data: { session } } = await supabase.auth.getSession()
-      if (cancelled) return
-      if (session) {
         stripRecoveryParams()
         setHasSession(true)
         setError(null)
-      } else {
+        setReady(true)
+        return
+      }
+
+      if (markedInvalid) {
         setHasSession(false)
         setError(INVALID_LINK)
+        setReady(true)
+        return
       }
+
+      setHasSession(false)
+      setError(INVALID_LINK)
       setReady(true)
     }
 
@@ -82,7 +89,7 @@ export function ResetPasswordForm() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [hasServerSession, markedInvalid])
 
   const passwordError =
     password && password.length < 8
@@ -124,7 +131,7 @@ export function ResetPasswordForm() {
         {!ready && (
           <div className="flex items-center justify-center gap-2 text-xs text-[#7A7267]">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Checking reset link…
+            Restoring password recovery session…
           </div>
         )}
         <div>

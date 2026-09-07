@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate, asRows } from '@/lib/utils'
-import { createGoal } from './actions'
+import { createGoal, updateGoal, removeGoal } from './actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
 import { requireStaff } from '@/lib/auth'
 import { applyOrderScope } from '@/lib/auth'
 import { asFormAction } from '@/lib/form-action'
@@ -119,6 +120,41 @@ export default async function GoalsPage() {
                 </div>
                 <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium uppercase">{goal.metric}</span>
               </div>
+              {(profile.role === 'admin' || profile.role === 'management') && (
+                <div className="mb-4 space-y-2 text-xs">
+                  <form action={asFormAction(updateGoal)} className="grid md:grid-cols-2 gap-2">
+                    <input type="hidden" name="id" value={goal.id} />
+                    <input name="title" defaultValue={goal.title} required className="border rounded-lg px-2 py-1" />
+                    <input name="target" type="number" min="1" defaultValue={goal.target ?? ''} required className="border rounded-lg px-2 py-1" />
+                    <select name="metric" defaultValue={goal.metric} className="border rounded-lg px-2 py-1">
+                      <option value="revenue">Revenue</option>
+                      <option value="orders">Orders</option>
+                    </select>
+                    <select name="period_type" defaultValue={goal.period_type || 'month'} className="border rounded-lg px-2 py-1">
+                      <option value="month">Month</option>
+                      <option value="quarter">Quarter</option>
+                      <option value="year">Year</option>
+                    </select>
+                    <input name="period_start" type="date" defaultValue={goal.period_start || ''} required className="border rounded-lg px-2 py-1" />
+                    <select name="owner_id" defaultValue={goal.owner_id || ''} className="border rounded-lg px-2 py-1">
+                      <option value="">Company-wide</option>
+                      {teamRows.map((p: TeamMember) => (
+                        <option key={p.id} value={p.id}>{p.full_name ?? ''}</option>
+                      ))}
+                    </select>
+                    <button className="underline text-left">Save goal</button>
+                  </form>
+                  <ConfirmAction
+                    title="Delete goal?"
+                    confirmLabel="Delete"
+                    action={asFormAction(removeGoal)}
+                    hiddenFields={{ id: goal.id }}
+                    description={<p>Goal: <span className="font-semibold">{goal.title}</span></p>}
+                  >
+                    Delete
+                  </ConfirmAction>
+                </div>
+              )}
               <div className="mb-2 flex justify-between text-sm">
                 <span>Progress</span>
                 <span>{goal.progress.toFixed(1)}%</span>

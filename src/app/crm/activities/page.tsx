@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { formatDateTime } from '@/lib/utils'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { logActivity } from './actions'
+import { logActivity, removeActivity } from './actions'
+import { ConfirmAction } from '@/components/ui/confirm-action'
 import { asFormAction } from '@/lib/form-action'
 
 export default async function ActivitiesPage({
@@ -114,6 +115,17 @@ export default async function ActivitiesPage({
                     </p>
                   )}
                   {activity.notes && <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{activity.notes}</p>}
+                  <div className="mt-3">
+                    <ConfirmAction
+                      title="Delete activity?"
+                      confirmLabel="Delete"
+                      action={asFormAction(removeActivity)}
+                      hiddenFields={{ id: activity.id }}
+                      description={<p>Activity: <span className="font-semibold">{activity.title}</span></p>}
+                    >
+                      Delete
+                    </ConfirmAction>
+                  </div>
                 </div>
               </div>
             )
