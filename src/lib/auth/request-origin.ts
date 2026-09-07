@@ -7,3 +7,7 @@ export async function requestOrigin() {
   const proto = h.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https')
   return `${proto}://${host}`
 }
+
+export async function recoveryRedirectTo() {
+  return `${await requestOrigin()}/reset-password`
+}

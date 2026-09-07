@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getRequestTabId } from "@/lib/auth/tab-server"
 import { TabSessionRevive } from "@/components/auth/tab-session-revive"
+import { confirmSearchFromParams, hasRecoveryQuery } from "@/lib/auth/recovery"
 
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
@@ -16,13 +17,14 @@ export default async function RootPage({
   const type = firstParam(params.type) || ''
   const code = firstParam(params.code) || ''
   const tokenHash = firstParam(params.token_hash) || ''
+  const query = new URLSearchParams()
+  if (code) query.set('code', code)
+  if (tokenHash) query.set('token_hash', tokenHash)
+  if (type) query.set('type', type)
 
-  if (type === 'recovery' || tokenHash || code) {
-    const dest = new URLSearchParams()
-    if (code) dest.set('code', code)
-    if (tokenHash) dest.set('token_hash', tokenHash)
-    if (type) dest.set('type', type)
-    redirect(`/reset-password?${dest.toString()}`)
+  if (hasRecoveryQuery(query)) {
+    const dest = confirmSearchFromParams({ code, type, token_hash: tokenHash })
+    redirect(`/auth/confirm?${dest}`)
   }
 
   if (!(await getRequestTabId())) return <TabSessionRevive />

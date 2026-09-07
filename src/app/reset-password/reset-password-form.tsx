@@ -10,11 +10,14 @@ import { AuthShell } from '@/components/auth/auth-shell'
 import { PasswordField } from '@/components/auth/password-field'
 import { createRecoveryBrowserClient } from '@/lib/supabase/recovery-client'
 
+const INVALID_LINK = 'Password reset link is invalid or has expired.'
+
 function stripRecoveryParams() {
   const url = new URL(window.location.href)
   url.searchParams.delete('code')
   url.searchParams.delete('token_hash')
   url.searchParams.delete('type')
+  url.searchParams.delete('error')
   url.hash = ''
   window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}`)
 }
@@ -35,36 +38,31 @@ export function ResetPasswordForm() {
     const run = async () => {
       const params = new URLSearchParams(window.location.search)
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
-      const code = params.get('code')
-      const tokenHash = params.get('token_hash')
-      const type = params.get('type') || hash.get('type')
+      const accessToken = hash.get('access_token')
+      const refreshToken = hash.get('refresh_token')
 
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-        if (exchangeError && !cancelled) {
-          setError('This reset link is invalid or has expired. Request a new one.')
-        }
-      } else if (tokenHash) {
-        const otpType = type === 'recovery' || type === 'email' || type === 'magiclink' ? type : 'recovery'
-        const { error: otpError } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: otpType,
+      if (accessToken && refreshToken) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
         })
-        if (otpError && !cancelled) {
-          setError('This reset link is invalid or has expired. Request a new one.')
+        if (sessionError && !cancelled) {
+          setError(INVALID_LINK)
         }
-      } else {
-        const accessToken = hash.get('access_token')
-        const refreshToken = hash.get('refresh_token')
-        if (accessToken && refreshToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          })
-          if (sessionError && !cancelled) {
-            setError('This reset link is invalid or has expired. Request a new one.')
-          }
+      } else if (params.get('code') || params.get('token_hash')) {
+        const confirmUrl = new URL('/auth/confirm', window.location.origin)
+        if (params.get('code')) confirmUrl.searchParams.set('code', params.get('code') as string)
+        if (params.get('token_hash')) confirmUrl.searchParams.set('token_hash', params.get('token_hash') as string)
+        if (params.get('type')) confirmUrl.searchParams.set('type', params.get('type') as string)
+        window.location.replace(`${confirmUrl.pathname}${confirmUrl.search}`)
+        return
+      } else if (params.get('error') === 'invalid') {
+        if (!cancelled) {
+          setHasSession(false)
+          setError(INVALID_LINK)
+          setReady(true)
         }
+        return
       }
 
       const { data: { session } } = await supabase.auth.getSession()
@@ -75,7 +73,7 @@ export function ResetPasswordForm() {
         setError(null)
       } else {
         setHasSession(false)
-        setError((prev) => prev || 'This reset link is invalid or has expired. Request a new one.')
+        setError(INVALID_LINK)
       }
       setReady(true)
     }
@@ -98,7 +96,7 @@ export function ResetPasswordForm() {
     e.preventDefault()
     setError(null)
     if (!hasSession) {
-      setError('This reset link is invalid or has expired. Request a new one.')
+      setError(INVALID_LINK)
       return
     }
     if (passwordError) {
@@ -148,8 +146,15 @@ export function ResetPasswordForm() {
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reset password'}
         </button>
       </form>
-      <p className="text-xs text-center text-[#7A7267] mt-5">
-        <Link href="/login" className="font-semibold text-[#4A235A] hover:underline">Back to sign in</Link>
+      <p className="text-xs text-center text-[#7A7267] mt-5 space-y-2">
+        {!hasSession && ready ? (
+          <span className="block">
+            <Link href="/forgot-password" className="font-semibold text-[#4A235A] hover:underline">Request a new reset link</Link>
+          </span>
+        ) : null}
+        <span className="block">
+          <Link href="/login" className="font-semibold text-[#4A235A] hover:underline">Back to sign in</Link>
+        </span>
       </p>
     </AuthShell>
   )

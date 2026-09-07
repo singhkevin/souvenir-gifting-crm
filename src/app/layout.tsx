@@ -21,6 +21,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable}>
       <body className="h-full antialiased">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var h=location.hash;if(!h||h.length<2)return;var p=new URLSearchParams(h.slice(1));if(p.get("type")==="recovery"||(p.get("access_token")&&p.get("refresh_token"))){if(location.pathname.indexOf("/reset-password")!==0){location.replace("/reset-password"+location.search+location.hash)}}}catch(e){}})();`,
+          }}
+        />
         <TabSessionProvider>
           <NavHistoryTracker />
           {children}

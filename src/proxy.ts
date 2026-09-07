@@ -51,7 +51,11 @@ export async function proxy(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (isPublicAuthPath(pathname)) {
-    if (user && pathname.startsWith('/login')) {
+    const recoveryAttempt =
+      request.nextUrl.searchParams.get('type') === 'recovery' ||
+      request.nextUrl.searchParams.has('token_hash') ||
+      request.nextUrl.searchParams.has('code')
+    if (user && pathname.startsWith('/login') && !recoveryAttempt) {
       const next = request.nextUrl.searchParams.get('next')
       const dest = withTabQuery(new URL(isSafeNext(next) ? next : '/', request.url), tabId)
       const redirect = NextResponse.redirect(dest)

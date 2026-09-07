@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createRecoveryServerClient } from '@/lib/supabase/recovery-server'
 import { redirect } from 'next/navigation'
 import { isSafeNext, landingPathForRole } from '@/lib/safe-next'
-import { requestOrigin } from '@/lib/auth/request-origin'
+import { requestOrigin, recoveryRedirectTo } from '@/lib/auth/request-origin'
 import { validateNewPassword } from '@/lib/auth/password'
 
 export async function signIn(formData: FormData): Promise<{ error?: string; redirectTo?: string } | undefined> {
@@ -106,9 +106,9 @@ export async function requestPasswordReset(formData: FormData): Promise<{ error?
   }
 
   const supabase = await createRecoveryServerClient()
-  const origin = await requestOrigin()
+  const redirectTo = await recoveryRedirectTo()
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/reset-password`,
+    redirectTo,
   })
 
   if (error) {
@@ -132,7 +132,7 @@ export async function updatePassword(formData: FormData): Promise<{ error?: stri
   const supabase = await createRecoveryServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    return { error: 'This reset link is invalid or has expired. Request a new one.' }
+    return { error: 'Password reset link is invalid or has expired.' }
   }
 
   const { error } = await supabase.auth.updateUser({ password })
