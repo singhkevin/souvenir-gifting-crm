@@ -8,8 +8,7 @@ import type { PublicProduct } from '@/lib/catalogue/products'
 
 const SLOT_COUNT = 4
 const SLIDE_MS = 3000
-const BRIGHT_MS = 200
-const FADE_OUT_MS = 450
+const FADE_MS = 700
 
 /** Bigger cards, tighter overlap — collage reads as one cluster. */
 const SLOT_LAYOUT = [
@@ -19,7 +18,7 @@ const SLOT_LAYOUT = [
   { className: 'right-6 bottom-10 w-[15rem]', z: 10 },
 ] as const
 
-type TransitionPhase = 'idle' | 'bright' | 'out' | 'in'
+type TransitionPhase = 'idle' | 'out' | 'in'
 
 function nextBatch(pool: PublicProduct[], start: number, count: number, avoid: string[] = []) {
   const ids: string[] = []
@@ -65,7 +64,9 @@ export function HeroStage({
       setSlotIds([])
       return
     }
-    const { ids, nextCursor } = nextBatch(pool, 0, Math.min(SLOT_COUNT, pool.length))
+    // Start mid-catalogue so the first frame is a fresh set
+    const start = pool.length > SLOT_COUNT ? Math.floor(pool.length / 3) : 0
+    const { ids, nextCursor } = nextBatch(pool, start, Math.min(SLOT_COUNT, pool.length))
     setSlotIds(ids)
     cursorRef.current = nextCursor
     setPhase('idle')
@@ -82,25 +83,20 @@ export function HeroStage({
     const timer = window.setInterval(() => {
       if (!slotIdsRef.current.length) return
 
-      setPhase('bright')
+      setPhase('out')
       timers.push(
         window.setTimeout(() => {
-          setPhase('out')
+          const current = slotIdsRef.current
+          const { ids, nextCursor } = nextBatch(pool, cursorRef.current, current.length, current)
+          cursorRef.current = nextCursor
+          setSlotIds(ids)
+          setPhase('in')
           timers.push(
             window.setTimeout(() => {
-              const current = slotIdsRef.current
-              const { ids, nextCursor } = nextBatch(pool, cursorRef.current, current.length, current)
-              cursorRef.current = nextCursor
-              setSlotIds(ids)
-              setPhase('in')
-              timers.push(
-                window.setTimeout(() => {
-                  setPhase('idle')
-                }, 40),
-              )
-            }, FADE_OUT_MS),
+              setPhase('idle')
+            }, 40),
           )
-        }, BRIGHT_MS),
+        }, FADE_MS),
       )
     }, SLIDE_MS)
 
@@ -115,13 +111,7 @@ export function HeroStage({
     .filter(Boolean) as PublicProduct[]
 
   const contentClass =
-    phase === 'bright'
-      ? 'opacity-100 brightness-[1.55] contrast-110'
-      : phase === 'out'
-        ? 'opacity-0 brightness-[1.75]'
-        : phase === 'in'
-          ? 'opacity-0 brightness-[1.35]'
-          : 'opacity-100 brightness-100'
+    phase === 'out' || phase === 'in' ? 'opacity-0' : 'opacity-100'
 
   return (
     <section className="relative isolate min-h-[92vh] overflow-hidden bg-[#1A3022] text-[#FAF7F2]">
@@ -159,7 +149,7 @@ export function HeroStage({
             </Link>
             <Link
               href="/request-quote"
-              className="border border-[#FAF7F2]/35 px-7 py-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#FAF7F2] transition-colors hover:bg-[#FAF7F2]/10"
+              className="border border-[#FAF7F2]/35 px-7 py-3 text-[11px] uppercase tracking-[0.18em] text-[#FAF7F2] transition-colors hover:bg-[#FAF7F2]/10"
             >
               Request a Quote
             </Link>
@@ -180,7 +170,7 @@ export function HeroStage({
                 style={{ zIndex: layout.z }}
               >
                 <div
-                  className={`transition-[opacity,filter] duration-[450ms] ease-out motion-reduce:transition-none ${contentClass}`}
+                  className={`transition-opacity duration-700 ease-in-out motion-reduce:transition-none ${contentClass}`}
                 >
                   <div className="aspect-square overflow-hidden catalogue-studio-field">
                     <ProductImage

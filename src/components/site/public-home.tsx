@@ -54,8 +54,8 @@ export async function PublicHome() {
     more,
   } = curatePublicHome(products, categories, collections, CATALOGUE_OCCASIONS)
 
-  // Hero slideshow: full catalogue — full-bleed square frames first, then studio-pack
-  const heroSlideshow = [...products]
+  // Hero slideshow: studio assets first, rotated so the opening collage is a new set
+  const rankedHero = [...products]
     .filter((product) => Boolean(product.image_url?.trim()))
     .sort((a, b) => {
       const rank = (url: string) => {
@@ -64,8 +64,13 @@ export async function PublicHome() {
         if (/studio-pack-/i.test(url)) return 1
         return 0
       }
-      return rank(b.image_url || '') - rank(a.image_url || '')
+      const rotate =
+        (b.name.charCodeAt(0) * 31 + b.name.length * 19) % 200 -
+        ((a.name.charCodeAt(0) * 31 + a.name.length * 19) % 200)
+      return rank(b.image_url || '') - rank(a.image_url || '') || rotate
     })
+  const heroOffset = rankedHero.length > 12 ? 10 : 0
+  const heroSlideshow = rankedHero.slice(heroOffset).concat(rankedHero.slice(0, heroOffset))
 
   const budgetCounts = BUDGET_BANDS.map((band) => ({
     ...band,

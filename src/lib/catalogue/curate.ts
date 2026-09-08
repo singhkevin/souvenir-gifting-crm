@@ -14,65 +14,118 @@ const PRIORITY_CATEGORIES = [
   'Awards & Recognition',
 ] as const
 
+/** Bump to reshuffle homepage rails when preferred lists rotate. */
+const HOME_CURATION_SEED = 7
+
 /** Hero floats — mixed categories, full-bleed studio products. */
 const HERO_PREFERRED = [
+  'Chocolate truffle tower',
+  'Acrylic pillar award',
+  'Bamboo-lid glass bottle',
+  'Slim graphite power bank',
+  'Oxford button-down shirt',
+]
+
+/** Featured story — one hero visual only (do not reuse elsewhere on homepage). */
+const STORY_PREFERRED = [
+  'Spa bath ritual set',
+  'Tea tasting gift crate',
+  'Sparkling grape cheese box',
+  'Tech desk tidy gift set',
+]
+
+const OCCASION_TILE_PREFERRED = [
+  ['Premium induction gift box', 'Desk starter essentials kit', 'Welcome journal pen duo'],
+  ['Chocolate truffle tower', 'Herbal wellness tea set', 'Nuts and honey jar set'],
+  ['Acrylic pillar award', 'Acrylic star award', 'Walnut perpetual plaque'],
+  ['Brushed steel vacuum flask', 'Aluminium laptop stand', 'Executive pen set'],
+  ['Festive corporate hamper crate', 'Kraft ribbon gift hamper', 'Diwali sweets dry-fruit hamper'],
+  ['Bamboo eco plaque', 'Slate engraving plaque', 'Brass desk medallion'],
+] as const
+
+/** Distinct preferred products per collection — no shared names across slugs. */
+const COLLECTION_TILE_PREFERRED: Record<string, string[]> = {
+  'executive-edit': ['Softshell bodywarmer', 'Quilted sleeveless gilet', 'Crystal recognition trophy'],
+  'new-joiner-essentials': ['Branded mug welcome set', 'New-hire stationery bundle', 'Onboarding planner kit'],
+  'client-appreciation': ['Chocolate truffle tower', 'Spa bath ritual set', 'Herbal wellness tea set'],
+  'festival-gifting': ['Festive corporate hamper crate', 'Nuts and honey jar set', 'Tea tasting gift crate'],
+  'conference-and-events': ['Brushed steel vacuum flask', 'Compact nylon sling bag', 'Bluetooth tracker tag set'],
+  'welcome-kits': ['Soft-landing comfort kit', 'Team thermos welcome duo', 'Culture card welcome folio'],
+}
+
+const CATEGORY_TILE_PREFERRED: Record<string, string[]> = {
+  Drinkware: ['Bamboo-lid glass bottle', 'Brushed steel vacuum flask', 'Ceramic travel mug with sleeve'],
+  'Bags & Travel': [
+    'Compact nylon sling bag',
+    'Foldable packable backpack',
+    'Expandable toiletry kit',
+    'Crossbody tablet bag',
+  ],
+  'Tech & Electronics': ['Slim graphite power bank', 'Aluminium laptop stand', 'USB LED desk lamp'],
+  'Desk & Stationery': ['Executive pen set', 'Marble pen cup', 'Softcover dotted journal'],
+  Apparel: ['Oxford button-down shirt', 'Performance dri-fit polo', 'Quilted sleeveless gilet'],
+  'Hampers & Gift Sets': [
+    'Chocolate truffle tower',
+    'Spa bath ritual set',
+    'Tea tasting gift crate',
+    'Tech desk tidy gift set',
+  ],
+  'Welcome Kits': ['Premium induction gift box', 'Desk starter essentials kit', 'Welcome journal pen duo'],
+  'Eco-Friendly Gifts': ['Bamboo coffee tumbler', 'Seed paper notebook set', 'Wheat straw lunch box'],
+  Wellness: ['Matte ceramic wellness candle', 'Aromatherapy roller set', 'Eye mask sleep kit'],
+  'Home & Lifestyle': ['Bamboo cheese board', 'Reed diffuser set', 'Marble coaster quartet'],
+  'Awards & Recognition': ['Acrylic pillar award', 'Acrylic star award', 'Walnut perpetual plaque'],
+}
+
+/** Demote the previous homepage set so rails fully rotate. */
+const PREVIOUS_HOME_FEATURED = [
   'Appreciation thank-you box',
   'Breakfast brunch basket',
   'Olive oil vinegar gift crate',
   'Wireless mechanical keyboard',
   'Navy laptop daypack',
-]
-
-/** Featured story — one hero visual only (do not reuse elsewhere on homepage). */
-const STORY_PREFERRED = [
   'Festive dry fruit wooden tray',
   'Coffee connoisseur box',
   'Desk essentials starter kit',
-  'Premium induction gift box',
+  'Matte black travel tumbler',
+  'Insulated coffee tumbler with lid',
+  'Frosted acrylic tumbler',
+  'Charcoal weekender duffle',
+  'Quilted laptop messenger',
+  'Structured beige tote',
+  'Bamboo wireless charger pad',
+  'Wireless charging pad',
+  'Wood desk organiser tray',
+  'Forest hardcover notebook set',
+  'Sticky notes desk set',
+  'Forest green corporate polo',
+  'Navy corporate polo shirt',
+  'Black softshell corporate jacket',
+  'Starter welcome essentials kit',
+  'Office caddy welcome set',
+  'Induction gift crate',
+  'Essential oil wellness trio',
+  'Calm hour gift set',
+  'Rolled wellness yoga mat',
+  'Acacia serving tray',
+  'Linen throw blanket',
+  'Cotton waffle bathrobe',
+  'Marble base trophy',
+  'Glass flame award',
+  'Crystal cube award',
+  'Structured briefcase portfolio',
+  'First-day essentials pouch',
+  'Diwali sweets dry-fruit hamper',
+  'Festival hamper crate',
+  'Spiral A5 daily planner',
+  'Executive onboarding folio',
+  'New joiner onboarding hamper',
+  'Crystal diamond award',
+  'Glass medallion award',
+  'Metal tower trophy',
+  'Leadership recognition hamper',
+  'Kraft sustainable wrap kit',
 ]
-
-const OCCASION_TILE_PREFERRED = [
-  ['Starter welcome essentials kit', 'New joiner onboarding hamper', 'First-day essentials pouch'],
-  ['Appreciation thank-you box', 'Breakfast brunch basket', 'Leadership recognition hamper'],
-  ['Marble base trophy', 'Glass flame award', 'Crystal cube award'],
-  ['Matte black travel tumbler', 'Wireless mechanical keyboard', 'Wood desk organiser tray'],
-  ['Olive oil vinegar gift crate', 'Diwali sweets dry-fruit hamper', 'Festival hamper crate'],
-  ['Crystal diamond award', 'Glass medallion award', 'Metal tower trophy'],
-] as const
-
-/** Distinct preferred products per collection — no shared names across slugs. */
-const COLLECTION_TILE_PREFERRED: Record<string, string[]> = {
-  'executive-edit': ['Structured briefcase portfolio', 'Black softshell corporate jacket', 'Marble base trophy'],
-  'new-joiner-essentials': ['Starter welcome essentials kit', 'Office caddy welcome set', 'First-day essentials pouch'],
-  'client-appreciation': ['Appreciation thank-you box', 'Breakfast brunch basket', 'Calm hour gift set'],
-  'festival-gifting': ['Olive oil vinegar gift crate', 'Diwali sweets dry-fruit hamper', 'Festival hamper crate'],
-  'conference-and-events': ['Insulated coffee tumbler with lid', 'Wireless charging pad', 'Spiral A5 daily planner'],
-  'welcome-kits': ['Induction gift crate', 'Executive onboarding folio', 'New joiner onboarding hamper'],
-}
-
-const CATEGORY_TILE_PREFERRED: Record<string, string[]> = {
-  Drinkware: ['Matte black travel tumbler', 'Insulated coffee tumbler with lid', 'Frosted acrylic tumbler'],
-  'Bags & Travel': [
-    'Navy laptop daypack',
-    'Charcoal weekender duffle',
-    'Quilted laptop messenger',
-    'Structured beige tote',
-  ],
-  'Tech & Electronics': ['Wireless mechanical keyboard', 'Bamboo wireless charger pad', 'Wireless charging pad'],
-  'Desk & Stationery': ['Wood desk organiser tray', 'Forest hardcover notebook set', 'Sticky notes desk set'],
-  Apparel: ['Forest green corporate polo', 'Navy corporate polo shirt', 'Black softshell corporate jacket'],
-  'Hampers & Gift Sets': [
-    'Appreciation thank-you box',
-    'Breakfast brunch basket',
-    'Olive oil vinegar gift crate',
-    'Desk essentials starter kit',
-  ],
-  'Welcome Kits': ['Starter welcome essentials kit', 'Office caddy welcome set', 'Induction gift crate'],
-  'Eco-Friendly Gifts': ['Bamboo wireless charger pad', 'Kraft sustainable wrap kit'],
-  Wellness: ['Essential oil wellness trio', 'Calm hour gift set', 'Rolled wellness yoga mat'],
-  'Home & Lifestyle': ['Acacia serving tray', 'Linen throw blanket', 'Cotton waffle bathrobe'],
-  'Awards & Recognition': ['Marble base trophy', 'Glass flame award', 'Crystal cube award'],
-}
 
 const HOME_CATEGORY_TILES = [
   'Drinkware',
@@ -128,8 +181,9 @@ function scoreProduct(product: PublicProduct) {
   if (/studio-pack-/i.test(product.image_url || '')) score += 1600
   if (/\/catalogue-fill\//i.test(product.image_url || '')) score -= 4000
   if (/lifestyle|person|outdoor|hallway|office scene/i.test(product.description || '')) score -= 500
+  if (PREVIOUS_HOME_FEATURED.includes(product.name)) score -= 3500
   // Mild rotation so homepage regenerates with a fresh mix
-  score += (product.name.charCodeAt(0) * 17 + product.name.length * 13) % 400
+  score += (product.name.charCodeAt(0) * 31 + product.name.length * 19 + HOME_CURATION_SEED * 97) % 520
   return score
 }
 
@@ -277,8 +331,8 @@ export function curateTrendingProducts(
     .filter((product) => !isExclusiveGiftHamper(product))
     .sort(
       (a, b) =>
-        String(b.created_at || '').localeCompare(String(a.created_at || '')) ||
-        scoreProduct(b) - scoreProduct(a),
+        scoreProduct(b) - scoreProduct(a) ||
+        String(b.created_at || '').localeCompare(String(a.created_at || '')),
     )
   const selected: PublicProduct[] = []
   const { usedIds: used, usedImages } = usage
