@@ -18,7 +18,8 @@ export default async function ProductsPage({
   const showCost = canSeeCosts(profile.role)
   const params = await searchParams
   const search = (params.q || '').replace(/[,()*]/g, ' ').trim()
-  const statusFilter = params.status || 'all'
+  // Default to active so CRM matches the public frontend keep-set; use ?status=all for archived rows.
+  const statusFilter = params.status || 'active'
   const accessFilter = params.access ?? ''
   const categoryFilter = isUuid(params.category) ? params.category! : ''
   const currentPage = Math.max(1, Number.parseInt(params.page || '1', 10) || 1)
@@ -58,7 +59,7 @@ export default async function ProductsPage({
   const buildHref = (overrides: Record<string, string>) => {
     const next = new URLSearchParams()
     if (search) next.set('q', search)
-    if (statusFilter !== 'all') next.set('status', statusFilter)
+    if (statusFilter !== 'active') next.set('status', statusFilter)
     if (accessFilter) next.set('access', accessFilter)
     if (categoryFilter) next.set('category', categoryFilter)
     Object.entries(overrides).forEach(([key, value]) => {
@@ -75,7 +76,7 @@ export default async function ProductsPage({
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Product Catalogue</h1>
           <p className="mt-0.5 text-xs text-gray-500">
-            Every product carries a unique SKU and its own client visibility. {total} in the catalogue.
+            Every product carries a unique SKU and its own client visibility. {total} in this view.
           </p>
         </div>
         {['admin', 'sales'].includes(profile.role) && (
@@ -106,7 +107,7 @@ export default async function ProductsPage({
         <form className="flex w-full gap-2">
           {accessFilter ? <input type="hidden" name="access" value={accessFilter} /> : null}
           {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
-          {statusFilter !== 'all' ? <input type="hidden" name="status" value={statusFilter} /> : null}
+          {statusFilter !== 'active' ? <input type="hidden" name="status" value={statusFilter} /> : null}
           <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
@@ -129,9 +130,22 @@ export default async function ProductsPage({
           pathname="/crm/products"
           preserveParams={{
             ...(search ? { q: search } : {}),
-            ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+            ...(statusFilter !== 'active' ? { status: statusFilter } : {}),
+            ...(accessFilter ? { access: accessFilter } : {}),
+            ...(categoryFilter ? { category: categoryFilter } : {}),
           }}
           fields={[
+            {
+              key: 'status',
+              label: 'Status',
+              value: statusFilter === 'active' ? '' : statusFilter,
+              emptyLabel: 'Active',
+              options: [
+                { value: '', label: 'Active' },
+                { value: 'discontinued', label: 'Discontinued' },
+                { value: 'all', label: 'All statuses' },
+              ],
+            },
             {
               key: 'access',
               label: 'Visibility',
