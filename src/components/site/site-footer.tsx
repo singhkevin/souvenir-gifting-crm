@@ -16,8 +16,8 @@ export function SiteFooter({
 }) {
   return (
     <footer className="mt-0 border-t border-[#E8E4DE] bg-[#F6F4F1] text-[#1B2430]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
-        <div>
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-14 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
+        <div className="md:col-span-2 lg:col-span-1">
           <p className="font-serif text-3xl tracking-[0.06em]">GIFFTER</p>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#5C6570]">
             Your destination for curated corporate gifts — catalogue, quotation and fulfilment in one place.
@@ -26,7 +26,7 @@ export function SiteFooter({
 
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A3022]">Shop</p>
-          <div className="mt-4 flex flex-col gap-2 text-sm text-[#5C6570]">
+          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
             <Link href="/catalogue" className="hover:text-[#1B2430]">
               Catalogue
             </Link>
@@ -47,7 +47,7 @@ export function SiteFooter({
 
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A3022]">About us</p>
-          <div className="mt-4 flex flex-col gap-2 text-sm text-[#5C6570]">
+          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
             <Link href="/about" className="hover:text-[#1B2430]">
               About GIFFTER
             </Link>
@@ -65,7 +65,7 @@ export function SiteFooter({
 
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A3022]">Shop by price</p>
-          <div className="mt-4 flex flex-col gap-2 text-sm text-[#5C6570]">
+          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
             {SHOP_BY_PRICE.map((item) => (
               <Link key={item.href} href={item.href} className="hover:text-[#1B2430]">
                 {item.label}

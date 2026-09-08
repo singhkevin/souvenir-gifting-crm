@@ -75,7 +75,7 @@ export async function PublicHome() {
       />
 
       {/* Top Trending — Bombay Store pattern */}
-      <section className="bg-white py-14 sm:py-16">
+      <section className="bg-white py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <div className="flex items-end justify-between gap-4">
@@ -83,7 +83,7 @@ export async function PublicHome() {
                 <p className="store-eyebrow">Top trending</p>
                 <h2 className="store-section-title mt-2">Products teams love.</h2>
               </div>
-              <Link href="/catalogue?sort=newest" className="store-link hidden sm:inline">
+              <Link href="/catalogue?sort=newest" className="store-link shrink-0">
                 View all {ARROW}
               </Link>
             </div>
@@ -95,7 +95,7 @@ export async function PublicHome() {
       </section>
 
       {/* Featured Categories */}
-      <section className="bg-[#F6F4F1] py-14 sm:py-16">
+      <section className="bg-[#F6F4F1] py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <div className="flex items-end justify-between gap-4">
@@ -103,7 +103,7 @@ export async function PublicHome() {
                 <p className="store-eyebrow">Featured categories</p>
                 <h2 className="store-section-title mt-2">Shop by category.</h2>
               </div>
-              <Link href="/categories" className="store-link hidden sm:inline">
+              <Link href="/categories" className="store-link shrink-0">
                 All categories {ARROW}
               </Link>
             </div>
@@ -154,7 +154,7 @@ export async function PublicHome() {
         <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">Built for programmes</p>
-            <h2 className="mx-auto mt-4 max-w-3xl font-serif text-4xl tracking-tight sm:text-5xl">
+            <h2 className="mx-auto mt-4 max-w-3xl font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">
               Gifts that represent your brand.
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/80">
@@ -171,7 +171,7 @@ export async function PublicHome() {
       </section>
 
       {/* Collections */}
-      <section className="bg-white py-14 sm:py-16">
+      <section className="bg-white py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <p className="store-eyebrow">Collections</p>
@@ -217,7 +217,7 @@ export async function PublicHome() {
 
       {/* Featured gift story */}
       {story ? (
-        <section className="bg-[#F6F4F1] py-14 sm:py-20">
+        <section className="bg-[#F6F4F1] py-10 sm:py-16 lg:py-20">
           <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
             <Reveal>
               <div className="relative aspect-square overflow-hidden rounded-md catalogue-studio-field">
@@ -234,7 +234,7 @@ export async function PublicHome() {
             </Reveal>
             <Reveal delay={100}>
               <p className="store-eyebrow">Featured corporate gift</p>
-              <h2 className="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">
+              <h2 className="mt-3 font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">
                 One gift. A lasting impression.
               </h2>
               <p className="mt-4 text-[11px] uppercase tracking-[0.16em] text-[#5C6570]">{story.category_name}</p>
@@ -256,7 +256,7 @@ export async function PublicHome() {
       ) : null}
 
       {/* Shop by Occasion */}
-      <section className="bg-white py-14 sm:py-16">
+      <section className="bg-white py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <p className="store-eyebrow">Shop by occasion</p>
@@ -298,7 +298,7 @@ export async function PublicHome() {
 
       {/* Shop by price */}
       {budgetCounts.length > 0 ? (
-        <section className="bg-[#F6F4F1] py-14 sm:py-16">
+        <section className="bg-[#F6F4F1] py-10 sm:py-14 lg:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Reveal>
               <p className="store-eyebrow">Shop by price</p>
@@ -323,7 +323,7 @@ export async function PublicHome() {
       ) : null}
 
       {/* From the catalogue grid */}
-      <section className="bg-white py-14 sm:py-16">
+      <section className="bg-white py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <div className="flex items-end justify-between gap-4">
@@ -345,7 +345,7 @@ export async function PublicHome() {
       </section>
 
       {more.length > 0 ? (
-        <section className="bg-[#F6F4F1] py-14 sm:py-16">
+        <section className="bg-[#F6F4F1] py-10 sm:py-14 lg:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Reveal>
               <p className="store-eyebrow">Keep browsing</p>
@@ -361,7 +361,7 @@ export async function PublicHome() {
       ) : null}
 
       {/* Trust / why */}
-      <section className="bg-white py-14 sm:py-16">
+      <section className="bg-white py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <p className="store-eyebrow">Why GIFFTER</p>
@@ -396,7 +396,7 @@ export async function PublicHome() {
       </section>
 
       {/* Quote CTA */}
-      <section className="relative overflow-hidden py-20 text-center text-white">
+      <section className="relative overflow-hidden py-14 text-center text-white sm:py-20">
         <div className="absolute inset-0">
           <Image src="/site/cta-dark.webp" alt="" fill sizes="100vw" className="object-cover" />
           <div className="absolute inset-0 bg-[#0E1A13]/86" />
@@ -404,7 +404,7 @@ export async function PublicHome() {
         <div className="relative mx-auto max-w-3xl px-4 sm:px-6">
           <Reveal>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">Request a quote</p>
-            <h2 className="mt-4 font-serif text-4xl tracking-tight sm:text-5xl">
+            <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">
               Ready for your next gifting programme?
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/80">

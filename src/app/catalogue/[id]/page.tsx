@@ -34,7 +34,7 @@ export default async function PublicProductPage({ params }: Props) {
 
   return (
     <SiteShell>
-      <article className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:py-16">
+      <article className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:gap-10 sm:px-6 sm:py-12 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:py-16">
         <div className="overflow-hidden rounded-md catalogue-studio-field">
           <ProductImage
             src={product.image_url}
@@ -42,7 +42,7 @@ export default async function PublicProductPage({ params }: Props) {
             size="hero"
             fit="contain"
             fadeEdges
-            className="min-h-[22rem] h-full aspect-square bg-transparent"
+            className="min-h-[16rem] h-full aspect-square bg-transparent sm:min-h-[22rem]"
             imgClassName="catalogue-product-img scale-[1.04]"
           />
         </div>
@@ -50,7 +50,7 @@ export default async function PublicProductPage({ params }: Props) {
           {product.category_name ? (
             <p className="text-[11px] uppercase tracking-[0.18em] text-[#5C6570]">{product.category_name}</p>
           ) : null}
-          <h1 className="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">{product.name}</h1>
+          <h1 className="mt-3 font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">{product.name}</h1>
           {product.brand_name ? <p className="mt-3 text-sm text-[#5C6570]">{product.brand_name}</p> : null}
           <p className="mt-6 text-2xl font-semibold text-[#1A3022]">{formatCurrency(product.price)}</p>
           <p className="mt-2 text-xs text-[#5C6570]">Minimum order {product.moq || 1} units</p>
@@ -71,14 +71,17 @@ export default async function PublicProductPage({ params }: Props) {
             </div>
           </dl>
 
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4">
             <Link
               href={quoteHref}
-              className="inline-flex justify-center bg-[#1A3022] px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
+              className="inline-flex justify-center bg-[#1A3022] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white sm:py-3"
             >
               Request a Quote
             </Link>
-            <Link href="/catalogue" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]">
+            <Link
+              href="/catalogue"
+              className="inline-flex justify-center py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]"
+            >
               Back to catalogue
             </Link>
           </div>

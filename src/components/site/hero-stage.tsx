@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ProductImage } from '@/components/ui/product-image'
+import { formatCurrency } from '@/lib/utils'
 import type { PublicProduct } from '@/lib/catalogue/products'
 
 const SLOT_COUNT = 4
@@ -103,6 +104,7 @@ export function HeroStage({
     .filter(Boolean) as PublicProduct[]
 
   const contentClass = phase === 'out' || phase === 'in' ? 'opacity-0' : 'opacity-100'
+  const mobilePreview = floats.slice(0, 3)
 
   return (
     <section className="relative isolate overflow-hidden bg-[#1A3022] text-white">
@@ -118,32 +120,68 @@ export function HeroStage({
         <div className="absolute inset-0 bg-gradient-to-r from-[#0E1A13] via-[#1A3022]/92 to-[#1A3022]/75" />
       </div>
 
-      <div className="relative mx-auto grid min-h-[78vh] max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
+      <div className="relative mx-auto grid min-h-[auto] max-w-7xl items-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 lg:min-h-[78vh] lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
         <div>
-          <p className="font-serif text-5xl tracking-[0.08em] text-white sm:text-6xl lg:text-7xl">GIFFTER</p>
-          <h1 className="mt-5 max-w-xl font-serif text-3xl leading-tight tracking-tight text-white/95 sm:text-4xl lg:text-[2.75rem]">
+          <p className="font-serif text-4xl tracking-[0.08em] text-white sm:text-6xl lg:text-7xl">GIFFTER</p>
+          <h1 className="mt-4 max-w-xl font-serif text-[1.75rem] leading-tight tracking-tight text-white/95 sm:mt-5 sm:text-4xl lg:text-[2.75rem]">
             Corporate gifting, designed to be remembered.
           </h1>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-white/80">
+          <p className="mt-4 max-w-md text-sm leading-relaxed text-white/80 sm:mt-5 sm:text-base">
             Hand-picked gifts for teams, clients and brands — ready to quote and fulfil.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
             <Link
               href="/catalogue"
-              className="bg-white px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1A3022]"
+              className="inline-flex items-center justify-center bg-white px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1A3022] sm:py-3"
             >
               Explore Catalogue
             </Link>
             <Link
               href="/request-quote"
-              className="border border-white/40 px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-white/10"
+              className="inline-flex items-center justify-center border border-white/40 px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-white/10 sm:py-3"
             >
               Request a Quote
             </Link>
           </div>
-          <p className="mt-6 text-xs tracking-wide text-white/70">{catalogueCount} gifts in the live catalogue</p>
+          <p className="mt-5 text-xs tracking-wide text-white/70 sm:mt-6">
+            {catalogueCount} gifts in the live catalogue
+          </p>
         </div>
 
+        {/* Mobile product preview strip */}
+        {mobilePreview.length > 0 ? (
+          <div className="-mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
+            <div className={`flex w-max gap-3 transition-opacity duration-700 ${contentClass}`}>
+              {mobilePreview.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/catalogue/${product.id}`}
+                  className="w-[42vw] max-w-[11.5rem] shrink-0 overflow-hidden rounded-md bg-white shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
+                >
+                  <div className="aspect-square catalogue-studio-field">
+                    <ProductImage
+                      src={product.image_url}
+                      alt={product.name}
+                      size="sm"
+                      fit="contain"
+                      fadeEdges
+                      className="h-full w-full bg-transparent"
+                      imgClassName="catalogue-product-img"
+                    />
+                  </div>
+                  <div className="border-t border-[#E8E4DE] px-2.5 py-2 text-[#1B2430]">
+                    <p className="truncate text-center text-[11px] leading-snug">{product.name}</p>
+                    <p className="mt-0.5 text-center text-[11px] font-semibold text-[#1A3022]">
+                      {formatCurrency(product.price)}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Desktop collage */}
         <div className="relative mx-auto hidden h-[32rem] w-full max-w-[30rem] lg:block">
           {floats.map((product, index) => {
             const layout = SLOT_LAYOUT[index % SLOT_LAYOUT.length]
@@ -168,9 +206,7 @@ export function HeroStage({
                   </div>
                   <div className="border-t border-[#E8E4DE] bg-white px-3 py-2.5 text-[#1B2430]">
                     <p className="truncate text-center text-[12px] leading-snug">{product.name}</p>
-                    <p className="mt-0.5 text-center text-[11px] font-semibold text-[#1A3022]">
-                      View gift
-                    </p>
+                    <p className="mt-0.5 text-center text-[11px] font-semibold text-[#1A3022]">View gift</p>
                   </div>
                 </div>
               </Link>

@@ -82,6 +82,7 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
   h1,
@@ -141,7 +142,7 @@
   }
 
   .store-section-title {
-    @apply font-serif text-3xl tracking-tight text-[#1B2430] sm:text-4xl;
+    @apply font-serif text-[1.75rem] tracking-tight text-[#1B2430] sm:text-3xl lg:text-4xl;
   }
 
   .store-eyebrow {

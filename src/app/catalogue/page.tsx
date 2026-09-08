@@ -127,8 +127,8 @@ export default async function CataloguePage({
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[16.5rem_minmax(0,1fr)]">
-          {/* Sidebar filters — sticky + independently scrollable */}
-          <aside className="lg:sticky lg:top-28 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-2 [scrollbar-width:thin]">
+          {/* Sidebar filters — desktop only; mobile uses horizontal rows below */}
+          <aside className="hidden lg:sticky lg:top-28 lg:block lg:max-h-[calc(100vh-8rem)] lg:self-start lg:overflow-y-auto lg:pr-2 [scrollbar-width:thin]">
             <div className="space-y-8">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Category</p>
@@ -178,7 +178,7 @@ export default async function CataloguePage({
 
           {/* Results */}
           <div className="min-w-0">
-            <form className="flex flex-col gap-4 border border-[#E8E4DE] bg-white p-4 sm:flex-row sm:items-center sm:gap-6">
+            <form className="flex flex-col gap-3 border border-[#E8E4DE] bg-white p-3 sm:flex-row sm:items-center sm:gap-6 sm:p-4">
               {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
               {budget ? <input type="hidden" name="budget" value={budget} /> : null}
               <label className="min-w-0 flex-1">
@@ -187,16 +187,16 @@ export default async function CataloguePage({
                   name="q"
                   defaultValue={search}
                   placeholder="Search products"
-                  className="w-full bg-transparent text-sm text-[#1B2430] outline-none placeholder:text-[#8A929C]"
+                  className="w-full bg-transparent py-1 text-base text-[#1B2430] outline-none placeholder:text-[#8A929C] sm:text-sm"
                 />
               </label>
-              <div className="flex items-center gap-3 border-t border-[#E8E4DE] pt-3 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6">
-                <label className="flex items-center gap-2 text-sm text-[#5C6570]">
+              <div className="flex flex-col gap-3 border-t border-[#E8E4DE] pt-3 sm:flex-row sm:items-center sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6">
+                <label className="flex items-center justify-between gap-2 text-sm text-[#5C6570] sm:justify-start">
                   <span className="whitespace-nowrap">Sort by</span>
                   <select
                     name="sort"
                     defaultValue={sort}
-                    className="bg-transparent py-1 text-sm text-[#1B2430] outline-none"
+                    className="max-w-[60%] bg-transparent py-1 text-sm text-[#1B2430] outline-none sm:max-w-none"
                   >
                     <option value="name">A–Z</option>
                     <option value="newest">Newest</option>
@@ -206,7 +206,7 @@ export default async function CataloguePage({
                 </label>
                 <button
                   type="submit"
-                  className="bg-[#1A3022] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white"
+                  className="bg-[#1A3022] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white sm:py-2"
                 >
                   Apply
                 </button>

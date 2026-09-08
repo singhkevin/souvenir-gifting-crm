@@ -63,7 +63,7 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
       </div>
 
       {view === 'grid' ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-6 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
           {products.map((product) => (
             <SiteProductCard key={product.id} product={product} />
           ))}
