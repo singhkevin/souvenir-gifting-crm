@@ -35,14 +35,15 @@ export default async function PublicProductPage({ params }: Props) {
   return (
     <SiteShell>
       <article className="mx-auto grid max-w-6xl gap-12 px-5 py-14 sm:px-8 lg:grid-cols-2 lg:py-20">
-        <div className="bg-[#EDE6DB] overflow-hidden">
+        <div className="overflow-hidden rounded-[1.35rem] catalogue-studio-field">
           <ProductImage
             src={product.image_url}
             alt={product.name}
             size="hero"
             fit="contain"
-            className="min-h-[22rem] h-full aspect-square bg-[#EDE6DB]"
-            imgClassName="catalogue-product-img"
+            fadeEdges
+            className="min-h-[22rem] h-full aspect-square bg-transparent"
+            imgClassName="catalogue-product-img scale-[1.04]"
           />
         </div>
         <div className="lg:py-6">

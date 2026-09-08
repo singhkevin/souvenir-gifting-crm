@@ -114,18 +114,38 @@
     @apply bg-white border border-[#E5DFD5] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.03)];
   }
 
-  /* Product images must show the COMPLETE product.
-     Do not scale/crop via CSS — composition belongs in the source asset. */
+  /*
+    Single studio tone — matches warm product photo fields.
+    Avoid stacking #FAF7F2 / #F7F4EF / #EDE6DB mats around the JPEG.
+  */
+  .catalogue-studio-field {
+    background-color: #e4d9c8;
+  }
+
+  /* Soft edge fade so the photo rectangle dissolves into the studio field. */
   .catalogue-product-img {
     object-fit: contain;
-    object-position: center;
-  }
-  .group:hover .catalogue-product-img {
-    scale: 1.02;
+    object-position: center center;
+    width: 100%;
+    height: 100%;
+    -webkit-mask-image: radial-gradient(
+      ellipse 86% 86% at 50% 48%,
+      #000 48%,
+      rgba(0, 0, 0, 0.72) 68%,
+      rgba(0, 0, 0, 0.28) 84%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      ellipse 86% 86% at 50% 48%,
+      #000 48%,
+      rgba(0, 0, 0, 0.72) 68%,
+      rgba(0, 0, 0, 0.28) 84%,
+      transparent 100%
+    );
   }
   @media (prefers-reduced-motion: reduce) {
-    .group:hover .catalogue-product-img {
-      scale: 1;
+    .catalogue-product-img {
+      transform: none;
     }
   }
 

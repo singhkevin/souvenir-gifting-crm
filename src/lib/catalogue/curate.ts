@@ -14,63 +14,64 @@ const PRIORITY_CATEGORIES = [
   'Awards & Recognition',
 ] as const
 
-/** Hero floats — mixed categories, complete studio products. */
+/** Hero floats — mixed categories, full-bleed studio products. */
 const HERO_PREFERRED = [
-  'Matte black travel tumbler',
+  'Appreciation thank-you box',
+  'Breakfast brunch basket',
+  'Olive oil vinegar gift crate',
   'Wireless mechanical keyboard',
   'Navy laptop daypack',
-  'Desk essentials starter kit',
-  'Forest hardcover notebook set',
 ]
 
 /** Featured story — one hero visual only (do not reuse elsewhere on homepage). */
 const STORY_PREFERRED = [
+  'Festive dry fruit wooden tray',
+  'Coffee connoisseur box',
+  'Desk essentials starter kit',
   'Premium induction gift box',
-  'Eco green living kit',
-  'Leadership recognition hamper',
 ]
 
 const OCCASION_TILE_PREFERRED = [
-  ['New joiner onboarding hamper', 'Office caddy welcome set', 'First-day essentials pouch'],
-  ['Leadership recognition hamper', 'Acacia serving tray', 'Calm hour gift set'],
-  ['Silver cup trophy', 'Achievement medal with ribbon', 'Crystal recognition plaque'],
+  ['Starter welcome essentials kit', 'New joiner onboarding hamper', 'First-day essentials pouch'],
+  ['Appreciation thank-you box', 'Breakfast brunch basket', 'Leadership recognition hamper'],
+  ['Marble base trophy', 'Glass flame award', 'Crystal cube award'],
   ['Matte black travel tumbler', 'Wireless mechanical keyboard', 'Wood desk organiser tray'],
-  ['Festive corporate hamper crate', 'Diwali sweets dry-fruit hamper', 'Festival hamper crate'],
-  ['Crystal recognition plaque', 'Achievement medal with ribbon', 'Silver cup trophy'],
+  ['Olive oil vinegar gift crate', 'Diwali sweets dry-fruit hamper', 'Festival hamper crate'],
+  ['Crystal diamond award', 'Glass medallion award', 'Metal tower trophy'],
 ] as const
 
 /** Distinct preferred products per collection — no shared names across slugs. */
 const COLLECTION_TILE_PREFERRED: Record<string, string[]> = {
-  'executive-edit': ['Structured briefcase portfolio', 'Black softshell corporate jacket', 'Silver cup trophy'],
-  'new-joiner-essentials': ['New joiner onboarding hamper', 'Office caddy welcome set', 'First-day essentials pouch'],
-  'client-appreciation': ['Leadership recognition hamper', 'Acacia serving tray', 'Calm hour gift set'],
-  'festival-gifting': ['Festive corporate hamper crate', 'Diwali sweets dry-fruit hamper', 'Festival hamper crate'],
-  'conference-and-events': ['Insulated coffee tumbler with lid', 'Portable Bluetooth speaker', 'Spiral A5 daily planner'],
-  'welcome-kits': ['Starter welcome essentials kit', 'Induction gift crate', 'Executive onboarding folio'],
+  'executive-edit': ['Structured briefcase portfolio', 'Black softshell corporate jacket', 'Marble base trophy'],
+  'new-joiner-essentials': ['Starter welcome essentials kit', 'Office caddy welcome set', 'First-day essentials pouch'],
+  'client-appreciation': ['Appreciation thank-you box', 'Breakfast brunch basket', 'Calm hour gift set'],
+  'festival-gifting': ['Olive oil vinegar gift crate', 'Diwali sweets dry-fruit hamper', 'Festival hamper crate'],
+  'conference-and-events': ['Insulated coffee tumbler with lid', 'Wireless charging pad', 'Spiral A5 daily planner'],
+  'welcome-kits': ['Induction gift crate', 'Executive onboarding folio', 'New joiner onboarding hamper'],
 }
 
 const CATEGORY_TILE_PREFERRED: Record<string, string[]> = {
-  Drinkware: ['Matte black travel tumbler', 'Insulated coffee tumbler with lid'],
+  Drinkware: ['Matte black travel tumbler', 'Insulated coffee tumbler with lid', 'Frosted acrylic tumbler'],
   'Bags & Travel': [
     'Navy laptop daypack',
     'Charcoal weekender duffle',
     'Quilted laptop messenger',
-    'Structured briefcase portfolio',
+    'Structured beige tote',
   ],
-  'Tech & Electronics': ['Wireless mechanical keyboard', '65W dual-port GaN charger', 'Noise cancelling earbuds'],
-  'Desk & Stationery': ['Wood desk organiser tray', 'Forest hardcover notebook set', 'Executive pen set'],
+  'Tech & Electronics': ['Wireless mechanical keyboard', 'Bamboo wireless charger pad', 'Wireless charging pad'],
+  'Desk & Stationery': ['Wood desk organiser tray', 'Forest hardcover notebook set', 'Sticky notes desk set'],
   Apparel: ['Forest green corporate polo', 'Navy corporate polo shirt', 'Black softshell corporate jacket'],
   'Hampers & Gift Sets': [
+    'Appreciation thank-you box',
+    'Breakfast brunch basket',
+    'Olive oil vinegar gift crate',
     'Desk essentials starter kit',
-    'Eco green living kit',
-    'Festive dry fruit wooden tray',
-    'Tech desk tidy gift set',
   ],
   'Welcome Kits': ['Starter welcome essentials kit', 'Office caddy welcome set', 'Induction gift crate'],
-  'Eco-Friendly Gifts': ['Bamboo wireless charger pad', 'Recycled notebook set'],
+  'Eco-Friendly Gifts': ['Bamboo wireless charger pad', 'Kraft sustainable wrap kit'],
   Wellness: ['Essential oil wellness trio', 'Calm hour gift set', 'Rolled wellness yoga mat'],
   'Home & Lifestyle': ['Acacia serving tray', 'Linen throw blanket', 'Cotton waffle bathrobe'],
-  'Awards & Recognition': ['Achievement medal with ribbon', 'Silver cup trophy', 'Crystal recognition plaque'],
+  'Awards & Recognition': ['Marble base trophy', 'Glass flame award', 'Crystal cube award'],
 }
 
 const HOME_CATEGORY_TILES = [
@@ -90,7 +91,7 @@ function isExclusiveGiftHamper(product: PublicProduct) {
 function isMisalignedHomepageImage(product: PublicProduct) {
   const name = product.name
   if (
-    /lanyard|badge holder|pashmina wrap|double-wall glass tumbler|hard-shell cabin trolley|leather work bag|gold laurel|executive gift box|graphite over-ear headphones|laptop backpack 20l|matte green insulated bottle|hybrid work-from-home kit/i.test(
+    /lanyard|badge holder|pashmina wrap|double-wall glass tumbler|hard-shell cabin trolley|leather work bag|gold laurel|executive gift box|graphite over-ear headphones|laptop backpack 20l|matte green insulated bottle|hybrid work-from-home kit|hardcover planner|bamboo desk set|recycled rpet notebook|ceramic mug 350ml|northsteel|wireless mouse|passport organiser|cottonline|ceramic aroma diffuser/i.test(
       name,
     )
   ) {
@@ -118,14 +119,17 @@ function imageKey(product: PublicProduct) {
 function scoreProduct(product: PublicProduct) {
   let score = product.price || 0
   if (hasImage(product)) score += 5000
-  if (/square-/i.test(product.image_url || '') || /\/site\/home-/i.test(product.image_url || '')) score += 2500
+  // Full-bleed square assets (like appreciation / brunch reference) rank highest
+  if (/square-/i.test(product.image_url || '')) score += 2800
+  if (/\/site\/home-/i.test(product.image_url || '')) score += 2200
   if (PRIORITY_CATEGORIES.includes(product.category_name as (typeof PRIORITY_CATEGORIES)[number])) score += 1200
   if (isWatch(product)) score -= 8000
   if (isMisalignedHomepageImage(product)) score -= 12000
-  // Prefer reframed studio-pack assets for homepage consistency
-  if (/studio-pack-/i.test(product.image_url || '')) score += 1800
+  if (/studio-pack-/i.test(product.image_url || '')) score += 1600
   if (/\/catalogue-fill\//i.test(product.image_url || '')) score -= 4000
   if (/lifestyle|person|outdoor|hallway|office scene/i.test(product.description || '')) score -= 500
+  // Mild rotation so homepage regenerates with a fresh mix
+  score += (product.name.charCodeAt(0) * 17 + product.name.length * 13) % 400
   return score
 }
 

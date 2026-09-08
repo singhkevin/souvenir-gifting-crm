@@ -4,21 +4,31 @@ import { formatCurrency } from '@/lib/utils'
 import type { PublicProduct } from '@/lib/catalogue/products'
 import { cn } from '@/lib/utils'
 
+/**
+ * Product listing: one studio tone, feathered photo edges — no nested mats.
+ */
 export function SiteProductCard({
   product,
   featured = false,
 }: {
   product: PublicProduct
   featured?: boolean
+  /** @deprecated kept for call-site compatibility; badges removed for cleaner listing */
+  showBadge?: boolean
 }) {
   return (
     <Link
       href={`/catalogue/${product.id}`}
-      className={cn('group block text-inherit hover:text-inherit', featured ? 'space-y-4' : 'space-y-3')}
+      className={cn(
+        'group block text-inherit transition-transform duration-300 hover:text-inherit motion-reduce:transition-none',
+        'hover:-translate-y-0.5',
+      )}
     >
       <div
         className={cn(
-          'relative overflow-hidden bg-[#E8E2D8]',
+          'relative overflow-hidden rounded-[1.35rem] catalogue-studio-field',
+          'shadow-[0_8px_24px_rgba(26,48,34,0.06)]',
+          'transition-shadow duration-300 group-hover:shadow-[0_14px_32px_rgba(26,48,34,0.1)]',
           featured ? 'aspect-[4/5]' : 'aspect-square',
         )}
       >
@@ -27,29 +37,27 @@ export function SiteProductCard({
           alt={product.name}
           size="md"
           fit="contain"
-          className="h-full min-h-0 w-full bg-[#EDE6DB]"
-          imgClassName="catalogue-product-img transition-transform duration-700 ease-out"
+          fadeEdges
+          className="absolute inset-0 h-full w-full bg-transparent"
+          imgClassName="catalogue-product-img scale-[1.04]"
         />
-        <div className="pointer-events-none absolute inset-0 bg-[#1A3022]/0 transition-colors duration-500 group-hover:bg-[#1A3022]/22 motion-reduce:group-hover:bg-transparent" />
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 px-4 py-4 text-[11px] font-medium uppercase tracking-[0.18em] text-[#FAF7F2] opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 max-lg:translate-y-0 max-lg:opacity-100 max-lg:bg-gradient-to-t max-lg:from-[#1A3022]/70 max-lg:pt-10 motion-reduce:hidden">
-          View Product →
-        </span>
       </div>
-      <div className="space-y-1">
-        {product.category_name && (
-          <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[#5A5348]">
+
+      <div className="mt-3.5 space-y-1 px-0.5 text-center sm:mt-4">
+        {product.category_name ? (
+          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#7A7267]">
             {product.category_name}
           </p>
-        )}
+        ) : null}
         <h3
           className={cn(
             'text-[#1C1917] line-clamp-2',
-            featured ? 'font-serif text-2xl leading-snug' : 'text-[15px] font-medium leading-snug',
+            featured ? 'font-serif text-xl leading-snug' : 'text-[14px] font-medium leading-snug sm:text-[15px]',
           )}
         >
           {product.name}
         </h3>
-        <p className="text-sm font-medium text-[#1A3022]">{formatCurrency(product.price)}</p>
+        <p className="text-[15px] font-semibold text-[#1A3022]">{formatCurrency(product.price)}</p>
       </div>
     </Link>
   )

@@ -2,9 +2,42 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ProductImage } from '@/components/ui/product-image'
 import type { PublicProduct } from '@/lib/catalogue/products'
+
+const SLOT_COUNT = 4
+const SLIDE_MS = 3000
+const BRIGHT_MS = 200
+const FADE_OUT_MS = 450
+
+/** Bigger cards, tighter overlap — collage reads as one cluster. */
+const SLOT_LAYOUT = [
+  { className: 'left-0 top-0 w-[16.5rem]', z: 20 },
+  { className: 'right-0 top-8 w-[15.5rem]', z: 30 },
+  { className: 'left-8 bottom-0 w-[17.5rem]', z: 40 },
+  { className: 'right-6 bottom-10 w-[15rem]', z: 10 },
+] as const
+
+type TransitionPhase = 'idle' | 'bright' | 'out' | 'in'
+
+function nextBatch(pool: PublicProduct[], start: number, count: number, avoid: string[] = []) {
+  const ids: string[] = []
+  let idx = start % pool.length
+  let attempts = 0
+  while (ids.length < count && attempts < pool.length * 2) {
+    const candidate = pool[idx]
+    if (!ids.includes(candidate.id) && (!avoid.includes(candidate.id) || pool.length <= count)) {
+      ids.push(candidate.id)
+    }
+    idx = (idx + 1) % pool.length
+    attempts++
+  }
+  while (ids.length < count && pool.length) {
+    ids.push(pool[ids.length % pool.length].id)
+  }
+  return { ids, nextCursor: idx % pool.length }
+}
 
 export function HeroStage({
   products,
@@ -13,22 +46,85 @@ export function HeroStage({
   products: PublicProduct[]
   catalogueCount: number
 }) {
-  const floats = products.slice(0, 4)
-  const [active, setActive] = useState(0)
+  const pool = useMemo(
+    () => products.filter((product) => Boolean(product.image_url?.trim())),
+    [products],
+  )
+
+  const [slotIds, setSlotIds] = useState<string[]>([])
+  const [phase, setPhase] = useState<TransitionPhase>('idle')
+  const cursorRef = useRef(0)
+  const slotIdsRef = useRef<string[]>([])
 
   useEffect(() => {
-    if (floats.length < 2) return
+    slotIdsRef.current = slotIds
+  }, [slotIds])
+
+  useEffect(() => {
+    if (!pool.length) {
+      setSlotIds([])
+      return
+    }
+    const { ids, nextCursor } = nextBatch(pool, 0, Math.min(SLOT_COUNT, pool.length))
+    setSlotIds(ids)
+    cursorRef.current = nextCursor
+    setPhase('idle')
+  }, [pool])
+
+  useEffect(() => {
+    if (pool.length < 2) return
     const reduced =
       typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) return
+
+    const timers: number[] = []
+
     const timer = window.setInterval(() => {
-      setActive((current) => (current + 1) % floats.length)
-    }, 4200)
-    return () => window.clearInterval(timer)
-  }, [floats.length])
+      if (!slotIdsRef.current.length) return
+
+      setPhase('bright')
+      timers.push(
+        window.setTimeout(() => {
+          setPhase('out')
+          timers.push(
+            window.setTimeout(() => {
+              const current = slotIdsRef.current
+              const { ids, nextCursor } = nextBatch(pool, cursorRef.current, current.length, current)
+              cursorRef.current = nextCursor
+              setSlotIds(ids)
+              setPhase('in')
+              timers.push(
+                window.setTimeout(() => {
+                  setPhase('idle')
+                }, 40),
+              )
+            }, FADE_OUT_MS),
+          )
+        }, BRIGHT_MS),
+      )
+    }, SLIDE_MS)
+
+    return () => {
+      window.clearInterval(timer)
+      timers.forEach((id) => window.clearTimeout(id))
+    }
+  }, [pool])
+
+  const floats = slotIds
+    .map((id) => pool.find((product) => product.id === id))
+    .filter(Boolean) as PublicProduct[]
+
+  const contentClass =
+    phase === 'bright'
+      ? 'opacity-100 brightness-[1.55] contrast-110'
+      : phase === 'out'
+        ? 'opacity-0 brightness-[1.75]'
+        : phase === 'in'
+          ? 'opacity-0 brightness-[1.35]'
+          : 'opacity-100 brightness-100'
 
   return (
-    <section className="relative isolate min-h-[88vh] overflow-hidden bg-[#1A3022] text-[#FAF7F2]">
+    <section className="relative isolate min-h-[92vh] overflow-hidden bg-[#1A3022] text-[#FAF7F2]">
       <div className="absolute inset-0">
         <Image
           src="/site/hero-composition.webp"
@@ -36,14 +132,14 @@ export function HeroStage({
           fill
           priority
           sizes="100vw"
-          className="object-cover scale-[1.03] animate-[giffter-drift_22s_ease-in-out_infinite] motion-reduce:animate-none"
+          className="object-cover scale-[1.02]"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#102018]/95 via-[#1A3022]/88 to-[#1A3022]/78" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0E1A13]/75 via-transparent to-[#1A3022]/40" />
         <div className="absolute inset-0 bg-[#1A3022]/25" />
       </div>
 
-      <div className="relative mx-auto grid min-h-[88vh] max-w-6xl items-end gap-10 px-5 pb-16 pt-28 sm:px-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:pb-24 lg:pt-32">
+      <div className="relative mx-auto grid min-h-[92vh] max-w-6xl items-end gap-8 px-5 pb-16 pt-28 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:pb-24 lg:pt-32">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-[#D6CEBE]/90">GIFFTER</p>
           <h1 className="mt-5 max-w-xl font-serif text-[2.8rem] leading-[1.02] tracking-tight text-[#FAF7F2] sm:text-6xl lg:text-[4.4rem]">
@@ -73,42 +169,38 @@ export function HeroStage({
           </p>
         </div>
 
-        <div className="relative hidden h-[28rem] lg:block">
+        <div className="relative mx-auto hidden h-[36rem] w-full max-w-[34rem] lg:block xl:h-[40rem]">
           {floats.map((product, index) => {
-            const positions = [
-              'left-6 top-4 w-44',
-              'right-2 top-16 w-40',
-              'left-16 bottom-8 w-48',
-              'right-8 bottom-20 w-36',
-            ]
-            const isActive = index === active
+            const layout = SLOT_LAYOUT[index % SLOT_LAYOUT.length]
             return (
               <Link
-                key={product.id}
+                key={`slot-${index}`}
                 href={`/catalogue/${product.id}`}
-                className={`absolute overflow-hidden border border-white/15 bg-[#FAF7F2]/95 shadow-[0_18px_50px_rgba(0,0,0,0.28)] transition-all duration-700 ease-out motion-reduce:transition-none ${
-                  positions[index % positions.length]
-                } ${isActive ? 'z-10 scale-105 opacity-100' : 'z-0 scale-100 opacity-80'}`}
-                style={{
-                  animation: `giffter-float ${10 + index * 2}s ease-in-out infinite`,
-                  animationDelay: `${index * 0.4}s`,
-                }}
+                className={`absolute overflow-hidden rounded-[1.35rem] catalogue-studio-field shadow-[0_14px_40px_rgba(0,0,0,0.18)] ${layout.className}`}
+                style={{ zIndex: layout.z }}
               >
-                <div className="aspect-square overflow-hidden">
-                  <ProductImage
-                    src={product.image_url}
-                    alt={product.name}
-                    size="md"
-                    fit="contain"
-                    className="h-full min-h-0 w-full bg-[#EDE6DB]"
-                    imgClassName="catalogue-product-img"
-                  />
-                </div>
-                <div className="border-t border-[#E5DFD5]/70 px-3 py-2.5 text-[#1C1917]">
-                  <p className="truncate text-[10px] uppercase tracking-[0.16em] text-[#3F3A34]">
-                    {product.category_name}
-                  </p>
-                  <p className="mt-0.5 truncate font-serif text-sm">{product.name}</p>
+                <div
+                  className={`transition-[opacity,filter] duration-[450ms] ease-out motion-reduce:transition-none ${contentClass}`}
+                >
+                  <div className="aspect-square overflow-hidden catalogue-studio-field">
+                    <ProductImage
+                      src={product.image_url}
+                      alt={product.name}
+                      size="md"
+                      fit="contain"
+                      fadeEdges
+                      className="h-full min-h-0 w-full bg-transparent"
+                      imgClassName="catalogue-product-img scale-[1.05]"
+                    />
+                  </div>
+                  <div className="border-t border-[#1A3022]/08 bg-[#E4D9C8] px-4 py-3 text-[#1C1917]">
+                    <p className="truncate text-[10px] uppercase tracking-[0.16em] text-[#2A342C]/90">
+                      {product.category_name}
+                    </p>
+                    <p className="mt-0.5 truncate font-serif text-[15px] leading-snug text-[#122018]">
+                      {product.name}
+                    </p>
+                  </div>
                 </div>
               </Link>
             )

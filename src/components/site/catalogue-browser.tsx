@@ -76,13 +76,14 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
               href={`/catalogue/${product.id}`}
               className="grid grid-cols-[5rem_1fr_auto] items-center gap-4 py-4 text-inherit hover:text-inherit sm:grid-cols-[6.5rem_1fr_auto] sm:gap-5"
             >
-              <div className="aspect-square overflow-hidden bg-[#EFE8DC]">
+              <div className="aspect-square overflow-hidden rounded-2xl catalogue-studio-field">
                 <ProductImage
                   src={product.image_url}
                   alt={product.name}
                   size="sm"
                   fit="contain"
-                  className="h-full w-full min-h-0 bg-[#EDE6DB]"
+                  fadeEdges
+                  className="h-full w-full min-h-0 bg-transparent"
                   imgClassName="catalogue-product-img"
                 />
               </div>

@@ -7,6 +7,9 @@ import { cn } from '@/lib/utils'
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'hero'
 type Fit = 'contain' | 'cover'
 
+/** Warm studio field — keep in sync with `.catalogue-studio-field` in globals.css */
+export const STUDIO_FIELD = '#E4D9C8'
+
 const sizeWrap: Record<Size, string> = {
   xs: 'w-8 h-8',
   sm: 'w-14 h-14',
@@ -26,7 +29,8 @@ function usableSrc(src?: string | null): string | null {
 function Fallback({ alt, compact }: { alt: string; compact: boolean }) {
   return (
     <div
-      className="flex h-full w-full flex-col items-center justify-center gap-1 bg-[#EFE8DC] text-[#1A3022]"
+      className="flex h-full w-full flex-col items-center justify-center gap-1 text-[#1A3022]"
+      style={{ backgroundColor: STUDIO_FIELD }}
       role="img"
       aria-label={alt || 'Product'}
     >
@@ -47,6 +51,7 @@ export function ProductImage({
   fit = 'contain',
   className = '',
   imgClassName = '',
+  fadeEdges = false,
 }: {
   src?: string | null
   alt: string
@@ -54,6 +59,8 @@ export function ProductImage({
   fit?: Fit
   className?: string
   imgClassName?: string
+  /** Feather photo edges into the studio field (public catalogue tiles). */
+  fadeEdges?: boolean
 }) {
   const resolved = usableSrc(src)
   const [failed, setFailed] = React.useState(false)
@@ -69,10 +76,14 @@ export function ProductImage({
     setFailed(false)
   }, [resolved])
 
+  const wantsFade =
+    fadeEdges ||
+    imgClassName.includes('catalogue-product-img')
+
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-[#F7F4EF] flex items-center justify-center',
+        'relative overflow-hidden flex items-center justify-center catalogue-studio-field',
         fillParent ? 'h-full min-h-0 w-full' : sizeWrap[size],
         className,
       )}
@@ -88,6 +99,7 @@ export function ProductImage({
             'h-full w-full',
             fit === 'cover' ? 'object-cover' : 'object-contain',
             fit === 'contain' && compact ? 'p-0.5' : fit === 'contain' ? 'p-0' : '',
+            wantsFade && !imgClassName.includes('catalogue-product-img') ? 'catalogue-product-img' : '',
             imgClassName,
           )}
           onError={() => setFailed(true)}

@@ -8,9 +8,9 @@ export function ProductRail({ products }: { products: PublicProduct[] }) {
 
   return (
     <div className="-mx-5 overflow-x-auto px-5 pb-2 [scrollbar-width:thin] sm:-mx-8 sm:px-8">
-      <div className="flex w-max gap-4 sm:gap-5">
+      <div className="flex w-max gap-5 sm:gap-6">
         {products.map((product) => (
-          <div key={product.id} className="w-[42vw] max-w-[240px] shrink-0 sm:w-[220px] lg:w-[240px]">
+          <div key={product.id} className="w-[48vw] max-w-[260px] shrink-0 sm:w-[240px] lg:w-[255px]">
             <SiteProductCard product={product} />
           </div>
         ))}
