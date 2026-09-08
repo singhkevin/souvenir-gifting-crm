@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -19,6 +19,8 @@ interface SidebarProps {
   onNavigate?: () => void;
   showClose?: boolean;
   onClose?: () => void;
+  /** When true on mobile, scroll the active nav item into view. */
+  mobileOpen?: boolean;
 }
 
 type NavItem = { label: string; href: string; matchPrefix: string; icon: typeof LayoutDashboard };
@@ -111,8 +113,12 @@ const navGroups: NavGroup[] = [
   }
 ];
 
-export function Sidebar({ role, user, onNavigate, showClose, onClose }: SidebarProps) {
+const SCROLL_KEY = 'giffter.crm.sidebar.scrollTop'
+
+export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen }: SidebarProps) {
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement | null>(null)
+  const activeRef = useRef<HTMLAnchorElement | null>(null)
 
   const displayName = user?.name?.trim() || 'User';
   const roleName = role === 'admin' ? 'Admin' : role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -126,6 +132,35 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose }: SidebarP
     })
     return items.length ? [{ ...group, items }] : []
   })
+
+  // Restore last scroll, then ensure the current page link is visible when the drawer opens.
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+
+    const saved = Number.parseInt(sessionStorage.getItem(SCROLL_KEY) || '', 10)
+    if (Number.isFinite(saved) && saved > 0) {
+      nav.scrollTop = saved
+    }
+
+    if (mobileOpen === false) return
+    // Desktop sidebar (no mobileOpen) and mobile-open both scroll active into view.
+    if (mobileOpen === undefined || mobileOpen) {
+      requestAnimationFrame(() => {
+        activeRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      })
+    }
+  }, [pathname, mobileOpen])
+
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const onScroll = () => {
+      sessionStorage.setItem(SCROLL_KEY, String(nav.scrollTop))
+    }
+    nav.addEventListener('scroll', onScroll, { passive: true })
+    return () => nav.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
     <aside className="flex h-full max-h-screen min-h-0 w-64 flex-shrink-0 select-none flex-col border-r border-[#1B3224] bg-[#16281E] text-[#A3B5AA]">
@@ -150,7 +185,10 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose }: SidebarP
         ) : null}
       </div>
 
-      <nav className="min-h-0 flex-1 space-y-5 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4">
+      <nav
+        ref={navRef}
+        className="min-h-0 flex-1 space-y-5 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4"
+      >
         {visibleGroups.map((group) => (
             <div key={group.label} className="space-y-1">
               <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#697D71]">
@@ -163,6 +201,7 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose }: SidebarP
                     <Link
                       key={`${item.href}-${item.label}`}
                       href={item.href}
+                      ref={isActive ? activeRef : undefined}
                       onClick={onNavigate}
                       className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all ${
                         isActive

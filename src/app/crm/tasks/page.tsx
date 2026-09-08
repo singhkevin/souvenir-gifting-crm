@@ -173,14 +173,18 @@ export default async function TasksPage({
                   <td className="p-3 capitalize">{priority}</td>
                   <td className="p-3">
                     {canSeeAll ? (
-                      <form action={asFormAction(reassignTask)} className="flex items-center gap-1">
+                      <form action={asFormAction(reassignTask)} className="flex min-w-[140px] flex-col gap-1">
                         <input type="hidden" name="id" value={task.id} />
-                        <select name="assigned_to" defaultValue={task.assigned_to || ''} className="border rounded px-1 py-1 text-xs">
-                          {(team || []).map((member) => (
-                            <option key={member.id} value={member.id}>{member.full_name}</option>
-                          ))}
-                        </select>
-                        <button className="text-[11px] underline">Save</button>
+                        <MobileSheetSelect
+                          name="assigned_to"
+                          label="Assigned to"
+                          defaultValue={task.assigned_to || ''}
+                          options={(team || []).map((member) => ({
+                            value: member.id,
+                            label: member.full_name || 'Unnamed',
+                          }))}
+                        />
+                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save</button>
                       </form>
                     ) : (
                       assignee?.full_name || 'Unassigned'
@@ -188,19 +192,23 @@ export default async function TasksPage({
                   </td>
                   <td className={`p-3 ${overdue ? 'text-red-600 font-semibold' : ''}`}>{formatDate(task.due_at)}</td>
                   <td className="p-3">
-                    <form action={asFormAction(updateTaskStatus)} className="flex items-center gap-1">
+                    <form action={asFormAction(updateTaskStatus)} className="flex min-w-[140px] flex-col gap-1">
                       <input type="hidden" name="id" value={task.id} />
-                      <select name="status" defaultValue={task.status || 'open'} className="border rounded px-1 py-1 text-xs">
-                        {STATUS_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                      <button className="text-[11px] underline">Update</button>
+                      <MobileSheetSelect
+                        name="status"
+                        label="Status"
+                        defaultValue={task.status || 'open'}
+                        options={STATUS_OPTIONS.map((option) => ({
+                          value: option.value,
+                          label: option.label,
+                        }))}
+                      />
+                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Update</button>
                     </form>
                     {task.status !== 'done' && !task.completed_at && (
                       <form action={asFormAction(completeTask)} className="mt-1">
                         <input type="hidden" name="id" value={task.id} />
-                        <button className="text-xs underline">Complete</button>
+                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Complete</button>
                       </form>
                     )}
                   </td>

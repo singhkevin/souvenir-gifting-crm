@@ -140,23 +140,37 @@ export default async function GoalsPage() {
                     <input type="hidden" name="id" value={goal.id} />
                     <input name="title" defaultValue={goal.title} required className="border rounded-lg px-2 py-1" />
                     <input name="target" type="number" min="1" defaultValue={goal.target ?? ''} required className="border rounded-lg px-2 py-1" />
-                    <select name="metric" defaultValue={goal.metric} className="border rounded-lg px-2 py-1">
-                      <option value="revenue">Revenue</option>
-                      <option value="orders">Orders</option>
-                    </select>
-                    <select name="period_type" defaultValue={goal.period_type || 'month'} className="border rounded-lg px-2 py-1">
-                      <option value="month">Month</option>
-                      <option value="quarter">Quarter</option>
-                      <option value="year">Year</option>
-                    </select>
+                    <MobileSheetSelect
+                      name="metric"
+                      label="Metric"
+                      defaultValue={goal.metric}
+                      options={[
+                        { value: 'revenue', label: 'Revenue' },
+                        { value: 'orders', label: 'Orders' },
+                      ]}
+                    />
+                    <MobileSheetSelect
+                      name="period_type"
+                      label="Period"
+                      defaultValue={goal.period_type || 'month'}
+                      options={[
+                        { value: 'month', label: 'Month' },
+                        { value: 'quarter', label: 'Quarter' },
+                        { value: 'year', label: 'Year' },
+                      ]}
+                    />
                     <input name="period_start" type="date" defaultValue={goal.period_start || ''} required className="border rounded-lg px-2 py-1" />
-                    <select name="owner_id" defaultValue={goal.owner_id || ''} className="border rounded-lg px-2 py-1">
-                      <option value="">Company-wide</option>
-                      {teamRows.map((p: TeamMember) => (
-                        <option key={p.id} value={p.id}>{p.full_name ?? ''}</option>
-                      ))}
-                    </select>
-                    <button className="underline text-left">Save goal</button>
+                    <MobileSheetSelect
+                      name="owner_id"
+                      label="Owner"
+                      defaultValue={goal.owner_id || ''}
+                      emptyLabel="Company-wide"
+                      options={[
+                        { value: '', label: 'Company-wide' },
+                        ...teamRows.map((p: TeamMember) => ({ value: p.id, label: p.full_name ?? '' })),
+                      ]}
+                    />
+                    <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save goal</button>
                   </form>
                   <ConfirmAction
                     title="Delete goal?"

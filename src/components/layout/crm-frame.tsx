@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Topbar } from '@/components/layout/topbar'
 import type { Role } from '@/lib/types'
@@ -48,19 +47,35 @@ export function CrmFrame({
         <Sidebar role={role} user={user} />
       </div>
 
-      {open ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-[#122018]/50 backdrop-blur-[1px]"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
+      {/* Keep mounted so nav scroll position is preserved between opens */}
+      <div
+        className={`fixed inset-0 z-50 lg:hidden ${open ? '' : 'pointer-events-none'}`}
+        aria-hidden={!open}
+      >
+        <button
+          type="button"
+          tabIndex={open ? 0 : -1}
+          className={`absolute inset-0 bg-[#122018]/50 backdrop-blur-[1px] transition-opacity duration-200 ${
+            open ? 'opacity-100' : 'opacity-0'
+          }`}
+          aria-label="Close menu"
+          onClick={() => setOpen(false)}
+        />
+        <div
+          className={`relative flex h-full w-[min(20rem,88vw)] max-w-full shadow-2xl transition-transform duration-200 ease-out ${
+            open ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <Sidebar
+            role={role}
+            user={user}
+            onNavigate={() => setOpen(false)}
+            showClose
+            onClose={() => setOpen(false)}
+            mobileOpen={open}
           />
-          <div className="relative flex h-full w-[min(20rem,88vw)] max-w-full shadow-2xl">
-            <Sidebar role={role} user={user} onNavigate={() => setOpen(false)} showClose onClose={() => setOpen(false)} />
-          </div>
         </div>
-      ) : null}
+      </div>
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar user={user} notifications={notifications} onMenuClick={() => setOpen(true)} />

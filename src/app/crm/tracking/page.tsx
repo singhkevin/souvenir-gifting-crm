@@ -5,6 +5,15 @@ import { ORDER_STATUS_LABELS, orderHealth, HEALTH_LABELS, HEALTH_STYLES } from '
 import Link from 'next/link'
 import { completeTask, reassignTask, updateTaskStatus } from '@/app/crm/tasks/actions'
 import { asFormAction } from '@/lib/form-action'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+
+const TASK_STATUS_OPTIONS = [
+  { value: 'open', label: 'Pending' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'blocked', label: 'Blocked' },
+  { value: 'done', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
+]
 
 export default async function AdminTrackingPage() {
   const profile = await requireStaff(['admin', 'management'])
@@ -141,14 +150,18 @@ export default async function AdminTrackingPage() {
                   </td>
                   <td className="px-4 py-2">
                     {canMutateTasks ? (
-                    <form action={asFormAction(reassignTask)} className="flex items-center gap-1">
+                    <form action={asFormAction(reassignTask)} className="flex min-w-[140px] flex-col gap-1">
                       <input type="hidden" name="id" value={task.id} />
-                      <select name="assigned_to" defaultValue={task.assigned_to || ''} className="border rounded px-1 py-1">
-                        {(staff || []).map((member) => (
-                          <option key={member.id} value={member.id}>{member.full_name}</option>
-                        ))}
-                      </select>
-                      <button className="underline">Save</button>
+                      <MobileSheetSelect
+                        name="assigned_to"
+                        label="Assigned to"
+                        defaultValue={task.assigned_to || ''}
+                        options={(staff || []).map((member) => ({
+                          value: member.id,
+                          label: member.full_name || 'Unnamed',
+                        }))}
+                      />
+                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save</button>
                     </form>
                     ) : (
                       assignee?.full_name || 'Unassigned'
@@ -158,21 +171,20 @@ export default async function AdminTrackingPage() {
                   <td className="px-4 py-2">
                     {canMutateTasks ? (
                     <>
-                    <form action={asFormAction(updateTaskStatus)} className="flex items-center gap-1">
+                    <form action={asFormAction(updateTaskStatus)} className="flex min-w-[140px] flex-col gap-1">
                       <input type="hidden" name="id" value={task.id} />
-                      <select name="status" defaultValue={task.status || 'open'} className="border rounded px-1 py-1">
-                        <option value="open">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="blocked">Blocked</option>
-                        <option value="done">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                      <button className="underline">Update</button>
+                      <MobileSheetSelect
+                        name="status"
+                        label="Status"
+                        defaultValue={task.status || 'open'}
+                        options={TASK_STATUS_OPTIONS}
+                      />
+                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Update</button>
                     </form>
                     {task.status !== 'done' && (
                       <form action={asFormAction(completeTask)}>
                         <input type="hidden" name="id" value={task.id} />
-                        <button className="underline">Complete</button>
+                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Complete</button>
                       </form>
                     )}
                     </>

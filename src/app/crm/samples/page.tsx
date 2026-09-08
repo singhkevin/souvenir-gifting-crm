@@ -92,25 +92,38 @@ export default async function SamplesPage() {
                   <td className="p-3">
                     <form action={asFormAction(moveSample)} className="grid grid-cols-2 gap-1 text-[11px] min-w-[220px]">
                       <input type="hidden" name="stock_id" value={sample.id} />
-                      <select name="from_holder" className="border rounded px-1 py-1">
-                        <option value="office">From office</option>
-                        <option value="team">From team</option>
-                        <option value="client">From client</option>
-                        <option value="supplier">From supplier</option>
-                      </select>
-                      <select name="to_holder" className="border rounded px-1 py-1">
-                        <option value="team">To team</option>
-                        <option value="client">To client</option>
-                        <option value="office">To office</option>
-                        <option value="supplier">To supplier</option>
-                      </select>
+                      <MobileSheetSelect
+                        name="from_holder"
+                        label="From"
+                        defaultValue="office"
+                        options={[
+                          { value: 'office', label: 'From office' },
+                          { value: 'team', label: 'From team' },
+                          { value: 'client', label: 'From client' },
+                          { value: 'supplier', label: 'From supplier' },
+                        ]}
+                      />
+                      <MobileSheetSelect
+                        name="to_holder"
+                        label="To"
+                        defaultValue="team"
+                        options={[
+                          { value: 'team', label: 'To team' },
+                          { value: 'client', label: 'To client' },
+                          { value: 'office', label: 'To office' },
+                          { value: 'supplier', label: 'To supplier' },
+                        ]}
+                      />
                       <input name="quantity" type="number" min="1" defaultValue={1} className="border rounded px-1 py-1" />
-                      <select name="company_id" className="border rounded px-1 py-1">
-                        <option value="">Client (if needed)</option>
-                        {(companies || []).map((c) => (
-                          <option key={c.id} value={c.id}>{c.name}</option>
-                        ))}
-                      </select>
+                      <MobileSheetSelect
+                        name="company_id"
+                        label="Client"
+                        emptyLabel="Client (if needed)"
+                        options={[
+                          { value: '', label: 'Client (if needed)' },
+                          ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
+                        ]}
+                      />
                       <input name="note" placeholder="Note / holder name" className="col-span-2 border rounded px-1 py-1" />
                       <button className="col-span-2 border rounded py-1 font-semibold">Record movement</button>
                     </form>

@@ -141,15 +141,20 @@ export default async function MockupsPage() {
                     <td className="p-3 capitalize">{mockup.status === 'shared' ? 'Client-facing' : mockup.status || 'internal'}</td>
                     <td className="p-3">{uploader?.full_name || '—'} · {formatDate(mockup.created_at)}</td>
                     <td className="p-3 text-xs space-y-2">
-                      <form action={asFormAction(updateMockup)} className="flex gap-2 items-center">
+                      <form action={asFormAction(updateMockup)} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <input type="hidden" name="id" value={mockup.id} />
-                        <select name="status" defaultValue={mockup.status || 'draft'} className="border rounded px-2 py-1">
-                          <option value="draft">Internal</option>
-                          <option value="shared">Client-facing</option>
-                          <option value="approved">Approved</option>
-                          <option value="rejected">Rejected</option>
-                        </select>
-                        <button className="underline">Save</button>
+                        <MobileSheetSelect
+                          name="status"
+                          label="Status"
+                          defaultValue={mockup.status || 'draft'}
+                          options={[
+                            { value: 'draft', label: 'Internal' },
+                            { value: 'shared', label: 'Client-facing' },
+                            { value: 'approved', label: 'Approved' },
+                            { value: 'rejected', label: 'Rejected' },
+                          ]}
+                        />
+                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save</button>
                       </form>
                       <ConfirmAction
                         title="Delete mockup?"

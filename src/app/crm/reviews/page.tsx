@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createReview, updateReview, removeReview } from './actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { asFormAction } from '@/lib/form-action'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function ReviewsPage() {
   const supabase = await createClient()
@@ -27,23 +28,37 @@ export default async function ReviewsPage() {
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Client Reviews</h1>
 
       <form action={asFormAction(createReview)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-2 gap-3 text-xs">
-        <select name="company_id" required className="border rounded-lg px-2 py-2">
-          <option value="">Company</option>
-          {(companies || []).map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <select name="order_id" className="border rounded-lg px-2 py-2">
-          <option value="">Related order (optional)</option>
-          {(orders || []).map((o) => (
-            <option key={o.id} value={o.id}>{o.order_number}</option>
-          ))}
-        </select>
-        <select name="rating" defaultValue="5" className="border rounded-lg px-2 py-2">
-          {[5, 4, 3, 2, 1].map((n) => (
-            <option key={n} value={n}>{n} star{n === 1 ? '' : 's'}</option>
-          ))}
-        </select>
+        <MobileSheetSelect
+          name="company_id"
+          label="Company"
+          required
+          emptyLabel="Company"
+          options={[
+            { value: '', label: 'Company' },
+            ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
+          ]}
+        />
+        <MobileSheetSelect
+          name="order_id"
+          label="Related order"
+          emptyLabel="Related order (optional)"
+          options={[
+            { value: '', label: 'Related order (optional)' },
+            ...(orders || []).map((o) => ({
+              value: o.id,
+              label: o.order_number || o.id.slice(0, 8),
+            })),
+          ]}
+        />
+        <MobileSheetSelect
+          name="rating"
+          label="Rating"
+          defaultValue="5"
+          options={[5, 4, 3, 2, 1].map((n) => ({
+            value: String(n),
+            label: `${n} star${n === 1 ? '' : 's'}`,
+          }))}
+        />
         <input name="feedback" placeholder="Feedback" className="border rounded-lg px-2 py-2" />
         <button className="bg-[#1A3022] text-white rounded-lg font-semibold md:col-span-2 py-2">Log review</button>
       </form>
@@ -81,13 +96,17 @@ export default async function ReviewsPage() {
                     <td className="p-3 text-xs space-y-2">
                       <form action={asFormAction(updateReview)} className="flex flex-col gap-1">
                         <input type="hidden" name="id" value={review.id} />
-                        <select name="rating" defaultValue={review.rating || 5} className="border rounded px-2 py-1">
-                          {[5, 4, 3, 2, 1].map((n) => (
-                            <option key={n} value={n}>{n} stars</option>
-                          ))}
-                        </select>
+                        <MobileSheetSelect
+                          name="rating"
+                          label="Rating"
+                          defaultValue={String(review.rating || 5)}
+                          options={[5, 4, 3, 2, 1].map((n) => ({
+                            value: String(n),
+                            label: `${n} stars`,
+                          }))}
+                        />
                         <input name="feedback" defaultValue={review.feedback || ''} className="border rounded px-2 py-1" />
-                        <button className="underline text-left">Save</button>
+                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save</button>
                       </form>
                       <ConfirmAction
                         title="Delete review?"

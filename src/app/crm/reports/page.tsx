@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, ORDER_STATUSES, ORDER_STATUS_LABELS } from '@/lib/utils'
 import { requireStaff, canSeeFinance } from '@/lib/auth'
 import Link from 'next/link'
+import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 export default async function ReportsPage({
   searchParams,
@@ -94,14 +95,31 @@ export default async function ReportsPage({
     <div>
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Reports & Analytics</h1>
 
-      <div className="flex gap-4 mb-6 border-b border-[var(--color-border)]">
+      <div className="mb-6 md:hidden">
+        <MobileFilterBar
+          pathname="/crm/reports"
+          fields={[
+            {
+              key: 'tab',
+              label: 'Report',
+              value: tab === tabs[0] ? '' : tab,
+              emptyLabel: tabs[0] === 'gst' ? 'Tax Overview' : tabs[0].charAt(0).toUpperCase() + tabs[0].slice(1),
+              options: tabs.map((t) => ({
+                value: t === tabs[0] ? '' : t,
+                label: t === 'gst' ? 'Tax Overview' : t.charAt(0).toUpperCase() + t.slice(1),
+              })),
+            },
+          ]}
+        />
+      </div>
+      <div className="mb-6 hidden gap-4 overflow-x-auto border-b border-[var(--color-border)] md:flex">
         {tabs.map((t) => (
           <Link
             key={t}
             href={`?tab=${t}`}
-            className={`pb-2 px-2 font-medium ${
+            className={`shrink-0 px-2 pb-2 font-medium ${
               tab === t
-                ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]'
+                ? 'border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]'
                 : 'text-[var(--color-text-secondary)] hover:text-black'
             }`}
           >
@@ -256,13 +274,15 @@ export default async function ReportsPage({
               <p className="text-2xl font-bold">{formatCurrency(sampleValue)}</p>
             </div>
           </div>
-          <p className="text-sm text-gray-500">
-            Full SKU-level sample stock lives on the{' '}
-            <Link href="/crm/samples" className="underline text-[var(--color-primary)]">
-              Sample Stock
-            </Link>{' '}
-            page.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-500">Full SKU-level sample stock lives on the Sample Stock page.</p>
+            <Link
+              href="/crm/samples"
+              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]"
+            >
+              Open sample stock
+            </Link>
+          </div>
         </div>
       )}
       {tab === 'gst' && canSeeFinance(profile.role) && (
@@ -281,13 +301,18 @@ export default async function ReportsPage({
               <p className="text-2xl font-bold">{invoices?.length || 0}</p>
             </div>
           </div>
-          <p className="text-sm text-gray-500">
-            Invoice, GSTIN, taxable value and stored GST live on the dedicated{' '}
-            <Link href="/crm/gst-reports" className="underline text-[var(--color-primary)] font-semibold">
-              GST Reports
-            </Link>{' '}
-            page. This tab is a finance overview only.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-500">
+              Invoice, GSTIN, taxable value and stored GST live on the dedicated GST Reports page. This tab is a finance
+              overview only.
+            </p>
+            <Link
+              href="/crm/gst-reports"
+              className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white"
+            >
+              Open GST reports
+            </Link>
+          </div>
         </div>
       )}
     </div>

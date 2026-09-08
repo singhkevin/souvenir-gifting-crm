@@ -123,21 +123,30 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
                     <form action={asFormAction(updateContact)} className="grid gap-1 max-w-xs">
                       <input type="hidden" name="id" value={c.id} />
                       <input name="full_name" defaultValue={c.full_name} required className="border rounded px-2 py-1" />
-                      <select name="company_id" defaultValue={c.company_id || company?.id || ''} className="border rounded px-2 py-1">
-                        {companyRows.map((companyOption: CompanyOption) => (
-                          <option key={companyOption.id} value={companyOption.id}>{companyOption.name}</option>
-                        ))}
-                      </select>
+                      <MobileSheetSelect
+                        name="company_id"
+                        label="Company"
+                        defaultValue={c.company_id || company?.id || ''}
+                        options={companyRows.map((companyOption: CompanyOption) => ({
+                          value: companyOption.id,
+                          label: companyOption.name,
+                        }))}
+                      />
                       <input name="email" defaultValue={c.email || ''} className="border rounded px-2 py-1" />
                       <input name="phone" defaultValue={c.phone || ''} className="border rounded px-2 py-1" />
                       <input name="designation" defaultValue={c.designation || ''} placeholder="Designation" className="border rounded px-2 py-1" />
-                      <select name="contact_type" defaultValue={c.contact_type || 'primary'} className="border rounded px-2 py-1">
-                        <option value="primary">Primary</option>
-                        <option value="billing">Billing</option>
-                        <option value="procurement">Procurement</option>
-                        <option value="other">Other</option>
-                      </select>
-                      <button className="text-[#1A3022] font-semibold underline text-left">Save</button>
+                      <MobileSheetSelect
+                        name="contact_type"
+                        label="Contact type"
+                        defaultValue={c.contact_type || 'primary'}
+                        options={[
+                          { value: 'primary', label: 'Primary' },
+                          { value: 'billing', label: 'Billing' },
+                          { value: 'procurement', label: 'Procurement' },
+                          { value: 'other', label: 'Other' },
+                        ]}
+                      />
+                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save</button>
                     </form>
                     <ConfirmAction
                       title="Delete contact?"

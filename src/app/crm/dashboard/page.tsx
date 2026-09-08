@@ -249,7 +249,7 @@ export default async function DashboardPage({
       <div className="flex justify-between items-center mb-3">
         <h2 className="font-serif text-lg">Activity</h2>
         {(profile.role === 'admin' || profile.role === 'management') && (
-          <Link href="/crm/audit-log" className="text-xs underline">Full audit log</Link>
+          <Link href="/crm/audit-log" className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Full audit log</Link>
         )}
       </div>
       <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -326,14 +326,14 @@ export default async function DashboardPage({
             <div className="bg-white rounded-xl border p-5">
               <h2 className="font-serif text-lg mb-3">Exceptions</h2>
               <p className="text-sm">Delayed: {delayed.length} · At risk: {atRisk.length} · Unassigned: {unassigned.length} · Lost requirements: {lost}</p>
-              <Link href="/crm/order-management?health=delayed" className="text-xs underline mt-2 inline-block">Open delayed orders</Link>
+              <Link href="/crm/order-management?health=delayed" className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Open delayed orders</Link>
             </div>
           )}
 
           <div className="rounded-xl border bg-white p-4 sm:p-6">
             <div className="mb-4 flex justify-between">
               <h2 className="font-serif text-lg">Order pipeline</h2>
-              <Link href="/crm/order-management?view=kanban" className="text-xs underline">Kanban</Link>
+              <Link href="/crm/order-management?view=kanban" className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Kanban</Link>
             </div>
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 lg:grid-cols-6">
               {byStage.map((s) => (
@@ -431,7 +431,7 @@ export default async function DashboardPage({
                 <p key={a.id} className="text-sm py-1">{a.type} · {a.title}</p>
               ))}
               {(!followUps.data || followUps.data.length === 0) && <p className="text-sm text-gray-500">No follow-ups due.</p>}
-              <Link href="/crm/activities" className="text-xs underline mt-2 inline-block">Activity feed</Link>
+              <Link href="/crm/activities" className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Activity feed</Link>
             </div>
             <ActivityFeed />
           </div>

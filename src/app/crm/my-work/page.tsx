@@ -3,6 +3,7 @@ import { requireStaff, applyOwnerScope } from '@/lib/auth'
 import { formatCurrency, formatDate, oneRelation, asRows } from '@/lib/utils'
 import { ORDER_STATUS_LABELS, orderHealth, HEALTH_LABELS, HEALTH_STYLES } from '@/lib/order-workflow'
 import Link from 'next/link'
+import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 type NamedCompany = { name: string | null }
 type WorkLead = {
@@ -63,7 +64,8 @@ export default async function MyWorkPage({
   searchParams: Promise<{ filter?: string }>
 }) {
   const profile = await requireStaff()
-  const { filter = 'today' } = await searchParams
+  const { filter: filterParam } = await searchParams
+  const filter = filterParam || 'today'
   const supabase = await createClient()
   const today = new Date().toISOString().slice(0, 10)
   const weekStart = new Date()
@@ -142,13 +144,30 @@ export default async function MyWorkPage({
         <p className="text-xs text-[#7A7267] mt-1">Assigned work for {profile.full_name || profile.email}.</p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="md:hidden">
+        <MobileFilterBar
+          pathname="/crm/my-work"
+          fields={[
+            {
+              key: 'filter',
+              label: 'Period',
+              value: filter === 'today' ? '' : filter,
+              emptyLabel: 'Today',
+              options: [
+                { value: '', label: 'Today' },
+                ...FILTERS.filter((f) => f.id !== 'today').map((f) => ({ value: f.id, label: f.label })),
+              ],
+            },
+          ]}
+        />
+      </div>
+      <div className="hidden flex-wrap gap-2 md:flex">
         {FILTERS.map((f) => (
           <Link
             key={f.id}
             href={`/crm/my-work?filter=${f.id}`}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-              filter === f.id ? 'bg-[#1A3022] text-white' : 'bg-white border text-gray-600 hover:bg-gray-50'
+            className={`rounded-lg px-3 py-2 text-xs font-medium ${
+              filter === f.id ? 'bg-[#1A3022] text-white' : 'border bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
             {f.label}
