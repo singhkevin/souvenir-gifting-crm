@@ -90,77 +90,193 @@ export default async function CataloguePage({
     { id: '2000+', label: 'Premium Gifts' },
   ]
 
-  const chipClass = (active: boolean) =>
-    `rounded-full border px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] transition-colors ${
+  const categoryCounts = new Map<string, number>()
+  for (const product of products) {
+    if (!product.category_id) continue
+    categoryCounts.set(product.category_id, (categoryCounts.get(product.category_id) || 0) + 1)
+  }
+
+  const activeCategoryName = categories.find((item) => item.id === categoryFilter)?.name
+  const activeBudgetLabel = budgetChips.find((item) => item.id === budget)?.label
+  const hasFilters = Boolean(search || categoryFilter || budget)
+
+  const filterLinkClass = (active: boolean) =>
+    `flex items-center justify-between gap-3 border-l-2 py-2 pl-3 text-sm transition-colors ${
       active
-        ? 'border-[#1A3022] bg-[#1A3022] text-white'
-        : 'border-[#E8E4DE] bg-white text-[#5C6570] hover:border-[#1A3022] hover:text-[#1B2430]'
+        ? 'border-[#1A3022] font-medium text-[#1A3022]'
+        : 'border-transparent text-[#5C6570] hover:border-[#C9C3BA] hover:text-[#1B2430]'
     }`
 
   return (
     <SiteShell>
       <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <p className="store-eyebrow">Shop</p>
-          <h1 className="store-section-title mt-2">Catalogue</h1>
+          <p className="text-sm text-[#5C6570]">
+            <Link href="/home" className="hover:text-[#1A3022]">
+              Home
+            </Link>
+            <span className="mx-2 text-[#C9C3BA]">/</span>
+            <span className="text-[#1B2430]">Catalogue</span>
+          </p>
+          <h1 className="store-section-title mt-3">Catalogue</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">
-            Every piece below is a live GIFFTER catalogue product — the same records used by the team and client portal.
+            Browse live GIFFTER gifts — filter by category and budget, then request a quote.
           </p>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <form className="flex flex-col gap-3 rounded-md border border-[#E8E4DE] bg-white p-4 sm:flex-row sm:items-end">
-          {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
-          {budget ? <input type="hidden" name="budget" value={budget} /> : null}
-          <label className="flex-1">
-            <span className="text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">Search</span>
-            <input
-              name="q"
-              defaultValue={search}
-              placeholder="Name, category or SKU"
-              className="mt-1 w-full border-b border-[#E8E4DE] bg-transparent py-2 text-sm outline-none focus:border-[#1A3022]"
-            />
-          </label>
-          <label>
-            <span className="text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">Sort</span>
-            <select name="sort" defaultValue={sort} className="mt-1 block bg-transparent py-2 text-sm outline-none">
-              <option value="name">A–Z</option>
-              <option value="newest">Newest</option>
-              <option value="price_low">Price: low to high</option>
-              <option value="price_high">Price: high to low</option>
-            </select>
-          </label>
-          <button
-            type="submit"
-            className="bg-[#1A3022] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
-          >
-            Apply
-          </button>
-        </form>
+        <div className="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[16.5rem_minmax(0,1fr)]">
+          {/* Sidebar filters — sticky + independently scrollable */}
+          <aside className="lg:sticky lg:top-28 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-2 [scrollbar-width:thin]">
+            <div className="space-y-8">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Category</p>
+                <nav className="mt-3 space-y-0.5 border-t border-[#E8E4DE] pt-2">
+                  <Link href={hrefFor({ category: '' })} className={filterLinkClass(!categoryFilter)}>
+                    <span>All gifts</span>
+                    <span className="text-xs text-[#8A929C]">{products.length}</span>
+                  </Link>
+                  {categories.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={hrefFor({ category: item.id })}
+                      className={filterLinkClass(categoryFilter === item.id)}
+                    >
+                      <span className="truncate">{item.name}</span>
+                      <span className="shrink-0 text-xs text-[#8A929C]">{categoryCounts.get(item.id) || 0}</span>
+                    </Link>
+                  ))}
+                </nav>
+              </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Link href={hrefFor({ category: '' })} className={chipClass(!categoryFilter)}>
-            All
-          </Link>
-          {categories.map((item) => (
-            <Link key={item.id} href={hrefFor({ category: item.id })} className={chipClass(categoryFilter === item.id)}>
-              {item.name}
-            </Link>
-          ))}
-        </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Shop by price</p>
+                <nav className="mt-3 space-y-0.5 border-t border-[#E8E4DE] pt-2">
+                  {budgetChips.map((item) => (
+                    <Link
+                      key={item.id || 'any'}
+                      href={hrefFor({ budget: item.id })}
+                      className={filterLinkClass(budget === item.id)}
+                    >
+                      <span>{item.label}</span>
+                    </Link>
+                  ))}
+                </nav>
+              </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          {budgetChips.map((item) => (
-            <Link key={item.id || 'any'} href={hrefFor({ budget: item.id })} className={chipClass(budget === item.id)}>
-              {item.label}
-            </Link>
-          ))}
-        </div>
+              {hasFilters ? (
+                <Link
+                  href="/catalogue"
+                  className="inline-block text-[12px] font-medium uppercase tracking-[0.12em] text-[#1A3022] underline-offset-4 hover:underline"
+                >
+                  Clear all filters
+                </Link>
+              ) : null}
+            </div>
+          </aside>
 
-        <p className="mt-8 text-xs text-[#5C6570]">{filtered.length} gifts</p>
-        <div className="mt-6">
-          <CatalogueBrowser products={filtered} />
+          {/* Results */}
+          <div className="min-w-0">
+            <form className="flex flex-col gap-4 border border-[#E8E4DE] bg-white p-4 sm:flex-row sm:items-center sm:gap-6">
+              {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
+              {budget ? <input type="hidden" name="budget" value={budget} /> : null}
+              <label className="min-w-0 flex-1">
+                <span className="sr-only">Search products</span>
+                <input
+                  name="q"
+                  defaultValue={search}
+                  placeholder="Search products"
+                  className="w-full bg-transparent text-sm text-[#1B2430] outline-none placeholder:text-[#8A929C]"
+                />
+              </label>
+              <div className="flex items-center gap-3 border-t border-[#E8E4DE] pt-3 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6">
+                <label className="flex items-center gap-2 text-sm text-[#5C6570]">
+                  <span className="whitespace-nowrap">Sort by</span>
+                  <select
+                    name="sort"
+                    defaultValue={sort}
+                    className="bg-transparent py-1 text-sm text-[#1B2430] outline-none"
+                  >
+                    <option value="name">A–Z</option>
+                    <option value="newest">Newest</option>
+                    <option value="price_low">Price: low to high</option>
+                    <option value="price_high">Price: high to low</option>
+                  </select>
+                </label>
+                <button
+                  type="submit"
+                  className="bg-[#1A3022] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white"
+                >
+                  Apply
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-[#1A3022]">
+                <span className="font-semibold">{filtered.length}</span>
+                <span className="text-[#5C6570]"> {filtered.length === 1 ? 'product' : 'products'}</span>
+                {activeCategoryName ? (
+                  <span className="text-[#5C6570]"> in {activeCategoryName}</span>
+                ) : null}
+                {activeBudgetLabel && budget ? (
+                  <span className="text-[#5C6570]"> · {activeBudgetLabel}</span>
+                ) : null}
+                {search ? <span className="text-[#5C6570]"> · “{search}”</span> : null}
+              </p>
+            </div>
+
+            {/* Mobile filter rows */}
+            <div className="mt-4 space-y-3 lg:hidden">
+              <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:thin]">
+                <div className="flex w-max gap-2">
+                  <Link
+                    href={hrefFor({ category: '' })}
+                    className={`whitespace-nowrap border px-3 py-1.5 text-xs ${
+                      !categoryFilter ? 'border-[#1A3022] bg-[#1A3022] text-white' : 'border-[#E8E4DE] text-[#5C6570]'
+                    }`}
+                  >
+                    All
+                  </Link>
+                  {categories.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={hrefFor({ category: item.id })}
+                      className={`whitespace-nowrap border px-3 py-1.5 text-xs ${
+                        categoryFilter === item.id
+                          ? 'border-[#1A3022] bg-[#1A3022] text-white'
+                          : 'border-[#E8E4DE] text-[#5C6570]'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:thin]">
+                <div className="flex w-max gap-2">
+                  {budgetChips.map((item) => (
+                    <Link
+                      key={item.id || 'any'}
+                      href={hrefFor({ budget: item.id })}
+                      className={`whitespace-nowrap border px-3 py-1.5 text-xs ${
+                        budget === item.id
+                          ? 'border-[#1A3022] bg-[#1A3022] text-white'
+                          : 'border-[#E8E4DE] text-[#5C6570]'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <CatalogueBrowser products={filtered} />
+            </div>
+          </div>
         </div>
       </div>
     </SiteShell>
