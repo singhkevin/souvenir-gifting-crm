@@ -130,18 +130,6 @@ export const CATALOGUE_OCCASIONS = [
     line: 'Milestone gifts for tenure and loyalty',
     href: '/collections/executive-edit',
   },
-  {
-    slug: 'team-celebrations',
-    title: 'Team Celebration',
-    line: 'Shared moments, shared gifts',
-    href: '/collections/festival-gifting',
-  },
-  {
-    slug: 'executive-gifting',
-    title: 'Executive Gifting',
-    line: 'Refined pieces for leadership',
-    href: '/collections/premium-corporate-gifts',
-  },
 ]
 
 export const BUDGET_BANDS = [

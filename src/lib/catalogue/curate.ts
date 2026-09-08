@@ -18,24 +18,38 @@ const HERO_PREFERRED = [
   'Premium insulated bottle',
   'Leather work bag',
   'Laptop backpack 20L',
-  'Executive gift box',
+  'Graphite over-ear headphones',
   'Matte black travel tumbler',
   'Forest hardcover notebook set',
-  'Graphite over-ear headphones',
   'Navy laptop daypack',
   'Starter welcome essentials kit',
-  'Kraft ribbon gift hamper',
   'Forest green corporate polo',
   'Silver coin keepsake',
+  'Wood desk organiser tray',
+  'Black softshell corporate jacket',
 ]
 
 const STORY_PREFERRED = [
-  'Executive gift box',
   'Leather work bag',
   'Premium insulated bottle',
-  'Gold ribbon executive gift box',
-  'Kraft ribbon gift hamper',
+  'Graphite over-ear headphones',
+  'Black softshell corporate jacket',
+  'Leadership recognition hamper',
+  'Premium induction gift box',
 ]
+
+const OCCASION_TILE_PREFERRED = [
+  ['Premium induction gift box', 'Starter welcome essentials kit', 'Hybrid work-from-home kit'],
+  ['Leadership recognition hamper', 'Gold ribbon executive gift box', 'Self-care wellness box'],
+  ['Silver cup trophy', 'Achievement medal with ribbon', 'Silver coin keepsake'],
+  ['Premium insulated bottle', 'Graphite over-ear headphones', 'Double-wall glass tumbler'],
+  ['Festive corporate hamper crate', 'Kraft ribbon gift hamper', 'Cotton waffle bathrobe'],
+  ['Silver coin keepsake', 'Metal tower trophy', 'Pashmina wrap'],
+] as const
+
+function isExclusiveGiftHamper(product: PublicProduct) {
+  return /executive gift box|exclusive gift|gold ribbon executive/i.test(product.name)
+}
 
 function isWatch(product: PublicProduct) {
   return product.category_name === 'Watches' || /watch/i.test(product.name)
@@ -141,6 +155,7 @@ export function curateTrendingProducts(products: PublicProduct[], limit = 10) {
   const recent = [...products]
     .filter(hasImage)
     .filter((product) => !isWatch(product))
+    .filter((product) => !isExclusiveGiftHamper(product))
     .sort(
       (a, b) =>
         String(b.created_at || '').localeCompare(String(a.created_at || '')) ||
@@ -186,10 +201,19 @@ export function curateMoreProducts(products: PublicProduct[], exclude: PublicPro
 
 export function curateStoryProduct(products: PublicProduct[]) {
   for (const name of STORY_PREFERRED) {
-    const match = products.find((product) => product.name === name && hasImage(product) && !isWatch(product))
+    const match = products.find(
+      (product) =>
+        product.name === name &&
+        hasImage(product) &&
+        !isWatch(product) &&
+        !isExclusiveGiftHamper(product),
+    )
     if (match) return match
   }
-  return curateHomepageProducts(products, 1, 0)[0] || null
+  return (
+    curateHomepageProducts(products, 8, 0).find((product) => !isExclusiveGiftHamper(product)) ||
+    null
+  )
 }
 
 const HOME_CATEGORY_TILES = [
@@ -279,6 +303,15 @@ export function pickCategorySample(products: PublicProduct[], categoryId: string
 }
 
 export function pickOccasionSample(products: PublicProduct[], index: number) {
-  const curated = curateHomepageProducts(products, 24, 0)
+  const preferred = OCCASION_TILE_PREFERRED[index % OCCASION_TILE_PREFERRED.length] || []
+  for (const name of preferred) {
+    const match = products.find((product) => product.name === name && hasImage(product))
+    if (match) return match
+  }
+  const curated = curateHomepageProducts(
+    products.filter((product) => !isExclusiveGiftHamper(product)),
+    24,
+    0,
+  )
   return curated[index % curated.length] || products.find(hasImage) || null
 }

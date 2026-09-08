@@ -1,6 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const PUBLIC_PRODUCT_SELECT =
   'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)'
@@ -52,23 +54,36 @@ function toPublicProduct(row: {
   }
 }
 
-export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
+async function publicDbClient(): Promise<SupabaseClient | null> {
   const admin = createAdminClient()
-  if (!admin) return []
-  const { data, error } = await admin
+  if (admin) return admin
+  try {
+    return await createClient()
+  } catch {
+    return null
+  }
+}
+
+export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
+  const client = await publicDbClient()
+  if (!client) return []
+  const { data, error } = await client
     .from('products')
     .select(PUBLIC_PRODUCT_SELECT)
     .eq('status', 'active')
     .eq('catalogue_access', 'all')
     .order('name')
-  if (error || !data) return []
+  if (error || !data) {
+    console.error('[catalogue] public products fetch failed:', error?.message || 'no data')
+    return []
+  }
   return data.map(toPublicProduct)
 }
 
 export async function getPublicProduct(id: string): Promise<PublicProduct | null> {
-  const admin = createAdminClient()
-  if (!admin) return null
-  const { data, error } = await admin
+  const client = await publicDbClient()
+  if (!client) return null
+  const { data, error } = await client
     .from('products')
     .select(PUBLIC_PRODUCT_SELECT)
     .eq('id', id)

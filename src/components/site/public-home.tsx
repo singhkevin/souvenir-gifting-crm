@@ -265,10 +265,10 @@ export async function PublicHome() {
             <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Shop by occasion</p>
             <h2 className="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">Programmes that need gifts.</h2>
           </Reveal>
-          <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {occasionVisuals.map((occasion, index) => (
-              <Reveal key={occasion.slug} delay={(index % 4) * 50}>
-                <Link href={occasion.href} className="group relative block overflow-hidden bg-[#F7F4EF]">
+              <Reveal key={occasion.slug} delay={(index % 3) * 50}>
+                <Link href={occasion.href} className="group relative block overflow-hidden bg-[#F0EBE4]">
                   <div className="aspect-[5/4]">
                     {occasion.sample ? (
                       <ProductImage
@@ -281,7 +281,7 @@ export async function PublicHome() {
                       />
                     ) : null}
                   </div>
-                  <div className="absolute inset-0 bg-[#1A3022]/45 transition-colors group-hover:bg-[#1A3022]/55" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-[#1A3022]/90 via-[#1A3022]/45 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-5 text-[#FAF7F2]">
                     <p className="font-serif text-xl text-[#FAF7F2]">{occasion.title}</p>
                     <p className="mt-1 text-xs text-[#F0EAE0]/85">{occasion.line}</p>
