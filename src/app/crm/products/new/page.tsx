@@ -43,7 +43,7 @@ export default async function NewProductPage({
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Add New Product</h1>
-            <p className="text-xs text-gray-500">Add a new gifting item or custom product to the GIFFTER catalogue.</p>
+            <p className="text-xs text-gray-500">Add a new gifting item or custom product to the Gifting Solutions catalogue.</p>
           </div>
         </div>
 

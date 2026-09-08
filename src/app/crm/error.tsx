@@ -25,7 +25,7 @@ export default function CrmError({
           <div>
             <h1 className="text-base font-semibold text-[var(--color-text)]">This page could not be loaded</h1>
             <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-              The rest of GIFFTER is still available. Retry, or pick another section from the sidebar.
+              The rest of Gifting Solutions is still available. Retry, or pick another section from the sidebar.
             </p>
             {error.digest && (
               <p className="text-xs text-[var(--color-muted-fg)] mt-2 font-mono">Reference: {error.digest}</p>

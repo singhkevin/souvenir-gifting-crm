@@ -61,7 +61,7 @@ export function SignupForm() {
   }
 
   return (
-    <AuthShell title="Create a GIFFTER account" subtitle="Public signup creates a client portal login. Staff roles are assigned by an admin.">
+    <AuthShell title="Create a Gifting Solutions account" subtitle="Public signup creates a client portal login. Staff roles are assigned by an admin.">
       <form onSubmit={onSubmit} className="space-y-5">
         {error && (
           <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">{error}</div>

@@ -55,7 +55,9 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
                 <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xl font-bold text-white">
                   G
                 </div>
-                <span className="hidden font-bold tracking-tight text-primary sm:block sm:text-xl">GIFFTER</span>
+                <span className="hidden max-w-[11rem] truncate font-bold tracking-tight text-primary sm:block sm:text-lg">
+                  Gifting Solutions
+                </span>
               </div>
               
               <nav className="hidden items-center space-x-1 md:flex">

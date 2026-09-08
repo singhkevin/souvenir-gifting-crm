@@ -22,7 +22,7 @@ export default function GlobalError({
               textAlign: 'center',
             }}
           >
-            <h1 style={{ fontSize: 16, fontWeight: 600, color: '#1C1917', margin: 0 }}>GIFFTER could not load</h1>
+            <h1 style={{ fontSize: 16, fontWeight: 600, color: '#1C1917', margin: 0 }}>Gifting Solutions could not load</h1>
             <p style={{ fontSize: 14, color: '#6B6358', marginTop: 8 }}>
               An unexpected error occurred while starting the application.
             </p>

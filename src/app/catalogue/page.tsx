@@ -8,7 +8,7 @@ import { isUuid } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Catalogue',
-  description: 'Browse the GIFFTER corporate gifting catalogue.',
+  description: 'Browse the Gifting Solutions corporate gifting catalogue.',
 }
 
 const BUDGETS = [
@@ -121,7 +121,7 @@ export default async function CataloguePage({
           </p>
           <h1 className="store-section-title mt-3">Catalogue</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">
-            Browse live GIFFTER gifts — filter by category and budget, then request a quote.
+            Browse live Gifting Solutions gifts — filter by category and budget, then request a quote.
           </p>
         </div>
       </div>

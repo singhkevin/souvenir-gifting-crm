@@ -166,8 +166,8 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
     <aside className="flex h-full max-h-screen min-h-0 w-64 flex-shrink-0 select-none flex-col border-r border-[#1B3224] bg-[#16281E] text-[#A3B5AA]">
       <div className="flex shrink-0 items-start justify-between gap-2 border-b border-[#21382A] px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
         <Link href="/crm/dashboard" onClick={onNavigate} className="group block min-w-0">
-          <h1 className="font-serif text-2xl font-normal tracking-tight text-[#FAF7F2] transition-colors group-hover:text-white">
-            GIFFTER
+          <h1 className="font-serif text-xl font-normal leading-tight tracking-tight text-[#FAF7F2] transition-colors group-hover:text-white sm:text-2xl">
+            Gifting Solutions
           </h1>
           <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8B9E92]">
             Corporate Gifting CRM

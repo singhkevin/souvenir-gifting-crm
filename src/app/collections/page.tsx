@@ -8,7 +8,7 @@ const ARROW = '\u2192'
 
 export const metadata: Metadata = {
   title: 'Collections',
-  description: 'Editorial GIFFTER collections and corporate occasions, grouped from the existing catalogue.',
+  description: 'Editorial Gifting Solutions collections and corporate occasions, grouped from the existing catalogue.',
 }
 
 export default async function CollectionsPage() {
@@ -21,7 +21,7 @@ export default async function CollectionsPage() {
           <p className="store-eyebrow">Collections</p>
           <h1 className="store-section-title mt-2">Curated programmes</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">
-            Each collection is a view over existing GIFFTER products — no separate catalogue, and no invented items.
+            Each collection is a view over existing Gifting Solutions products — no separate catalogue, and no invented items.
           </p>
         </div>
       </div>

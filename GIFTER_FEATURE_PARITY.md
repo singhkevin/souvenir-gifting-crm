@@ -1,8 +1,8 @@
-# GIFFTER feature parity
+# Gifting Solutions feature parity
 
-Permanent reference for Oaklane vs the GIFFTER CRM product.
+Permanent reference for Oaklane vs the Gifting Solutions CRM product.
 
-**Reference source:** Written GIFFTER functional specification supplied with this task. A walkthrough video was requested but **no video file was found** in the project workspace or common media folders. Re-audit screen-by-screen if a video is attached later.
+**Reference source:** Written Gifting Solutions functional specification supplied with this task. A walkthrough video was requested but **no video file was found** in the project workspace or common media folders. Re-audit screen-by-screen if a video is attached later.
 
 **Existing application status key:** EXISTS / PARTIAL / MISSING / BROKEN  
 **Implemented** reflects the 2026-09-03 parity pass unless noted.
@@ -13,7 +13,7 @@ Permanent reference for Oaklane vs the GIFFTER CRM product.
 
 ## Where Observed
 
-GIFFTER spec: role-specific home (admin / sales / operations / accounts / management / employee / client).
+Gifting Solutions spec: role-specific home (admin / sales / operations / accounts / management / employee / client).
 
 ## Existing Application Status
 
@@ -37,7 +37,7 @@ Code-level: queries aligned to live schema. Production UI to be verified after d
 
 ## Where Observed
 
-GIFFTER module list: Goals.
+Gifting Solutions module list: Goals.
 
 ## Existing Application Status
 
@@ -61,7 +61,7 @@ Pending production login.
 
 ## Where Observed
 
-GIFFTER sales pipeline.
+Gifting Solutions sales pipeline.
 
 ## Existing Application Status
 
@@ -85,7 +85,7 @@ Regression: do not rewrite.
 
 ## Where Observed
 
-GIFFTER customers.
+Gifting Solutions customers.
 
 ## Existing Application Status
 
@@ -109,7 +109,7 @@ Pending production.
 
 ## Where Observed
 
-GIFFTER people on companies.
+Gifting Solutions people on companies.
 
 ## Existing Application Status
 
@@ -133,7 +133,7 @@ Pending production.
 
 ## Where Observed
 
-GIFFTER brief / campaign input.
+Gifting Solutions brief / campaign input.
 
 ## Existing Application Status
 
@@ -157,7 +157,7 @@ Pending production.
 
 ## Where Observed
 
-GIFFTER design files on requirements/orders.
+Gifting Solutions design files on requirements/orders.
 
 ## Existing Application Status
 
@@ -181,7 +181,7 @@ Pending production.
 
 ## Where Observed
 
-GIFFTER sample stock and movement (office / team / client / supplier).
+Gifting Solutions sample stock and movement (office / team / client / supplier).
 
 ## Existing Application Status
 
@@ -205,7 +205,7 @@ Pending production.
 
 ## Where Observed
 
-GIFFTER fulfilment board.
+Gifting Solutions fulfilment board.
 
 ## Existing Application Status
 
@@ -229,7 +229,7 @@ Demo orders SO-2026-2010… already in DB.
 
 ## Where Observed
 
-GIFFTER internal catalogue (variants, supplier, price, MOQ, images).
+Gifting Solutions internal catalogue (variants, supplier, price, MOQ, images).
 
 ## Existing Application Status
 
@@ -253,7 +253,7 @@ Pending Wipro portal login.
 
 ## Where Observed
 
-GIFFTER vendor modules.
+Gifting Solutions vendor modules.
 
 ## Existing Application Status
 
@@ -277,7 +277,7 @@ Regression only.
 
 ## Where Observed
 
-GIFFTER finance.
+Gifting Solutions finance.
 
 ## Existing Application Status
 
@@ -301,7 +301,7 @@ Regression only.
 
 ## Where Observed
 
-GIFFTER work items.
+Gifting Solutions work items.
 
 ## Existing Application Status
 
@@ -325,7 +325,7 @@ Pending production.
 
 ## Where Observed
 
-GIFFTER reporting.
+Gifting Solutions reporting.
 
 ## Existing Application Status
 
@@ -349,7 +349,7 @@ Pending production.
 
 ## Where Observed
 
-GIFFTER admin.
+Gifting Solutions admin.
 
 ## Existing Application Status
 
@@ -373,7 +373,7 @@ Regression only.
 
 ## Where Observed
 
-GIFFTER client feedback.
+Gifting Solutions client feedback.
 
 ## Existing Application Status
 
@@ -397,7 +397,7 @@ Pending admin login. Sales cannot insert (RLS).
 
 ## Where Observed
 
-GIFFTER alerts on assignment, stage, quote, payment.
+Gifting Solutions alerts on assignment, stage, quote, payment.
 
 ## Existing Application Status
 
@@ -421,7 +421,7 @@ Regression only.
 
 ## Where Observed
 
-GIFFTER client login: own campaigns, products, quotes, orders.
+Gifting Solutions client login: own campaigns, products, quotes, orders.
 
 ## Existing Application Status
 
@@ -493,7 +493,7 @@ Regression only.
 
 ## Where Observed
 
-GIFFTER call/email/meeting/message/follow-up.
+Gifting Solutions call/email/meeting/message/follow-up.
 
 ## Existing Application Status
 
@@ -517,7 +517,7 @@ Pending production.
 
 ## Where Observed
 
-GIFFTER operational control (spec sections 15–18).
+Gifting Solutions operational control (spec sections 15–18).
 
 ## Existing Application Status
 
@@ -589,7 +589,7 @@ N/A
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| GIFFTER branding | Done | Sidebar, portal header, login, page title, Settings default. Demo login emails unchanged (real credentials). |
+| Gifting Solutions branding | Done | Sidebar, portal header, login, page title, Settings default. Demo login emails unchanged (real credentials). |
 | Old colour palette | Not recoverable | `--color-*` tokens and the hardcoded greens are the same palette; no earlier palette exists in the tree and git history is unavailable. Touched components consolidated onto the tokens; no new colours invented. |
 | Nested-page back crash | Fixed | Root cause was `next/image` with unconfigured host in `CompanyAvatar`, plus a total absence of error boundaries. |
 | Error / not-found boundaries | Added | App root, `/crm`, `/portal`, plus `global-error`. |
@@ -613,5 +613,5 @@ N/A
 - Mockup “upload” is URL registration, not binary storage upload.
 - Client cannot auto-update `campaigns.status` (write is internal-only); sales sees selections on the campaign page.
 - Review insert is admin-only by RLS.
-- No GIFFTER video file was available for pixel-level screen audit.
+- No Gifting Solutions video file was available for pixel-level screen audit.
 - Binary file storage buckets for mockups/samples photos not wired.

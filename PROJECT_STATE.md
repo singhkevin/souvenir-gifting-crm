@@ -1,9 +1,9 @@
-# Project state — GIFFTER Corporate Gifting CRM
+# Project state — Gifting Solutions Corporate Gifting CRM
 
 Last updated: 2026-09-03
 
-This is the existing GIFFTER application (not a new project). Earlier revisions
-carried an "Oaklane" product name in the UI; the displayed brand is now GIFFTER.
+This is the existing Gifting Solutions application (not a new project). Earlier revisions
+carried an "Oaklane" product name in the UI; the displayed brand is now Gifting Solutions.
 The `*@oaklane.demo` login addresses are real Supabase credentials and must not be
 renamed.
 

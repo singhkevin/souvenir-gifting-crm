@@ -7,7 +7,7 @@ export default function CrmLoading() {
           <div key={i} className="h-20 bg-white border border-[#E5DFD5] rounded-xl animate-pulse" />
         ))}
       </div>
-      <p className="text-xs text-[#7A7267] mt-6">Loading GIFFTER…</p>
+      <p className="text-xs text-[#7A7267] mt-6">Loading Gifting Solutions…</p>
     </div>
   )
 }

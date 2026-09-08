@@ -21,7 +21,7 @@ export function QuoteForm({
       <div className="px-2 py-8 text-center">
         <p className="font-serif text-2xl text-[#1B2430]">Thank you.</p>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-[#5C6570]">
-          We have received your enquiry. A GIFFTER account manager will follow up with a quotation.
+          We have received your enquiry. A Gifting Solutions account manager will follow up with a quotation.
         </p>
       </div>
     )

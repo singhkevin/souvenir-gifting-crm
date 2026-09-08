@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const name =
     [...PRODUCT_CATEGORY_ORDER, ...products.map((p) => p.category_name || '')].find((item) => slugify(item) === slug) ||
     'Category'
-  return { title: name, description: `${name} gifts from the GIFFTER catalogue.` }
+  return { title: name, description: `${name} gifts from the Gifting Solutions catalogue.` }
 }
 
 export default async function CategoryDetailPage({ params }: Props) {

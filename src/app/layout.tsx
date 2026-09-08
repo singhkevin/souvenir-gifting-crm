@@ -19,9 +19,9 @@ const cormorant = Cormorant_Garamond({
 })
 
 export const metadata: Metadata = {
-  title: 'GIFFTER — Corporate Gifting',
+  title: 'Gifting Solutions — Corporate Gifting',
   description: 'Curated corporate gifts for teams, clients and brands — catalogue, quotation and fulfilment in one place.',
-  applicationName: 'GIFFTER',
+  applicationName: 'Gifting Solutions',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

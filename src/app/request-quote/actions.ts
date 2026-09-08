@@ -84,7 +84,7 @@ export async function submitPublicQuote(formData: FormData): Promise<{ error?: s
         name: companyName,
         status: 'prospect',
         owner_id: owner?.id || null,
-        notes: 'Created from the public GIFFTER catalogue quote form.',
+        notes: 'Created from the public Gifting Solutions catalogue quote form.',
       })
       .select('id')
       .single()

@@ -1,4 +1,4 @@
-﻿import Image from 'next/image'
+import Image from 'next/image'
 import Link from 'next/link'
 import { ProductImage } from '@/components/ui/product-image'
 import { SiteProductCard } from '@/components/site/site-product-card'
@@ -158,7 +158,7 @@ export async function PublicHome() {
               Gifts that represent your brand.
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/80">
-              From first enquiry to fulfilment — catalogue, quotation and delivery in one GIFFTER workflow.
+              From first enquiry to fulfilment — catalogue, quotation and delivery in one Gifting Solutions workflow.
             </p>
             <Link
               href="/catalogue"
@@ -364,7 +364,7 @@ export async function PublicHome() {
       <section className="bg-white py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <p className="store-eyebrow">Why GIFFTER</p>
+            <p className="store-eyebrow">Why Gifting Solutions</p>
             <h2 className="store-section-title mt-2 max-w-xl">From enquiry to fulfilment, in one place.</h2>
           </Reveal>
           <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -375,7 +375,7 @@ export async function PublicHome() {
               },
               {
                 title: 'Custom branding',
-                body: 'Mockups and personalisation handled inside the GIFFTER workflow.',
+                body: 'Mockups and personalisation handled inside the Gifting Solutions workflow.',
               },
               {
                 title: 'Bulk gifting',

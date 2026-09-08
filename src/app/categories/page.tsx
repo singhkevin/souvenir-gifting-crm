@@ -8,7 +8,7 @@ import { PRODUCT_CATEGORY_ORDER, sortProductCategories } from '@/lib/products/ca
 
 export const metadata: Metadata = {
   title: 'Categories',
-  description: 'Browse GIFFTER gifts by category.',
+  description: 'Browse Gifting Solutions gifts by category.',
 }
 
 export default async function CategoriesPage() {

@@ -80,7 +80,7 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
     <div className="flex min-h-[100dvh] flex-col justify-center bg-[#F4EFE6] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
       <div className="space-y-3 text-center sm:mx-auto sm:w-full sm:max-w-md">
         <Link href="/home" className="inline-block">
-          <h1 className="font-serif text-3xl tracking-tight text-[#1C1917] sm:text-4xl">GIFFTER</h1>
+          <h1 className="font-serif text-3xl tracking-tight text-[#1C1917] sm:text-4xl">Gifting Solutions</h1>
         </Link>
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7A7267]">
           Corporate Gifting CRM
@@ -92,7 +92,7 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
         <div className="bg-white py-8 px-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] rounded-2xl border border-[#E5DFD5] sm:px-10">
-          <p className="text-sm text-[#5A5248] mb-6 text-center">Sign in to GIFFTER</p>
+          <p className="text-sm text-[#5A5248] mb-6 text-center">Sign in to Gifting Solutions</p>
           <form onSubmit={handleSubmit} className="space-y-5">
             {next ? <input type="hidden" name="next" value={next} /> : null}
             {resetSuccess && !error && (

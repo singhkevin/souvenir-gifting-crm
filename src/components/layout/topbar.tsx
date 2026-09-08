@@ -53,7 +53,7 @@ export function Topbar({
             </button>
           ) : null}
           <Link href="/crm/dashboard" className="truncate font-serif text-lg tracking-tight text-[#1A3022] lg:hidden">
-            GIFFTER
+            Gifting Solutions
           </Link>
           <p className="hidden text-xs text-[#7A7267] lg:block">Corporate gifting, from enquiry to payment</p>
         </div>

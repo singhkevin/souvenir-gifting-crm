@@ -115,8 +115,8 @@ export function SiteHeader({
             ) : null}
           </form>
 
-          <Link href="/home" className="shrink-0 font-serif text-xl tracking-[0.08em] text-white">
-            GIFFTER
+          <Link href="/home" className="shrink-0 font-serif text-lg tracking-[0.04em] text-white">
+            Gifting Solutions
           </Link>
 
           <div className="flex shrink-0 items-center gap-4">
@@ -144,8 +144,8 @@ export function SiteHeader({
       {/* Main nav / mobile bar */}
       <div className="border-b border-[#E8E4DE] bg-white">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
-          <Link href="/home" className="font-serif text-[1.65rem] tracking-[0.06em] text-[#1B2430] sm:text-2xl">
-            GIFFTER
+          <Link href="/home" className="font-serif text-lg tracking-[0.04em] text-[#1B2430] sm:text-xl">
+            Gifting Solutions
           </Link>
 
           <nav className="hidden items-center gap-5 text-[13px] text-[#1B2430] lg:flex xl:gap-7">

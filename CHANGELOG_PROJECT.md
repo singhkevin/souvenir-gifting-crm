@@ -10,7 +10,7 @@ Company → lead → requirement → quotation → order → vendor → invoice 
 
 - **Login dropped the destination.** Unauthenticated `/dashboard` now redirects to `/login?next=/dashboard` (via `proxy.ts`). After sign-in, staff return to that path; clients are kept on `/portal`. Logged-in visits to `/login` bounce home.
 - **Wrong-role access** redirected to the dashboard with no explanation. `requireStaff` now sends people to `/crm/access-denied`.
-- **Missing/broken product photos** showed empty boxes or broken icons. Shared `ProductImage` falls back to a GIFFTER placeholder on null, empty, invalid and failed URLs, used on product list/detail, portal catalogue, shortlist, campaign offerings, and company product tables.
+- **Missing/broken product photos** showed empty boxes or broken icons. Shared `ProductImage` falls back to a Gifting Solutions placeholder on null, empty, invalid and failed URLs, used on product list/detail, portal catalogue, shortlist, campaign offerings, and company product tables.
 - **No product image upload.** Admin/sales can upload, replace or remove a JPG/PNG/WebP (max 5 MB) into the `product-images` bucket. A failed upload does not overwrite the previous image.
 - **Hover text unreadable** on forest-green and plum action buttons (dark hover background, no hover text colour). Global CSS plus the `Button` component now keep a light label on hover, with focus-visible rings.
 - **Catalogue assignment was one company at a time.** Product detail now has All / Selected / None radios, company search, select-all, clear, and a save toast.
@@ -21,7 +21,7 @@ Additive only: public `product-images` storage bucket (5 MB, PNG/JPEG/WebP) with
 
 ---
 
-## 2026-09-03 — GIFFTER feature-parity pass
+## 2026-09-03 — Gifting Solutions feature-parity pass
 
 ### What already existed
 
@@ -33,11 +33,11 @@ Additive only: public `product-images` storage bucket (5 MB, PNG/JPEG/WebP) with
 - Role-aware navigation and notifications
 - Wipro Diwali 2026 campaign demo data (no database reset)
 
-### What the GIFFTER reference requires
+### What the Gifting Solutions reference requires
 
 A full corporate-gifting operating system: dashboard, goals, leads, companies, contacts, requirements, mockups, samples (with movement), orders, products, suppliers / printing / courier, accounts, tasks/activities, reports, team, reviews, settings, notifications, client portal, **client-specific product catalogue**, quotations, and the requirement → quote → order → fulfilment → invoice lifecycle.
 
-A reference video was requested with this task. No video file was present in the workspace, Downloads, Desktop, or Videos folders, so the audit used the written GIFFTER functional specification plus the existing Oaklane schema/UI as the product reference. If a video is attached later, re-check any screen-only modules against `GIFTER_FEATURE_PARITY.md`.
+A reference video was requested with this task. No video file was present in the workspace, Downloads, Desktop, or Videos folders, so the audit used the written Gifting Solutions functional specification plus the existing Oaklane schema/UI as the product reference. If a video is attached later, re-check any screen-only modules against `GIFTER_FEATURE_PARITY.md`.
 
 ### What was missing or broken
 
@@ -78,11 +78,11 @@ A reference video was requested with this task. No video file was present in the
 - `mockups_select_client` RLS for shared mockups
 - Published remaining Diwali draft offering and added two more published Wipro offerings (still a curated subset, not the full catalogue)
 
-## 2026-09-03 — GIFFTER branding, back-button crash, personalised client catalogue
+## 2026-09-03 — Gifting Solutions branding, back-button crash, personalised client catalogue
 
 ### Branding
 
-Product name restored to **GIFFTER** in the sidebar, portal header, login screen,
+Product name restored to **Gifting Solutions** in the sidebar, portal header, login screen,
 browser title and the Settings default organisation name. Demo login emails
 (`*@oaklane.demo`) and the demo password are real Supabase credentials and were
 deliberately left untouched.
