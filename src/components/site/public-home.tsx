@@ -21,6 +21,7 @@ import {
   curateTrendingProducts,
   homeCategoryTiles,
   pickCategorySample,
+  pickCollectionSample,
   pickOccasionSample,
 } from '@/lib/catalogue/curate'
 
@@ -177,7 +178,7 @@ export async function PublicHome() {
           </Reveal>
           <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {collections.map((collection, index) => {
-              const sample = products.find(collection.match)
+              const sample = pickCollectionSample(products, collection.slug, collection.match)
               return (
                 <Reveal key={collection.slug} delay={(index % 3) * 70}>
                   <Link

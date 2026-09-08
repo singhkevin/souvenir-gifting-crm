@@ -16,7 +16,6 @@ const PRIORITY_CATEGORIES = [
 
 const HERO_PREFERRED = [
   'Premium insulated bottle',
-  'Leather work bag',
   'Laptop backpack 20L',
   'Graphite over-ear headphones',
   'Matte black travel tumbler',
@@ -27,28 +26,59 @@ const HERO_PREFERRED = [
   'Silver coin keepsake',
   'Wood desk organiser tray',
   'Black softshell corporate jacket',
+  'Charcoal weekender duffle',
 ]
 
 const STORY_PREFERRED = [
-  'Leather work bag',
   'Premium insulated bottle',
   'Graphite over-ear headphones',
+  'Laptop backpack 20L',
   'Black softshell corporate jacket',
-  'Leadership recognition hamper',
   'Premium induction gift box',
+  'Leadership recognition hamper',
 ]
 
 const OCCASION_TILE_PREFERRED = [
   ['Premium induction gift box', 'Starter welcome essentials kit', 'Hybrid work-from-home kit'],
-  ['Leadership recognition hamper', 'Gold ribbon executive gift box', 'Self-care wellness box'],
-  ['Silver cup trophy', 'Achievement medal with ribbon', 'Silver coin keepsake'],
-  ['Premium insulated bottle', 'Graphite over-ear headphones', 'Double-wall glass tumbler'],
-  ['Festive corporate hamper crate', 'Kraft ribbon gift hamper', 'Cotton waffle bathrobe'],
-  ['Silver coin keepsake', 'Metal tower trophy', 'Pashmina wrap'],
+  ['Leadership recognition hamper', 'Kraft ribbon gift hamper', 'Self-care wellness box'],
+  ['Silver cup trophy', 'Achievement medal with ribbon', 'Crystal recognition plaque'],
+  ['Premium insulated bottle', 'Graphite over-ear headphones', 'Matte black travel tumbler'],
+  ['Festive corporate hamper crate', 'Kraft ribbon gift hamper', 'Leadership recognition hamper'],
+  ['Achievement medal with ribbon', 'Silver cup trophy', 'Crystal recognition plaque'],
 ] as const
+
+const COLLECTION_TILE_PREFERRED: Record<string, string[]> = {
+  'executive-edit': ['Black softshell corporate jacket', 'Structured briefcase portfolio', 'Silver cup trophy'],
+  'new-joiner-essentials': [
+    'Premium induction gift box',
+    'Starter welcome essentials kit',
+    'Hybrid work-from-home kit',
+    'New joiner onboarding hamper',
+  ],
+  'client-appreciation': ['Leadership recognition hamper', 'Kraft ribbon gift hamper', 'Acacia serving tray'],
+  'festival-gifting': ['Festive corporate hamper crate', 'Festival hamper crate', 'Kraft ribbon gift hamper'],
+  'conference-and-events': ['Premium insulated bottle', 'Graphite over-ear headphones', 'Wood desk organiser tray'],
+  'welcome-kits': ['Premium induction gift box', 'Starter welcome essentials kit', 'Hybrid work-from-home kit'],
+}
 
 function isExclusiveGiftHamper(product: PublicProduct) {
   return /executive gift box|exclusive gift|gold ribbon executive/i.test(product.name)
+}
+
+/** Products whose current photos crop poorly in homepage tiles/cards. */
+function isMisalignedHomepageImage(product: PublicProduct) {
+  const name = product.name
+  if (
+    /lanyard|badge holder|double-wall glass tumbler|hard-shell cabin trolley|leather work bag|gold laurel|executive gift box/i.test(
+      name,
+    )
+  ) {
+    return true
+  }
+  if (/lifestyle|person|latte|hands holding|outdoor|hallway|office scene/i.test(product.description || '')) {
+    return true
+  }
+  return false
 }
 
 function isWatch(product: PublicProduct) {
@@ -64,6 +94,7 @@ function scoreProduct(product: PublicProduct) {
   if (hasImage(product)) score += 5000
   if (PRIORITY_CATEGORIES.includes(product.category_name as (typeof PRIORITY_CATEGORIES)[number])) score += 1200
   if (isWatch(product)) score -= 8000
+  if (isMisalignedHomepageImage(product)) score -= 12000
   if (/lifestyle|person|outdoor|hallway|office scene/i.test(product.description || '')) score -= 500
   return score
 }
@@ -72,7 +103,10 @@ function scoreProduct(product: PublicProduct) {
  * Curate homepage rails: category diversity, prefer imaged premium gifts, limit watches.
  */
 export function curateHomepageProducts(products: PublicProduct[], limit: number, maxWatches = 1) {
-  const pool = [...products].filter(hasImage).sort((a, b) => scoreProduct(b) - scoreProduct(a))
+  const pool = [...products]
+    .filter(hasImage)
+    .filter((product) => !isMisalignedHomepageImage(product))
+    .sort((a, b) => scoreProduct(b) - scoreProduct(a))
   const selected: PublicProduct[] = []
   const used = new Set<string>()
   const categoryCounts = new Map<string, number>()
@@ -156,6 +190,7 @@ export function curateTrendingProducts(products: PublicProduct[], limit = 10) {
     .filter(hasImage)
     .filter((product) => !isWatch(product))
     .filter((product) => !isExclusiveGiftHamper(product))
+    .filter((product) => !isMisalignedHomepageImage(product))
     .sort(
       (a, b) =>
         String(b.created_at || '').localeCompare(String(a.created_at || '')) ||
@@ -206,13 +241,15 @@ export function curateStoryProduct(products: PublicProduct[]) {
         product.name === name &&
         hasImage(product) &&
         !isWatch(product) &&
-        !isExclusiveGiftHamper(product),
+        !isExclusiveGiftHamper(product) &&
+        !isMisalignedHomepageImage(product),
     )
     if (match) return match
   }
   return (
-    curateHomepageProducts(products, 8, 0).find((product) => !isExclusiveGiftHamper(product)) ||
-    null
+    curateHomepageProducts(products, 8, 0).find(
+      (product) => !isExclusiveGiftHamper(product) && !isMisalignedHomepageImage(product),
+    ) || null
   )
 }
 
@@ -228,16 +265,16 @@ const HOME_CATEGORY_TILES = [
 /** Prefer full-bleed studio shots that read cleanly in 4:5 category tiles. */
 const CATEGORY_TILE_PREFERRED: Record<string, string[]> = {
   Drinkware: [
-    'Double-wall glass tumbler',
     'Matte black travel tumbler',
-    'Premium insulated bottle',
     'Matte green insulated bottle',
+    'Premium insulated bottle',
+    'Insulated coffee tumbler with lid',
   ],
   'Bags & Travel': [
     'Laptop backpack 20L',
-    'Leather work bag',
     'Navy laptop daypack',
     'Charcoal weekender duffle',
+    'Quilted laptop messenger',
   ],
   'Tech & Electronics': [
     'Graphite over-ear headphones',
@@ -258,10 +295,10 @@ const CATEGORY_TILE_PREFERRED: Record<string, string[]> = {
     'Zip-through hoodie',
   ],
   'Hampers & Gift Sets': [
-    'Gold ribbon executive gift box',
-    'Executive gift box',
+    'Leadership recognition hamper',
     'Festive corporate hamper crate',
     'Kraft ribbon gift hamper',
+    'Festival hamper crate',
   ],
   'Welcome Kits': [
     'Premium induction gift box',
@@ -269,9 +306,9 @@ const CATEGORY_TILE_PREFERRED: Record<string, string[]> = {
     'Hybrid work-from-home kit',
   ],
   'Eco-Friendly Gifts': ['Bamboo wireless charger', 'Recycled notebook set'],
-  Wellness: ['Essential oil wellness trio', 'Self-care wellness box', 'Rolled wellness yoga mat'],
+  Wellness: ['Essential oil wellness trio', 'Self-care wellness box', 'Pashmina wrap'],
   'Home & Lifestyle': ['Acacia serving tray', 'Linen throw blanket', 'Cotton waffle bathrobe'],
-  'Awards & Recognition': ['Silver coin keepsake', 'Achievement medal with ribbon', 'Silver cup trophy'],
+  'Awards & Recognition': ['Achievement medal with ribbon', 'Silver cup trophy', 'Crystal recognition plaque'],
 }
 
 export function homeCategoryTiles<T extends { name: string }>(categories: T[], limit = 6) {
@@ -288,8 +325,15 @@ export function homeCategoryTiles<T extends { name: string }>(categories: T[], l
 }
 
 export function pickCategorySample(products: PublicProduct[], categoryId: string, categoryName?: string) {
-  const inCategory = products.filter((product) => product.category_id === categoryId && hasImage(product))
-  if (!inCategory.length) return null
+  const inCategory = products.filter(
+    (product) =>
+      product.category_id === categoryId && hasImage(product) && !isMisalignedHomepageImage(product),
+  )
+  if (!inCategory.length) {
+    return (
+      products.find((product) => product.category_id === categoryId && hasImage(product)) || null
+    )
+  }
 
   const preferred = categoryName ? CATEGORY_TILE_PREFERRED[categoryName] || [] : []
   for (const name of preferred) {
@@ -297,15 +341,31 @@ export function pickCategorySample(products: PublicProduct[], categoryId: string
     if (match) return match
   }
 
-  return [...inCategory]
-    .filter((product) => !/lifestyle|person|latte|outdoor|hallway|office scene/i.test(product.description || ''))
-    .sort((a, b) => scoreProduct(b) - scoreProduct(a))[0] || inCategory[0]
+  return [...inCategory].sort((a, b) => scoreProduct(b) - scoreProduct(a))[0] || inCategory[0]
+}
+
+export function pickCollectionSample(
+  products: PublicProduct[],
+  slug: string,
+  match: (product: PublicProduct) => boolean,
+) {
+  const pool = products.filter(
+    (product) => match(product) && hasImage(product) && !isMisalignedHomepageImage(product),
+  )
+  const preferred = COLLECTION_TILE_PREFERRED[slug] || []
+  for (const name of preferred) {
+    const matchPreferred = pool.find((product) => product.name === name)
+    if (matchPreferred) return matchPreferred
+  }
+  return [...pool].sort((a, b) => scoreProduct(b) - scoreProduct(a))[0] || products.find(match) || null
 }
 
 export function pickOccasionSample(products: PublicProduct[], index: number) {
   const preferred = OCCASION_TILE_PREFERRED[index % OCCASION_TILE_PREFERRED.length] || []
   for (const name of preferred) {
-    const match = products.find((product) => product.name === name && hasImage(product))
+    const match = products.find(
+      (product) => product.name === name && hasImage(product) && !isMisalignedHomepageImage(product),
+    )
     if (match) return match
   }
   const curated = curateHomepageProducts(
