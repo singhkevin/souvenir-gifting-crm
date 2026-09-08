@@ -15,28 +15,44 @@ export default async function PortalHomePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">Your campaigns, quotations, and live order status.</p>
+        <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-500">Your campaigns, quotations, and live order status.</p>
       </div>
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="bg-white border rounded-2xl p-4"><p className="text-xs text-gray-500">Campaigns</p><p className="text-2xl font-semibold">{campaigns?.length || 0}</p></div>
-        <div className="bg-white border rounded-2xl p-4"><p className="text-xs text-gray-500">Open quotations</p><p className="text-2xl font-semibold">{quotes?.length || 0}</p></div>
-        <div className="bg-white border rounded-2xl p-4"><p className="text-xs text-gray-500">Orders</p><p className="text-2xl font-semibold">{orders?.length || 0}</p></div>
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Campaigns</p><p className="text-xl font-semibold sm:text-2xl">{campaigns?.length || 0}</p></div>
+        <div className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Open quotations</p><p className="text-xl font-semibold sm:text-2xl">{quotes?.length || 0}</p></div>
+        <div className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Orders</p><p className="text-xl font-semibold sm:text-2xl">{orders?.length || 0}</p></div>
       </div>
-      <div className="bg-white border rounded-2xl p-5">
-        <div className="flex justify-between mb-3">
+      <div className="rounded-2xl border bg-white p-4 sm:p-5">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="font-serif text-lg">My orders</h2>
-          <Link href="/portal/orders" className="text-xs underline">View all</Link>
+          <Link
+            href="/portal/orders"
+            className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#FAF7F2]"
+          >
+            View all
+          </Link>
         </div>
-        {(orders || []).map((o) => {
-          const campaign = Array.isArray(o.campaign) ? o.campaign[0] : o.campaign
-          return (
-            <Link key={o.id} href={`/portal/orders/${o.id}`} className="flex justify-between py-2 border-t text-sm">
-              <span>{campaign?.name || o.order_number}</span>
-              <span>{CLIENT_STATUS_LABELS[o.status] || o.status} · {formatCurrency(o.order_value)}</span>
-            </Link>
-          )
-        })}
+        <div className="space-y-2">
+          {(orders || []).map((o) => {
+            const campaign = Array.isArray(o.campaign) ? o.campaign[0] : o.campaign
+            return (
+              <Link
+                key={o.id}
+                href={`/portal/orders/${o.id}`}
+                className="flex flex-col gap-1 rounded-xl border border-[#EFE9E0] bg-[#FAF7F2] px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+              >
+                <span className="font-medium text-gray-900">{campaign?.name || o.order_number}</span>
+                <span className="text-xs text-gray-500 sm:text-sm">
+                  {CLIENT_STATUS_LABELS[o.status] || o.status} · {formatCurrency(o.order_value)}
+                </span>
+              </Link>
+            )
+          })}
+          {(!orders || orders.length === 0) && (
+            <p className="py-4 text-center text-sm text-gray-500">No orders yet.</p>
+          )}
+        </div>
       </div>
     </div>
   )

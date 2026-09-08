@@ -8,6 +8,7 @@ import { requireStaff } from '@/lib/auth'
 import { updateRequirementForm, removeRequirement } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { asFormAction } from '@/lib/form-action'
+import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 
 export default async function RequirementDetailPage({
   params,
@@ -124,18 +125,23 @@ export default async function RequirementDetailPage({
                 <input name="budget" type="number" step="0.01" defaultValue={req.budget || ''} placeholder="Budget" className="border rounded-lg px-2 py-2" />
                 <input name="purpose" defaultValue={req.purpose || ''} placeholder="Purpose" className="border rounded-lg px-2 py-2" />
                 <input name="delivery_city" defaultValue={req.delivery_city || ''} placeholder="Delivery city" className="border rounded-lg px-2 py-2" />
-                <input name="payment_terms" defaultValue={req.payment_terms || ''} placeholder="Payment terms" className="border rounded-lg px-2 py-2" />
-                <input name="deadline" type="date" defaultValue={req.deadline || ''} className="border rounded-lg px-2 py-2" />
-                <select name="status" defaultValue={req.status} className="border rounded-lg px-2 py-2">
-                  <option value="draft">Draft</option>
-                  <option value="active">Active</option>
-                  <option value="quoted">Quoted</option>
-                  <option value="won">Won</option>
-                  <option value="lost">Lost</option>
-                  <option value="closed">Closed</option>
-                </select>
-                <textarea name="description" rows={3} defaultValue={req.description || ''} className="md:col-span-2 border rounded-lg px-2 py-2" />
-                <button className="md:col-span-2 px-3 py-2 rounded-lg text-white bg-[#4A235A] font-semibold">Save requirement</button>
+                <input name="payment_terms" defaultValue={req.payment_terms || ''} placeholder="Payment terms" className="min-h-11 rounded-lg border px-2 py-2" />
+                <SheetDateField name="deadline" label="Deadline" defaultValue={req.deadline || ''} />
+                <MobileSheetSelect
+                  name="status"
+                  label="Status"
+                  defaultValue={req.status}
+                  options={[
+                    { value: 'draft', label: 'Draft' },
+                    { value: 'active', label: 'Active' },
+                    { value: 'quoted', label: 'Quoted' },
+                    { value: 'won', label: 'Won' },
+                    { value: 'lost', label: 'Lost' },
+                    { value: 'closed', label: 'Closed' },
+                  ]}
+                />
+                <textarea name="description" rows={3} defaultValue={req.description || ''} className="rounded-lg border px-2 py-2 md:col-span-2" />
+                <button className="min-h-11 rounded-lg bg-[#1A3022] px-3 py-2 font-semibold text-white md:col-span-2">Save requirement</button>
               </form>
             </div>
 

@@ -170,13 +170,17 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
                   type="button"
                   disabled={loading}
                   onClick={() => loginDemo(account.email)}
-                  className="w-full text-left p-2.5 rounded-xl bg-[#FAF7F2] hover:bg-[#EFE9E0] border border-[#EFE9E0] flex justify-between items-center gap-3 transition-all disabled:opacity-50"
+                  className="flex w-full flex-col gap-3 rounded-xl border border-[#EFE9E0] bg-[#FAF7F2] p-3 text-left transition-all hover:bg-[#EFE9E0] disabled:opacity-50 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <span className="min-w-0">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-[#7A7267]">{account.role}</span>
-                    <span className="block text-xs text-[#1C1917] truncate">{account.email}</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-[#7A7267]">
+                      {account.role}
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-[#1C1917]">{account.email}</span>
                   </span>
-                  <span className="shrink-0 text-[11px] font-semibold text-[#1A3022]">{account.action}</span>
+                  <span className="inline-flex min-h-10 w-full shrink-0 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-[11px] font-semibold text-white hover:bg-[#274433] sm:w-auto">
+                    {account.action}
+                  </span>
                 </button>
               ))}
             </div>

@@ -219,8 +219,13 @@ export default async function MyWorkPage({
             {visibleLeads.map((l: WorkLead) => {
               const company = oneRelation(l.company)
               return (
-                <Link key={l.id} href={`/crm/leads/${l.id}`} className="block text-sm py-1 hover:underline">
-                  {company?.name || 'Lead'} · {l.stage} · {formatCurrency(l.estimated_value)}
+                <Link
+                  key={l.id}
+                  href={`/crm/leads/${l.id}`}
+                  className="block rounded-xl border border-[#EFE9E0] bg-[#FAF7F2] p-3 text-sm"
+                >
+                  <p className="font-medium text-gray-900">{company?.name || 'Lead'}</p>
+                  <p className="mt-0.5 text-[11px] text-[#7A7267]">{l.stage} · {formatCurrency(l.estimated_value)}</p>
                 </Link>
               )
             })}
@@ -228,16 +233,26 @@ export default async function MyWorkPage({
           <Section title="My requirements">
             {visibleReqs.length === 0 && <p className="text-sm text-gray-500">No requirements in this view.</p>}
             {visibleReqs.map((r: WorkRequirement) => (
-              <Link key={r.id} href={`/crm/requirements/${r.id}`} className="block text-sm py-1 hover:underline">
-                {r.name} · {r.status}
+              <Link
+                key={r.id}
+                href={`/crm/requirements/${r.id}`}
+                className="block rounded-xl border border-[#EFE9E0] bg-[#FAF7F2] p-3 text-sm"
+              >
+                <p className="font-medium text-gray-900">{r.name}</p>
+                <p className="mt-0.5 text-[11px] text-[#7A7267]">{r.status}</p>
               </Link>
             ))}
           </Section>
           <Section title="My quotations">
             {visibleQuotes.length === 0 && <p className="text-sm text-gray-500">No quotations in this view.</p>}
             {visibleQuotes.map((q: WorkQuote) => (
-              <Link key={q.id} href={`/crm/quotations/${q.id}`} className="block text-sm py-1 hover:underline">
-                {q.quotation_number} · {q.status} · {formatCurrency(q.total)}
+              <Link
+                key={q.id}
+                href={`/crm/quotations/${q.id}`}
+                className="block rounded-xl border border-[#EFE9E0] bg-[#FAF7F2] p-3 text-sm"
+              >
+                <p className="font-mono font-medium text-gray-900">{q.quotation_number}</p>
+                <p className="mt-0.5 text-[11px] text-[#7A7267]">{q.status} · {formatCurrency(q.total)}</p>
               </Link>
             ))}
           </Section>

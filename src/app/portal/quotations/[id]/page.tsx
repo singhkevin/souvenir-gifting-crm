@@ -66,15 +66,42 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
         {/* Body */}
         <div className="p-6 space-y-6">
           <div>
-            <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-3">Itemized Quotation</h3>
-            <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-700">Itemized Quotation</h3>
+
+            <div className="space-y-3 md:hidden">
+              {quote.items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+                const product = oneRelation(item.product)
+                return (
+                  <article key={item.id} className="rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-4">
+                    <p className="text-sm font-semibold text-gray-900">{product?.name}</p>
+                    <p className="mt-0.5 font-mono text-[10px] text-gray-400">{product?.sku}</p>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                      <div>
+                        <p className="text-[10px] uppercase text-gray-400">Qty</p>
+                        <p className="font-semibold text-gray-800">{item.quantity}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase text-gray-400">Unit</p>
+                        <p className="font-semibold text-gray-800">{formatCurrency(item.unit_price)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase text-gray-400">Total</p>
+                        <p className="font-semibold text-gray-900">{formatCurrency(item.line_total)}</p>
+                      </div>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+
+            <div className="hidden overflow-hidden rounded-xl border border-gray-200 md:block">
               <table className="w-full text-left text-xs">
-                <thead className="bg-gray-50 text-gray-700 border-b border-gray-200">
+                <thead className="border-b border-gray-200 bg-gray-50 text-gray-700">
                   <tr>
                     <th className="px-4 py-3 font-semibold">Product</th>
-                    <th className="px-4 py-3 font-semibold text-center">Quantity</th>
-                    <th className="px-4 py-3 font-semibold text-right">Unit Price</th>
-                    <th className="px-4 py-3 font-semibold text-right">Line Total</th>
+                    <th className="px-4 py-3 text-center font-semibold">Quantity</th>
+                    <th className="px-4 py-3 text-right font-semibold">Unit Price</th>
+                    <th className="px-4 py-3 text-right font-semibold">Line Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -84,7 +111,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div className="font-bold text-gray-900">{product?.name}</div>
-                        <div className="text-[10px] text-gray-400 font-mono">{product?.sku}</div>
+                        <div className="font-mono text-[10px] text-gray-400">{product?.sku}</div>
                       </td>
                       <td className="px-4 py-3 text-center font-semibold text-gray-800">{item.quantity} units</td>
                       <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(item.unit_price)}</td>

@@ -5,6 +5,8 @@ import { formatCurrency, asRows, isUuid } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
 import { Package, Search } from 'lucide-react'
 import { sortProductCategories } from '@/lib/products/categories'
+import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
+import { CatalogueShortlistButton } from '@/components/portal/catalogue-shortlist-button'
 
 const PAGE_SIZE = 24
 
@@ -43,7 +45,7 @@ export default async function PortalCataloguePage({
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Your campaign selection</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="mt-1 text-sm text-gray-500">
             Shortlist the gifts you like and we will build your quotation around them.
           </p>
         </div>
@@ -54,25 +56,25 @@ export default async function PortalCataloguePage({
             body="Your account manager will share gifting options for this campaign shortly."
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {offerings.map((offering) => {
               const campaign = Array.isArray(offering.campaign) ? offering.campaign[0] : offering.campaign
               return (
-                <div key={offering.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+                <div key={offering.id} className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
                   <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="md" />
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="flex flex-1 flex-col justify-between space-y-4 p-5">
                     <div>
-                      <p className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-wider">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary)]">
                         {campaign?.name}
                       </p>
                       <Link href={`/portal/catalogue/${offering.id}`}>
-                        <h3 className="text-sm font-semibold text-gray-900 hover:text-[var(--color-primary)] line-clamp-1 mt-1">
+                        <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-gray-900 hover:text-[var(--color-primary)]">
                           {offering.display_name}
                         </h3>
                       </Link>
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{offering.client_description || ''}</p>
+                      <p className="mt-1 line-clamp-2 text-xs text-gray-500">{offering.client_description || ''}</p>
                     </div>
-                    <div className="pt-3 border-t border-gray-100 space-y-3">
+                    <div className="space-y-3 border-t border-gray-100 pt-3">
                       <div>
                         <p className="text-base font-semibold text-gray-900">{formatCurrency(offering.selling_price)}</p>
                         <p className="text-[10px] text-gray-400">MOQ: {offering.moq || 1} units</p>
@@ -145,70 +147,66 @@ export default async function PortalCataloguePage({
     return `/portal/catalogue${qs ? `?${qs}` : ''}`
   }
 
-  const categoryHref = (nextCategory: string) => {
-    const params = new URLSearchParams()
-    if (q) params.set('q', q)
-    if (nextCategory) params.set('category', nextCategory)
-    if (sort && sort !== 'name') params.set('sort', sort)
-    const qs = params.toString()
-    return `/portal/catalogue${qs ? `?${qs}` : ''}`
+  const preserveParams = {
+    ...(q ? { q } : {}),
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Explore gifts</h1>
-        <p className="text-sm text-gray-500 mt-1">Curated corporate gifting for your team, ready to personalise.</p>
+        <p className="mt-1 text-sm text-gray-500">Curated corporate gifting for your team, ready to personalise.</p>
       </div>
 
-      <form className="flex flex-col gap-3 bg-white border border-gray-200 rounded-lg p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+        <form className="flex w-full gap-2">
           {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+          {sort && sort !== 'name' ? <input type="hidden" name="sort" value={sort} /> : null}
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               name="q"
               defaultValue={q}
               placeholder="Search gifts"
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-md"
+              className="min-h-10 w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#1A3022]"
             />
           </div>
-          <select name="sort" defaultValue={sort} className="text-sm border border-gray-200 rounded-md px-3 py-2 bg-white">
-            <option value="name">Sort: A–Z</option>
-            <option value="price_low">Price: low to high</option>
-            <option value="price_high">Price: high to low</option>
-          </select>
-          <button type="submit" className="px-4 py-2 text-sm font-medium rounded-md bg-[var(--color-primary)] text-white hover:text-white hover:opacity-90">
-            Apply
+          <button
+            type="submit"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433]"
+          >
+            Search
           </button>
-        </div>
-        {categories.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-100">
-            <span className="text-xs text-gray-400 font-medium">Category:</span>
-            <Link
-              href={categoryHref('')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                !categoryFilter ? 'bg-[var(--color-primary)] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              All Products
-            </Link>
-            {categories.map((item) => (
-              <Link
-                key={item.id}
-                href={categoryHref(item.id)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                  categoryFilter === item.id
-                    ? 'bg-[var(--color-primary)] text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </div>
-        )}
-      </form>
+        </form>
+
+        <MobileFilterBar
+          pathname="/portal/catalogue"
+          preserveParams={preserveParams}
+          fields={[
+            {
+              key: 'sort',
+              label: 'Sort',
+              value: sort === 'name' ? '' : sort,
+              emptyLabel: 'A–Z',
+              options: [
+                { value: '', label: 'A–Z' },
+                { value: 'price_low', label: 'Price: low to high' },
+                { value: 'price_high', label: 'Price: high to low' },
+              ],
+            },
+            {
+              key: 'category',
+              label: 'Category',
+              value: categoryFilter,
+              emptyLabel: 'All products',
+              options: [
+                { value: '', label: 'All products' },
+                ...categories.map((item) => ({ value: item.id, label: item.name })),
+              ],
+            },
+          ]}
+        />
+      </div>
 
       {!products?.length ? (
         <EmptyState
@@ -221,53 +219,74 @@ export default async function PortalCataloguePage({
             Showing {from + 1}–{Math.min(from + PAGE_SIZE, total)} of {total}
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
-              <Link
+              <article
                 key={product.id}
-                href={`/portal/catalogue/product/${product.id}`}
-                className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col hover:border-[var(--color-primary)] hover:shadow-sm transition-all"
+                className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:border-[var(--color-primary)] hover:shadow-sm"
               >
-                <div className="aspect-square bg-[#FAF7F2] border-b border-gray-100">
-                  <ProductImage src={product.image_url} alt={product.name} size="md" className="min-h-0 h-full" />
-                </div>
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                <Link href={`/portal/catalogue/product/${product.id}`} className="block">
+                  <div className="aspect-square border-b border-gray-100 bg-[#FAF7F2]">
+                    <ProductImage src={product.image_url} alt={product.name} size="md" className="h-full min-h-0" />
+                  </div>
+                </Link>
+                <div className="flex flex-1 flex-col justify-between space-y-3 p-4 sm:p-5">
                   <div>
                     {product.category_name && (
-                      <p className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-wider">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary)]">
                         {product.category_name}
                       </p>
                     )}
-                    <h3 className="text-sm font-semibold text-gray-900 line-clamp-1 mt-1">{product.name}</h3>
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{product.description || ''}</p>
+                    <Link href={`/portal/catalogue/product/${product.id}`}>
+                      <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-gray-900 hover:text-[#1A3022]">{product.name}</h3>
+                    </Link>
+                    <p className="mt-1 line-clamp-2 text-xs text-gray-500">{product.description || ''}</p>
                   </div>
-                  <div className="pt-3 border-t border-gray-100">
-                    <p className="text-base font-semibold text-gray-900">{formatCurrency(product.price)}</p>
-                    <p className="text-[10px] text-gray-400">MOQ: {product.moq || 1} units</p>
+                  <div className="space-y-3 border-t border-gray-100 pt-3">
+                    <div>
+                      <p className="text-base font-semibold text-gray-900">{formatCurrency(product.price)}</p>
+                      <p className="text-[10px] text-gray-400">MOQ: {product.moq || 1} units</p>
+                    </div>
+                    <CatalogueShortlistButton
+                      product={{
+                        id: product.id,
+                        sku: product.sku,
+                        name: product.name,
+                        price: product.price,
+                        image_url: product.image_url,
+                        category_name: product.category_name,
+                      }}
+                    />
                   </div>
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center justify-between gap-3 pt-2">
               {currentPage > 1 ? (
-                <Link href={pageHref(currentPage - 1)} className="text-sm text-[var(--color-primary)] hover:underline">
-                  ← Previous
+                <Link
+                  href={pageHref(currentPage - 1)}
+                  className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#FAF7F2] sm:flex-none"
+                >
+                  Previous
                 </Link>
               ) : (
-                <span />
+                <span className="flex-1 sm:flex-none" />
               )}
               <span className="text-xs text-gray-500">
                 Page {currentPage} of {totalPages}
               </span>
               {currentPage < totalPages ? (
-                <Link href={pageHref(currentPage + 1)} className="text-sm text-[var(--color-primary)] hover:underline">
-                  Next →
+                <Link
+                  href={pageHref(currentPage + 1)}
+                  className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] sm:flex-none"
+                >
+                  Next
                 </Link>
               ) : (
-                <span />
+                <span className="flex-1 sm:flex-none" />
               )}
             </div>
           )}
@@ -279,10 +298,10 @@ export default async function PortalCataloguePage({
 
 function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <div className="bg-white p-12 rounded-lg text-center border border-gray-200">
-      <Package className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+    <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
+      <Package className="mx-auto mb-3 h-10 w-10 text-gray-300" />
       <p className="text-sm font-semibold text-gray-700">{title}</p>
-      <p className="text-xs text-gray-400 mt-1">{body}</p>
+      <p className="mt-1 text-xs text-gray-400">{body}</p>
     </div>
   )
 }

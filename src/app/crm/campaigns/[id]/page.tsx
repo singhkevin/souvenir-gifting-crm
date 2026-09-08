@@ -6,6 +6,7 @@ import { ConfirmAction } from '@/components/ui/confirm-action'
 import { BackButton } from '@/components/ui/back-button'
 import { asFormAction } from '@/lib/form-action'
 import { requireStaff } from '@/lib/auth'
+import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 
 export default async function CampaignDetailPage({
   params,
@@ -65,19 +66,27 @@ export default async function CampaignDetailPage({
         <input name="occasion" defaultValue={campaign.occasion || ''} placeholder="Occasion" className="border rounded-lg px-3 py-2" />
         <input name="employee_quantity" type="number" min="1" defaultValue={campaign.employee_quantity || 1} className="border rounded-lg px-3 py-2" />
         <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={campaign.budget_per_employee || 0} className="border rounded-lg px-3 py-2" />
-        <input name="required_delivery_date" type="date" defaultValue={campaign.required_delivery_date || ''} className="border rounded-lg px-3 py-2" />
-        <input name="description" defaultValue={campaign.description || ''} placeholder="Notes" className="border rounded-lg px-3 py-2" />
-        <button className="bg-[#1A3022] text-white rounded-lg font-semibold">Save campaign</button>
+        <SheetDateField name="required_delivery_date" label="Required delivery" defaultValue={campaign.required_delivery_date || ''} />
+        <input name="description" defaultValue={campaign.description || ''} placeholder="Notes" className="min-h-11 rounded-lg border px-3 py-2" />
+        <button className="min-h-11 rounded-lg bg-[#1A3022] font-semibold text-white">Save campaign</button>
       </form>
 
-      <form action={asFormAction(addCampaignProduct)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-3 gap-3 text-xs">
+      <form action={asFormAction(addCampaignProduct)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3">
         <input type="hidden" name="campaign_id" value={campaign.id} />
-        <select name="product_id" required className="border rounded-lg px-2 py-2">
-          <option value="">Add from internal catalogue</option>
-          {available.map((p) => (
-            <option key={p.id} value={p.id}>{p.name} · {formatCurrency(p.price)}</option>
-          ))}
-        </select>
+        <MobileSheetSelect
+          name="product_id"
+          label="Product"
+          required
+          emptyLabel="Add from internal catalogue"
+          className="md:col-span-2"
+          options={[
+            { value: '', label: 'Add from internal catalogue' },
+            ...available.map((p) => ({
+              value: p.id,
+              label: `${p.name} · ${formatCurrency(p.price)}`,
+            })),
+          ]}
+        />
         <input name="selling_price" type="number" step="0.01" placeholder="Client selling price" className="border rounded-lg px-2 py-2" />
         <button className="bg-[#1A3022] text-white rounded-lg font-semibold">Add as draft offering</button>
       </form>

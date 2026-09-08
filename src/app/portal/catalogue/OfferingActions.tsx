@@ -33,10 +33,10 @@ export function OfferingActions({
         {shortlisted && !selected ? <input type="hidden" name="remove" value="1" /> : null}
         <ActionButton
           label={shortlisted && !selected ? 'Shortlisted' : 'Shortlist'}
-          className={`w-full py-2 rounded-md text-xs font-semibold ${
+          className={`inline-flex min-h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-semibold ${
             shortlisted && !selected
-              ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-white border border-gray-300 text-gray-700'
+              ? 'border border-green-200 bg-green-50 text-green-700'
+              : 'border border-gray-300 bg-white text-gray-700'
           }`}
         />
       </form>
@@ -47,8 +47,8 @@ export function OfferingActions({
         {selected ? <input type="hidden" name="remove" value="1" /> : null}
         <ActionButton
           label={selected ? 'Selected' : 'Select'}
-          className={`w-full py-2 rounded-md text-xs font-semibold ${
-            selected ? 'bg-[#1A3022] text-white' : 'bg-[#4A235A] text-white'
+          className={`inline-flex min-h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-semibold text-white ${
+            selected ? 'bg-[#1A3022]' : 'bg-[#1A3022] hover:bg-[#274433]'
           }`}
         />
       </form>

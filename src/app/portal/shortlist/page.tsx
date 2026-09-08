@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
 import { OfferingActions } from '../catalogue/OfferingActions'
 import { ProductImage } from '@/components/ui/product-image'
+import { CatalogueShortlistSection } from '@/components/portal/catalogue-shortlist-section'
 
 export default async function PortalShortlistPage() {
   const supabase = await createClient()
@@ -14,59 +15,80 @@ export default async function PortalShortlistPage() {
     .in('kind', ['shortlisted', 'selected'])
     .order('updated_at', { ascending: false })
 
+  const campaignRows = rows || []
+
   return (
-    <div>
-      <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-8">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Shortlist</h1>
-          <p className="mt-2 text-gray-600">Products you have shortlisted or selected for your campaign.</p>
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">My Shortlist</h1>
+          <p className="mt-2 text-sm text-gray-600 sm:text-base">
+            Saved gifts from your catalogue and campaign selections.
+          </p>
         </div>
-        {(rows || []).length > 0 && (
-          <Link
-            href="/portal/requirements/new"
-            className="px-4 py-2 text-sm font-medium text-white bg-[#4A235A] rounded-md"
-          >
-            Create Requirement
-          </Link>
-        )}
+        <Link
+          href="/portal/requirements/new"
+          className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#1A3022] px-4 text-sm font-semibold text-white hover:bg-[#274433] sm:w-auto"
+        >
+          Create Requirement
+        </Link>
       </div>
 
-      {(!rows || rows.length === 0) ? (
-        <div className="bg-white p-12 rounded-xl shadow-sm border border-gray-200 text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Your shortlist is empty</h2>
-          <p className="text-gray-500 mb-6">Browse published campaign products and shortlist or select the gifts you want.</p>
-          <Link href="/portal/catalogue" className="text-[#4A235A] font-medium hover:underline">
-            Browse campaign products →
-          </Link>
+      <CatalogueShortlistSection />
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Campaign selections</h2>
+          <p className="mt-1 text-sm text-gray-500">Products shortlisted or selected from published campaigns.</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rows.map((row) => {
-            const offering = Array.isArray(row.offering) ? row.offering[0] : row.offering
-            const campaign = offering && !Array.isArray(offering.campaign) ? offering.campaign : offering?.campaign?.[0]
-            if (!offering) return null
-            return (
-              <div key={row.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="md" />
-                <div className="p-4 flex-1 flex flex-col space-y-3">
-                  <p className="text-[10px] uppercase tracking-wider text-[#4A235A]">{campaign?.name}</p>
-                  <Link href={`/portal/catalogue/${offering.id}`}>
-                    <h3 className="text-md font-bold text-gray-900 hover:text-[#4A235A]">{offering.display_name}</h3>
-                  </Link>
-                  <p className="text-sm text-gray-600">
-                    {formatCurrency(offering.selling_price)} · qty {row.quantity || 1} · {row.kind}
-                  </p>
-                  <OfferingActions
-                    campaignId={row.campaign_id}
-                    campaignProductId={row.campaign_product_id}
-                    currentKind={row.kind}
-                  />
+
+        {campaignRows.length === 0 ? (
+          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+            <p className="text-sm text-gray-500">No campaign products shortlisted yet.</p>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
+              <Link
+                href="/portal/catalogue"
+                className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#1A3022] px-4 text-sm font-semibold text-white hover:bg-[#274433]"
+              >
+                Browse catalogue
+              </Link>
+              <Link
+                href="/portal/campaigns"
+                className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-4 text-sm font-semibold text-[#1A3022] hover:bg-[#FAF7F2]"
+              >
+                View campaigns
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {campaignRows.map((row) => {
+              const offering = Array.isArray(row.offering) ? row.offering[0] : row.offering
+              const campaign = offering && !Array.isArray(offering.campaign) ? offering.campaign : offering?.campaign?.[0]
+              if (!offering) return null
+              return (
+                <div key={row.id} className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                  <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="md" />
+                  <div className="flex flex-1 flex-col space-y-3 p-4">
+                    <p className="text-[10px] uppercase tracking-wider text-[#1A3022]">{campaign?.name}</p>
+                    <Link href={`/portal/catalogue/${offering.id}`}>
+                      <h3 className="text-md font-bold text-gray-900 hover:text-[#1A3022]">{offering.display_name}</h3>
+                    </Link>
+                    <p className="text-sm text-gray-600">
+                      {formatCurrency(offering.selling_price)} · qty {row.quantity || 1} · {row.kind}
+                    </p>
+                    <OfferingActions
+                      campaignId={row.campaign_id}
+                      campaignProductId={row.campaign_product_id}
+                      currentKind={row.kind}
+                    />
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+              )
+            })}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

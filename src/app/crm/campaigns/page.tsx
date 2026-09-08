@@ -6,7 +6,7 @@ import { FolderGit2, Building2 } from 'lucide-react'
 import { createCampaign } from './actions'
 import { asFormAction } from '@/lib/form-action'
 import { requireStaff } from '@/lib/auth'
-import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 
 type CampaignCompany = { name: string | null }
 type CampaignRow = {
@@ -50,11 +50,11 @@ export default async function CampaignsPage() {
           ]}
         />
         <input name="occasion" placeholder="Occasion (Diwali, onboarding…)" className="rounded-lg border px-3 py-2" />
-        <input name="employee_quantity" type="number" min="1" defaultValue={1000} placeholder="Employees" className="rounded-lg border px-3 py-2" />
-        <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={3000} placeholder="Budget per employee" className="rounded-lg border px-3 py-2" />
-        <input name="required_delivery_date" type="date" className="min-h-11 rounded-lg border px-3 py-2 md:min-h-0" />
-        <input name="description" placeholder="Notes" className="rounded-lg border px-3 py-2 md:col-span-2" />
-        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white">Create campaign</button>
+        <input name="employee_quantity" type="number" min="1" defaultValue={1000} placeholder="Employees" className="min-h-11 rounded-lg border px-3 py-2" />
+        <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={3000} placeholder="Budget per employee" className="min-h-11 rounded-lg border px-3 py-2" />
+        <SheetDateField name="required_delivery_date" label="Required delivery" />
+        <input name="description" placeholder="Notes" className="min-h-11 rounded-lg border px-3 py-2 md:col-span-2" />
+        <button className="min-h-11 rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white">Create campaign</button>
       </form>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

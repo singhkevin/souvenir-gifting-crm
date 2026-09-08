@@ -13,18 +13,28 @@ export default async function PortalCampaignsPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Campaigns</h1>
+      <h1 className="mb-6 text-2xl font-bold sm:text-3xl">Campaigns</h1>
       <div className="space-y-3">
         {(campaigns || []).map((c) => (
-          <div key={c.id} className="bg-white border rounded-2xl p-5">
+          <div key={c.id} className="rounded-2xl border bg-white p-4 sm:p-5">
             <p className="font-serif text-lg">{c.name}</p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="mt-1 text-xs text-gray-500">
               {c.employee_quantity?.toLocaleString('en-IN')} employees · {formatCurrency(c.budget_per_employee)} per person · {formatCurrency(c.total_budget)} total
             </p>
-            <p className="text-xs mt-1">Delivery {formatDate(c.required_delivery_date)}</p>
-            <div className="flex gap-4 mt-2">
-              <Link href={`/portal/catalogue?campaign=${c.id}`} className="text-xs text-[#1A3022] underline">View published products</Link>
-              <Link href="/portal/orders" className="text-xs text-[#1A3022] underline">View related orders</Link>
+            <p className="mt-1 text-xs">Delivery {formatDate(c.required_delivery_date)}</p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Link
+                href={`/portal/catalogue?campaign=${c.id}`}
+                className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433]"
+              >
+                View published products
+              </Link>
+              <Link
+                href="/portal/orders"
+                className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#FAF7F2]"
+              >
+                View related orders
+              </Link>
             </div>
           </div>
         ))}

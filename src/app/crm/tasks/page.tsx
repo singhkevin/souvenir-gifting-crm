@@ -4,7 +4,7 @@ import { requireStaff } from '@/lib/auth'
 import { completeTask, createTask, reassignTask, updateTaskStatus } from './actions'
 import { asFormAction } from '@/lib/form-action'
 import Link from 'next/link'
-import { MobileFilterBar, MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { MobileFilterBar, MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 
 const PRIORITY_LABELS: Record<number, string> = { 1: 'high', 2: 'medium', 3: 'low' }
 const STATUS_OPTIONS = [
@@ -50,8 +50,8 @@ export default async function TasksPage({
       </div>
 
       <form action={asFormAction(createTask)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-4">
-        <input name="title" required placeholder="Task title" className="rounded-lg border px-2 py-2 md:col-span-2" />
-        <input name="due_at" type="date" className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" />
+        <input name="title" required placeholder="Task title" className="min-h-11 rounded-lg border px-2 py-2 md:col-span-2" />
+        <SheetDateField name="due_at" label="Due date" />
         <MobileSheetSelect
           name="priority"
           label="Priority"

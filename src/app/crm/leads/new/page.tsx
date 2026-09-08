@@ -3,6 +3,7 @@ import { requireStaff } from '@/lib/auth'
 import { createLead } from '../actions'
 import { BackButton } from '@/components/ui/back-button'
 import { redirect } from 'next/navigation'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function NewLeadPage({
   searchParams,
@@ -30,7 +31,7 @@ export default async function NewLeadPage({
   return (
     <div className="mx-auto max-w-3xl">
       <BackButton href="/crm/leads" label="Back to leads" />
-      <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6 mt-4">Add Lead</h1>
+      <h1 className="mb-6 mt-4 text-2xl font-bold text-[var(--color-primary)]">Add Lead</h1>
 
       {error && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -38,57 +39,61 @@ export default async function NewLeadPage({
         </div>
       )}
 
-      <form action={handleCreate} className="bg-white p-6 rounded-lg border border-[var(--color-border)] shadow-sm grid gap-4 text-sm">
-        <label className="block">
-          <span className="text-xs font-semibold text-gray-700">Company *</span>
-          <select name="company_id" required className="mt-1 w-full p-2 border rounded-lg bg-white">
-            <option value="">Select company</option>
-            {(companies || []).map((company) => (
-              <option key={company.id} value={company.id}>{company.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="block">
-          <span className="text-xs font-semibold text-gray-700">Contact</span>
-          <select name="contact_id" className="mt-1 w-full p-2 border rounded-lg bg-white">
-            <option value="">Optional contact</option>
-            {(contacts || []).map((contact) => (
-              <option key={contact.id} value={contact.id}>{contact.full_name}</option>
-            ))}
-          </select>
-        </label>
+      <form action={handleCreate} className="grid gap-4 rounded-lg border border-[var(--color-border)] bg-white p-5 text-sm shadow-sm sm:p-6">
+        <MobileSheetSelect
+          name="company_id"
+          label="Company"
+          required
+          emptyLabel="Select company"
+          options={[
+            { value: '', label: 'Select company' },
+            ...(companies || []).map((company) => ({ value: company.id, label: company.name })),
+          ]}
+        />
+        <MobileSheetSelect
+          name="contact_id"
+          label="Contact"
+          emptyLabel="Optional contact"
+          options={[
+            { value: '', label: 'Optional contact' },
+            ...(contacts || []).map((contact) => ({ value: contact.id, label: contact.full_name || 'Contact' })),
+          ]}
+        />
         {profile.role === 'admin' && (
-          <label className="block">
-            <span className="text-xs font-semibold text-gray-700">Owner</span>
-            <select name="owner_id" defaultValue={profile.id} className="mt-1 w-full p-2 border rounded-lg bg-white">
-              {(owners || []).map((owner) => (
-                <option key={owner.id} value={owner.id}>{owner.full_name || owner.id}</option>
-              ))}
-            </select>
-          </label>
+          <MobileSheetSelect
+            name="owner_id"
+            label="Owner"
+            defaultValue={profile.id}
+            options={(owners || []).map((owner) => ({
+              value: owner.id,
+              label: owner.full_name || owner.id,
+            }))}
+          />
         )}
-        <label className="block">
-          <span className="text-xs font-semibold text-gray-700">Source</span>
-          <select name="source" className="mt-1 w-full p-2 border rounded-lg bg-white">
-            <option value="">Select source</option>
-            <option value="referral">Referral</option>
-            <option value="website">Website</option>
-            <option value="direct">Direct</option>
-            <option value="social_media">Social media</option>
-            <option value="event">Event</option>
-            <option value="other">Other</option>
-          </select>
-        </label>
+        <MobileSheetSelect
+          name="source"
+          label="Source"
+          emptyLabel="Select source"
+          options={[
+            { value: '', label: 'Select source' },
+            { value: 'referral', label: 'Referral' },
+            { value: 'website', label: 'Website' },
+            { value: 'direct', label: 'Direct' },
+            { value: 'social_media', label: 'Social media' },
+            { value: 'event', label: 'Event' },
+            { value: 'other', label: 'Other' },
+          ]}
+        />
         <label className="block">
           <span className="text-xs font-semibold text-gray-700">Estimated value</span>
-          <input name="estimated_value" type="number" min="0" step="0.01" className="mt-1 w-full p-2 border rounded-lg" />
+          <input name="estimated_value" type="number" min="0" step="0.01" className="mt-1 min-h-11 w-full rounded-lg border px-3 py-2" />
         </label>
         <label className="block">
           <span className="text-xs font-semibold text-gray-700">Notes</span>
-          <textarea name="notes" rows={3} className="mt-1 w-full p-2 border rounded-lg" />
+          <textarea name="notes" rows={3} className="mt-1 w-full rounded-lg border px-3 py-2" />
         </label>
-        <button type="submit" className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#4A235A]">
-          Create lead
+        <button type="submit" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1A3022] px-4 text-sm font-semibold text-white hover:bg-[#274433]">
+          Create Lead
         </button>
       </form>
     </div>

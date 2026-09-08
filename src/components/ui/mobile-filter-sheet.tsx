@@ -82,7 +82,7 @@ export function MobileFilterSheetShell({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div className="fixed inset-0 z-[70] flex flex-col justify-end">
       <button
         type="button"
         aria-label="Close filters"
@@ -93,7 +93,7 @@ export function MobileFilterSheetShell({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 max-h-[78vh] overflow-hidden rounded-t-2xl bg-white shadow-[0_-12px_40px_rgba(27,36,48,0.18)]"
+        className="relative z-10 max-h-[85vh] overflow-hidden rounded-t-2xl bg-white shadow-[0_-12px_40px_rgba(27,36,48,0.18)]"
       >
         <div className="border-b border-[#E8E4DE] px-4 pb-3 pt-3">
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#D6CEBE]" />
@@ -190,7 +190,7 @@ export function MobileFilterBar({
 
   return (
     <div className={className}>
-      <div className={`grid w-full gap-3 ${fields.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+      <div className={`grid w-full gap-3 ${fields.length === 1 ? 'grid-cols-1' : fields.length === 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
         {fields.map((field) => {
           const current =
             field.options.find((option) => option.value === field.value)?.label || field.emptyLabel
@@ -361,33 +361,42 @@ export function MobileSheetSelect({
   name,
   label,
   defaultValue = '',
+  value: controlledValue,
+  onChange,
   options,
   required,
   emptyLabel = 'Select',
   className = '',
 }: {
-  name: string
+  name?: string
   label: string
   defaultValue?: string
+  value?: string
+  onChange?: (value: string) => void
   options: MobileFilterOption[]
   required?: boolean
   emptyLabel?: string
   className?: string
 }) {
   const [open, setOpen] = useState(false)
-  const [value, setValue] = useState(defaultValue)
+  const [uncontrolled, setUncontrolled] = useState(defaultValue)
+  const value = controlledValue ?? uncontrolled
+  const setValue = (next: string) => {
+    if (controlledValue === undefined) setUncontrolled(next)
+    onChange?.(next)
+  }
   const currentLabel =
     options.find((option) => option.value === value)?.label || emptyLabel
 
   return (
     <div className={`w-full min-w-0 ${className}`}>
-      <input type="hidden" name={name} value={value} required={required} />
+      {name ? <input type="hidden" name={name} value={value} required={required} /> : null}
       <div className="w-full md:hidden">
         <MobileFilterTrigger label={label} value={currentLabel} onClick={() => setOpen(true)} />
         <MobileFilterSheetShell open={open} title={label} onClose={() => setOpen(false)}>
           {options.map((option) => (
             <MobileFilterSheetOption
-              key={`${name}-${option.value || 'empty'}`}
+              key={`${name || label}-${option.value || 'empty'}`}
               label={option.label}
               meta={option.meta}
               active={value === option.value}
@@ -408,11 +417,213 @@ export function MobileSheetSelect({
           className="min-h-10 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm"
         >
           {options.map((option) => (
-            <option key={`${name}-opt-${option.value || 'empty'}`} value={option.value}>
+            <option key={`${name || label}-opt-${option.value || 'empty'}`} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
+      </label>
+    </div>
+  )
+}
+
+function formatSheetDate(value: string) {
+  if (!value) return 'Pick a date'
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return value
+  return new Date(year, month - 1, day).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+function shiftMonth(year: number, month: number, delta: number) {
+  const date = new Date(year, month - 1 + delta, 1)
+  return { year: date.getFullYear(), month: date.getMonth() + 1 }
+}
+
+/** Mobile bottom-sheet calendar; desktop uses a normal date input. */
+export function SheetDateField({
+  name,
+  label,
+  value: controlledValue,
+  defaultValue = '',
+  onChange,
+  required,
+  className = '',
+  min,
+  max,
+}: {
+  name?: string
+  label: string
+  value?: string
+  defaultValue?: string
+  onChange?: (value: string) => void
+  required?: boolean
+  className?: string
+  min?: string
+  max?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [uncontrolled, setUncontrolled] = useState(defaultValue)
+  const value = controlledValue ?? uncontrolled
+  const setValue = (next: string) => {
+    if (controlledValue === undefined) setUncontrolled(next)
+    onChange?.(next)
+  }
+
+  const selected = value ? new Date(`${value}T00:00:00`) : null
+  const initial = selected && !Number.isNaN(selected.getTime()) ? selected : new Date()
+  const [viewYear, setViewYear] = useState(initial.getFullYear())
+  const [viewMonth, setViewMonth] = useState(initial.getMonth() + 1)
+
+  useEffect(() => {
+    if (!open) return
+    const base = value ? new Date(`${value}T00:00:00`) : new Date()
+    if (!Number.isNaN(base.getTime())) {
+      setViewYear(base.getFullYear())
+      setViewMonth(base.getMonth() + 1)
+    }
+  }, [open, value])
+
+  const daysInMonth = new Date(viewYear, viewMonth, 0).getDate()
+  const startWeekday = new Date(viewYear, viewMonth - 1, 1).getDay()
+  const monthLabel = new Date(viewYear, viewMonth - 1, 1).toLocaleDateString('en-IN', {
+    month: 'long',
+    year: 'numeric',
+  })
+
+  const minTime = min ? new Date(`${min}T00:00:00`).getTime() : null
+  const maxTime = max ? new Date(`${max}T00:00:00`).getTime() : null
+
+  const pickDay = (day: number) => {
+    const next = `${viewYear}-${String(viewMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    const time = new Date(`${next}T00:00:00`).getTime()
+    if (minTime != null && time < minTime) return
+    if (maxTime != null && time > maxTime) return
+    setValue(next)
+    setOpen(false)
+  }
+
+  return (
+    <div className={`w-full min-w-0 ${className}`}>
+      {name ? <input type="hidden" name={name} value={value} required={required} /> : null}
+
+      <div className="md:hidden">
+        <MobileFilterTrigger label={label} value={formatSheetDate(value)} onClick={() => setOpen(true)} />
+        <MobileFilterSheetShell
+          open={open}
+          title={label}
+          eyebrow="Date"
+          onClose={() => setOpen(false)}
+          footer={
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#E8E4DE] bg-white px-3 text-sm font-semibold text-[#1B2430]"
+                onClick={() => {
+                  setValue('')
+                  setOpen(false)
+                }}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-sm font-semibold text-white"
+                onClick={() => {
+                  const today = new Date()
+                  const next = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+                  setValue(next)
+                  setOpen(false)
+                }}
+              >
+                Today
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-3 px-2 pb-2">
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#F6F4F1] text-[#1A3022]"
+                onClick={() => {
+                  const next = shiftMonth(viewYear, viewMonth, -1)
+                  setViewYear(next.year)
+                  setViewMonth(next.month)
+                }}
+                aria-label="Previous month"
+              >
+                ‹
+              </button>
+              <p className="text-sm font-semibold text-[#1B2430]">{monthLabel}</p>
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#F6F4F1] text-[#1A3022]"
+                onClick={() => {
+                  const next = shiftMonth(viewYear, viewMonth, 1)
+                  setViewYear(next.year)
+                  setViewMonth(next.month)
+                }}
+                aria-label="Next month"
+              >
+                ›
+              </button>
+            </div>
+            <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[#8A929C]">
+              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
+                <span key={day} className="py-1">
+                  {day}
+                </span>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {Array.from({ length: startWeekday }).map((_, index) => (
+                <span key={`pad-${index}`} />
+              ))}
+              {Array.from({ length: daysInMonth }).map((_, index) => {
+                const day = index + 1
+                const iso = `${viewYear}-${String(viewMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                const time = new Date(`${iso}T00:00:00`).getTime()
+                const disabled =
+                  (minTime != null && time < minTime) || (maxTime != null && time > maxTime)
+                const active = value === iso
+                return (
+                  <button
+                    key={iso}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => pickDay(day)}
+                    className={`inline-flex min-h-11 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                      active
+                        ? 'bg-[#1A3022] text-white'
+                        : disabled
+                          ? 'cursor-not-allowed text-[#C4BDB3]'
+                          : 'text-[#1B2430] hover:bg-[#F6F4F1]'
+                    }`}
+                  >
+                    {day}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </MobileFilterSheetShell>
+      </div>
+
+      <label className="hidden w-full space-y-1 md:block">
+        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <input
+          type="date"
+          value={value}
+          required={required}
+          min={min}
+          max={max}
+          onChange={(event) => setValue(event.target.value)}
+          className="min-h-10 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm"
+        />
       </label>
     </div>
   )

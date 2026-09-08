@@ -31,20 +31,20 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <BackButton href="/portal/catalogue" label="Back to campaign products" />
+      <BackButton href={`/portal/catalogue?campaign=${offering.campaign_id}`} label="Back to campaign products" />
 
-      <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-8">
-        <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="hero" className="rounded-xl border border-gray-100 min-h-[300px]" />
+      <div className="grid grid-cols-1 gap-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8 md:grid-cols-2 md:gap-8">
+        <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="hero" className="min-h-[240px] rounded-xl border border-gray-100 sm:min-h-[300px]" />
 
         <div className="flex flex-col justify-between space-y-6">
           <div className="space-y-3">
-            <p className="text-xs font-semibold text-[#4A235A] uppercase">{campaign?.name}</p>
+            <p className="text-xs font-semibold uppercase text-[#1A3022]">{campaign?.name}</p>
             <h1 className="text-2xl font-bold text-gray-900">{offering.display_name}</h1>
-            <div className="pt-3 border-t border-gray-100">
+            <div className="border-t border-gray-100 pt-3">
               <p className="text-3xl font-bold text-gray-900">{formatCurrency(offering.selling_price)}</p>
-              <p className="text-xs text-gray-500 mt-1">Minimum order quantity: {offering.moq || 1} units</p>
+              <p className="mt-1 text-xs text-gray-500">Minimum order quantity: {offering.moq || 1} units</p>
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed">
+            <p className="text-sm leading-relaxed text-gray-600">
               {offering.client_description || 'Custom corporate gifting product with branding options.'}
             </p>
             {offering.personalization_options && (
@@ -55,7 +55,7 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
             )}
           </div>
 
-          <div className="pt-4 border-t border-gray-100 space-y-3">
+          <div className="space-y-3 border-t border-gray-100 pt-4">
             <OfferingActions
               campaignId={offering.campaign_id}
               campaignProductId={offering.id}
@@ -63,7 +63,7 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
             />
             <Link
               href="/portal/requirements/new"
-              className="w-full inline-flex justify-center items-center py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-[#4A235A]"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#1A3022] px-4 text-xs font-semibold text-white hover:bg-[#274433]"
             >
               Request a quotation
             </Link>

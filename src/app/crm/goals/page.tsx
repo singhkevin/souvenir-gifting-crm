@@ -5,7 +5,7 @@ import { ConfirmAction } from '@/components/ui/confirm-action'
 import { requireStaff } from '@/lib/auth'
 import { applyOrderScope } from '@/lib/auth'
 import { asFormAction } from '@/lib/form-action'
-import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 
 type TeamMember = { id: string; full_name: string | null | undefined }
 
@@ -106,7 +106,7 @@ export default async function GoalsPage() {
             { value: 'year', label: 'Year' },
           ]}
         />
-        <input name="period_start" type="date" required className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" />
+        <SheetDateField name="period_start" label="Period start" required />
         <MobileSheetSelect
           name="owner_id"
           label="Owner"
@@ -159,7 +159,7 @@ export default async function GoalsPage() {
                         { value: 'year', label: 'Year' },
                       ]}
                     />
-                    <input name="period_start" type="date" defaultValue={goal.period_start || ''} required className="border rounded-lg px-2 py-1" />
+                    <SheetDateField name="period_start" label="Period start" defaultValue={goal.period_start || ''} required />
                     <MobileSheetSelect
                       name="owner_id"
                       label="Owner"
