@@ -114,29 +114,18 @@
     @apply bg-white border border-[#E5DFD5] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.03)];
   }
 
-  /* Crop studio letterboxing so product photos fill tiles edge-to-edge.
-     Use the individual `scale` property — Tailwind v4 resets transform via
-     translate/scale/rotate, so `transform: scale()` alone can be ignored. */
-  .catalogue-fill-zoom {
-    scale: 1.28;
+  /* Product images must show the COMPLETE product.
+     Do not scale/crop via CSS — composition belongs in the source asset. */
+  .catalogue-product-img {
+    object-fit: contain;
+    object-position: center;
   }
-  .group:hover .catalogue-fill-zoom {
-    scale: 1.36;
-  }
-  .catalogue-fill-zoom-strong {
-    scale: 1.18;
-  }
-  .group:hover .catalogue-fill-zoom-strong {
-    scale: 1.26;
+  .group:hover .catalogue-product-img {
+    scale: 1.02;
   }
   @media (prefers-reduced-motion: reduce) {
-    .catalogue-fill-zoom,
-    .group:hover .catalogue-fill-zoom {
-      scale: 1.28;
-    }
-    .catalogue-fill-zoom-strong,
-    .group:hover .catalogue-fill-zoom-strong {
-      scale: 1.18;
+    .group:hover .catalogue-product-img {
+      scale: 1;
     }
   }
 

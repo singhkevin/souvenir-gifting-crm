@@ -38,13 +38,14 @@ export default async function CategoriesPage() {
                 </div>
                 <p className="text-xs text-[#7A7267]">{count} {count === 1 ? 'gift' : 'gifts'}</p>
                 {sample ? (
-                  <div className="hidden aspect-square bg-[#FAF7F2] sm:block">
+                  <div className="hidden aspect-square bg-[#EDE6DB] sm:block">
                     <ProductImage
                       src={sample.image_url}
                       alt={sample.name}
                       size="sm"
-                      fit="cover"
-                      className="h-full w-full min-h-0"
+                      fit="contain"
+                      className="h-full w-full min-h-0 bg-[#EDE6DB]"
+                      imgClassName="catalogue-product-img"
                     />
                   </div>
                 ) : (

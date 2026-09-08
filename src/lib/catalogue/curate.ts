@@ -14,53 +14,61 @@ const PRIORITY_CATEGORIES = [
   'Awards & Recognition',
 ] as const
 
-/** Hero floats — one product per category, square studio shots only. */
+/** Hero floats — mixed categories, complete studio products. */
 const HERO_PREFERRED = [
-  'Matte green insulated bottle',
-  'Navy laptop daypack',
+  'Matte black travel tumbler',
   'Wireless mechanical keyboard',
+  'Navy laptop daypack',
+  'Desk essentials starter kit',
   'Forest hardcover notebook set',
-  'Black softshell corporate jacket',
 ]
 
+/** Featured story — one hero visual only (do not reuse elsewhere on homepage). */
 const STORY_PREFERRED = [
-  'Black softshell corporate jacket',
-  'Matte green insulated bottle',
-  'Wireless mechanical keyboard',
-  'Navy laptop daypack',
+  'Premium induction gift box',
+  'Eco green living kit',
   'Leadership recognition hamper',
-  'Starter welcome essentials kit',
 ]
 
 const OCCASION_TILE_PREFERRED = [
-  ['Starter welcome essentials kit', 'Hybrid work-from-home kit', 'New joiner onboarding hamper'],
-  ['Leadership recognition hamper', 'Acacia serving tray', 'Self-care wellness box'],
+  ['New joiner onboarding hamper', 'Office caddy welcome set', 'First-day essentials pouch'],
+  ['Leadership recognition hamper', 'Acacia serving tray', 'Calm hour gift set'],
   ['Silver cup trophy', 'Achievement medal with ribbon', 'Crystal recognition plaque'],
   ['Matte black travel tumbler', 'Wireless mechanical keyboard', 'Wood desk organiser tray'],
-  ['Festive corporate hamper crate', 'Festival hamper crate', 'Kraft ribbon gift hamper'],
-  ['Achievement medal with ribbon', 'Crystal recognition plaque', 'Silver cup trophy'],
+  ['Festive corporate hamper crate', 'Diwali sweets dry-fruit hamper', 'Festival hamper crate'],
+  ['Crystal recognition plaque', 'Achievement medal with ribbon', 'Silver cup trophy'],
 ] as const
 
 /** Distinct preferred products per collection — no shared names across slugs. */
 const COLLECTION_TILE_PREFERRED: Record<string, string[]> = {
   'executive-edit': ['Structured briefcase portfolio', 'Black softshell corporate jacket', 'Silver cup trophy'],
-  'new-joiner-essentials': ['Starter welcome essentials kit', 'Hybrid work-from-home kit', 'New joiner onboarding hamper'],
-  'client-appreciation': ['Leadership recognition hamper', 'Acacia serving tray', 'Self-care wellness box'],
-  'festival-gifting': ['Festive corporate hamper crate', 'Festival hamper crate', 'Diwali sweets dry-fruit hamper'],
-  'conference-and-events': ['Matte black travel tumbler', 'Wireless mechanical keyboard', 'Wood desk organiser tray'],
-  'welcome-kits': ['Hybrid work-from-home kit', 'Premium induction gift box', 'Starter welcome essentials kit'],
+  'new-joiner-essentials': ['New joiner onboarding hamper', 'Office caddy welcome set', 'First-day essentials pouch'],
+  'client-appreciation': ['Leadership recognition hamper', 'Acacia serving tray', 'Calm hour gift set'],
+  'festival-gifting': ['Festive corporate hamper crate', 'Diwali sweets dry-fruit hamper', 'Festival hamper crate'],
+  'conference-and-events': ['Insulated coffee tumbler with lid', 'Portable Bluetooth speaker', 'Spiral A5 daily planner'],
+  'welcome-kits': ['Starter welcome essentials kit', 'Induction gift crate', 'Executive onboarding folio'],
 }
 
 const CATEGORY_TILE_PREFERRED: Record<string, string[]> = {
-  Drinkware: ['Matte green insulated bottle', 'Matte black travel tumbler', 'Insulated coffee tumbler with lid'],
-  'Bags & Travel': ['Navy laptop daypack', 'Charcoal weekender duffle', 'Quilted laptop messenger', 'Structured briefcase portfolio'],
-  'Tech & Electronics': ['Wireless mechanical keyboard', '65W dual-port GaN charger', 'Wireless charging pad'],
+  Drinkware: ['Matte black travel tumbler', 'Insulated coffee tumbler with lid'],
+  'Bags & Travel': [
+    'Navy laptop daypack',
+    'Charcoal weekender duffle',
+    'Quilted laptop messenger',
+    'Structured briefcase portfolio',
+  ],
+  'Tech & Electronics': ['Wireless mechanical keyboard', '65W dual-port GaN charger', 'Noise cancelling earbuds'],
   'Desk & Stationery': ['Wood desk organiser tray', 'Forest hardcover notebook set', 'Executive pen set'],
-  Apparel: ['Black softshell corporate jacket', 'Forest green corporate polo', 'Navy corporate polo shirt'],
-  'Hampers & Gift Sets': ['Leadership recognition hamper', 'Festive corporate hamper crate', 'Kraft ribbon gift hamper'],
-  'Welcome Kits': ['Starter welcome essentials kit', 'Hybrid work-from-home kit', 'Premium induction gift box'],
-  'Eco-Friendly Gifts': ['Bamboo wireless charger', 'Recycled notebook set'],
-  Wellness: ['Essential oil wellness trio', 'Self-care wellness box', 'Rolled wellness yoga mat'],
+  Apparel: ['Forest green corporate polo', 'Navy corporate polo shirt', 'Black softshell corporate jacket'],
+  'Hampers & Gift Sets': [
+    'Desk essentials starter kit',
+    'Eco green living kit',
+    'Festive dry fruit wooden tray',
+    'Tech desk tidy gift set',
+  ],
+  'Welcome Kits': ['Starter welcome essentials kit', 'Office caddy welcome set', 'Induction gift crate'],
+  'Eco-Friendly Gifts': ['Bamboo wireless charger pad', 'Recycled notebook set'],
+  Wellness: ['Essential oil wellness trio', 'Calm hour gift set', 'Rolled wellness yoga mat'],
   'Home & Lifestyle': ['Acacia serving tray', 'Linen throw blanket', 'Cotton waffle bathrobe'],
   'Awards & Recognition': ['Achievement medal with ribbon', 'Silver cup trophy', 'Crystal recognition plaque'],
 }
@@ -82,7 +90,7 @@ function isExclusiveGiftHamper(product: PublicProduct) {
 function isMisalignedHomepageImage(product: PublicProduct) {
   const name = product.name
   if (
-    /lanyard|badge holder|pashmina wrap|double-wall glass tumbler|hard-shell cabin trolley|leather work bag|gold laurel|executive gift box|graphite over-ear headphones|laptop backpack 20l|premium induction gift box/i.test(
+    /lanyard|badge holder|pashmina wrap|double-wall glass tumbler|hard-shell cabin trolley|leather work bag|gold laurel|executive gift box|graphite over-ear headphones|laptop backpack 20l|matte green insulated bottle|hybrid work-from-home kit/i.test(
       name,
     )
   ) {
@@ -110,10 +118,13 @@ function imageKey(product: PublicProduct) {
 function scoreProduct(product: PublicProduct) {
   let score = product.price || 0
   if (hasImage(product)) score += 5000
-  if (/square-/i.test(product.image_url || '')) score += 2500
+  if (/square-/i.test(product.image_url || '') || /\/site\/home-/i.test(product.image_url || '')) score += 2500
   if (PRIORITY_CATEGORIES.includes(product.category_name as (typeof PRIORITY_CATEGORIES)[number])) score += 1200
   if (isWatch(product)) score -= 8000
   if (isMisalignedHomepageImage(product)) score -= 12000
+  // Prefer reframed studio-pack assets for homepage consistency
+  if (/studio-pack-/i.test(product.image_url || '')) score += 1800
+  if (/\/catalogue-fill\//i.test(product.image_url || '')) score -= 4000
   if (/lifestyle|person|outdoor|hallway|office scene/i.test(product.description || '')) score -= 500
   return score
 }
@@ -146,14 +157,24 @@ function claim(product: PublicProduct, usedIds: Set<string>, usedImages: Set<str
   return product
 }
 
+type UsageSets = { usedIds: Set<string>; usedImages: Set<string> }
+
+function freshUsage(): UsageSets {
+  return { usedIds: new Set<string>(), usedImages: new Set<string>() }
+}
+
 /**
  * Curate homepage rails: category diversity, prefer square studio gifts, no duplicate images.
  */
-export function curateHomepageProducts(products: PublicProduct[], limit: number, maxWatches = 1) {
+export function curateHomepageProducts(
+  products: PublicProduct[],
+  limit: number,
+  maxWatches = 1,
+  usage: UsageSets = freshUsage(),
+) {
   const pool = usableHomepagePool(products)
   const selected: PublicProduct[] = []
-  const used = new Set<string>()
-  const usedImages = new Set<string>()
+  const { usedIds: used, usedImages } = usage
   const categoryCounts = new Map<string, number>()
   let watches = 0
 
@@ -213,9 +234,12 @@ export function curateHomepageProducts(products: PublicProduct[], limit: number,
   return selected.slice(0, limit)
 }
 
-export function curateHeroProducts(products: PublicProduct[], limit = 4) {
-  const usedIds = new Set<string>()
-  const usedImages = new Set<string>()
+export function curateHeroProducts(
+  products: PublicProduct[],
+  limit = 4,
+  usage: UsageSets = freshUsage(),
+) {
+  const { usedIds, usedImages } = usage
   const selected: PublicProduct[] = []
 
   for (const name of HERO_PREFERRED) {
@@ -225,7 +249,7 @@ export function curateHeroProducts(products: PublicProduct[], limit = 4) {
   }
 
   if (selected.length < limit) {
-    for (const product of curateHomepageProducts(products, limit * 2, 0)) {
+    for (const product of usableHomepagePool(products)) {
       if (selected.length >= limit) break
       if (usedIds.has(product.id) || usedImages.has(imageKey(product))) continue
       selected.push(claim(product, usedIds, usedImages))
@@ -235,11 +259,15 @@ export function curateHeroProducts(products: PublicProduct[], limit = 4) {
   return selected.slice(0, limit)
 }
 
-export function curateEditProducts(products: PublicProduct[], limit = 6) {
-  return curateHomepageProducts(products, limit, 0)
+export function curateEditProducts(products: PublicProduct[], limit = 6, usage?: UsageSets) {
+  return curateHomepageProducts(products, limit, 0, usage)
 }
 
-export function curateTrendingProducts(products: PublicProduct[], limit = 10) {
+export function curateTrendingProducts(
+  products: PublicProduct[],
+  limit = 10,
+  usage: UsageSets = freshUsage(),
+) {
   const recent = usableHomepagePool(products)
     .filter((product) => !isWatch(product))
     .filter((product) => !isExclusiveGiftHamper(product))
@@ -249,13 +277,12 @@ export function curateTrendingProducts(products: PublicProduct[], limit = 10) {
         scoreProduct(b) - scoreProduct(a),
     )
   const selected: PublicProduct[] = []
-  const used = new Set<string>()
-  const usedImages = new Set<string>()
+  const { usedIds: used, usedImages } = usage
   const cats = new Map<string, number>()
 
   for (const product of recent) {
     if (selected.length >= limit) break
-    if (usedImages.has(imageKey(product))) continue
+    if (used.has(product.id) || usedImages.has(imageKey(product))) continue
     const cat = product.category_name || 'Other'
     if ((cats.get(cat) || 0) >= 2) continue
     selected.push(claim(product, used, usedImages))
@@ -263,7 +290,7 @@ export function curateTrendingProducts(products: PublicProduct[], limit = 10) {
   }
 
   if (selected.length < limit) {
-    for (const product of curateHomepageProducts(products, limit * 2, 0)) {
+    for (const product of usableHomepagePool(products)) {
       if (selected.length >= limit) break
       if (used.has(product.id) || usedImages.has(imageKey(product))) continue
       selected.push(claim(product, used, usedImages))
@@ -273,26 +300,27 @@ export function curateTrendingProducts(products: PublicProduct[], limit = 10) {
   return selected.slice(0, limit)
 }
 
-export function curateFeaturedProducts(products: PublicProduct[], limit = 8) {
-  return curateHomepageProducts(products, limit, 0)
+export function curateFeaturedProducts(products: PublicProduct[], limit = 8, usage?: UsageSets) {
+  return curateHomepageProducts(products, limit, 0, usage)
 }
 
-export function curateMoreProducts(products: PublicProduct[], exclude: PublicProduct[], limit = 8) {
-  const excluded = new Set(exclude.map((product) => product.id))
-  const excludedImages = new Set(exclude.map(imageKey))
-  return curateHomepageProducts(
-    products.filter((product) => !excluded.has(product.id) && !excludedImages.has(imageKey(product))),
-    limit,
-    0,
+export function curateMoreProducts(
+  products: PublicProduct[],
+  exclude: PublicProduct[],
+  limit = 8,
+  usage: UsageSets = freshUsage(),
+) {
+  for (const product of exclude) claim(product, usage.usedIds, usage.usedImages)
+  return curateHomepageProducts(products, limit, 0, usage)
+}
+
+export function curateStoryProduct(products: PublicProduct[], usage: UsageSets = freshUsage()) {
+  const match = pickNamed(usableHomepagePool(products), STORY_PREFERRED, usage.usedIds, usage.usedImages)
+  if (match) return claim(match, usage.usedIds, usage.usedImages)
+  const fallback = usableHomepagePool(products).find(
+    (product) => !usage.usedIds.has(product.id) && !usage.usedImages.has(imageKey(product)),
   )
-}
-
-export function curateStoryProduct(products: PublicProduct[]) {
-  const usedIds = new Set<string>()
-  const usedImages = new Set<string>()
-  const match = pickNamed(usableHomepagePool(products), STORY_PREFERRED, usedIds, usedImages)
-  if (match) return match
-  return curateHomepageProducts(products, 8, 0)[0] || null
+  return fallback ? claim(fallback, usage.usedIds, usage.usedImages) : null
 }
 
 export function homeCategoryTiles<T extends { name: string }>(categories: T[], limit = 6) {
@@ -322,9 +350,9 @@ export function pickCategorySample(products: PublicProduct[], categoryId: string
 export function pickCategorySamples(
   products: PublicProduct[],
   categories: { id: string; name: string }[],
+  usage: UsageSets = freshUsage(),
 ) {
-  const usedIds = new Set<string>()
-  const usedImages = new Set<string>()
+  const { usedIds, usedImages } = usage
   const samples = new Map<string, PublicProduct | null>()
 
   for (const category of categories) {
@@ -363,9 +391,9 @@ export function pickCollectionSample(
 export function pickCollectionSamples(
   products: PublicProduct[],
   collections: { slug: string; match: (product: PublicProduct) => boolean }[],
+  usage: UsageSets = freshUsage(),
 ) {
-  const usedIds = new Set<string>()
-  const usedImages = new Set<string>()
+  const { usedIds, usedImages } = usage
   const samples = new Map<string, PublicProduct | null>()
 
   for (const collection of collections) {
@@ -398,9 +426,9 @@ export function pickOccasionSample(products: PublicProduct[], index: number) {
 export function pickOccasionSamples(
   products: PublicProduct[],
   occasions: { slug: string }[],
+  usage: UsageSets = freshUsage(),
 ) {
-  const usedIds = new Set<string>()
-  const usedImages = new Set<string>()
+  const { usedIds, usedImages } = usage
   const samples = new Map<string, PublicProduct | null>()
   const pool = usableHomepagePool(products)
 
@@ -416,4 +444,39 @@ export function pickOccasionSamples(
   })
 
   return samples
+}
+
+/**
+ * Single homepage pass: every visible tile/rail uses a unique product image.
+ * Order reserves the most important surfaces first (story → hero → categories → collections → occasions → rails).
+ */
+export function curatePublicHome(
+  products: PublicProduct[],
+  categories: { id: string; name: string }[],
+  collections: { slug: string; match: (product: PublicProduct) => boolean }[],
+  occasions: { slug: string }[],
+) {
+  const usage = freshUsage()
+
+  const story = curateStoryProduct(products, usage)
+  const heroProducts = curateHeroProducts(products, 4, usage)
+  const categorySamples = pickCategorySamples(products, categories, usage)
+  const collectionSamples = pickCollectionSamples(products, collections, usage)
+  const occasionSamples = pickOccasionSamples(products, occasions, usage)
+  const trending = curateTrendingProducts(products, 10, usage)
+  const edit = curateEditProducts(products, 6, usage)
+  const featured = curateFeaturedProducts(products, 8, usage)
+  const more = curateMoreProducts(products, [], 8, usage)
+
+  return {
+    story,
+    heroProducts,
+    categorySamples,
+    collectionSamples,
+    occasionSamples,
+    trending,
+    edit,
+    featured,
+    more,
+  }
 }

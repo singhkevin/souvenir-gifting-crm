@@ -81,8 +81,9 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
                   src={product.image_url}
                   alt={product.name}
                   size="sm"
-                  fit="cover"
-                  className="h-full w-full min-h-0"
+                  fit="contain"
+                  className="h-full w-full min-h-0 bg-[#EDE6DB]"
+                  imgClassName="catalogue-product-img"
                 />
               </div>
               <div className="min-w-0">

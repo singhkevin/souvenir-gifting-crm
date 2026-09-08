@@ -12,18 +12,7 @@ import {
   CATALOGUE_OCCASIONS,
 } from '@/lib/catalogue/collections'
 import { getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
-import {
-  curateEditProducts,
-  curateFeaturedProducts,
-  curateHeroProducts,
-  curateMoreProducts,
-  curateStoryProduct,
-  curateTrendingProducts,
-  homeCategoryTiles,
-  pickCategorySamples,
-  pickCollectionSamples,
-  pickOccasionSamples,
-} from '@/lib/catalogue/curate'
+import { curatePublicHome, homeCategoryTiles } from '@/lib/catalogue/curate'
 
 const CATEGORY_LINES: Record<string, string> = {
   Drinkware: 'Bottles, tumblers and everyday presence',
@@ -44,15 +33,17 @@ const CATEGORY_LINES: Record<string, string> = {
 export async function PublicHome() {
   const products = await getPublicCatalogueProducts()
   const categories = homeCategoryTiles(await getPublicCategories(), 6)
-  const categorySamples = pickCategorySamples(products, categories)
-  const edit = curateEditProducts(products, 6)
-  const trending = curateTrendingProducts(products, 10)
-  const featured = curateFeaturedProducts(products, 8)
-  const more = curateMoreProducts(products, [...featured, ...trending], 8)
-  const heroProducts = curateHeroProducts(products, 4)
-  const story = curateStoryProduct(products)
   const collections = CATALOGUE_COLLECTIONS.filter((collection) => products.some(collection.match)).slice(0, 6)
-  const collectionSamples = pickCollectionSamples(products, collections)
+  const {
+    story,
+    heroProducts,
+    categorySamples,
+    collectionSamples,
+    occasionSamples,
+    trending,
+    featured,
+    more,
+  } = curatePublicHome(products, categories, collections, CATALOGUE_OCCASIONS)
   const budgetCounts = BUDGET_BANDS.map((band) => ({
     ...band,
     count: products.filter((product) => {
@@ -61,17 +52,16 @@ export async function PublicHome() {
     }).length,
   })).filter((band) => band.count > 0)
 
-  const occasionSamples = pickOccasionSamples(products, CATALOGUE_OCCASIONS)
   const occasionVisuals = CATALOGUE_OCCASIONS.map((occasion) => ({
     ...occasion,
     sample: occasionSamples.get(occasion.slug) || null,
   }))
 
   return (
-    <div className="bg-[#F7F4EF]">
+    <div className="bg-[#F4EFE6]">
       <HeroStage products={heroProducts} catalogueCount={products.length} />
 
-      <section className="bg-[#F7F4EF] py-16 sm:py-20">
+      <section className="bg-[#F4EFE6] py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <Reveal>
             <div className="flex items-end justify-between gap-6">
@@ -90,7 +80,7 @@ export async function PublicHome() {
         </div>
       </section>
 
-      <section className="bg-[#F7F4EF] py-16 sm:py-20">
+      <section className="bg-[#F4EFE6] py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <Reveal>
             <div className="flex items-end justify-between gap-6">
@@ -119,9 +109,9 @@ export async function PublicHome() {
                           src={sample.image_url}
                           alt={category.name}
                           size="md"
-                          fit="cover"
-                          className="h-full min-h-0 w-full"
-                          imgClassName="catalogue-fill-zoom-strong transition-transform duration-700"
+                          fit="contain"
+                          className="h-full min-h-0 w-full bg-[#EDE6DB]"
+                          imgClassName="catalogue-product-img transition-transform duration-700"
                         />
                       ) : null}
                     </div>
@@ -173,7 +163,7 @@ export async function PublicHome() {
         </div>
       </section>
 
-      <section className="bg-[#F7F4EF] py-16 sm:py-20">
+      <section className="bg-[#F4EFE6] py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <Reveal>
             <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">The GIFFTER Edit</p>
@@ -193,9 +183,9 @@ export async function PublicHome() {
                         src={sample.image_url}
                         alt={collection.title}
                         size="md"
-                        fit="cover"
-                        className="absolute inset-0 h-full min-h-0 w-full"
-                        imgClassName="catalogue-fill-zoom transition-transform duration-700"
+                        fit="contain"
+                        className="absolute inset-0 h-full min-h-0 w-full bg-[#EDE6DB]"
+                        imgClassName="catalogue-product-img transition-transform duration-700"
                       />
                     ) : null}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#122018]/90 via-[#122018]/45 to-transparent" />
@@ -216,26 +206,18 @@ export async function PublicHome() {
       </section>
 
       {story ? (
-        <section className="bg-[#F7F4EF] py-16 sm:py-24">
+        <section className="bg-[#F4EFE6] py-16 sm:py-24">
           <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 sm:px-8 lg:grid-cols-2 lg:gap-16">
             <Reveal>
-              <div className="relative aspect-[4/5] overflow-hidden bg-[#F0EBE4]">
-                <Image
-                  src="/site/story-executive.webp"
-                  alt=""
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover opacity-90"
+              <div className="relative aspect-square overflow-hidden bg-[#E8DFD2] shadow-[0_28px_70px_rgba(26,48,34,0.14)] ring-1 ring-[#1A3022]/08">
+                <ProductImage
+                  src={story.image_url}
+                  alt={story.name}
+                  size="md"
+                  fit="contain"
+                  className="h-full min-h-0 w-full bg-[#EDE6DB]"
+                  imgClassName="catalogue-product-img"
                 />
-                <div className="absolute inset-6 overflow-hidden border border-white/40 bg-[#F7F4EF]/95 shadow-[0_20px_60px_rgba(0,0,0,0.18)] sm:inset-10">
-                  <ProductImage
-                    src={story.image_url}
-                    alt={story.name}
-                    size="md"
-                    fit="cover"
-                    className="h-full min-h-0 w-full"
-                  />
-                </div>
               </div>
             </Reveal>
             <Reveal delay={120}>
@@ -279,9 +261,9 @@ export async function PublicHome() {
                         src={occasion.sample.image_url}
                         alt={occasion.title}
                         size="md"
-                        fit="cover"
-                        className="h-full min-h-0 w-full"
-                        imgClassName="catalogue-fill-zoom transition-transform duration-700"
+                        fit="contain"
+                        className="h-full min-h-0 w-full bg-[#EDE6DB]"
+                        imgClassName="catalogue-product-img transition-transform duration-700"
                       />
                     ) : null}
                   </div>
@@ -299,7 +281,7 @@ export async function PublicHome() {
       </section>
 
       {budgetCounts.length > 0 && (
-        <section className="bg-[#F7F4EF] py-16 sm:py-20">
+        <section className="bg-[#F4EFE6] py-16 sm:py-20">
           <div className="mx-auto max-w-6xl px-5 sm:px-8">
             <Reveal>
               <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Gifts by budget</p>
@@ -350,7 +332,7 @@ export async function PublicHome() {
         </div>
       </section>
 
-      <section className="bg-[#F7F4EF] py-16 sm:py-20">
+      <section className="bg-[#F4EFE6] py-16 sm:py-20">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <Reveal>
             <div className="flex items-end justify-between gap-6">
@@ -372,7 +354,7 @@ export async function PublicHome() {
       </section>
 
       {more.length > 0 && (
-        <section className="bg-[#F7F4EF] py-16 sm:py-20">
+        <section className="bg-[#F4EFE6] py-16 sm:py-20">
           <div className="mx-auto max-w-6xl px-5 sm:px-8">
             <Reveal>
               <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Keep browsing</p>

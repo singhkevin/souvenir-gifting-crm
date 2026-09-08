@@ -99,9 +99,9 @@ export function HeroStage({
                     src={product.image_url}
                     alt={product.name}
                     size="md"
-                    fit="cover"
-                    className="h-full min-h-0 w-full"
-                    imgClassName="catalogue-fill-zoom"
+                    fit="contain"
+                    className="h-full min-h-0 w-full bg-[#EDE6DB]"
+                    imgClassName="catalogue-product-img"
                   />
                 </div>
                 <div className="border-t border-[#E5DFD5]/70 px-3 py-2.5 text-[#1C1917]">
