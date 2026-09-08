@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SiteShell } from '@/components/site/site-shell'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
+import { MobileCatalogueFilters } from '@/components/site/mobile-catalogue-filters'
 import { getPublicCatalogueProducts, getPublicCategories, sanitiseCatalogueSearch } from '@/lib/catalogue/products'
 import { isUuid } from '@/lib/utils'
 
@@ -227,51 +228,17 @@ export default async function CataloguePage({
               </p>
             </div>
 
-            {/* Mobile filter rows */}
-            <div className="mt-4 space-y-3 lg:hidden">
-              <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:thin]">
-                <div className="flex w-max gap-2">
-                  <Link
-                    href={hrefFor({ category: '' })}
-                    className={`whitespace-nowrap border px-3 py-1.5 text-xs ${
-                      !categoryFilter ? 'border-[#1A3022] bg-[#1A3022] text-white' : 'border-[#E8E4DE] text-[#5C6570]'
-                    }`}
-                  >
-                    All
-                  </Link>
-                  {categories.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={hrefFor({ category: item.id })}
-                      className={`whitespace-nowrap border px-3 py-1.5 text-xs ${
-                        categoryFilter === item.id
-                          ? 'border-[#1A3022] bg-[#1A3022] text-white'
-                          : 'border-[#E8E4DE] text-[#5C6570]'
-                      }`}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:thin]">
-                <div className="flex w-max gap-2">
-                  {budgetChips.map((item) => (
-                    <Link
-                      key={item.id || 'any'}
-                      href={hrefFor({ budget: item.id })}
-                      className={`whitespace-nowrap border px-3 py-1.5 text-xs ${
-                        budget === item.id
-                          ? 'border-[#1A3022] bg-[#1A3022] text-white'
-                          : 'border-[#E8E4DE] text-[#5C6570]'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
+            {/* Mobile filters — clean dropdowns instead of crowded chip rows */}
+            <MobileCatalogueFilters
+              categories={categories}
+              categoryFilter={categoryFilter}
+              budget={budget}
+              budgetChips={budgetChips}
+              search={search}
+              sort={sort}
+              categoryCounts={Object.fromEntries(categoryCounts)}
+              productTotal={products.length}
+            />
 
             <div className="mt-8">
               <CatalogueBrowser products={filtered} />
