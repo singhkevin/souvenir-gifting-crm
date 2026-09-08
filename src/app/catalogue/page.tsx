@@ -191,13 +191,13 @@ export default async function CataloguePage({
                   className="w-full bg-transparent py-1 text-base text-[#1B2430] outline-none placeholder:text-[#8A929C] sm:text-sm"
                 />
               </label>
-              <div className="flex flex-col gap-3 border-t border-[#E8E4DE] pt-3 sm:flex-row sm:items-center sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6">
-                <label className="flex items-center justify-between gap-2 text-sm text-[#5C6570] sm:justify-start">
+              <div className="hidden items-center gap-6 border-l border-[#E8E4DE] pl-6 lg:flex">
+                <label className="flex items-center gap-2 text-sm text-[#5C6570]">
                   <span className="whitespace-nowrap">Sort by</span>
                   <select
                     name="sort"
                     defaultValue={sort}
-                    className="max-w-[60%] bg-transparent py-1 text-sm text-[#1B2430] outline-none sm:max-w-none"
+                    className="bg-transparent py-1 text-sm text-[#1B2430] outline-none"
                   >
                     <option value="name">A–Z</option>
                     <option value="newest">Newest</option>
@@ -207,11 +207,18 @@ export default async function CataloguePage({
                 </label>
                 <button
                   type="submit"
-                  className="bg-[#1A3022] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white sm:py-2"
+                  className="bg-[#1A3022] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white"
                 >
                   Apply
                 </button>
               </div>
+              {sort && sort !== 'name' ? <input type="hidden" name="sort" value={sort} className="lg:hidden" /> : null}
+              <button
+                type="submit"
+                className="bg-[#1A3022] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white lg:hidden"
+              >
+                Apply
+              </button>
             </form>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">

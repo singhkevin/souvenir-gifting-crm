@@ -6,6 +6,7 @@ import { FolderGit2, Building2 } from 'lucide-react'
 import { createCampaign } from './actions'
 import { asFormAction } from '@/lib/form-action'
 import { requireStaff } from '@/lib/auth'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 type CampaignCompany = { name: string | null }
 type CampaignRow = {
@@ -36,20 +37,24 @@ export default async function CampaignsPage() {
         <p className="text-xs text-[#7A7267] mt-1">Curate a subset of the internal catalogue, publish it to one client, and track their selections.</p>
       </div>
 
-      <form action={asFormAction(createCampaign)} className="bg-white border border-[#E5DFD5] rounded-2xl p-5 grid md:grid-cols-3 gap-3 text-xs">
-        <input name="name" required placeholder="Campaign name" className="border rounded-lg px-3 py-2" />
-        <select name="company_id" required className="border rounded-lg px-3 py-2">
-          <option value="">Client company</option>
-          {companyOptions.map((c: { id: string; name: string }) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <input name="occasion" placeholder="Occasion (Diwali, onboarding…)" className="border rounded-lg px-3 py-2" />
-        <input name="employee_quantity" type="number" min="1" defaultValue={1000} placeholder="Employees" className="border rounded-lg px-3 py-2" />
-        <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={3000} placeholder="Budget per employee" className="border rounded-lg px-3 py-2" />
-        <input name="required_delivery_date" type="date" className="border rounded-lg px-3 py-2" />
-        <input name="description" placeholder="Notes" className="md:col-span-2 border rounded-lg px-3 py-2" />
-        <button className="bg-[#1A3022] text-white rounded-lg font-semibold">Create campaign</button>
+      <form action={asFormAction(createCampaign)} className="grid gap-3 rounded-2xl border border-[#E5DFD5] bg-white p-5 text-xs md:grid-cols-3">
+        <input name="name" required placeholder="Campaign name" className="rounded-lg border px-3 py-2" />
+        <MobileSheetSelect
+          name="company_id"
+          label="Client company"
+          required
+          emptyLabel="Client company"
+          options={[
+            { value: '', label: 'Client company' },
+            ...companyOptions.map((c: { id: string; name: string }) => ({ value: c.id, label: c.name })),
+          ]}
+        />
+        <input name="occasion" placeholder="Occasion (Diwali, onboarding…)" className="rounded-lg border px-3 py-2" />
+        <input name="employee_quantity" type="number" min="1" defaultValue={1000} placeholder="Employees" className="rounded-lg border px-3 py-2" />
+        <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={3000} placeholder="Budget per employee" className="rounded-lg border px-3 py-2" />
+        <input name="required_delivery_date" type="date" className="min-h-11 rounded-lg border px-3 py-2 md:min-h-0" />
+        <input name="description" placeholder="Notes" className="rounded-lg border px-3 py-2 md:col-span-2" />
+        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white">Create campaign</button>
       </form>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

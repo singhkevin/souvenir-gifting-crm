@@ -5,6 +5,7 @@ import { ConfirmAction } from '@/components/ui/confirm-action'
 import { requireStaff } from '@/lib/auth'
 import { applyOrderScope } from '@/lib/auth'
 import { asFormAction } from '@/lib/form-action'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 type TeamMember = { id: string; full_name: string | null | undefined }
 
@@ -79,30 +80,43 @@ export default async function GoalsPage() {
   })
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Goal Tracker</h1>
 
       {(profile.role === 'admin' || profile.role === 'management') && (
-      <form action={asFormAction(createGoal)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-3 gap-3 text-xs">
-        <input name="title" required placeholder="Goal title" className="border rounded-lg px-2 py-2" />
-        <select name="metric" className="border rounded-lg px-2 py-2">
-          <option value="revenue">Revenue</option>
-          <option value="orders">Orders</option>
-        </select>
-        <input name="target" type="number" min="1" required placeholder="Target" className="border rounded-lg px-2 py-2" />
-        <select name="period_type" className="border rounded-lg px-2 py-2">
-          <option value="month">Month</option>
-          <option value="quarter">Quarter</option>
-          <option value="year">Year</option>
-        </select>
-        <input name="period_start" type="date" required className="border rounded-lg px-2 py-2" />
-        <select name="owner_id" className="border rounded-lg px-2 py-2">
-          <option value="">Company-wide</option>
-          {teamRows.map((p: TeamMember) => (
-            <option key={p.id} value={p.id}>{p.full_name ?? ''}</option>
-          ))}
-        </select>
-        <button className="bg-[#1A3022] text-white hover:text-white rounded-lg font-semibold md:col-span-3 py-2">Add goal</button>
+      <form action={asFormAction(createGoal)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3">
+        <input name="title" required placeholder="Goal title" className="rounded-lg border px-2 py-2" />
+        <MobileSheetSelect
+          name="metric"
+          label="Metric"
+          defaultValue="revenue"
+          options={[
+            { value: 'revenue', label: 'Revenue' },
+            { value: 'orders', label: 'Orders' },
+          ]}
+        />
+        <input name="target" type="number" min="1" required placeholder="Target" className="rounded-lg border px-2 py-2" />
+        <MobileSheetSelect
+          name="period_type"
+          label="Period"
+          defaultValue="month"
+          options={[
+            { value: 'month', label: 'Month' },
+            { value: 'quarter', label: 'Quarter' },
+            { value: 'year', label: 'Year' },
+          ]}
+        />
+        <input name="period_start" type="date" required className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" />
+        <MobileSheetSelect
+          name="owner_id"
+          label="Owner"
+          emptyLabel="Company-wide"
+          options={[
+            { value: '', label: 'Company-wide' },
+            ...teamRows.map((p: TeamMember) => ({ value: p.id, label: p.full_name ?? '' })),
+          ]}
+        />
+        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white hover:text-white md:col-span-3">Add goal</button>
       </form>
       )}
 

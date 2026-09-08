@@ -6,6 +6,7 @@ import { requireStaff } from '@/lib/auth'
 import { CompanyAvatar } from '@/components/ui/avatar'
 import { asFormAction } from '@/lib/form-action'
 import { oneRelation, asRows } from '@/lib/utils'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 type CompanyOption = { id: string; name: string; logo_path: string | null }
 type ContactRow = {
@@ -48,7 +49,7 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
   const contactRows = asRows<ContactRow>(contacts)
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold text-[var(--color-primary)]">Contacts</h1>
       </div>
@@ -57,24 +58,33 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
         <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">{error}</div>
       )}
 
-      <form action={asFormAction(createContact)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-3 gap-3 text-xs">
-        <input name="full_name" required placeholder="Full name" className="border rounded-lg px-2 py-2" />
-        <select name="company_id" required className="border rounded-lg px-2 py-2">
-          <option value="">Company</option>
-          {companyRows.map((c: CompanyOption) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <input name="designation" placeholder="Designation" className="border rounded-lg px-2 py-2" />
-        <input name="email" type="email" placeholder="Email" className="border rounded-lg px-2 py-2" />
-        <input name="phone" placeholder="Phone" className="border rounded-lg px-2 py-2" />
-        <select name="contact_type" className="border rounded-lg px-2 py-2">
-          <option value="primary">Primary</option>
-          <option value="billing">Billing</option>
-          <option value="procurement">Procurement</option>
-          <option value="other">Other</option>
-        </select>
-        <button className="bg-[#1A3022] text-white hover:text-white rounded-lg font-semibold md:col-span-3 py-2">Add contact</button>
+      <form action={asFormAction(createContact)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3">
+        <input name="full_name" required placeholder="Full name" className="rounded-lg border px-2 py-2" />
+        <MobileSheetSelect
+          name="company_id"
+          label="Company"
+          required
+          emptyLabel="Company"
+          options={[
+            { value: '', label: 'Company' },
+            ...companyRows.map((c: CompanyOption) => ({ value: c.id, label: c.name })),
+          ]}
+        />
+        <input name="designation" placeholder="Designation" className="rounded-lg border px-2 py-2" />
+        <input name="email" type="email" placeholder="Email" className="rounded-lg border px-2 py-2" />
+        <input name="phone" placeholder="Phone" className="rounded-lg border px-2 py-2" />
+        <MobileSheetSelect
+          name="contact_type"
+          label="Contact type"
+          defaultValue="primary"
+          options={[
+            { value: 'primary', label: 'Primary' },
+            { value: 'billing', label: 'Billing' },
+            { value: 'procurement', label: 'Procurement' },
+            { value: 'other', label: 'Other' },
+          ]}
+        />
+        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white hover:text-white md:col-span-3">Add contact</button>
       </form>
 
       <form className="flex-1 max-w-md flex gap-2">

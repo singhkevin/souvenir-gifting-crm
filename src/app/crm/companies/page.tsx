@@ -5,6 +5,7 @@ import { CompanyAvatar } from '@/components/ui/avatar';
 import { Search } from 'lucide-react';
 
 import { requireStaff, applyCompanyScope } from '@/lib/auth'
+import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 type CompanyOwner = { full_name: string | null }
 type CompanyRow = {
@@ -37,7 +38,7 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
   const companyRows = asRows<CompanyRow>(companies)
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
         <div>
           <h1 className="text-xl font-semibold text-[var(--color-text)]">Companies</h1>
@@ -47,7 +48,7 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
         </div>
         <Link
           href="/crm/companies/new"
-          className="bg-[var(--color-primary)] text-white hover:text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 self-start"
+          className="inline-flex min-h-10 w-full items-center justify-center self-start rounded-md bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 hover:text-white sm:w-auto"
         >
           Add Company
         </Link>
@@ -59,19 +60,32 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
         </div>
       )}
 
-      <div className="mb-6 flex gap-4">
-        <form className="flex-1 flex gap-2">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-            <input name="q" defaultValue={q} placeholder="Search companies..." className="w-full pl-10 pr-4 py-2 border rounded-md" />
+      <div className="mb-6 space-y-3">
+        <form className="flex gap-2">
+          {status ? <input type="hidden" name="status" value={status} /> : null}
+          <div className="relative min-w-0 flex-1 sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input name="q" defaultValue={q} placeholder="Search companies..." className="w-full rounded-md border py-2.5 pl-10 pr-4 text-base sm:py-2 sm:text-sm" />
           </div>
-          <select name="status" defaultValue={status} className="border rounded-md px-4 py-2 bg-white">
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <button type="submit" className="px-4 py-2 bg-gray-100 border rounded-md">Filter</button>
+          <button type="submit" className="min-h-10 shrink-0 rounded-md border bg-gray-100 px-4 py-2">Search</button>
         </form>
+        <MobileFilterBar
+          pathname="/crm/companies"
+          preserveParams={q ? { q } : {}}
+          fields={[
+            {
+              key: 'status',
+              label: 'Status',
+              value: status,
+              emptyLabel: 'All statuses',
+              options: [
+                { value: '', label: 'All statuses' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+              ],
+            },
+          ]}
+        />
       </div>
 
       <div className="bg-white border rounded-lg overflow-x-auto">

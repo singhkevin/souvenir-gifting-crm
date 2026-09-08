@@ -16,7 +16,7 @@ export default function CrmError({
   }, [error])
 
   return (
-    <div className="p-6">
+    <div>
       <div className="max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-6">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 w-8 h-8 shrink-0 rounded-md bg-[var(--color-warning-bg)] text-[var(--color-warning)] flex items-center justify-center">

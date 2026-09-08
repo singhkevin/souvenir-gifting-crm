@@ -149,8 +149,12 @@
     @apply text-[11px] font-medium uppercase tracking-[0.22em] text-[#5C6570];
   }
 
-  .store-link {
-    @apply text-[12px] font-medium uppercase tracking-[0.14em] text-[#1A3022] underline-offset-4 hover:underline;
+  .crm-table-wrap {
+    @apply -mx-1 overflow-x-auto overscroll-x-contain sm:mx-0;
+  }
+
+  .crm-table-wrap > table {
+    @apply min-w-[640px];
   }
 
   .catalogue-studio-field {
@@ -196,5 +200,18 @@
   button.bg-accent:hover,
   a.bg-accent:hover {
     color: var(--color-primary-fg);
+  }
+}
+
+/* CRM: wide tables scroll inside their card on small screens */
+@media (max-width: 1023px) {
+  main div:has(> table) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  main div:has(> table) > table {
+    min-width: 640px;
   }
 }

@@ -77,9 +77,9 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
   };
 
   return (
-    <div className="min-h-screen bg-[#F4EFE6] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <h1 className="font-serif text-4xl text-[#1C1917] tracking-tight">GIFFTER</h1>
+    <div className="flex min-h-[100dvh] flex-col justify-center bg-[#F4EFE6] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+      <div className="text-center sm:mx-auto sm:w-full sm:max-w-md">
+        <h1 className="font-serif text-3xl tracking-tight text-[#1C1917] sm:text-4xl">GIFFTER</h1>
         <p className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#7A7267] mt-1">
           Corporate Gifting CRM
         </p>
@@ -119,7 +119,7 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   required
-                  className="block w-full pl-10 pr-3 py-2.5 bg-[#FAF7F2] border border-[#E5DFD5] rounded-xl text-xs text-[#1C1917] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1A3022] focus:border-[#1A3022] transition-colors"
+                  className="block w-full rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] py-3 pl-10 pr-3 text-base text-[#1C1917] placeholder-gray-400 transition-colors focus:border-[#1A3022] focus:outline-none focus:ring-1 focus:ring-[#1A3022] sm:py-2.5 sm:text-xs"
                   placeholder="Enter your email"
                 />
               </div>

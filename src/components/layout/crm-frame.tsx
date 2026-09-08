@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Topbar } from '@/components/layout/topbar'
 import type { Role } from '@/lib/types'
@@ -27,29 +28,44 @@ export function CrmFrame({
 }) {
   const [open, setOpen] = useState(false)
 
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F4EFE6]">
-      <div className="hidden lg:flex h-full min-h-0">
+    <div className="flex h-[100dvh] overflow-hidden bg-[#F4EFE6]">
+      <div className="hidden h-full min-h-0 lg:flex">
         <Sidebar role={role} user={user} />
       </div>
 
-      {open && (
-        <div className="lg:hidden fixed inset-0 z-50">
-          <button type="button" className="absolute inset-0 bg-black/40" aria-label="Close menu" onClick={() => setOpen(false)} />
-          <div className="relative h-full w-64 min-h-0">
-            <Sidebar role={role} user={user} onNavigate={() => setOpen(false)} />
+      {open ? (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-[#122018]/50 backdrop-blur-[1px]"
+            aria-label="Close menu"
+            onClick={() => setOpen(false)}
+          />
+          <div className="relative flex h-full w-[min(20rem,88vw)] max-w-full shadow-2xl">
+            <Sidebar role={role} user={user} onNavigate={() => setOpen(false)} showClose onClose={() => setOpen(false)} />
           </div>
         </div>
-      )}
+      ) : null}
 
-      <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-        <Topbar
-          user={user}
-          notifications={notifications}
-          onMenuClick={() => setOpen(true)}
-        />
-        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden bg-[#F4EFE6]">
-          <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <Topbar user={user} notifications={notifications} onMenuClick={() => setOpen(true)} />
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#F4EFE6] overscroll-y-contain">
+          <div className="mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
             {children}
           </div>
         </main>

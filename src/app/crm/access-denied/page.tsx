@@ -3,7 +3,7 @@ import { ShieldOff } from 'lucide-react'
 
 export default function AccessDeniedPage() {
   return (
-    <div className="p-6">
+    <div>
       <div className="max-w-lg bg-white border border-[#E5DFD5] rounded-lg p-6">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 w-8 h-8 shrink-0 rounded-md bg-[#FEE2E2] text-[#991B1B] flex items-center justify-center">

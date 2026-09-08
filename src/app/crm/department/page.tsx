@@ -48,7 +48,7 @@ export default async function DepartmentPage() {
   const manager = department ? (Array.isArray(department.manager) ? department.manager[0] : department.manager) : null
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[var(--color-primary)]">{department?.name || 'All departments'} dashboard</h1>
         <p className="text-xs text-[#7A7267] mt-1">

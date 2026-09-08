@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate, oneRelation } from '@/lib/utils'
 import { requireStaff } from '@/lib/auth'
 import Link from 'next/link'
+import { MobileDateRangeFilter } from '@/components/ui/mobile-filter-sheet'
 
 type NamedCompany = { id?: string; name?: string | null; gst_number?: string | null; state?: string | null }
 type QuoteTax = {
@@ -117,7 +118,7 @@ export default async function GstReportsPage({
   const defaultRate = money(settings?.default_tax_percent)
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-primary)]">GST Reports</h1>
@@ -128,20 +129,13 @@ export default async function GstReportsPage({
         </Link>
       </div>
 
-      <form className="flex flex-wrap items-end gap-3 bg-white p-4 rounded-2xl border border-[#E5DFD5] text-xs">
-        <label className="space-y-1">
-          <span className="text-[#7A7267]">From</span>
-          <input type="date" name="from" defaultValue={params.from || ''} className="block border rounded-lg px-2 py-2 bg-[#FAF7F2]" />
-        </label>
-        <label className="space-y-1">
-          <span className="text-[#7A7267]">To</span>
-          <input type="date" name="to" defaultValue={params.to || ''} className="block border rounded-lg px-2 py-2 bg-[#FAF7F2]" />
-        </label>
-        <button className="px-3 py-2 bg-[#1A3022] text-white rounded-lg font-semibold">Apply period</button>
-        {(params.from || params.to) && (
-          <Link href="/crm/gst-reports" className="px-3 py-2 border rounded-lg">Clear</Link>
-        )}
-      </form>
+      <MobileDateRangeFilter
+        from={params.from || ''}
+        to={params.to || ''}
+        clearHref="/crm/gst-reports"
+        submitLabel="Apply period"
+        className="rounded-2xl border border-[#E5DFD5] bg-white p-3 sm:p-4"
+      />
 
       {error && (
         <div className="p-3 rounded-xl bg-red-50 text-red-700 text-xs border border-red-200">

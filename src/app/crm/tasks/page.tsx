@@ -4,6 +4,7 @@ import { requireStaff } from '@/lib/auth'
 import { completeTask, createTask, reassignTask, updateTaskStatus } from './actions'
 import { asFormAction } from '@/lib/form-action'
 import Link from 'next/link'
+import { MobileFilterBar, MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 const PRIORITY_LABELS: Record<number, string> = { 1: 'high', 2: 'medium', 3: 'low' }
 const STATUS_OPTIONS = [
@@ -40,7 +41,7 @@ export default async function TasksPage({
   ])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">Tasks</h1>
         <p className="text-xs text-gray-500 mt-1">
@@ -48,45 +49,93 @@ export default async function TasksPage({
         </p>
       </div>
 
-      <form action={asFormAction(createTask)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-4 gap-3 text-xs">
-        <input name="title" required placeholder="Task title" className="border rounded-lg px-2 py-2 md:col-span-2" />
-        <input name="due_at" type="date" className="border rounded-lg px-2 py-2" />
-        <select name="priority" defaultValue="2" className="border rounded-lg px-2 py-2">
-          <option value="1">High</option>
-          <option value="2">Medium</option>
-          <option value="3">Low</option>
-        </select>
-        <select name="assigned_to" defaultValue={profile.id} className="border rounded-lg px-2 py-2 md:col-span-2">
-          {(team || []).map((p) => (
-            <option key={p.id} value={p.id}>{p.full_name}</option>
-          ))}
-        </select>
-        <select name="company_id" className="border rounded-lg px-2 py-2">
-          <option value="">Company (optional)</option>
-          {(companies || []).map((company) => (
-            <option key={company.id} value={company.id}>{company.name}</option>
-          ))}
-        </select>
-        <select name="order_id" className="border rounded-lg px-2 py-2">
-          <option value="">Related order (optional)</option>
-          {(orders || []).map((order) => (
-            <option key={order.id} value={order.id}>{order.order_number}</option>
-          ))}
-        </select>
-        <input name="description" placeholder="Notes" className="border rounded-lg px-2 py-2 md:col-span-4" />
-        <button className="bg-[#1A3022] text-white rounded-lg font-semibold md:col-span-4 py-2">Create task</button>
+      <form action={asFormAction(createTask)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-4">
+        <input name="title" required placeholder="Task title" className="rounded-lg border px-2 py-2 md:col-span-2" />
+        <input name="due_at" type="date" className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" />
+        <MobileSheetSelect
+          name="priority"
+          label="Priority"
+          defaultValue="2"
+          options={[
+            { value: '1', label: 'High' },
+            { value: '2', label: 'Medium' },
+            { value: '3', label: 'Low' },
+          ]}
+        />
+        <MobileSheetSelect
+          name="assigned_to"
+          label="Assigned to"
+          defaultValue={profile.id}
+          className="md:col-span-2"
+          options={(team || []).map((p) => ({ value: p.id, label: p.full_name || 'Unnamed' }))}
+        />
+        <MobileSheetSelect
+          name="company_id"
+          label="Company"
+          emptyLabel="Company (optional)"
+          options={[
+            { value: '', label: 'Company (optional)' },
+            ...(companies || []).map((company) => ({ value: company.id, label: company.name })),
+          ]}
+        />
+        <MobileSheetSelect
+          name="order_id"
+          label="Related order"
+          emptyLabel="Related order (optional)"
+          options={[
+            { value: '', label: 'Related order (optional)' },
+            ...(orders || []).map((order) => ({
+              value: order.id,
+              label: order.order_number || order.id.slice(0, 8),
+            })),
+          ]}
+        />
+        <input name="description" placeholder="Notes" className="rounded-lg border px-2 py-2 md:col-span-4" />
+        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white md:col-span-4">Create task</button>
       </form>
 
-      <div className="flex flex-wrap gap-4 border-b">
-        <Link href="?tab=my_tasks" className={`pb-2 px-1 text-sm ${tab === 'my_tasks' ? 'font-semibold border-b-2 border-[#1A3022]' : 'text-gray-500'}`}>My Tasks</Link>
+      <div className="md:hidden">
+        <MobileFilterBar
+          pathname="/crm/tasks"
+          preserveParams={canSeeAll ? {} : { tab }}
+          fields={[
+            {
+              key: 'status',
+              label: 'Status',
+              value: status,
+              emptyLabel: 'All statuses',
+              options: [
+                { value: '', label: 'All statuses' },
+                ...STATUS_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+              ],
+            },
+            ...(canSeeAll
+              ? [
+                  {
+                    key: 'tab',
+                    label: 'Scope',
+                    value: tab,
+                    emptyLabel: 'My tasks',
+                    options: [
+                      { value: 'my_tasks', label: 'My tasks' },
+                      { value: 'all_tasks', label: 'All tasks' },
+                    ],
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </div>
+      <div className="hidden flex-wrap gap-4 border-b md:flex">
+        <Link href="?tab=my_tasks" className={`px-1 pb-2 text-sm ${tab === 'my_tasks' ? 'border-b-2 border-[#1A3022] font-semibold' : 'text-gray-500'}`}>My Tasks</Link>
         {canSeeAll && (
-          <Link href="?tab=all_tasks" className={`pb-2 px-1 text-sm ${tab === 'all_tasks' ? 'font-semibold border-b-2 border-[#1A3022]' : 'text-gray-500'}`}>All Tasks</Link>
+          <Link href="?tab=all_tasks" className={`px-1 pb-2 text-sm ${tab === 'all_tasks' ? 'border-b-2 border-[#1A3022] font-semibold' : 'text-gray-500'}`}>All Tasks</Link>
         )}
         {STATUS_OPTIONS.map((option) => (
           <Link
             key={option.value}
             href={`?tab=${tab}&status=${option.value}`}
-            className={`pb-2 px-1 text-sm ${status === option.value ? 'font-semibold border-b-2 border-[#1A3022]' : 'text-gray-500'}`}
+            className={`px-1 pb-2 text-sm ${status === option.value ? 'border-b-2 border-[#1A3022] font-semibold' : 'text-gray-500'}`}
           >
             {option.label}
           </Link>

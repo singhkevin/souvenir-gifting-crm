@@ -33,7 +33,7 @@ export default async function CampaignDetailPage({
   const available = (products || []).filter((p) => !offeredIds.has(p.id))
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <BackButton href="/crm/campaigns" label="Back to campaigns" />
       {removed === 'archived' && (
         <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">

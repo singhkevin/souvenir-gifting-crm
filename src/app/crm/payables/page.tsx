@@ -9,7 +9,7 @@ export default async function PayablesPage() {
   const { data: payables } = await supabase.from('payables').select('*, orders(order_number)').order('due_date', { ascending: true })
 
   return (
-    <div className="p-6">
+    <div>
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Accounts Payable</h1>
       
       <div className="bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] overflow-hidden">

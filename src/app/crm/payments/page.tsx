@@ -13,7 +13,7 @@ export default async function PaymentsPage() {
   const totalThisMonth = payments?.filter(p => p.payment_date >= currentMonthStart).reduce((acc, curr) => acc + Number(curr.amount), 0) || 0
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">Payments Received</h1>
         <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded-lg shadow-sm">

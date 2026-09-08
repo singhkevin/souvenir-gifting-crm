@@ -19,24 +19,24 @@ export default async function ReceivablesPage() {
   const paidThisMonth = paidThisMonthInvoices?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0
 
   return (
-    <div className="p-6">
+    <div>
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Accounts Receivable</h1>
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-sm">
-          <p className="text-sm text-[var(--color-text-secondary)]">Total Outstanding</p>
-          <p className="text-xl font-semibold">{formatCurrency(outstanding)}</p>
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
+          <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Total Outstanding</p>
+          <p className="mt-1 text-base font-semibold break-words sm:text-xl">{formatCurrency(outstanding)}</p>
         </div>
-        <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-sm">
-          <p className="text-sm text-[var(--color-text-secondary)]">Due This Month</p>
-          <p className="text-xl font-semibold text-blue-600">{formatCurrency(dueThisMonth)}</p>
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
+          <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Due This Month</p>
+          <p className="mt-1 text-base font-semibold break-words text-blue-600 sm:text-xl">{formatCurrency(dueThisMonth)}</p>
         </div>
-        <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-sm">
-          <p className="text-sm text-[var(--color-text-secondary)]">Overdue</p>
-          <p className="text-xl font-semibold text-red-600">{formatCurrency(overdue)}</p>
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
+          <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Overdue</p>
+          <p className="mt-1 text-base font-semibold break-words text-red-600 sm:text-xl">{formatCurrency(overdue)}</p>
         </div>
-        <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-sm">
-          <p className="text-sm text-[var(--color-text-secondary)]">Paid This Month</p>
-          <p className="text-xl font-semibold text-green-600">{formatCurrency(paidThisMonth)}</p>
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
+          <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Paid This Month</p>
+          <p className="mt-1 text-base font-semibold break-words text-green-600 sm:text-xl">{formatCurrency(paidThisMonth)}</p>
         </div>
       </div>
       

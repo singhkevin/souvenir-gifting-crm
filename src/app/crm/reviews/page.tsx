@@ -23,7 +23,7 @@ export default async function ReviewsPage() {
   ])
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Client Reviews</h1>
 
       <form action={asFormAction(createReview)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-2 gap-3 text-xs">

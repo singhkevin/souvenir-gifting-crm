@@ -136,7 +136,7 @@ export default async function MyWorkPage({
   )
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-[var(--color-primary)]">My Work</h1>
         <p className="text-xs text-[#7A7267] mt-1">Assigned work for {profile.full_name || profile.email}.</p>

@@ -10,10 +10,10 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, action, breadcrumbs, className = '' }: PageHeaderProps) {
   return (
-    <div className={`mb-6 md:flex md:items-center md:justify-between ${className}`}>
-      <div className="flex-1 min-w-0">
+    <div className={`mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-start sm:justify-between ${className}`}>
+      <div className="min-w-0 flex-1">
         {breadcrumbs && <div className="mb-2">{breadcrumbs}</div>}
-        <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+        <h2 className="text-xl font-bold leading-7 text-gray-900 sm:truncate sm:text-2xl md:text-3xl">
           {title}
         </h2>
         {description && (
@@ -23,7 +23,7 @@ export function PageHeader({ title, description, action, breadcrumbs, className 
         )}
       </div>
       {action && (
-        <div className="mt-4 flex md:mt-0 md:ml-4">
+        <div className="flex w-full flex-col gap-2 sm:mt-0 sm:w-auto sm:flex-row sm:items-center">
           {action}
         </div>
       )}

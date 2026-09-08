@@ -4,12 +4,13 @@ import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { ORDER_LIFECYCLE, ORDER_STATUS_LABELS, orderHealth } from '@/lib/order-workflow'
 import { entityHref, describeAudit } from '@/lib/entity-href'
 import Link from 'next/link'
+import { MobileDateRangeFilter } from '@/components/ui/mobile-filter-sheet'
 
 function Card({ label, value, href, warn }: { label: string; value: string | number; href?: string; warn?: boolean }) {
   const inner = (
-    <div className={`rounded-xl border p-4 ${warn ? 'bg-red-50 border-red-100' : 'bg-white border-[#E5DFD5]'}`}>
+    <div className={`rounded-xl border p-3 sm:p-4 ${warn ? 'bg-red-50 border-red-100' : 'bg-white border-[#E5DFD5]'}`}>
       <span className="text-[10px] font-semibold tracking-wider text-[#7A7267] uppercase">{label}</span>
-      <p className="font-serif text-xl text-[#1C1917] mt-2">{value}</p>
+      <p className="font-serif text-lg text-[#1C1917] mt-1.5 sm:mt-2 sm:text-xl break-words">{value}</p>
     </div>
   )
   return href ? <Link href={href} className="block hover:border-[#1A3022]">{inner}</Link> : inner
@@ -277,18 +278,14 @@ export default async function DashboardPage({
   )
 
   return (
-    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-serif text-3xl text-[#1C1917]">Good day, {greeting}</h1>
-          <p className="text-xs text-[#7A7267] mt-1">{roleTitle}</p>
+          <h1 className="font-serif text-2xl text-[#1C1917] sm:text-3xl">Good day, {greeting}</h1>
+          <p className="mt-1 text-xs text-[#7A7267]">{roleTitle}</p>
         </div>
         {(profile.role === 'admin' || profile.role === 'management') && (
-          <form className="flex items-center gap-2 text-xs">
-            <input type="date" name="from" defaultValue={from} className="border rounded-lg px-2 py-1.5 bg-white" />
-            <input type="date" name="to" defaultValue={to} className="border rounded-lg px-2 py-1.5 bg-white" />
-            <button type="submit" className="px-3 py-1.5 bg-[#1A3022] text-white hover:text-white rounded-lg">Filter</button>
-          </form>
+          <MobileDateRangeFilter from={from} to={to} submitLabel="Filter" className="w-full sm:w-auto" />
         )}
       </div>
 
@@ -296,7 +293,7 @@ export default async function DashboardPage({
         <>
           <section>
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[#7A7267] mb-3">Business overview</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 lg:grid-cols-6">
               <Card label="Total leads" value={leadRows.length} href="/crm/leads" />
               <Card label="New leads" value={newLeads.length} href="/crm/leads" />
               <Card label="Active leads" value={activeLeads.length} href="/crm/leads" />
@@ -333,24 +330,24 @@ export default async function DashboardPage({
             </div>
           )}
 
-          <div className="bg-white rounded-xl border p-6">
-            <div className="flex justify-between mb-4">
+          <div className="rounded-xl border bg-white p-4 sm:p-6">
+            <div className="mb-4 flex justify-between">
               <h2 className="font-serif text-lg">Order pipeline</h2>
               <Link href="/crm/order-management?view=kanban" className="text-xs underline">Kanban</Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 lg:grid-cols-6">
               {byStage.map((s) => (
-                <Link key={s.st} href={`/crm/order-management?stage=${s.st}`} className="p-3 rounded-xl bg-[#FAF7F2] border hover:border-[#1A3022]">
+                <Link key={s.st} href={`/crm/order-management?stage=${s.st}`} className="rounded-xl border bg-[#FAF7F2] p-2.5 hover:border-[#1A3022] sm:p-3">
                   <p className="text-[11px] text-[#7A7267]">{ORDER_STATUS_LABELS[s.st]}</p>
-                  <p className="text-xl font-semibold mt-1">{s.n}</p>
-                  <p className="text-[11px] text-[#7A7267]">{formatCurrency(s.value)} · {s.overdue} overdue</p>
+                  <p className="mt-1 text-lg font-semibold sm:text-xl">{s.n}</p>
+                  <p className="text-[10px] text-[#7A7267] sm:text-[11px]">{formatCurrency(s.value)} · {s.overdue} overdue</p>
                 </Link>
               ))}
               {canSeeFinance(profile.role) && financeStages.map((s) => (
-                <Link key={s.key} href={s.href} className="p-3 rounded-xl bg-[#FAF7F2] border hover:border-[#1A3022]">
+                <Link key={s.key} href={s.href} className="rounded-xl border bg-[#FAF7F2] p-2.5 hover:border-[#1A3022] sm:p-3">
                   <p className="text-[11px] text-[#7A7267]">{s.label}</p>
-                  <p className="text-xl font-semibold mt-1">{s.n}</p>
-                  <p className="text-[11px] text-[#7A7267]">{formatCurrency(s.value)}</p>
+                  <p className="mt-1 text-lg font-semibold sm:text-xl">{s.n}</p>
+                  <p className="text-[10px] text-[#7A7267] sm:text-[11px]">{formatCurrency(s.value)}</p>
                 </Link>
               ))}
             </div>

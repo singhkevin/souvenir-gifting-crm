@@ -5,6 +5,7 @@ import { registerMockup, updateMockup, removeMockup } from './actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { requireStaff, applyOwnerScope, applyOrderScope } from '@/lib/auth'
 import { asFormAction } from '@/lib/form-action'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 type RequirementOption = { id: string; name: string }
 type OrderOption = { id: string; order_number: string | null }
@@ -42,37 +43,56 @@ export default async function MockupsPage() {
   const mockupRows = asRows<MockupRow>(mockups)
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">Design Mockups</h1>
         <p className="text-xs text-[#7A7267] mt-1">Attach mockup files to a requirement or order. Shared mockups are visible in the client portal.</p>
       </div>
 
-      <form action={asFormAction(registerMockup)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-3 gap-3 text-xs">
-        <input name="file_url" required placeholder="File URL" className="border rounded-lg px-2 py-2" />
-        <input name="file_name" placeholder="File name" className="border rounded-lg px-2 py-2" />
-        <select name="mime_type" className="border rounded-lg px-2 py-2">
-          <option value="image/png">PNG</option>
-          <option value="image/jpeg">JPEG</option>
-          <option value="application/pdf">PDF</option>
-        </select>
-        <select name="requirement_id" className="border rounded-lg px-2 py-2">
-          <option value="">Requirement (optional)</option>
-          {requirementOptions.map((r: RequirementOption) => (
-            <option key={r.id} value={r.id}>{r.name}</option>
-          ))}
-        </select>
-        <select name="order_id" className="border rounded-lg px-2 py-2">
-          <option value="">Order (optional)</option>
-          {orderOptions.map((o: OrderOption) => (
-            <option key={o.id} value={o.id}>{o.order_number}</option>
-          ))}
-        </select>
-        <select name="visibility" className="border rounded-lg px-2 py-2">
-          <option value="internal">Internal only</option>
-          <option value="client">Share with client</option>
-        </select>
-        <button className="bg-[#1A3022] text-white rounded-lg font-semibold md:col-span-3 py-2">Register mockup</button>
+      <form action={asFormAction(registerMockup)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3">
+        <input name="file_url" required placeholder="File URL" className="rounded-lg border px-2 py-2" />
+        <input name="file_name" placeholder="File name" className="rounded-lg border px-2 py-2" />
+        <MobileSheetSelect
+          name="mime_type"
+          label="File type"
+          defaultValue="image/png"
+          options={[
+            { value: 'image/png', label: 'PNG' },
+            { value: 'image/jpeg', label: 'JPEG' },
+            { value: 'application/pdf', label: 'PDF' },
+          ]}
+        />
+        <MobileSheetSelect
+          name="requirement_id"
+          label="Requirement"
+          emptyLabel="Requirement (optional)"
+          options={[
+            { value: '', label: 'Requirement (optional)' },
+            ...requirementOptions.map((r: RequirementOption) => ({ value: r.id, label: r.name })),
+          ]}
+        />
+        <MobileSheetSelect
+          name="order_id"
+          label="Order"
+          emptyLabel="Order (optional)"
+          options={[
+            { value: '', label: 'Order (optional)' },
+            ...orderOptions.map((o: OrderOption) => ({
+              value: o.id,
+              label: o.order_number || o.id.slice(0, 8),
+            })),
+          ]}
+        />
+        <MobileSheetSelect
+          name="visibility"
+          label="Visibility"
+          defaultValue="internal"
+          options={[
+            { value: 'internal', label: 'Internal only' },
+            { value: 'client', label: 'Share with client' },
+          ]}
+        />
+        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white md:col-span-3">Register mockup</button>
       </form>
 
       <div className="bg-white rounded-lg border overflow-hidden">

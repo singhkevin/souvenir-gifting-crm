@@ -21,7 +21,7 @@ export default async function TeamPage() {
   }
 
   return (
-    <div className="p-6">
+    <div>
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Team Directory</h1>
       <div className="bg-white rounded-lg border overflow-hidden">
         <table className="w-full text-left text-sm">

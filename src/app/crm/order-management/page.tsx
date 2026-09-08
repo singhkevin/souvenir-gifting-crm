@@ -11,6 +11,7 @@ import {
 import Link from 'next/link'
 import { OrderKanban } from '@/components/orders/order-kanban'
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
+import { MobileDateRangeFilter, MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 type NamedRef = { id?: string; name?: string | null; full_name?: string | null }
 type ControlOrder = {
@@ -99,55 +100,176 @@ export default async function OrderControlCenterPage({
   const kanbanHref = filterQuery ? `/crm/order-management?${filterQuery}&view=kanban` : '/crm/order-management?view=kanban'
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-end justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-primary)]">Order Control Center</h1>
-          <p className="text-xs text-[#7A7267] mt-1">Who owns each order right now, and whether it is healthy.</p>
-          <p className="text-[10px] text-[#7A7267] mt-2">
+          <h1 className="text-xl font-semibold text-[var(--color-primary)] sm:text-2xl">Order Control Center</h1>
+          <p className="mt-1 text-xs text-[#7A7267]">Who owns each order right now, and whether it is healthy.</p>
+          <p className="mt-2 text-[10px] leading-relaxed text-[#7A7267]">
             Lifecycle: {ORDER_LIFECYCLE.map((s) => ORDER_STATUS_LABELS[s]).join(' → ')}
           </p>
         </div>
         <div className="flex gap-2 text-xs">
-          <Link href={tableHref} className={`px-3 py-1.5 rounded-lg border ${view === 'table' ? 'bg-[#1A3022] text-white border-[#1A3022]' : 'bg-white'}`}>Table</Link>
-          <Link href={kanbanHref} className={`px-3 py-1.5 rounded-lg border ${view === 'kanban' ? 'bg-[#1A3022] text-white border-[#1A3022]' : 'bg-white'}`}>Kanban</Link>
+          <Link href={tableHref} className={`min-h-10 flex-1 rounded-lg border px-3 py-2 text-center sm:flex-none ${view === 'table' ? 'border-[#1A3022] bg-[#1A3022] text-white' : 'bg-white'}`}>Table</Link>
+          <Link href={kanbanHref} className={`min-h-10 flex-1 rounded-lg border px-3 py-2 text-center sm:flex-none ${view === 'kanban' ? 'border-[#1A3022] bg-[#1A3022] text-white' : 'bg-white'}`}>Kanban</Link>
         </div>
       </div>
 
-      <form className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-3 bg-white p-4 rounded-2xl border border-[#E5DFD5]">
-        {view === 'kanban' && <input type="hidden" name="view" value="kanban" />}
-        <select name="client" defaultValue={params.client || ''} className="text-xs border rounded-lg px-2 py-2 bg-[#FAF7F2]">
+      <div className="space-y-3 lg:hidden">
+        <MobileFilterBar
+          pathname="/crm/order-management"
+          preserveParams={{
+            ...(view === 'kanban' ? { view: 'kanban' } : {}),
+            ...(params.from ? { from: params.from } : {}),
+            ...(params.to ? { to: params.to } : {}),
+          }}
+          fields={[
+            {
+              key: 'client',
+              label: 'Client',
+              value: params.client || '',
+              emptyLabel: 'All clients',
+              options: [
+                { value: '', label: 'All clients' },
+                ...(companies || []).map((c: { id: string; name: string }) => ({
+                  value: c.id,
+                  label: c.name,
+                })),
+              ],
+            },
+            {
+              key: 'department',
+              label: 'Department',
+              value: params.department || '',
+              emptyLabel: 'All departments',
+              options: [
+                { value: '', label: 'All departments' },
+                ...(departments || []).map((d: { id: string; name: string }) => ({
+                  value: d.id,
+                  label: d.name,
+                })),
+              ],
+            },
+            {
+              key: 'employee',
+              label: 'Employee',
+              value: params.employee || '',
+              emptyLabel: 'All employees',
+              options: [
+                { value: '', label: 'All employees' },
+                ...(staff || []).map((s: { id: string; full_name: string | null }) => ({
+                  value: s.id,
+                  label: s.full_name || 'Unnamed',
+                })),
+              ],
+            },
+            {
+              key: 'stage',
+              label: 'Stage',
+              value: params.stage || '',
+              emptyLabel: 'All stages',
+              options: [
+                { value: '', label: 'All stages' },
+                ...ORDER_LIFECYCLE.map((s) => ({ value: s, label: ORDER_STATUS_LABELS[s] })),
+                { value: 'cancelled', label: 'Cancelled' },
+              ],
+            },
+            {
+              key: 'health',
+              label: 'Health',
+              value: params.health || '',
+              emptyLabel: 'All health',
+              options: [
+                { value: '', label: 'All health' },
+                { value: 'on_track', label: 'On Track' },
+                { value: 'at_risk', label: 'At Risk' },
+                { value: 'delayed', label: 'Delayed' },
+              ],
+            },
+            {
+              key: 'sort',
+              label: 'Sort by',
+              value: params.sort || 'delivery',
+              emptyLabel: 'Delivery date',
+              options: [
+                { value: 'delivery', label: 'Delivery date' },
+                { value: 'value', label: 'Order value' },
+                { value: 'updated', label: 'Last updated' },
+                { value: 'priority', label: 'Priority' },
+              ],
+            },
+          ]}
+        />
+        <MobileDateRangeFilter
+          from={params.from || ''}
+          to={params.to || ''}
+          submitLabel="Apply dates"
+          mobileOnly
+          preserveParams={{
+            ...(view === 'kanban' ? { view: 'kanban' } : {}),
+            ...(params.client ? { client: params.client } : {}),
+            ...(params.department ? { department: params.department } : {}),
+            ...(params.employee ? { employee: params.employee } : {}),
+            ...(params.stage ? { stage: params.stage } : {}),
+            ...(params.health ? { health: params.health } : {}),
+            ...(params.sort && params.sort !== 'delivery' ? { sort: params.sort } : {}),
+          }}
+          clearHref={
+            filterQuery
+              ? `/crm/order-management?${new URLSearchParams(
+                  Object.fromEntries(
+                    Object.entries({
+                      view: view === 'kanban' ? 'kanban' : '',
+                      client: params.client || '',
+                      department: params.department || '',
+                      employee: params.employee || '',
+                      stage: params.stage || '',
+                      health: params.health || '',
+                      sort: params.sort && params.sort !== 'delivery' ? params.sort : '',
+                    }).filter(([, v]) => Boolean(v))
+                  )
+                ).toString()}`
+              : view === 'kanban'
+                ? '/crm/order-management?view=kanban'
+                : '/crm/order-management'
+          }
+        />
+      </div>
+
+      <form className="hidden grid-cols-2 gap-3 rounded-2xl border border-[#E5DFD5] bg-white p-4 md:grid-cols-4 lg:grid lg:grid-cols-9">
+        {view === 'kanban' ? <input type="hidden" name="view" value="kanban" /> : null}
+        <select name="client" defaultValue={params.client || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All clients</option>
           {(companies || []).map((c: { id: string; name: string }) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select name="department" defaultValue={params.department || ''} className="text-xs border rounded-lg px-2 py-2 bg-[#FAF7F2]">
+        <select name="department" defaultValue={params.department || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All departments</option>
           {(departments || []).map((d: { id: string; name: string }) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
-        <select name="employee" defaultValue={params.employee || ''} className="text-xs border rounded-lg px-2 py-2 bg-[#FAF7F2]">
+        <select name="employee" defaultValue={params.employee || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All employees</option>
           {(staff || []).map((s: { id: string; full_name: string | null }) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
         </select>
-        <select name="stage" defaultValue={params.stage || ''} className="text-xs border rounded-lg px-2 py-2 bg-[#FAF7F2]">
+        <select name="stage" defaultValue={params.stage || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All stages</option>
           {ORDER_LIFECYCLE.map((s) => <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>)}
           <option value="cancelled">Cancelled</option>
         </select>
-        <select name="health" defaultValue={params.health || ''} className="text-xs border rounded-lg px-2 py-2 bg-[#FAF7F2]">
+        <select name="health" defaultValue={params.health || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All health</option>
           <option value="on_track">On Track</option>
           <option value="at_risk">At Risk</option>
           <option value="delayed">Delayed</option>
         </select>
-        <input type="date" name="from" defaultValue={params.from || ''} className="text-xs border rounded-lg px-2 py-2 bg-[#FAF7F2]" />
-        <input type="date" name="to" defaultValue={params.to || ''} className="text-xs border rounded-lg px-2 py-2 bg-[#FAF7F2]" />
-        <select name="sort" defaultValue={params.sort || 'delivery'} className="text-xs border rounded-lg px-2 py-2 bg-[#FAF7F2]">
+        <input type="date" name="from" defaultValue={params.from || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs" />
+        <input type="date" name="to" defaultValue={params.to || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs" />
+        <select name="sort" defaultValue={params.sort || 'delivery'} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="delivery">Delivery date</option>
           <option value="value">Order value</option>
           <option value="updated">Last updated</option>
           <option value="priority">Priority</option>
         </select>
-        <button className="text-xs font-semibold bg-[#1A3022] text-white rounded-lg px-3">Apply</button>
+        <button className="rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white">Apply</button>
       </form>
 
       {view === 'kanban' ? (

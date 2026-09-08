@@ -25,7 +25,7 @@ export default async function AnnouncementsPage() {
   const announcementRows = asRows<AnnouncementRow>(announcements)
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">Announcements</h1>
       </div>

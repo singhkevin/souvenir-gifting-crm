@@ -10,6 +10,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
+import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 type ReqCompany = { id: string; name: string }
 type ReqOwner = { id: string; full_name: string | null }
@@ -48,7 +49,7 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
   const statuses = ['all', 'active', 'won', 'lost', 'closed']
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-[var(--color-primary)]">Requirements</h1>
         <button className="bg-[var(--color-primary)] text-white hover:text-white px-4 py-2 rounded-md hover:opacity-90">
@@ -56,12 +57,29 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
         </button>
       </div>
 
-      <div className="mb-6 flex gap-2 border-b">
+      <div className="mb-6 md:hidden">
+        <MobileFilterBar
+          pathname="/crm/requirements"
+          fields={[
+            {
+              key: 'status',
+              label: 'Status',
+              value: statusFilter,
+              emptyLabel: 'All',
+              options: statuses.map((status) => ({
+                value: status,
+                label: status === 'all' ? 'All' : status,
+              })),
+            },
+          ]}
+        />
+      </div>
+      <div className="mb-6 hidden gap-2 border-b md:flex">
         {statuses.map(status => (
           <Link 
             key={status}
             href={`/crm/requirements?status=${status}`}
-            className={`px-4 py-2 font-medium text-sm capitalize ${statusFilter === status ? 'border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-2 text-sm font-medium capitalize ${statusFilter === status ? 'border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-700'}`}
           >
             {status}
           </Link>

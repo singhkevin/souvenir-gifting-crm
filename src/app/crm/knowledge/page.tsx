@@ -14,7 +14,7 @@ export default async function KnowledgePage() {
     .limit(12)
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8">
       <div>
         <h1 className="font-serif text-2xl text-[#1C1917]">Knowledge Center</h1>
         <p className="text-xs text-[#7A7267] mt-1">How GIFFTER runs a gift programme — from enquiry to payment.</p>

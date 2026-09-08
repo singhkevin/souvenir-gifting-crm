@@ -12,6 +12,7 @@ const STAGE_COLORS: Record<string, string> = {
 }
 
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
+import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 type LeadCompany = { id: string; name: string; logo_path?: string | null }
 type LeadContact = { id: string; full_name: string | null; designation?: string | null }
@@ -57,18 +58,18 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   }, {})
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>Leads</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>{leadRows.length} leads total</p>
+          <p className="mt-0.5 text-sm" style={{ color: 'var(--color-text-secondary)' }}>{leadRows.length} leads total</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden">
-            <Link href="?view=kanban" className={`px-3 py-1.5 text-sm font-medium transition-colors ${view === 'kanban' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'}`}>Kanban</Link>
-            <Link href="?view=table" className={`px-3 py-1.5 text-sm font-medium transition-colors ${view === 'table' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'}`}>Table</Link>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex overflow-hidden rounded-lg border border-[var(--color-border)]">
+            <Link href="?view=kanban" className={`min-h-10 px-3 py-2 text-sm font-medium transition-colors ${view === 'kanban' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'}`}>Kanban</Link>
+            <Link href="?view=table" className={`min-h-10 px-3 py-2 text-sm font-medium transition-colors ${view === 'table' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'}`}>Table</Link>
           </div>
-          <Link href="/crm/leads/new" className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ background: 'var(--color-primary)' }}>
+          <Link href="/crm/leads/new" className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white sm:flex-none" style={{ background: 'var(--color-primary)' }}>
             <Plus size={16} /> Add Lead
           </Link>
         </div>
@@ -81,18 +82,46 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       )}
 
       {/* Filters */}
-      <div className="flex gap-3 mb-6">
-        <form className="flex gap-3">
+      <div className="mb-6 md:hidden">
+        <MobileFilterBar
+          pathname="/crm/leads"
+          preserveParams={{ view }}
+          fields={[
+            {
+              key: 'stage',
+              label: 'Stage',
+              value: params.stage || '',
+              emptyLabel: 'All stages',
+              options: [
+                { value: '', label: 'All stages' },
+                ...stages.map((s) => ({ value: s, label: LEAD_STAGE_LABELS[s] })),
+              ],
+            },
+            {
+              key: 'owner',
+              label: 'Owner',
+              value: params.owner || '',
+              emptyLabel: 'All owners',
+              options: [
+                { value: '', label: 'All owners' },
+                ...(owners || []).map((o) => ({ value: o.id, label: o.full_name || 'Unnamed' })),
+              ],
+            },
+          ]}
+        />
+      </div>
+      <div className="mb-6 hidden md:block">
+        <form className="flex flex-wrap items-center gap-3">
           <input type="hidden" name="view" value={view} />
-          <select name="stage" defaultValue={params.stage || ''} className="border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-white">
+          <select name="stage" defaultValue={params.stage || ''} className="min-h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm">
             <option value="">All Stages</option>
             {stages.map(s => <option key={s} value={s}>{LEAD_STAGE_LABELS[s]}</option>)}
           </select>
-          <select name="owner" defaultValue={params.owner || ''} className="border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-white">
+          <select name="owner" defaultValue={params.owner || ''} className="min-h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm">
             <option value="">All Owners</option>
             {owners?.map(o => <option key={o.id} value={o.id}>{o.full_name}</option>)}
           </select>
-          <button type="submit" className="px-3 py-2 text-sm border border-[var(--color-border)] rounded-lg bg-white hover:bg-[var(--color-muted)]">
+          <button type="submit" className="min-h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm hover:bg-[var(--color-muted)]">
             Filter
           </button>
         </form>
@@ -103,7 +132,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           {stages.map(stage => {
             const stageLeads = groupedLeads[stage] || []
             return (
-              <div key={stage} className="flex-shrink-0 w-72">
+              <div key={stage} className="w-[min(16.5rem,78vw)] flex-shrink-0 sm:w-72">
                 <div className="flex items-center justify-between mb-3">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STAGE_COLORS[stage]}`}>
                     {LEAD_STAGE_LABELS[stage]}

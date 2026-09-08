@@ -91,7 +91,7 @@ export default async function ReportsPage({
         : ['sales', 'orders', 'samples']
 
   return (
-    <div className="p-6">
+    <div>
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Reports & Analytics</h1>
 
       <div className="flex gap-4 mb-6 border-b border-[var(--color-border)]">

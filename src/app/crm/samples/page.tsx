@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { receiveSample, moveSample } from './actions'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { asFormAction } from '@/lib/form-action'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function SamplesPage() {
   const profile = await requireStaff()
@@ -24,7 +25,7 @@ export default async function SamplesPage() {
   const totalPending = samples?.reduce((acc, curr) => acc + (curr.pending_supplier || 0), 0) || 0
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">Sample Management</h1>
         <p className="text-xs text-[#7A7267] mt-1">Track physical samples in office, with the team, with a client, or pending from a supplier.</p>
@@ -44,16 +45,21 @@ export default async function SamplesPage() {
         ))}
       </div>
 
-      <form action={asFormAction(receiveSample)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-4 gap-3 text-xs">
-        <select name="product_id" required className="border rounded-lg px-2 py-2">
-          <option value="">Receive product sample</option>
-          {(products || []).map((p) => (
-            <option key={p.id} value={p.id}>{p.name} · {p.sku}</option>
-          ))}
-        </select>
-        <input name="quantity" type="number" min="1" defaultValue={1} className="border rounded-lg px-2 py-2" />
-        {showCost ? <input name="unit_cost" type="number" step="0.01" placeholder="Unit cost" className="border rounded-lg px-2 py-2" /> : <input type="hidden" name="unit_cost" value="0" />}
-        <button className="bg-[#1A3022] text-white rounded-lg font-semibold">Receive into office</button>
+      <form action={asFormAction(receiveSample)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-4">
+        <MobileSheetSelect
+          name="product_id"
+          label="Product"
+          required
+          emptyLabel="Receive product sample"
+          className="md:col-span-2"
+          options={[
+            { value: '', label: 'Receive product sample' },
+            ...(products || []).map((p) => ({ value: p.id, label: `${p.name} · ${p.sku}` })),
+          ]}
+        />
+        <input name="quantity" type="number" min="1" defaultValue={1} className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" />
+        {showCost ? <input name="unit_cost" type="number" step="0.01" placeholder="Unit cost" className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" /> : <input type="hidden" name="unit_cost" value="0" />}
+        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white md:col-span-4 lg:col-span-1">Receive into office</button>
       </form>
 
       <div className="bg-white rounded-2xl border overflow-hidden">

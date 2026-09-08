@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
 import { FileText } from 'lucide-react'
+import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-800',
@@ -66,7 +67,7 @@ export default async function QuotationsPage(props: {
   const pipelineValue = rows.reduce((sum, r) => sum + Number(r.total || 0), 0)
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-[#1A3022]">Quotations</h1>
@@ -88,36 +89,68 @@ export default async function QuotationsPage(props: {
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 border-b pb-2">
-        {STATUSES.map((s) => (
-          <Link
-            key={s}
-            href={`/crm/quotations?status=${s}${owner !== 'all' ? `&owner=${owner}` : ''}`}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize ${
-              status === s ? 'bg-[#1A3022] text-white' : 'text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            {s}
-          </Link>
-        ))}
-        <Link
-          href={`/crm/quotations?status=${status}&owner=${owner === 'mine' ? 'all' : 'mine'}`}
-          className={`ml-auto px-3 py-1.5 rounded-full text-xs font-medium ${
-            owner === 'mine' ? 'bg-[#1A3022] text-white' : 'text-gray-500 hover:bg-gray-100'
-          }`}
-        >
-          My quotations
-        </Link>
-        <form action="/crm/quotations" className="flex items-center gap-2">
+      <div className="space-y-3">
+        <form action="/crm/quotations" className="flex gap-2">
           <input type="hidden" name="status" value={status} />
           <input type="hidden" name="owner" value={owner} />
           <input
             name="q"
             defaultValue={q}
             placeholder="Search quote number"
-            className="border rounded-lg px-3 py-1.5 text-xs"
+            className="min-h-10 min-w-0 flex-1 rounded-lg border px-3 py-2 text-sm"
           />
+          <button type="submit" className="min-h-10 shrink-0 rounded-lg border bg-gray-100 px-3 text-xs font-semibold">
+            Search
+          </button>
         </form>
+
+        <div className="md:hidden">
+          <MobileFilterBar
+            pathname="/crm/quotations"
+            preserveParams={q ? { q } : {}}
+            fields={[
+              {
+                key: 'status',
+                label: 'Status',
+                value: status,
+                emptyLabel: 'All',
+                options: STATUSES.map((s) => ({ value: s, label: s === 'all' ? 'All' : s })),
+              },
+              {
+                key: 'owner',
+                label: 'Owner',
+                value: owner,
+                emptyLabel: 'All',
+                options: [
+                  { value: 'all', label: 'All quotations' },
+                  { value: 'mine', label: 'My quotations' },
+                ],
+              },
+            ]}
+          />
+        </div>
+
+        <div className="hidden flex-wrap items-center gap-2 border-b pb-2 md:flex">
+          {STATUSES.map((s) => (
+            <Link
+              key={s}
+              href={`/crm/quotations?status=${s}${owner !== 'all' ? `&owner=${owner}` : ''}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium capitalize ${
+                status === s ? 'bg-[#1A3022] text-white' : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            >
+              {s}
+            </Link>
+          ))}
+          <Link
+            href={`/crm/quotations?status=${status}&owner=${owner === 'mine' ? 'all' : 'mine'}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+            className={`ml-auto rounded-full px-3 py-1.5 text-xs font-medium ${
+              owner === 'mine' ? 'bg-[#1A3022] text-white' : 'text-gray-500 hover:bg-gray-100'
+            }`}
+          >
+            My quotations
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border overflow-x-auto">

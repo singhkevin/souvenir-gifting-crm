@@ -16,6 +16,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 import { requireStaff, applyOrderScope } from '@/lib/auth'
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
+import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 type OrderCompany = { id: string; name: string }
 type OrderOwner = { id: string; full_name: string | null }
@@ -55,7 +56,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
   const today = new Date().toISOString().split('T')[0]
 
   return (
-    <div className="p-6">
+    <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-[var(--color-primary)]">Orders</h1>
       </div>
@@ -65,12 +66,29 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
         </div>
       )}
 
-      <div className="mb-6 flex gap-2 border-b">
+      <div className="mb-6 md:hidden">
+        <MobileFilterBar
+          pathname="/crm/orders"
+          fields={[
+            {
+              key: 'status',
+              label: 'Status',
+              value: statusFilter,
+              emptyLabel: 'All',
+              options: statuses.map((status) => ({
+                value: status,
+                label: status === 'all' ? 'All' : status.replace(/_/g, ' '),
+              })),
+            },
+          ]}
+        />
+      </div>
+      <div className="mb-6 hidden gap-1 overflow-x-auto border-b pb-px md:flex">
         {statuses.map(status => (
           <Link 
             key={status}
             href={`/crm/orders?status=${status}`}
-            className={`px-4 py-2 font-medium text-sm capitalize ${statusFilter === status ? 'border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`shrink-0 px-4 py-2.5 text-sm font-medium capitalize ${statusFilter === status ? 'border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-700'}`}
           >
             {status.replace('_', ' ')}
           </Link>

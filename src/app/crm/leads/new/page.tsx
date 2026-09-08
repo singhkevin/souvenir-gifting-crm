@@ -28,7 +28,7 @@ export default async function NewLeadPage({
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="mx-auto max-w-3xl">
       <BackButton href="/crm/leads" label="Back to leads" />
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6 mt-4">Add Lead</h1>
 

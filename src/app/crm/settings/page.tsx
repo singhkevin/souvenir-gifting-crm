@@ -11,7 +11,7 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'admin') {
     return (
-      <div className="p-6">
+      <div>
         <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg">
           <h2 className="font-bold mb-1">Access Denied</h2>
           <p className="text-sm">You must be an administrator to view this page.</p>
@@ -23,7 +23,7 @@ export default async function SettingsPage() {
   const { data: settings } = await supabase.from('org_settings').select('*').limit(1).maybeSingle()
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="mx-auto max-w-3xl">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Organization Settings</h1>
       <form action={asFormAction(updateOrgSettings)} className="bg-white p-6 rounded-lg border space-y-4 text-sm">
         <label className="block">

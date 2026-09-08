@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { logActivity, removeActivity } from './actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { asFormAction } from '@/lib/form-action'
+import { MobileFilterBar, MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function ActivitiesPage({
   searchParams,
@@ -40,38 +41,70 @@ export default async function ActivitiesPage({
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Activity Feed</h1>
 
-      <form action={asFormAction(logActivity)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-2 gap-3 text-xs">
-        <input name="title" required placeholder="Activity title" className="border rounded-lg px-2 py-2" />
-        <select name="type" className="border rounded-lg px-2 py-2">
-          <option value="follow_up">Follow-up</option>
-          <option value="call">Call</option>
-          <option value="email">Email</option>
-          <option value="meeting">Meeting</option>
-          <option value="message">Message</option>
-        </select>
-        <input name="due_at" type="datetime-local" className="border rounded-lg px-2 py-2" />
-        <select name="assigned_to" defaultValue={user.id} className="border rounded-lg px-2 py-2">
-          {(team || []).map((p) => (
-            <option key={p.id} value={p.id}>{p.full_name}</option>
-          ))}
-        </select>
-        <select name="related_type" className="border rounded-lg px-2 py-2">
-          <option value="">Related record (optional)</option>
-          <option value="company">Company</option>
-          <option value="lead">Lead</option>
-          <option value="requirement">Requirement</option>
-          <option value="order">Order</option>
-        </select>
-        <input name="related_id" placeholder="Related record ID" className="border rounded-lg px-2 py-2" />
-        <textarea name="notes" placeholder="Notes" className="md:col-span-2 border rounded-lg px-2 py-2 min-h-[70px]" />
-        <button className="bg-[#1A3022] text-white rounded-lg font-semibold md:col-span-2 py-2">Log activity</button>
+      <form action={asFormAction(logActivity)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-2">
+        <input name="title" required placeholder="Activity title" className="rounded-lg border px-2 py-2 md:col-span-2" />
+        <MobileSheetSelect
+          name="type"
+          label="Type"
+          defaultValue="follow_up"
+          options={[
+            { value: 'follow_up', label: 'Follow-up' },
+            { value: 'call', label: 'Call' },
+            { value: 'email', label: 'Email' },
+            { value: 'meeting', label: 'Meeting' },
+            { value: 'message', label: 'Message' },
+          ]}
+        />
+        <input name="due_at" type="datetime-local" className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" />
+        <MobileSheetSelect
+          name="assigned_to"
+          label="Assigned to"
+          defaultValue={user.id}
+          options={(team || []).map((p) => ({ value: p.id, label: p.full_name || 'Unnamed' }))}
+        />
+        <MobileSheetSelect
+          name="related_type"
+          label="Related record"
+          emptyLabel="None (optional)"
+          options={[
+            { value: '', label: 'None (optional)' },
+            { value: 'company', label: 'Company' },
+            { value: 'lead', label: 'Lead' },
+            { value: 'requirement', label: 'Requirement' },
+            { value: 'order', label: 'Order' },
+          ]}
+        />
+        <input name="related_id" placeholder="Related record ID" className="rounded-lg border px-2 py-2" />
+        <textarea name="notes" placeholder="Notes" className="min-h-[70px] rounded-lg border px-2 py-2 md:col-span-2" />
+        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white md:col-span-2">Log activity</button>
       </form>
 
-      <form>
-        <select name="type" defaultValue={params.type || ''} className="p-2 border rounded text-sm bg-white">
+      <div className="md:hidden">
+        <MobileFilterBar
+          pathname="/crm/activities"
+          fields={[
+            {
+              key: 'type',
+              label: 'Type',
+              value: params.type || '',
+              emptyLabel: 'All types',
+              options: [
+                { value: '', label: 'All types' },
+                { value: 'call', label: 'Calls' },
+                { value: 'email', label: 'Emails' },
+                { value: 'meeting', label: 'Meetings' },
+                { value: 'follow_up', label: 'Follow-ups' },
+                { value: 'message', label: 'Messages' },
+              ],
+            },
+          ]}
+        />
+      </div>
+      <form className="hidden md:block">
+        <select name="type" defaultValue={params.type || ''} className="rounded border bg-white p-2 text-sm">
           <option value="">All types</option>
           <option value="call">Calls</option>
           <option value="email">Emails</option>

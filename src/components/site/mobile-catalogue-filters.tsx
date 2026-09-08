@@ -1,11 +1,22 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, ChevronDown, X } from 'lucide-react'
+import {
+  MobileFilterSheetOption,
+  MobileFilterSheetShell,
+  MobileFilterTrigger,
+} from '@/components/ui/mobile-filter-sheet'
 
 type CategoryOption = { id: string; name: string }
 type BudgetOption = { id: string; label: string }
+
+const SORT_OPTIONS = [
+  { value: 'name', label: 'A–Z' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'price_low', label: 'Price: low to high' },
+  { value: 'price_high', label: 'Price: high to low' },
+] as const
 
 export function MobileCatalogueFilters({
   categories,
@@ -27,31 +38,17 @@ export function MobileCatalogueFilters({
   productTotal: number
 }) {
   const router = useRouter()
-  const titleId = useId()
-  const [sheet, setSheet] = useState<'category' | 'budget' | null>(null)
+  const [sheet, setSheet] = useState<'category' | 'budget' | 'sort' | null>(null)
 
-  useEffect(() => {
-    if (!sheet) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setSheet(null)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = prev
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [sheet])
-
-  const go = (overrides: { category?: string; budget?: string }) => {
+  const go = (overrides: { category?: string; budget?: string; sort?: string }) => {
     const params = new URLSearchParams()
     if (search) params.set('q', search)
     const nextCategory = overrides.category !== undefined ? overrides.category : categoryFilter
     const nextBudget = overrides.budget !== undefined ? overrides.budget : budget
+    const nextSort = overrides.sort !== undefined ? overrides.sort : sort
     if (nextCategory) params.set('category', nextCategory)
     if (nextBudget) params.set('budget', nextBudget)
-    if (sort && sort !== 'name') params.set('sort', sort)
+    if (nextSort && nextSort !== 'name') params.set('sort', nextSort)
     const qs = params.toString()
     setSheet(null)
     router.push(`/catalogue${qs ? `?${qs}` : ''}`)
@@ -60,139 +57,73 @@ export function MobileCatalogueFilters({
   const categoryLabel =
     categories.find((item) => item.id === categoryFilter)?.name || 'All gifts'
   const budgetLabel = budgetChips.find((item) => item.id === budget)?.label || 'Any budget'
+  const sortLabel = SORT_OPTIONS.find((item) => item.value === sort)?.label || 'A–Z'
 
   return (
-    <div className="mt-5 lg:hidden">
+    <div className="mt-5 space-y-3 lg:hidden">
       <div className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
+        <MobileFilterTrigger
+          label="Category"
+          value={categoryLabel}
           onClick={() => setSheet('category')}
-          className="rounded-md border border-[#E8E4DE] bg-[#F6F4F1] px-3.5 py-3 text-left"
-        >
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8A929C]">
-            Category
-          </span>
-          <span className="mt-1.5 flex items-center justify-between gap-2 text-[15px] text-[#1B2430]">
-            <span className="truncate">{categoryLabel}</span>
-            <ChevronDown size={16} className="shrink-0 text-[#1A3022]" />
-          </span>
-        </button>
-
-        <button
-          type="button"
+        />
+        <MobileFilterTrigger
+          label="Budget"
+          value={budgetLabel}
           onClick={() => setSheet('budget')}
-          className="rounded-md border border-[#E8E4DE] bg-[#F6F4F1] px-3.5 py-3 text-left"
-        >
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8A929C]">
-            Budget
-          </span>
-          <span className="mt-1.5 flex items-center justify-between gap-2 text-[15px] text-[#1B2430]">
-            <span className="truncate">{budgetLabel}</span>
-            <ChevronDown size={16} className="shrink-0 text-[#1A3022]" />
-          </span>
-        </button>
+        />
       </div>
+      <MobileFilterTrigger label="Sort by" value={sortLabel} onClick={() => setSheet('sort')} />
 
-      {sheet ? (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end">
-          <button
-            type="button"
-            aria-label="Close filters"
-            className="absolute inset-0 bg-[#1A3022]/45"
-            onClick={() => setSheet(null)}
-          />
-
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={titleId}
-            className="relative z-10 max-h-[78vh] overflow-hidden rounded-t-2xl bg-white shadow-[0_-12px_40px_rgba(27,36,48,0.18)]"
-          >
-            <div className="border-b border-[#E8E4DE] px-4 pb-3 pt-3">
-              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#D6CEBE]" />
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8A929C]">
-                    Filter
-                  </p>
-                  <h2 id={titleId} className="mt-1 font-serif text-2xl text-[#1B2430]">
-                    {sheet === 'category' ? 'Category' : 'Shop by price'}
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  aria-label="Close"
-                  onClick={() => setSheet(null)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6F4F1] text-[#1A3022]"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            <div className="max-h-[min(58vh,28rem)] overflow-y-auto overscroll-contain px-2 py-2 [scrollbar-width:thin]">
-              {sheet === 'category' ? (
-                <>
-                  <SheetOption
-                    label="All gifts"
-                    meta={`${productTotal}`}
-                    active={!categoryFilter}
-                    onSelect={() => go({ category: '' })}
-                  />
-                  {categories.map((item) => (
-                    <SheetOption
-                      key={item.id}
-                      label={item.name}
-                      meta={`${categoryCounts[item.id] || 0}`}
-                      active={categoryFilter === item.id}
-                      onSelect={() => go({ category: item.id })}
-                    />
-                  ))}
-                </>
-              ) : (
-                budgetChips.map((item) => (
-                  <SheetOption
-                    key={item.id || 'any'}
-                    label={item.label}
-                    active={budget === item.id}
-                    onSelect={() => go({ budget: item.id })}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      ) : null}
-    </div>
-  )
-}
-
-function SheetOption({
-  label,
-  meta,
-  active,
-  onSelect,
-}: {
-  label: string
-  meta?: string
-  active: boolean
-  onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-3.5 text-left transition-colors ${
-        active ? 'bg-[#1A3022] text-white' : 'text-[#1B2430] hover:bg-[#F6F4F1]'
-      }`}
-    >
-      <span className="min-w-0 truncate text-[15px]">{label}</span>
-      <span className="flex shrink-0 items-center gap-2">
-        {meta ? (
-          <span className={`text-xs ${active ? 'text-white/70' : 'text-[#8A929C]'}`}>{meta}</span>
+      <MobileFilterSheetShell
+        open={Boolean(sheet)}
+        title={
+          sheet === 'category' ? 'Category' : sheet === 'budget' ? 'Shop by price' : 'Sort by'
+        }
+        onClose={() => setSheet(null)}
+      >
+        {sheet === 'category' ? (
+          <>
+            <MobileFilterSheetOption
+              label="All gifts"
+              meta={`${productTotal}`}
+              active={!categoryFilter}
+              onSelect={() => go({ category: '' })}
+            />
+            {categories.map((item) => (
+              <MobileFilterSheetOption
+                key={item.id}
+                label={item.name}
+                meta={`${categoryCounts[item.id] || 0}`}
+                active={categoryFilter === item.id}
+                onSelect={() => go({ category: item.id })}
+              />
+            ))}
+          </>
         ) : null}
-        {active ? <Check size={16} className="text-white" /> : null}
-      </span>
-    </button>
+
+        {sheet === 'budget'
+          ? budgetChips.map((item) => (
+              <MobileFilterSheetOption
+                key={item.id || 'any'}
+                label={item.label}
+                active={budget === item.id}
+                onSelect={() => go({ budget: item.id })}
+              />
+            ))
+          : null}
+
+        {sheet === 'sort'
+          ? SORT_OPTIONS.map((item) => (
+              <MobileFilterSheetOption
+                key={item.value}
+                label={item.label}
+                active={sort === item.value}
+                onSelect={() => go({ sort: item.value })}
+              />
+            ))
+          : null}
+      </MobileFilterSheetShell>
+    </div>
   )
 }

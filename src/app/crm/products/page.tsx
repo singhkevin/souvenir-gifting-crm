@@ -5,6 +5,7 @@ import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { isUuid } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
 import { ProductsBrowser } from '@/components/products/products-browser'
+import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 const PAGE_SIZE = 50
 
@@ -70,24 +71,24 @@ export default async function ProductsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Product Catalogue</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="mt-0.5 text-xs text-gray-500">
             Every product carries a unique SKU and its own client visibility. {total} in the catalogue.
           </p>
         </div>
         {['admin', 'sales'].includes(profile.role) && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/crm/products/import"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-gray-800 bg-white border border-gray-200 hover:bg-gray-50 shadow-sm transition-colors"
+            className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-800 shadow-sm transition-colors hover:bg-gray-50 sm:flex-none"
           >
             <Upload size={14} /> Import CSV
           </Link>
           <Link
             href="/crm/products/new"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white bg-[#4A235A] hover:bg-[#3d1c4a] hover:text-white shadow-sm transition-colors"
+            className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#4A235A] px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#3d1c4a] hover:text-white sm:flex-none"
           >
             <Plus size={14} /> Add Product
           </Link>
@@ -101,77 +102,60 @@ export default async function ProductsPage({
         </div>
       )}
 
-      <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <form className="flex-1 max-w-sm flex gap-2">
-            {accessFilter ? <input type="hidden" name="access" value={accessFilter} /> : null}
-            {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
-            {statusFilter !== 'all' ? <input type="hidden" name="status" value={statusFilter} /> : null}
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                name="q"
-                defaultValue={search}
-                placeholder="Search by name or SKU..."
-                className="w-full pl-9 pr-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4A235A]"
-              />
-            </div>
-            <button
-              type="submit"
-              className="px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
-            >
-              Filter
-            </button>
-          </form>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-gray-400 font-medium">Visibility:</span>
-            {[
-              { value: '', label: 'Any' },
-              { value: 'all', label: 'All Clients' },
-              { value: 'selected', label: 'Selected Clients' },
-              { value: 'none', label: 'Internal Only' },
-            ].map((option) => (
-              <Link
-                key={option.value || 'any'}
-                href={buildHref({ access: option.value, page: '' })}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                  accessFilter === option.value
-                    ? 'bg-[var(--color-primary)] text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {option.label}
-              </Link>
-            ))}
+      <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+        <form className="flex w-full gap-2">
+          {accessFilter ? <input type="hidden" name="access" value={accessFilter} /> : null}
+          {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
+          {statusFilter !== 'all' ? <input type="hidden" name="status" value={statusFilter} /> : null}
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              name="q"
+              defaultValue={search}
+              placeholder="Search by name or SKU..."
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#4A235A] sm:py-1.5 sm:text-xs"
+            />
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-100">
-          <span className="text-xs text-gray-400 font-medium">Category:</span>
-          <Link
-            href={buildHref({ category: '', page: '' })}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-              !categoryFilter ? 'bg-[var(--color-primary)] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+          <button
+            type="submit"
+            className="min-h-10 shrink-0 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-200"
           >
-            All Products
-          </Link>
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={buildHref({ category: category.id, page: '' })}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                categoryFilter === category.id
-                  ? 'bg-[var(--color-primary)] text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {category.name}
-            </Link>
-          ))}
-        </div>
+            Search
+          </button>
+        </form>
+
+        <MobileFilterBar
+          pathname="/crm/products"
+          preserveParams={{
+            ...(search ? { q: search } : {}),
+            ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+          }}
+          fields={[
+            {
+              key: 'access',
+              label: 'Visibility',
+              value: accessFilter,
+              emptyLabel: 'Any',
+              options: [
+                { value: '', label: 'Any' },
+                { value: 'all', label: 'All Clients' },
+                { value: 'selected', label: 'Selected Clients' },
+                { value: 'none', label: 'Internal Only' },
+              ],
+            },
+            {
+              key: 'category',
+              label: 'Category',
+              value: categoryFilter,
+              emptyLabel: 'All products',
+              options: [
+                { value: '', label: 'All products' },
+                ...categories.map((category) => ({ value: category.id, label: category.name })),
+              ],
+            },
+          ]}
+        />
       </div>
 
       <ProductsBrowser products={products || []} showCost={showCost} />
