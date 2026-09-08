@@ -15,13 +15,6 @@ import { getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue
 import { curatePublicHome, homeCategoryTiles } from '@/lib/catalogue/curate'
 
 const ARROW = '\u2192'
-const EM_DASH = '\u2014'
-
-const TILE =
-  'group relative block overflow-hidden rounded-[1.35rem] catalogue-studio-field shadow-[0_8px_24px_rgba(26,48,34,0.06)] transition-shadow duration-300 hover:shadow-[0_14px_32px_rgba(26,48,34,0.1)]'
-
-const TILE_OVERLAY =
-  'pointer-events-none absolute inset-x-0 bottom-0 h-[48%] bg-gradient-to-t from-[#1A3022]/50 via-[#1A3022]/18 to-transparent'
 
 const CATEGORY_LINES: Record<string, string> = {
   Drinkware: 'Bottles, tumblers and everyday presence',
@@ -30,13 +23,6 @@ const CATEGORY_LINES: Record<string, string> = {
   'Desk & Stationery': 'Notebooks, pens and desk kits',
   Apparel: 'Wearable brand moments',
   'Hampers & Gift Sets': 'Curated boxes, ready to programme',
-  'Welcome Kits': 'First-day essentials',
-  'Eco-Friendly Gifts': 'Lower-impact corporate gifts',
-  Wellness: 'Thoughtful wellbeing gifts',
-  'Home & Lifestyle': 'Objects for life beyond the office',
-  'Awards & Recognition': 'Milestones made tangible',
-  Other: 'Everything else, still catalogue-ready',
-  Watches: 'Timepieces with quiet authority',
 }
 
 export async function PublicHome() {
@@ -54,7 +40,6 @@ export async function PublicHome() {
     more,
   } = curatePublicHome(products, categories, collections, CATALOGUE_OCCASIONS)
 
-  // Hero slideshow: studio assets first, rotated so the opening collage is a new set
   const rankedHero = [...products]
     .filter((product) => Boolean(product.image_url?.trim()))
     .sort((a, b) => {
@@ -64,10 +49,7 @@ export async function PublicHome() {
         if (/studio-pack-/i.test(url)) return 1
         return 0
       }
-      const rotate =
-        (b.name.charCodeAt(0) * 31 + b.name.length * 19) % 200 -
-        ((a.name.charCodeAt(0) * 31 + a.name.length * 19) % 200)
-      return rank(b.image_url || '') - rank(a.image_url || '') || rotate
+      return rank(b.image_url || '') - rank(a.image_url || '')
     })
   const heroOffset = rankedHero.length > 12 ? 10 : 0
   const heroSlideshow = rankedHero.slice(heroOffset).concat(rankedHero.slice(0, heroOffset))
@@ -86,52 +68,57 @@ export async function PublicHome() {
   }))
 
   return (
-    <div className="bg-[#FAF7F2]">
+    <div className="bg-white">
       <HeroStage
         products={heroSlideshow.length ? heroSlideshow : heroProducts}
         catalogueCount={products.length}
       />
 
-      <section className="bg-[#FAF7F2] py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      {/* Top Trending — Bombay Store pattern */}
+      <section className="bg-white py-14 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <div className="flex items-end justify-between gap-6">
+            <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Trending corporate gifts</p>
-                <h2 className="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">What teams are choosing.</h2>
+                <p className="store-eyebrow">Top trending</p>
+                <h2 className="store-section-title mt-2">Products teams love.</h2>
               </div>
-              <Link href="/catalogue?sort=newest" className="hidden text-[11px] uppercase tracking-[0.16em] text-[#1A3022] sm:inline">
+              <Link href="/catalogue?sort=newest" className="store-link hidden sm:inline">
                 View all {ARROW}
               </Link>
             </div>
           </Reveal>
-          <div className="mt-10">
+          <div className="mt-8">
             <ProductRail products={trending} />
           </div>
         </div>
       </section>
 
-      <section className="bg-[#FAF7F2] py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      {/* Featured Categories */}
+      <section className="bg-[#F6F4F1] py-14 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <div className="flex items-end justify-between gap-6">
+            <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Shop by category</p>
-                <h2 className="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">Find the right lane.</h2>
+                <p className="store-eyebrow">Featured categories</p>
+                <h2 className="store-section-title mt-2">Shop by category.</h2>
               </div>
-              <Link href="/categories" className="hidden text-[11px] uppercase tracking-[0.16em] text-[#1A3022] sm:inline">
+              <Link href="/categories" className="store-link hidden sm:inline">
                 All categories {ARROW}
               </Link>
             </div>
           </Reveal>
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:gap-5">
             {categories.map((category, index) => {
               const sample = categorySamples.get(category.id) || null
               const count = products.filter((product) => product.category_id === category.id).length
               return (
-                <Reveal key={category.id} delay={(index % 3) * 60}>
-                  <Link href={`/categories/${slugify(category.name)}`} className={TILE}>
-                    <div className="aspect-[4/5] catalogue-studio-field">
+                <Reveal key={category.id} delay={(index % 3) * 50}>
+                  <Link
+                    href={`/categories/${slugify(category.name)}`}
+                    className="group block overflow-hidden rounded-md bg-white shadow-[0_1px_3px_rgba(27,36,48,0.06)] transition-shadow hover:shadow-[0_8px_24px_rgba(27,36,48,0.08)]"
+                  >
+                    <div className="aspect-square catalogue-studio-field">
                       {sample ? (
                         <ProductImage
                           src={sample.image_url}
@@ -139,19 +126,15 @@ export async function PublicHome() {
                           size="md"
                           fit="contain"
                           fadeEdges
-                          className="h-full min-h-0 w-full bg-transparent"
-                          imgClassName="catalogue-product-img scale-[1.06] transition-transform duration-700 group-hover:scale-[1.08]"
+                          className="h-full w-full bg-transparent"
+                          imgClassName="catalogue-product-img scale-[1.04] transition-transform duration-500 group-hover:scale-[1.06]"
                         />
                       ) : null}
                     </div>
-                    <div className={TILE_OVERLAY} />
-                    <div className="absolute inset-x-0 bottom-0 p-4 text-[#FAF7F2]">
-                      <p className="font-serif text-xl leading-tight text-[#FAF7F2]">{category.name}</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#FAF7F2]/85">
+                    <div className="border-t border-[#E8E4DE] px-3 py-3 text-center sm:px-4 sm:py-4">
+                      <p className="font-serif text-lg text-[#1B2430] sm:text-xl">{category.name}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#5C6570]">
                         {CATEGORY_LINES[category.name] || `${count} gifts`}
-                      </p>
-                      <p className="mt-3 translate-x-0 text-[11px] uppercase tracking-[0.16em] text-[#FAF7F2] transition-transform duration-500 group-hover:translate-x-1">
-                        Explore {ARROW}
                       </p>
                     </div>
                   </Link>
@@ -162,29 +145,24 @@ export async function PublicHome() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-[#1A3022] py-20 text-[#FAF7F2]">
-        <div className="absolute inset-0 opacity-20">
-          <Image
-            src="/site/banner-brand.webp"
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
+      {/* Brand / legacy banner */}
+      <section className="relative overflow-hidden py-20 text-white">
+        <div className="absolute inset-0">
+          <Image src="/site/banner-brand.webp" alt="" fill sizes="100vw" className="object-cover" />
+          <div className="absolute inset-0 bg-[#1A3022]/88" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#102018] via-[#1A3022]/95 to-[#1A3022]/90" />
-        <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[#D6CEBE]">Premium gifting stories</p>
-            <h2 className="mt-4 max-w-3xl font-serif text-4xl tracking-tight text-[#FAF7F2] sm:text-5xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">Built for programmes</p>
+            <h2 className="mx-auto mt-4 max-w-3xl font-serif text-4xl tracking-tight sm:text-5xl">
               Gifts that represent your brand.
             </h2>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-[#F0EAE0]/85">
-              From first enquiry to fulfilment {EM_DASH} catalogue, quotation and delivery in one GIFFTER workflow.
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/80">
+              From first enquiry to fulfilment — catalogue, quotation and delivery in one GIFFTER workflow.
             </p>
             <Link
               href="/catalogue"
-              className="mt-8 inline-flex rounded-2xl border border-[#EFE8DC]/40 px-6 py-3 text-[11px] uppercase tracking-[0.18em] text-[#F7F2EA] transition-colors hover:bg-[#F7F4EF]/10"
+              className="mt-8 inline-flex border border-white/40 px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-white/10"
             >
               Browse the Catalogue {ARROW}
             </Link>
@@ -192,37 +170,40 @@ export async function PublicHome() {
         </div>
       </section>
 
-      <section className="bg-[#FAF7F2] py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      {/* Collections */}
+      <section className="bg-white py-14 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">The GIFFTER Edit</p>
-            <h2 className="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">Curated collections.</h2>
+            <p className="store-eyebrow">Collections</p>
+            <h2 className="store-section-title mt-2">Curated for every brief.</h2>
           </Reveal>
-          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {collections.map((collection, index) => {
               const sample = collectionSamples.get(collection.slug) || null
               return (
-                <Reveal key={collection.slug} delay={(index % 3) * 70}>
-                  <Link href={`/collections/${collection.slug}`} className={`${TILE} min-h-[280px]`}>
-                    {sample ? (
-                      <ProductImage
-                        src={sample.image_url}
-                        alt={collection.title}
-                        size="md"
-                        fit="contain"
-                        fadeEdges
-                        className="absolute inset-0 h-full min-h-0 w-full bg-transparent"
-                        imgClassName="catalogue-product-img scale-[1.08] transition-transform duration-700 group-hover:scale-[1.1]"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 catalogue-studio-field" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#122018]/55 via-[#122018]/18 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 p-6 text-[#FAF7F2]">
-                      <p className="text-[10px] uppercase tracking-[0.22em] text-[#FAF7F2]/80">{collection.kicker}</p>
-                      <p className="mt-2 font-serif text-2xl text-[#FAF7F2]">{collection.title}</p>
-                      <p className="mt-2 text-sm leading-relaxed text-[#F0EAE0]/85">{collection.description}</p>
-                      <p className="mt-4 text-[11px] uppercase tracking-[0.16em] transition-transform duration-500 group-hover:translate-x-1">
+                <Reveal key={collection.slug} delay={(index % 3) * 50}>
+                  <Link
+                    href={`/collections/${collection.slug}`}
+                    className="group flex h-full flex-col overflow-hidden rounded-md border border-[#E8E4DE] bg-white transition-shadow hover:shadow-[0_8px_24px_rgba(27,36,48,0.08)]"
+                  >
+                    <div className="relative aspect-[5/3] catalogue-studio-field">
+                      {sample ? (
+                        <ProductImage
+                          src={sample.image_url}
+                          alt={collection.title}
+                          size="md"
+                          fit="contain"
+                          fadeEdges
+                          className="absolute inset-0 h-full w-full bg-transparent"
+                          imgClassName="catalogue-product-img scale-[1.05]"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="flex flex-1 flex-col px-5 py-5">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-[#5C6570]">{collection.kicker}</p>
+                      <p className="mt-2 font-serif text-2xl text-[#1B2430]">{collection.title}</p>
+                      <p className="mt-2 flex-1 text-sm leading-relaxed text-[#5C6570]">{collection.description}</p>
+                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]">
                         Open collection {ARROW}
                       </p>
                     </div>
@@ -234,39 +215,38 @@ export async function PublicHome() {
         </div>
       </section>
 
+      {/* Featured gift story */}
       {story ? (
-        <section className="bg-[#FAF7F2] py-16 sm:py-24">
-          <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 sm:px-8 lg:grid-cols-2 lg:gap-16">
+        <section className="bg-[#F6F4F1] py-14 sm:py-20">
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
             <Reveal>
-              <div className="relative aspect-square overflow-hidden rounded-[1.35rem] catalogue-studio-field shadow-[0_8px_24px_rgba(26,48,34,0.06)]">
+              <div className="relative aspect-square overflow-hidden rounded-md catalogue-studio-field">
                 <ProductImage
                   src={story.image_url}
                   alt={story.name}
                   size="md"
                   fit="contain"
                   fadeEdges
-                  className="h-full min-h-0 w-full bg-transparent"
-                  imgClassName="catalogue-product-img scale-[1.05]"
+                  className="h-full w-full bg-transparent"
+                  imgClassName="catalogue-product-img scale-[1.04]"
                 />
               </div>
             </Reveal>
-            <Reveal delay={120}>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Featured corporate gift</p>
-              <h2 className="mt-4 font-serif text-4xl tracking-tight sm:text-5xl">
-                One gift.
-                <br />
-                A lasting impression.
+            <Reveal delay={100}>
+              <p className="store-eyebrow">Featured corporate gift</p>
+              <h2 className="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">
+                One gift. A lasting impression.
               </h2>
-              <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[#3F3A34]">{story.category_name}</p>
-              <p className="mt-4 font-serif text-2xl text-[#1C1917]">{story.name}</p>
-              <p className="mt-4 max-w-md text-base leading-relaxed text-[#3F3A34]">
+              <p className="mt-4 text-[11px] uppercase tracking-[0.16em] text-[#5C6570]">{story.category_name}</p>
+              <p className="mt-3 font-serif text-2xl text-[#1B2430]">{story.name}</p>
+              <p className="mt-4 max-w-md text-base leading-relaxed text-[#5C6570]">
                 {story.description ||
                   'A catalogue piece selected for presence, practicality and programme-ready quoting.'}
               </p>
-              <p className="mt-5 text-lg text-[#1A3022]">{formatCurrency(story.price)}</p>
+              <p className="mt-5 text-xl font-semibold text-[#1A3022]">{formatCurrency(story.price)}</p>
               <Link
                 href={`/catalogue/${story.id}`}
-                className="mt-8 inline-flex rounded-2xl bg-[#1A3022] px-7 py-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#F7F2EA]"
+                className="mt-8 inline-flex bg-[#1A3022] px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
               >
                 View Product
               </Link>
@@ -275,34 +255,39 @@ export async function PublicHome() {
         </section>
       ) : null}
 
-      <section className="bg-[#F3EEE6]/70 py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      {/* Shop by Occasion */}
+      <section className="bg-white py-14 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Shop by occasion</p>
-            <h2 className="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">Programmes that need gifts.</h2>
+            <p className="store-eyebrow">Shop by occasion</p>
+            <h2 className="store-section-title mt-2">Hand-picked for every gifting need.</h2>
           </Reveal>
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {occasionVisuals.map((occasion, index) => (
-              <Reveal key={occasion.slug} delay={(index % 3) * 50}>
-                <Link href={occasion.href} className={TILE}>
-                  <div className="aspect-[5/4] catalogue-studio-field">
+              <Reveal key={occasion.slug} delay={(index % 3) * 40}>
+                <Link
+                  href={occasion.href}
+                  className="group flex gap-4 overflow-hidden rounded-md border border-[#E8E4DE] bg-white p-3 transition-shadow hover:shadow-[0_8px_24px_rgba(27,36,48,0.08)] sm:p-4"
+                >
+                  <div className="h-24 w-24 shrink-0 overflow-hidden rounded-md catalogue-studio-field sm:h-28 sm:w-28">
                     {occasion.sample ? (
                       <ProductImage
                         src={occasion.sample.image_url}
                         alt={occasion.title}
-                        size="md"
+                        size="sm"
                         fit="contain"
                         fadeEdges
-                        className="h-full min-h-0 w-full bg-transparent"
-                        imgClassName="catalogue-product-img scale-[1.06] transition-transform duration-700 group-hover:scale-[1.08]"
+                        className="h-full w-full bg-transparent"
+                        imgClassName="catalogue-product-img"
                       />
                     ) : null}
                   </div>
-                  <div className={TILE_OVERLAY} />
-                  <div className="absolute inset-x-0 bottom-0 p-5 text-[#FAF7F2]">
-                    <p className="font-serif text-xl text-[#FAF7F2]">{occasion.title}</p>
-                    <p className="mt-1 text-xs text-[#F0EAE0]/85">{occasion.line}</p>
-                    <p className="mt-3 text-[11px] uppercase tracking-[0.16em]">Browse {ARROW}</p>
+                  <div className="min-w-0 flex-1 py-1">
+                    <p className="font-serif text-xl text-[#1B2430]">{occasion.title}</p>
+                    <p className="mt-1 text-sm text-[#5C6570]">{occasion.line}</p>
+                    <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]">
+                      Browse {ARROW}
+                    </p>
                   </div>
                 </Link>
               </Reveal>
@@ -311,22 +296,23 @@ export async function PublicHome() {
         </div>
       </section>
 
-      {budgetCounts.length > 0 && (
-        <section className="bg-[#FAF7F2] py-16 sm:py-20">
-          <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      {/* Shop by price */}
+      {budgetCounts.length > 0 ? (
+        <section className="bg-[#F6F4F1] py-14 sm:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Gifts by budget</p>
-              <h2 className="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">Start where the brief starts.</h2>
+              <p className="store-eyebrow">Shop by price</p>
+              <h2 className="store-section-title mt-2">Start where the brief starts.</h2>
             </Reveal>
-            <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {budgetCounts.map((band) => (
                 <Link
                   key={band.id}
                   href={`/catalogue?budget=${band.id}`}
-                  className="rounded-[1.35rem] catalogue-studio-field px-5 py-7 shadow-[0_8px_24px_rgba(26,48,34,0.04)] transition-shadow hover:shadow-[0_12px_28px_rgba(26,48,34,0.08)]"
+                  className="rounded-md border border-[#E8E4DE] bg-white px-4 py-6 text-center transition-shadow hover:shadow-[0_8px_20px_rgba(27,36,48,0.07)]"
                 >
-                  <p className="font-serif text-xl text-[#1C1917]">{band.label}</p>
-                  <p className="mt-3 text-xs text-[#3F3A34]">
+                  <p className="font-serif text-xl text-[#1B2430]">{band.label}</p>
+                  <p className="mt-2 text-xs text-[#5C6570]">
                     {band.count} {band.count === 1 ? 'gift' : 'gifts'}
                   </p>
                 </Link>
@@ -334,49 +320,23 @@ export async function PublicHome() {
             </div>
           </div>
         </section>
-      )}
+      ) : null}
 
-      <section className="relative overflow-hidden py-20">
-        <div className="absolute inset-0">
-          <Image
-            src="/site/banner-milestones.webp"
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-[#122018]/82" />
-        </div>
-        <div className="relative mx-auto max-w-6xl px-5 text-center text-[#F7F2EA] sm:px-8">
+      {/* From the catalogue grid */}
+      <section className="bg-white py-14 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[#D6CEBE]">From first day to big milestones</p>
-            <h2 className="mx-auto mt-4 max-w-3xl font-serif text-4xl tracking-tight text-[#FAF7F2] sm:text-5xl">
-              Built for teams. Designed for people.
-            </h2>
-            <Link
-              href="/collections/new-joiner-essentials"
-              className="mt-8 inline-flex rounded-2xl bg-[#F7F4EF] px-7 py-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#1A3022]"
-            >
-              Explore Welcome Kits
-            </Link>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="bg-[#FAF7F2] py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <Reveal>
-            <div className="flex items-end justify-between gap-6">
+            <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Featured corporate gifts</p>
-                <h2 className="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">From the catalogue.</h2>
+                <p className="store-eyebrow">From the catalogue</p>
+                <h2 className="store-section-title mt-2">Featured gifts.</h2>
               </div>
-              <Link href="/catalogue" className="text-[11px] uppercase tracking-[0.16em] text-[#1A3022]">
+              <Link href="/catalogue" className="store-link">
                 Full catalogue {ARROW}
               </Link>
             </div>
           </Reveal>
-          <div className="mt-10 grid grid-cols-2 gap-5 sm:gap-6 lg:grid-cols-4 lg:gap-7">
+          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
             {featured.map((product) => (
               <SiteProductCard key={product.id} product={product} />
             ))}
@@ -384,66 +344,75 @@ export async function PublicHome() {
         </div>
       </section>
 
-      {more.length > 0 && (
-        <section className="bg-[#FAF7F2] py-16 sm:py-20">
-          <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      {more.length > 0 ? (
+        <section className="bg-[#F6F4F1] py-14 sm:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Keep browsing</p>
-              <h2 className="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">More from the collection.</h2>
+              <p className="store-eyebrow">Keep browsing</p>
+              <h2 className="store-section-title mt-2">More from the collection.</h2>
             </Reveal>
-            <div className="mt-10 grid grid-cols-2 gap-5 sm:gap-6 lg:grid-cols-4 lg:gap-7">
+            <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
               {more.map((product) => (
                 <SiteProductCard key={product.id} product={product} />
               ))}
             </div>
           </div>
         </section>
-      )}
+      ) : null}
 
-      <section className="bg-[#F3EEE6]/70 py-16 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      {/* Trust / why */}
+      <section className="bg-white py-14 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[#3F3A34]">Why GIFFTER</p>
-            <h2 className="mt-2 max-w-xl font-serif text-3xl tracking-tight sm:text-4xl">
-              From enquiry to fulfilment, in one place.
-            </h2>
+            <p className="store-eyebrow">Why GIFFTER</p>
+            <h2 className="store-section-title mt-2 max-w-xl">From enquiry to fulfilment, in one place.</h2>
           </Reveal>
           <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { title: 'Curated corporate gifts', body: 'A live catalogue organised by category and ready to quote.' },
-              { title: 'Custom branding', body: 'Mockups and personalisation handled inside the GIFFTER workflow.' },
+              {
+                title: 'Curated corporate gifts',
+                body: 'A live catalogue organised by category and ready to quote.',
+              },
+              {
+                title: 'Custom branding',
+                body: 'Mockups and personalisation handled inside the GIFFTER workflow.',
+              },
               {
                 title: 'Bulk gifting',
-                body: `Minimum order quantities for programme-scale orders ${EM_DASH} not single-item checkout.`,
+                body: 'Minimum order quantities for programme-scale orders — not single-item checkout.',
               },
-              { title: 'End-to-end fulfilment', body: 'Quotations, orders, courier partners and invoicing in the same system.' },
+              {
+                title: 'End-to-end fulfilment',
+                body: 'Quotations, orders, courier partners and invoicing in the same system.',
+              },
             ].map((item) => (
               <div key={item.title} className="border-t border-[#1A3022]/15 pt-5">
                 <p className="font-serif text-xl">{item.title}</p>
-                <p className="mt-3 text-sm leading-relaxed text-[#3F3A34]">{item.body}</p>
+                <p className="mt-3 text-sm leading-relaxed text-[#5C6570]">{item.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="relative overflow-hidden py-24 text-center text-[#F7F2EA]">
+      {/* Quote CTA */}
+      <section className="relative overflow-hidden py-20 text-center text-white">
         <div className="absolute inset-0">
           <Image src="/site/cta-dark.webp" alt="" fill sizes="100vw" className="object-cover" />
           <div className="absolute inset-0 bg-[#0E1A13]/86" />
         </div>
-        <div className="relative mx-auto max-w-3xl px-5 sm:px-8">
+        <div className="relative mx-auto max-w-3xl px-4 sm:px-6">
           <Reveal>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[#D6CEBE]">Request a quote</p>
-            <h2 className="mt-4 font-serif text-4xl tracking-tight text-[#FAF7F2] sm:text-5xl">
-              Ready to create your next gifting programme?
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">Request a quote</p>
+            <h2 className="mt-4 font-serif text-4xl tracking-tight sm:text-5xl">
+              Ready for your next gifting programme?
             </h2>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-[#F0EAE0]/85">
+            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/80">
               Tell us who you are gifting, and we will prepare the quotation.
             </p>
             <Link
               href="/request-quote"
-              className="mt-10 inline-flex rounded-2xl bg-[#F7F4EF] px-8 py-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#1A3022]"
+              className="mt-8 inline-flex bg-white px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1A3022]"
             >
               Request a Quote
             </Link>

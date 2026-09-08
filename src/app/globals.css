@@ -3,22 +3,22 @@
 @theme {
   --color-primary: #1A3022;
   --color-primary-light: #274433;
-  --color-primary-fg: #FAF7F2;
-  --color-accent: #4A235A;
-  --color-accent-hover: #3d1c4a;
-  --color-accent-fg: #FAF7F2;
+  --color-primary-fg: #FFFFFF;
+  --color-accent: #1A3022;
+  --color-accent-hover: #122018;
+  --color-accent-fg: #FFFFFF;
   --color-sidebar: #16281E;
   --color-sidebar-active: #274433;
   --color-sidebar-text: #A3B5AA;
-  --color-background: #F7F4EF;
+  --color-background: #FFFFFF;
   --color-surface: #FFFFFF;
-  --color-surface-subtle: #F7F4EF;
-  --color-border: #E2DBD0;
-  --color-border-subtle: #EBE5DC;
-  --color-muted: #E8E2D8;
-  --color-muted-fg: #5A5348;
-  --color-text: #1C1917;
-  --color-text-secondary: #5A5348;
+  --color-surface-subtle: #F6F4F1;
+  --color-border: #E8E4DE;
+  --color-border-subtle: #F0EDE8;
+  --color-muted: #F0EDE8;
+  --color-muted-fg: #5C6570;
+  --color-text: #1B2430;
+  --color-text-secondary: #5C6570;
   --color-success: #166534;
   --color-success-bg: #DCFCE7;
   --color-warning: #92400E;
@@ -28,17 +28,18 @@
   --color-info: #1E40AF;
   --color-info-bg: #DBEAFE;
 
-  --font-sans: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: var(--font-playfair), "Playfair Display", "Georgia", "Cambria", serif;
+  --font-sans: var(--font-outfit), "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: var(--font-cormorant), "Cormorant Garamond", "Georgia", serif;
 
-  --radius-sm: 0.375rem;
-  --radius: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
+  --radius-sm: 0.25rem;
+  --radius: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
 
   --animate-giffter-drift: giffter-drift 18s ease-in-out infinite;
   --animate-giffter-float: giffter-float 12s ease-in-out infinite;
+  --animate-store-fade: store-fade 0.7s ease-in-out;
 }
 
 @keyframes giffter-drift {
@@ -61,6 +62,15 @@
   }
 }
 
+@keyframes store-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
@@ -74,15 +84,31 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     color: inherit;
+    font-family: var(--font-serif);
+    font-weight: 500;
   }
 
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #D6CEBE; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #BDB3A1; }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cfc8be;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #b7afa3;
+  }
 
   button,
   a[role='button'] {
@@ -111,35 +137,42 @@
 
 @layer components {
   .card {
-    @apply bg-white border border-[#E5DFD5] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.03)];
+    @apply rounded-lg border border-[#E8E4DE] bg-white shadow-[0_1px_2px_rgba(27,36,48,0.04)];
   }
 
-  /*
-    Single studio tone — matches warm product photo fields.
-    Avoid stacking #FAF7F2 / #F7F4EF / #EDE6DB mats around the JPEG.
-  */
+  .store-section-title {
+    @apply font-serif text-3xl tracking-tight text-[#1B2430] sm:text-4xl;
+  }
+
+  .store-eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-[0.22em] text-[#5C6570];
+  }
+
+  .store-link {
+    @apply text-[12px] font-medium uppercase tracking-[0.14em] text-[#1A3022] underline-offset-4 hover:underline;
+  }
+
   .catalogue-studio-field {
-    background-color: #e4d9c8;
+    background-color: #ebe4d8;
   }
 
-  /* Soft edge fade so the photo rectangle dissolves into the studio field. */
   .catalogue-product-img {
     object-fit: contain;
     object-position: center center;
     width: 100%;
     height: 100%;
     -webkit-mask-image: radial-gradient(
-      ellipse 86% 86% at 50% 48%,
-      #000 48%,
-      rgba(0, 0, 0, 0.72) 68%,
-      rgba(0, 0, 0, 0.28) 84%,
+      ellipse 88% 88% at 50% 48%,
+      #000 52%,
+      rgba(0, 0, 0, 0.75) 72%,
+      rgba(0, 0, 0, 0.3) 88%,
       transparent 100%
     );
     mask-image: radial-gradient(
-      ellipse 86% 86% at 50% 48%,
-      #000 48%,
-      rgba(0, 0, 0, 0.72) 68%,
-      rgba(0, 0, 0, 0.28) 84%,
+      ellipse 88% 88% at 50% 48%,
+      #000 52%,
+      rgba(0, 0, 0, 0.75) 72%,
+      rgba(0, 0, 0, 0.3) 88%,
       transparent 100%
     );
   }
@@ -149,11 +182,6 @@
     }
   }
 
-  /*
-    Forest-green and plum fills used as action buttons. Hover must keep a light
-    label — several pages set a dark hover background without an explicit
-    hover:text, which made the original (or inherited) text colour unreadable.
-  */
   button.bg-\[\#1A3022\]:hover,
   a.bg-\[\#1A3022\]:hover,
   button.bg-\[\#274433\]:hover,

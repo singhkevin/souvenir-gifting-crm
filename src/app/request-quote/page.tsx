@@ -23,16 +23,22 @@ export default async function RequestQuotePage({
 
   return (
     <SiteShell>
-      <div className="mx-auto grid max-w-6xl gap-16 px-5 py-16 sm:px-8 lg:grid-cols-2">
+      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <p className="store-eyebrow">Request a quote</p>
+          <h1 className="store-section-title mt-2">Tell us about the programme.</h1>
+        </div>
+      </div>
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:px-8">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.28em] text-[#7A7267]">Request a quote</p>
-          <h1 className="mt-4 font-serif text-4xl tracking-tight sm:text-5xl">Tell us about the programme.</h1>
-          <p className="mt-6 max-w-md text-sm leading-relaxed text-[#6B6358]">
+          <p className="max-w-md text-sm leading-relaxed text-[#5C6570]">
             Share the occasion, quantity and timing. We will come back with a quotation — branding, packaging and
             fulfilment included.
           </p>
         </div>
-        <QuoteForm productId={product?.id} productName={product?.name} portalHref={portalHref} />
+        <div className="rounded-md border border-[#E8E4DE] bg-white p-6 sm:p-8">
+          <QuoteForm productId={product?.id} productName={product?.name} portalHref={portalHref} />
+        </div>
       </div>
     </SiteShell>
   )

@@ -24,14 +24,18 @@ export default async function CollectionDetailPage({ params }: Props) {
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-[#7A7267]">{collection.kicker}</p>
-        <h1 className="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">{collection.title}</h1>
-        <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#6B6358]">{collection.description}</p>
-        <p className="mt-8 text-xs text-[#7A7267]">{products.length} gifts</p>
-        <div className="mt-8">
-          <CatalogueBrowser products={products} />
+      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <p className="store-eyebrow">{collection.kicker}</p>
+          <h1 className="store-section-title mt-2">{collection.title}</h1>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">{collection.description}</p>
+          <p className="mt-4 text-xs text-[#5C6570]">
+            {products.length} {products.length === 1 ? 'gift' : 'gifts'}
+          </p>
         </div>
+      </div>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <CatalogueBrowser products={products} />
       </div>
     </SiteShell>
   )

@@ -34,8 +34,8 @@ export default async function PublicProductPage({ params }: Props) {
 
   return (
     <SiteShell>
-      <article className="mx-auto grid max-w-6xl gap-12 px-5 py-14 sm:px-8 lg:grid-cols-2 lg:py-20">
-        <div className="overflow-hidden rounded-[1.35rem] catalogue-studio-field">
+      <article className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:py-16">
+        <div className="overflow-hidden rounded-md catalogue-studio-field">
           <ProductImage
             src={product.image_url}
             alt={product.name}
@@ -46,27 +46,27 @@ export default async function PublicProductPage({ params }: Props) {
             imgClassName="catalogue-product-img scale-[1.04]"
           />
         </div>
-        <div className="lg:py-6">
-          {product.category_name && (
-            <p className="text-[11px] uppercase tracking-[0.22em] text-[#7A7267]">{product.category_name}</p>
-          )}
-          <h1 className="mt-4 font-serif text-4xl tracking-tight sm:text-5xl">{product.name}</h1>
-          {product.brand_name && <p className="mt-3 text-sm text-[#6B6358]">{product.brand_name}</p>}
-          <p className="mt-6 text-2xl text-[#1A3022]">{formatCurrency(product.price)}</p>
-          <p className="mt-2 text-xs text-[#7A7267]">Minimum order {product.moq || 1} units</p>
+        <div className="lg:py-4">
+          {product.category_name ? (
+            <p className="text-[11px] uppercase tracking-[0.18em] text-[#5C6570]">{product.category_name}</p>
+          ) : null}
+          <h1 className="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">{product.name}</h1>
+          {product.brand_name ? <p className="mt-3 text-sm text-[#5C6570]">{product.brand_name}</p> : null}
+          <p className="mt-6 text-2xl font-semibold text-[#1A3022]">{formatCurrency(product.price)}</p>
+          <p className="mt-2 text-xs text-[#5C6570]">Minimum order {product.moq || 1} units</p>
 
-          <p className="mt-8 max-w-md text-sm leading-relaxed text-[#5A5248]">
+          <p className="mt-8 max-w-md text-sm leading-relaxed text-[#5C6570]">
             {product.description ||
               'Share a requirement and we will prepare a quotation with branding and packaging options.'}
           </p>
 
           <dl className="mt-10 space-y-3 text-sm">
-            <div className="flex justify-between border-b border-[#E5DFD5] py-2">
-              <dt className="text-[#7A7267]">SKU</dt>
+            <div className="flex justify-between border-b border-[#E8E4DE] py-2">
+              <dt className="text-[#5C6570]">SKU</dt>
               <dd className="font-mono text-xs">{product.sku}</dd>
             </div>
-            <div className="flex justify-between border-b border-[#E5DFD5] py-2">
-              <dt className="text-[#7A7267]">Availability</dt>
+            <div className="flex justify-between border-b border-[#E8E4DE] py-2">
+              <dt className="text-[#5C6570]">Availability</dt>
               <dd className="capitalize">{product.status === 'active' ? 'Available to quote' : product.status}</dd>
             </div>
           </dl>
@@ -74,12 +74,12 @@ export default async function PublicProductPage({ params }: Props) {
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
             <Link
               href={quoteHref}
-              className="inline-flex justify-center bg-[#1A3022] px-7 py-3 text-[11px] font-medium uppercase tracking-[0.18em] text-[#FAF7F2]"
+              className="inline-flex justify-center bg-[#1A3022] px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
             >
               Request a Quote
             </Link>
-            <Link href={quoteHref} className="text-[11px] uppercase tracking-[0.16em] text-[#1A3022]">
-              Enquire about this product
+            <Link href="/catalogue" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]">
+              Back to catalogue
             </Link>
           </div>
         </div>

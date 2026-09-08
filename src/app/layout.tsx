@@ -1,31 +1,32 @@
-import type { Metadata } from "next"
-import { Inter, Playfair_Display } from "next/font/google"
-import "./globals.css"
-import { Toaster } from "sonner"
-import { NavHistoryTracker } from "@/components/ui/nav-history"
-import { TabSessionProvider } from "@/components/auth/tab-session-provider"
+import type { Metadata } from 'next'
+import { Cormorant_Garamond, Outfit } from 'next/font/google'
+import './globals.css'
+import { Toaster } from 'sonner'
+import { NavHistoryTracker } from '@/components/ui/nav-history'
+import { TabSessionProvider } from '@/components/auth/tab-session-provider'
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
 })
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-  display: "swap",
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-cormorant',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: "GIFFTER — Corporate Gifting CRM",
-  description: "B2B corporate gifting CRM from first enquiry through fulfilment, invoicing, and payment.",
-  applicationName: "GIFFTER",
+  title: 'GIFFTER — Corporate Gifting',
+  description: 'Curated corporate gifts for teams, clients and brands — catalogue, quotation and fulfilment in one place.',
+  applicationName: 'GIFFTER',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${outfit.variable} ${cormorant.variable}`}>
       <body className="h-full antialiased">
         <script
           dangerouslySetInnerHTML={{

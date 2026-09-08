@@ -29,13 +29,17 @@ export default async function CategoryDetailPage({ params }: Props) {
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-[#7A7267]">Category</p>
-        <h1 className="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">{name}</h1>
-        <p className="mt-8 text-xs text-[#7A7267]">{filtered.length} gifts</p>
-        <div className="mt-8">
-          <CatalogueBrowser products={filtered} />
+      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <p className="store-eyebrow">Category</p>
+          <h1 className="store-section-title mt-2">{name}</h1>
+          <p className="mt-3 text-sm text-[#5C6570]">
+            {filtered.length} {filtered.length === 1 ? 'gift' : 'gifts'}
+          </p>
         </div>
+      </div>
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <CatalogueBrowser products={filtered} />
       </div>
     </SiteShell>
   )

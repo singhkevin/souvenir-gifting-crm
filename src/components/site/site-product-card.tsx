@@ -5,7 +5,8 @@ import type { PublicProduct } from '@/lib/catalogue/products'
 import { cn } from '@/lib/utils'
 
 /**
- * Product listing: one studio tone, feathered photo edges — no nested mats.
+ * Retail product tile inspired by craft storefronts:
+ * clean white card, studio image, name + price.
  */
 export function SiteProductCard({
   product,
@@ -13,22 +14,17 @@ export function SiteProductCard({
 }: {
   product: PublicProduct
   featured?: boolean
-  /** @deprecated kept for call-site compatibility; badges removed for cleaner listing */
   showBadge?: boolean
 }) {
   return (
     <Link
       href={`/catalogue/${product.id}`}
-      className={cn(
-        'group block text-inherit transition-transform duration-300 hover:text-inherit motion-reduce:transition-none',
-        'hover:-translate-y-0.5',
-      )}
+      className="group block text-inherit hover:text-inherit"
     >
       <div
         className={cn(
-          'relative overflow-hidden rounded-[1.35rem] catalogue-studio-field',
-          'shadow-[0_8px_24px_rgba(26,48,34,0.06)]',
-          'transition-shadow duration-300 group-hover:shadow-[0_14px_32px_rgba(26,48,34,0.1)]',
+          'relative overflow-hidden rounded-md catalogue-studio-field',
+          'transition-transform duration-300 group-hover:-translate-y-0.5 motion-reduce:transition-none',
           featured ? 'aspect-[4/5]' : 'aspect-square',
         )}
       >
@@ -39,20 +35,15 @@ export function SiteProductCard({
           fit="contain"
           fadeEdges
           className="absolute inset-0 h-full w-full bg-transparent"
-          imgClassName="catalogue-product-img scale-[1.04]"
+          imgClassName="catalogue-product-img scale-[1.03]"
         />
       </div>
 
-      <div className="mt-3.5 space-y-1 px-0.5 text-center sm:mt-4">
-        {product.category_name ? (
-          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#7A7267]">
-            {product.category_name}
-          </p>
-        ) : null}
+      <div className="mt-3 space-y-1 px-0.5 text-center">
         <h3
           className={cn(
-            'text-[#1C1917] line-clamp-2',
-            featured ? 'font-serif text-xl leading-snug' : 'text-[14px] font-medium leading-snug sm:text-[15px]',
+            'line-clamp-2 text-[#1B2430]',
+            featured ? 'font-serif text-xl leading-snug' : 'text-[13px] leading-snug sm:text-sm',
           )}
         >
           {product.name}

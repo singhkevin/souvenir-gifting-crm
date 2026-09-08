@@ -32,19 +32,19 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
   }
 
   if (products.length === 0) {
-    return <p className="py-20 text-center text-sm text-[#5A5348]">No gifts match these filters.</p>
+    return <p className="py-20 text-center text-sm text-[#5C6570]">No gifts match these filters.</p>
   }
 
   return (
     <div className="space-y-8">
       <div className="flex justify-end">
-        <div className="inline-flex border border-[#C9C0B2]">
+        <div className="inline-flex overflow-hidden rounded-md border border-[#E8E4DE]">
           <button
             type="button"
             onClick={() => choose('grid')}
             aria-pressed={view === 'grid'}
-            className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.16em] ${
-              view === 'grid' ? 'bg-[#1A3022] text-[#EFE8DC]' : 'text-[#5A5248]'
+            className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
+              view === 'grid' ? 'bg-[#1A3022] text-white' : 'bg-white text-[#5C6570]'
             }`}
           >
             <LayoutGrid size={13} /> Grid
@@ -53,8 +53,8 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
             type="button"
             onClick={() => choose('list')}
             aria-pressed={view === 'list'}
-            className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.16em] ${
-              view === 'list' ? 'bg-[#1A3022] text-[#EFE8DC]' : 'text-[#5A5248]'
+            className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
+              view === 'list' ? 'bg-[#1A3022] text-white' : 'bg-white text-[#5C6570]'
             }`}
           >
             <List size={13} /> List
@@ -69,14 +69,14 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
           ))}
         </div>
       ) : (
-        <div className="divide-y divide-[#C9C0B2] border-y border-[#C9C0B2]">
+        <div className="divide-y divide-[#E8E4DE] border-y border-[#E8E4DE]">
           {products.map((product) => (
             <Link
               key={product.id}
               href={`/catalogue/${product.id}`}
               className="grid grid-cols-[5rem_1fr_auto] items-center gap-4 py-4 text-inherit hover:text-inherit sm:grid-cols-[6.5rem_1fr_auto] sm:gap-5"
             >
-              <div className="aspect-square overflow-hidden rounded-2xl catalogue-studio-field">
+              <div className="aspect-square overflow-hidden rounded-md catalogue-studio-field">
                 <ProductImage
                   src={product.image_url}
                   alt={product.name}
@@ -88,13 +88,13 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
                 />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#5A5348]">{product.category_name}</p>
-                <p className="mt-1 truncate font-medium text-[#1C1917]">{product.name}</p>
-                <p className="mt-1 font-mono text-[10px] text-[#6B6358]">{product.sku}</p>
+                <p className="text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">{product.category_name}</p>
+                <p className="mt-1 truncate font-medium text-[#1B2430]">{product.name}</p>
+                <p className="mt-1 font-mono text-[10px] text-[#5C6570]">{product.sku}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-[#1A3022]">{formatCurrency(product.price)}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-[#5A5348]">View</p>
+                <p className="text-sm font-semibold text-[#1A3022]">{formatCurrency(product.price)}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">View</p>
               </div>
             </Link>
           ))}

@@ -19,10 +19,15 @@ export default async function CategoriesPage() {
 
   return (
     <SiteShell>
-      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-[#7A7267]">Categories</p>
-        <h1 className="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">Shop by category.</h1>
-        <div className="mt-12 divide-y divide-[#E5DFD5] border-y border-[#E5DFD5]">
+      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <p className="store-eyebrow">Shop</p>
+          <h1 className="store-section-title mt-2">Shop by category</h1>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => {
             const sample = products.find((product) => product.category_name === category.name)
             const count = products.filter((product) => product.category_name === category.name).length
@@ -30,28 +35,27 @@ export default async function CategoriesPage() {
               <Link
                 key={category.name}
                 href={`/categories/${slugify(category.name)}`}
-                className="grid grid-cols-1 items-center gap-6 py-8 sm:grid-cols-[1fr_auto_6rem]"
+                className="group overflow-hidden rounded-md border border-[#E8E4DE] bg-white transition-shadow hover:shadow-[0_8px_24px_rgba(27,36,48,0.08)]"
               >
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-[#7A7267]">Category</p>
-                  <p className="mt-2 font-serif text-3xl">{category.name}</p>
-                </div>
-                <p className="text-xs text-[#7A7267]">{count} {count === 1 ? 'gift' : 'gifts'}</p>
-                {sample ? (
-                  <div className="hidden aspect-square overflow-hidden rounded-2xl catalogue-studio-field sm:block">
+                <div className="aspect-[5/4] catalogue-studio-field">
+                  {sample ? (
                     <ProductImage
                       src={sample.image_url}
                       alt={sample.name}
-                      size="sm"
+                      size="md"
                       fit="contain"
                       fadeEdges
-                      className="h-full w-full min-h-0 bg-transparent"
-                      imgClassName="catalogue-product-img"
+                      className="h-full w-full bg-transparent"
+                      imgClassName="catalogue-product-img scale-[1.04]"
                     />
-                  </div>
-                ) : (
-                  <div />
-                )}
+                  ) : null}
+                </div>
+                <div className="border-t border-[#E8E4DE] px-5 py-4">
+                  <p className="font-serif text-2xl text-[#1B2430]">{category.name}</p>
+                  <p className="mt-1 text-xs text-[#5C6570]">
+                    {count} {count === 1 ? 'gift' : 'gifts'}
+                  </p>
+                </div>
               </Link>
             )
           })}

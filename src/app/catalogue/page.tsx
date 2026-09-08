@@ -90,29 +90,40 @@ export default async function CataloguePage({
     { id: '2000+', label: 'Premium Gifts' },
   ]
 
+  const chipClass = (active: boolean) =>
+    `rounded-full border px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.1em] transition-colors ${
+      active
+        ? 'border-[#1A3022] bg-[#1A3022] text-white'
+        : 'border-[#E8E4DE] bg-white text-[#5C6570] hover:border-[#1A3022] hover:text-[#1B2430]'
+    }`
+
   return (
     <SiteShell>
-      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-[#7A7267]">Catalogue</p>
-        <h1 className="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">The collection.</h1>
-        <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#6B6358]">
-          Every piece below is a live GIFFTER catalogue product — the same records used by the team and client portal.
-        </p>
+      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <p className="store-eyebrow">Shop</p>
+          <h1 className="store-section-title mt-2">Catalogue</h1>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">
+            Every piece below is a live GIFFTER catalogue product — the same records used by the team and client portal.
+          </p>
+        </div>
+      </div>
 
-        <form className="mt-8 flex flex-col gap-3 border border-[#E5DFD5] bg-[#FAF7F2]/60 p-4 sm:flex-row sm:items-end">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <form className="flex flex-col gap-3 rounded-md border border-[#E8E4DE] bg-white p-4 sm:flex-row sm:items-end">
           {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
           {budget ? <input type="hidden" name="budget" value={budget} /> : null}
           <label className="flex-1">
-            <span className="text-[10px] uppercase tracking-[0.16em] text-[#7A7267]">Search</span>
+            <span className="text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">Search</span>
             <input
               name="q"
               defaultValue={search}
               placeholder="Name, category or SKU"
-              className="mt-1 w-full border-b border-[#D6CEBE] bg-transparent py-2 text-sm outline-none"
+              className="mt-1 w-full border-b border-[#E8E4DE] bg-transparent py-2 text-sm outline-none focus:border-[#1A3022]"
             />
           </label>
           <label>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-[#7A7267]">Sort</span>
+            <span className="text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">Sort</span>
             <select name="sort" defaultValue={sort} className="mt-1 block bg-transparent py-2 text-sm outline-none">
               <option value="name">A–Z</option>
               <option value="newest">Newest</option>
@@ -120,28 +131,20 @@ export default async function CataloguePage({
               <option value="price_high">Price: high to low</option>
             </select>
           </label>
-          <button type="submit" className="text-[11px] uppercase tracking-[0.16em] text-[#1A3022]">
+          <button
+            type="submit"
+            className="bg-[#1A3022] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+          >
             Apply
           </button>
         </form>
 
         <div className="mt-6 flex flex-wrap gap-2">
-          <Link
-            href={hrefFor({ category: '' })}
-            className={`px-3 py-1.5 text-[11px] uppercase tracking-[0.14em] ${
-              !categoryFilter ? 'bg-[#1A3022] text-[#FAF7F2]' : 'text-[#5A5248]'
-            }`}
-          >
+          <Link href={hrefFor({ category: '' })} className={chipClass(!categoryFilter)}>
             All
           </Link>
           {categories.map((item) => (
-            <Link
-              key={item.id}
-              href={hrefFor({ category: item.id })}
-              className={`px-3 py-1.5 text-[11px] uppercase tracking-[0.14em] ${
-                categoryFilter === item.id ? 'bg-[#1A3022] text-[#FAF7F2]' : 'text-[#5A5248]'
-              }`}
-            >
+            <Link key={item.id} href={hrefFor({ category: item.id })} className={chipClass(categoryFilter === item.id)}>
               {item.name}
             </Link>
           ))}
@@ -149,19 +152,13 @@ export default async function CataloguePage({
 
         <div className="mt-3 flex flex-wrap gap-2">
           {budgetChips.map((item) => (
-            <Link
-              key={item.id || 'any'}
-              href={hrefFor({ budget: item.id })}
-              className={`px-3 py-1.5 text-[11px] uppercase tracking-[0.14em] ${
-                budget === item.id ? 'bg-[#1A3022] text-[#FAF7F2]' : 'text-[#5A5248]'
-              }`}
-            >
+            <Link key={item.id || 'any'} href={hrefFor({ budget: item.id })} className={chipClass(budget === item.id)}>
               {item.label}
             </Link>
           ))}
         </div>
 
-        <p className="mt-8 text-xs text-[#7A7267]">{filtered.length} gifts</p>
+        <p className="mt-8 text-xs text-[#5C6570]">{filtered.length} gifts</p>
         <div className="mt-6">
           <CatalogueBrowser products={filtered} />
         </div>

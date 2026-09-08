@@ -7,10 +7,10 @@ export function ProductRail({ products }: { products: PublicProduct[] }) {
   if (!products.length) return null
 
   return (
-    <div className="-mx-5 overflow-x-auto px-5 pb-2 [scrollbar-width:thin] sm:-mx-8 sm:px-8">
-      <div className="flex w-max gap-5 sm:gap-6">
+    <div className="-mx-4 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="flex w-max gap-4 sm:gap-5">
         {products.map((product) => (
-          <div key={product.id} className="w-[48vw] max-w-[260px] shrink-0 sm:w-[240px] lg:w-[255px]">
+          <div key={product.id} className="w-[42vw] max-w-[220px] shrink-0 sm:w-[200px] lg:w-[210px]">
             <SiteProductCard product={product} />
           </div>
         ))}
