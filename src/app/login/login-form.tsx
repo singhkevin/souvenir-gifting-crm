@@ -78,12 +78,14 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
 
   return (
     <div className="flex min-h-[100dvh] flex-col justify-center bg-[#F4EFE6] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
-      <div className="text-center sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="font-serif text-3xl tracking-tight text-[#1C1917] sm:text-4xl">GIFFTER</h1>
-        <p className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#7A7267] mt-1">
+      <div className="space-y-3 text-center sm:mx-auto sm:w-full sm:max-w-md">
+        <Link href="/home" className="inline-block">
+          <h1 className="font-serif text-3xl tracking-tight text-[#1C1917] sm:text-4xl">GIFFTER</h1>
+        </Link>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7A7267]">
           Corporate Gifting CRM
         </p>
-        <p className="text-xs text-[#7A7267] mt-3">
+        <p className="text-xs leading-relaxed text-[#7A7267]">
           Corporate gifting, from enquiry to payment.
         </p>
       </div>

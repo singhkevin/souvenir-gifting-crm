@@ -366,42 +366,46 @@ export default async function DashboardPage({
                   ))}
                 </div>
               </div>
-              <div className="bg-white rounded-xl border p-6 overflow-x-auto">
-                <h2 className="font-serif text-lg mb-3">Team performance</h2>
-                <table className="w-full text-xs min-w-[720px]">
-                  <thead className="text-left text-[#7A7267]">
-                    <tr>
-                      <th className="py-2">Employee</th>
-                      <th>Role</th>
-                      <th>Leads</th>
-                      <th>Converted</th>
-                      <th>Requirements</th>
-                      <th>Quotations</th>
-                      <th>Orders</th>
-                      <th>Order value</th>
-                      <th>Pending tasks</th>
-                      <th>Overdue</th>
-                      <th>Completed</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {people.map((p) => (
-                      <tr key={p.id} className="border-t">
-                        <td className="py-2">{p.full_name}</td>
-                        <td className="capitalize">{p.role}</td>
-                        <td>{p.leads}</td>
-                        <td>{p.converted}</td>
-                        <td>{p.reqs}</td>
-                        <td>{p.quotes}</td>
-                        <td>{p.assigned}</td>
-                        <td>{formatCurrency(p.orderValue)}</td>
-                        <td>{p.pending}</td>
-                        <td className={p.overdue ? 'text-red-700 font-semibold' : ''}>{p.overdue}</td>
-                        <td>{p.completed}</td>
+              <div className="overflow-x-auto rounded-xl border bg-white">
+                <div className="p-4 sm:p-6">
+                  <h2 className="mb-4 font-serif text-lg">Team performance</h2>
+                  <table className="w-full min-w-[920px] border-collapse text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#E8E4DE] text-[#7A7267]">
+                        <th className="whitespace-nowrap py-3 pr-4 font-medium">Employee</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-medium">Role</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-medium">Leads</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-medium">Converted</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-medium">Requirements</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-medium">Quotations</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-medium">Orders</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-medium">Order value</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-medium">Pending tasks</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-medium">Overdue</th>
+                        <th className="whitespace-nowrap py-3 pl-3 font-medium">Completed</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {people.map((p) => (
+                        <tr key={p.id} className="border-t border-[#EFE9E0]">
+                          <td className="whitespace-nowrap py-3 pr-4 font-medium text-[#1C1917]">{p.full_name}</td>
+                          <td className="whitespace-nowrap px-3 py-3 capitalize">{p.role}</td>
+                          <td className="whitespace-nowrap px-3 py-3">{p.leads}</td>
+                          <td className="whitespace-nowrap px-3 py-3">{p.converted}</td>
+                          <td className="whitespace-nowrap px-3 py-3">{p.reqs}</td>
+                          <td className="whitespace-nowrap px-3 py-3">{p.quotes}</td>
+                          <td className="whitespace-nowrap px-3 py-3">{p.assigned}</td>
+                          <td className="whitespace-nowrap px-3 py-3">{formatCurrency(p.orderValue)}</td>
+                          <td className="whitespace-nowrap px-3 py-3">{p.pending}</td>
+                          <td className={`whitespace-nowrap px-3 py-3 ${p.overdue ? 'font-semibold text-red-700' : ''}`}>
+                            {p.overdue}
+                          </td>
+                          <td className="whitespace-nowrap py-3 pl-3">{p.completed}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </>
           )}

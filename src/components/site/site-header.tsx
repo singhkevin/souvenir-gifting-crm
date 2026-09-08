@@ -177,10 +177,10 @@ export function SiteHeader({
               <Search size={20} />
             </button>
             <Link
-              href="/request-quote"
+              href="/login"
               className="rounded-sm bg-[#1A3022] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white"
             >
-              Quote
+              Sign in
             </Link>
             <button
               type="button"
