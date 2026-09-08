@@ -285,7 +285,7 @@ export default async function DashboardPage({
           <p className="mt-1 text-xs text-[#7A7267]">{roleTitle}</p>
         </div>
         {(profile.role === 'admin' || profile.role === 'management') && (
-          <MobileDateRangeFilter from={from} to={to} submitLabel="Filter" className="w-full sm:w-auto" />
+          <MobileDateRangeFilter from={from || ''} to={to || ''} submitLabel="Filter" className="w-full sm:w-auto" />
         )}
       </div>
 
