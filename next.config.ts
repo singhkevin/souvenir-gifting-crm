@@ -17,7 +17,6 @@ const nextConfig: NextConfig = {
       { source: '/campaigns', destination: '/crm/campaigns' },
       { source: '/requirements', destination: '/crm/requirements' },
       { source: '/requirements/:path*', destination: '/crm/requirements/:path*' },
-      { source: '/catalogue', destination: '/crm/products' },
       { source: '/products', destination: '/crm/products' },
       { source: '/products/:path*', destination: '/crm/products/:path*' },
       { source: '/mockups', destination: '/crm/mockups' },

@@ -55,6 +55,13 @@ export function isPublicAuthPath(pathname: string) {
   )
 }
 
+/** Anonymous-accessible public catalogue pages. CRM and portal stay authenticated. */
+export function isPublicSitePath(pathname: string) {
+  if (pathname === '/') return true
+  const prefixes = ['/home', '/catalogue', '/categories', '/collections', '/request-quote', '/about']
+  return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+}
+
 export function createTabId() {
   const bytes = new Uint8Array(8)
   crypto.getRandomValues(bytes)

@@ -10,15 +10,15 @@
   --color-sidebar: #16281E;
   --color-sidebar-active: #274433;
   --color-sidebar-text: #A3B5AA;
-  --color-background: #F4EFE6;
+  --color-background: #F7F4EF;
   --color-surface: #FFFFFF;
-  --color-surface-subtle: #FAF7F2;
-  --color-border: #E5DFD5;
-  --color-border-subtle: #EFE9E0;
-  --color-muted: #EBE5DB;
-  --color-muted-fg: #7A7267;
+  --color-surface-subtle: #F7F4EF;
+  --color-border: #E2DBD0;
+  --color-border-subtle: #EBE5DC;
+  --color-muted: #E8E2D8;
+  --color-muted-fg: #5A5348;
   --color-text: #1C1917;
-  --color-text-secondary: #6B6358;
+  --color-text-secondary: #5A5348;
   --color-success: #166534;
   --color-success-bg: #DCFCE7;
   --color-warning: #92400E;
@@ -28,14 +28,37 @@
   --color-info: #1E40AF;
   --color-info-bg: #DBEAFE;
 
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: "Playfair Display", "Georgia", "Cambria", serif;
+  --font-sans: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-playfair), "Playfair Display", "Georgia", "Cambria", serif;
 
   --radius-sm: 0.375rem;
   --radius: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
   --radius-2xl: 1.25rem;
+
+  --animate-giffter-drift: giffter-drift 18s ease-in-out infinite;
+  --animate-giffter-float: giffter-float 12s ease-in-out infinite;
+}
+
+@keyframes giffter-drift {
+  0%,
+  100% {
+    transform: scale(1.01) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.045) translate3d(-1.2%, -0.6%, 0);
+  }
+}
+
+@keyframes giffter-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
 }
 
 @layer base {
@@ -52,7 +75,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    color: var(--color-text);
+    color: inherit;
   }
 
   /* Scrollbar */
@@ -73,11 +96,48 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
   .card {
     @apply bg-white border border-[#E5DFD5] rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.03)];
+  }
+
+  /* Crop studio letterboxing so product photos fill tiles edge-to-edge.
+     Use the individual `scale` property — Tailwind v4 resets transform via
+     translate/scale/rotate, so `transform: scale()` alone can be ignored. */
+  .catalogue-fill-zoom {
+    scale: 1.28;
+  }
+  .group:hover .catalogue-fill-zoom {
+    scale: 1.36;
+  }
+  .catalogue-fill-zoom-strong {
+    scale: 1.18;
+  }
+  .group:hover .catalogue-fill-zoom-strong {
+    scale: 1.26;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .catalogue-fill-zoom,
+    .group:hover .catalogue-fill-zoom {
+      scale: 1.28;
+    }
+    .catalogue-fill-zoom-strong,
+    .group:hover .catalogue-fill-zoom-strong {
+      scale: 1.18;
+    }
   }
 
   /*

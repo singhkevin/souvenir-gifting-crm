@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Inter, Playfair_Display } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "sonner"
 import { NavHistoryTracker } from "@/components/ui/nav-history"
@@ -11,6 +11,12 @@ const inter = Inter({
   display: "swap",
 })
 
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
+})
+
 export const metadata: Metadata = {
   title: "GIFFTER — Corporate Gifting CRM",
   description: "B2B corporate gifting CRM from first enquiry through fulfilment, invoicing, and payment.",
@@ -19,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="h-full antialiased">
         <script
           dangerouslySetInnerHTML={{

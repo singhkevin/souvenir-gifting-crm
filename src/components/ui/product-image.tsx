@@ -5,13 +5,14 @@ import { Package } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'hero'
+type Fit = 'contain' | 'cover'
 
 const sizeWrap: Record<Size, string> = {
   xs: 'w-8 h-8',
   sm: 'w-14 h-14',
-  md: 'aspect-square w-full h-auto min-h-48',
+  md: 'aspect-square w-full h-auto min-h-0',
   lg: 'w-32 h-32',
-  hero: 'w-full aspect-square min-h-64',
+  hero: 'w-full aspect-square min-h-0',
 }
 
 function usableSrc(src?: string | null): string | null {
@@ -25,7 +26,7 @@ function usableSrc(src?: string | null): string | null {
 function Fallback({ alt, compact }: { alt: string; compact: boolean }) {
   return (
     <div
-      className="flex h-full w-full flex-col items-center justify-center gap-1 bg-[#FAF7F2] text-[#1A3022]"
+      className="flex h-full w-full flex-col items-center justify-center gap-1 bg-[#EFE8DC] text-[#1A3022]"
       role="img"
       aria-label={alt || 'Product'}
     >
@@ -43,17 +44,26 @@ export function ProductImage({
   src,
   alt,
   size = 'md',
+  fit = 'contain',
   className = '',
+  imgClassName = '',
 }: {
   src?: string | null
   alt: string
   size?: Size
+  fit?: Fit
   className?: string
+  imgClassName?: string
 }) {
   const resolved = usableSrc(src)
   const [failed, setFailed] = React.useState(false)
   const showImage = Boolean(resolved) && !failed
   const compact = size === 'xs' || size === 'sm'
+  const fillParent =
+    fit === 'cover' ||
+    className.includes('h-full') ||
+    className.includes('absolute') ||
+    className.includes('inset-0')
 
   React.useEffect(() => {
     setFailed(false)
@@ -62,8 +72,8 @@ export function ProductImage({
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-[#FAF7F2] flex items-center justify-center',
-        sizeWrap[size],
+        'relative overflow-hidden bg-[#F7F4EF] flex items-center justify-center',
+        fillParent ? 'h-full min-h-0 w-full' : sizeWrap[size],
         className,
       )}
     >
@@ -72,7 +82,14 @@ export function ProductImage({
         <img
           src={resolved as string}
           alt={alt || 'Product'}
-          className="h-full w-full object-contain p-1"
+          loading="lazy"
+          decoding="async"
+          className={cn(
+            'h-full w-full',
+            fit === 'cover' ? 'object-cover' : 'object-contain',
+            fit === 'contain' && compact ? 'p-0.5' : fit === 'contain' ? 'p-0' : '',
+            imgClassName,
+          )}
           onError={() => setFailed(true)}
         />
       ) : (

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { isSafeNext } from '@/lib/safe-next'
-import { TAB_HEADER, TAB_QUERY, authCookieName, isPublicAuthPath, isTabId } from '@/lib/auth/tab'
+import { TAB_HEADER, TAB_QUERY, authCookieName, isPublicAuthPath, isPublicSitePath, isTabId } from '@/lib/auth/tab'
 
 function withTabHeader(request: NextRequest, tabId: string) {
   const requestHeaders = new Headers(request.headers)
@@ -50,12 +50,12 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (isPublicAuthPath(pathname)) {
+  if (isPublicAuthPath(pathname) || isPublicSitePath(pathname)) {
     const recoveryAttempt =
       request.nextUrl.searchParams.get('type') === 'recovery' ||
       request.nextUrl.searchParams.has('token_hash') ||
       request.nextUrl.searchParams.has('code')
-    if (user && pathname.startsWith('/login') && !recoveryAttempt) {
+    if (user && isPublicAuthPath(pathname) && pathname.startsWith('/login') && !recoveryAttempt) {
       const next = request.nextUrl.searchParams.get('next')
       const dest = withTabQuery(new URL(isSafeNext(next) ? next : '/', request.url), tabId)
       const redirect = NextResponse.redirect(dest)
