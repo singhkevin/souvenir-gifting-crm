@@ -20,9 +20,9 @@ import {
   curateStoryProduct,
   curateTrendingProducts,
   homeCategoryTiles,
-  pickCategorySample,
-  pickCollectionSample,
-  pickOccasionSample,
+  pickCategorySamples,
+  pickCollectionSamples,
+  pickOccasionSamples,
 } from '@/lib/catalogue/curate'
 
 const CATEGORY_LINES: Record<string, string> = {
@@ -44,13 +44,15 @@ const CATEGORY_LINES: Record<string, string> = {
 export async function PublicHome() {
   const products = await getPublicCatalogueProducts()
   const categories = homeCategoryTiles(await getPublicCategories(), 6)
+  const categorySamples = pickCategorySamples(products, categories)
   const edit = curateEditProducts(products, 6)
   const trending = curateTrendingProducts(products, 10)
   const featured = curateFeaturedProducts(products, 8)
   const more = curateMoreProducts(products, [...featured, ...trending], 8)
-  const heroProducts = curateHeroProducts(products, 5)
+  const heroProducts = curateHeroProducts(products, 4)
   const story = curateStoryProduct(products)
   const collections = CATALOGUE_COLLECTIONS.filter((collection) => products.some(collection.match)).slice(0, 6)
+  const collectionSamples = pickCollectionSamples(products, collections)
   const budgetCounts = BUDGET_BANDS.map((band) => ({
     ...band,
     count: products.filter((product) => {
@@ -59,10 +61,11 @@ export async function PublicHome() {
     }).length,
   })).filter((band) => band.count > 0)
 
-  const occasionVisuals = CATALOGUE_OCCASIONS.map((occasion, index) => {
-    const sample = pickOccasionSample(products, index)
-    return { ...occasion, sample }
-  })
+  const occasionSamples = pickOccasionSamples(products, CATALOGUE_OCCASIONS)
+  const occasionVisuals = CATALOGUE_OCCASIONS.map((occasion) => ({
+    ...occasion,
+    sample: occasionSamples.get(occasion.slug) || null,
+  }))
 
   return (
     <div className="bg-[#F7F4EF]">
@@ -102,7 +105,7 @@ export async function PublicHome() {
           </Reveal>
           <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {categories.map((category, index) => {
-              const sample = pickCategorySample(products, category.id, category.name)
+              const sample = categorySamples.get(category.id) || null
               const count = products.filter((product) => product.category_id === category.id).length
               return (
                 <Reveal key={category.id} delay={(index % 3) * 60}>
@@ -178,7 +181,7 @@ export async function PublicHome() {
           </Reveal>
           <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {collections.map((collection, index) => {
-              const sample = pickCollectionSample(products, collection.slug, collection.match)
+              const sample = collectionSamples.get(collection.slug) || null
               return (
                 <Reveal key={collection.slug} delay={(index % 3) * 70}>
                   <Link
