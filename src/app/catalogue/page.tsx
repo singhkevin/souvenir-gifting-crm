@@ -99,7 +99,7 @@ export default async function CataloguePage({
 
   const activeCategoryName = categories.find((item) => item.id === categoryFilter)?.name
   const activeBudgetLabel = budgetChips.find((item) => item.id === budget)?.label
-  const hasFilters = Boolean(search || categoryFilter || budget)
+  const hasFilters = Boolean(search || categoryFilter || budget || (sort && sort !== 'name'))
 
   const filterLinkClass = (active: boolean) =>
     `flex items-center justify-between gap-3 border-l-2 py-2 pl-3 text-sm transition-colors ${
@@ -128,9 +128,9 @@ export default async function CataloguePage({
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[16.5rem_minmax(0,1fr)]">
-          {/* Sidebar filters — desktop only; mobile uses horizontal rows below */}
-          <aside className="hidden lg:sticky lg:top-28 lg:block lg:max-h-[calc(100vh-8rem)] lg:self-start lg:overflow-y-auto lg:pr-2 [scrollbar-width:thin]">
-            <div className="space-y-8">
+          {/* Sidebar filters — desktop only; mobile uses sheet filters below */}
+          <aside className="hidden lg:sticky lg:top-28 lg:flex lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:self-start lg:overflow-hidden lg:pr-1">
+            <div className="min-h-0 flex-1 space-y-8 overflow-y-auto pr-2 [scrollbar-width:thin]">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Category</p>
                 <nav className="mt-3 space-y-0.5 border-t border-[#E8E4DE] pt-2">
@@ -165,15 +165,20 @@ export default async function CataloguePage({
                   ))}
                 </nav>
               </div>
+            </div>
 
-              {hasFilters ? (
-                <Link
-                  href="/catalogue"
-                  className="inline-block text-[12px] font-medium uppercase tracking-[0.12em] text-[#1A3022] underline-offset-4 hover:underline"
-                >
-                  Clear all filters
-                </Link>
-              ) : null}
+            <div className="shrink-0 border-t border-[#E8E4DE] bg-white pt-4">
+              <Link
+                href="/catalogue"
+                className={`inline-flex min-h-10 w-full items-center text-[12px] font-bold uppercase tracking-[0.14em] transition-colors ${
+                  hasFilters
+                    ? 'text-[#1A3022] hover:text-[#274433]'
+                    : 'pointer-events-none text-[#C4BDB3]'
+                }`}
+                aria-disabled={!hasFilters}
+              >
+                Clear all filters
+              </Link>
             </div>
           </aside>
 

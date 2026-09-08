@@ -59,6 +59,8 @@ export function MobileCatalogueFilters({
   const budgetLabel = budgetChips.find((item) => item.id === budget)?.label || 'Any budget'
   const sortLabel = SORT_OPTIONS.find((item) => item.value === sort)?.label || 'A–Z'
 
+  const hasFilters = Boolean(search || categoryFilter || budget || (sort && sort !== 'name'))
+
   return (
     <div className="mt-5 space-y-3 lg:hidden">
       <div className="grid grid-cols-2 gap-3">
@@ -74,6 +76,20 @@ export function MobileCatalogueFilters({
         />
       </div>
       <MobileFilterTrigger label="Sort by" value={sortLabel} onClick={() => setSheet('sort')} />
+
+      <button
+        type="button"
+        disabled={!hasFilters}
+        onClick={() => {
+          setSheet(null)
+          router.push('/catalogue')
+        }}
+        className={`inline-flex min-h-10 w-full items-center text-[12px] font-bold uppercase tracking-[0.14em] transition-colors ${
+          hasFilters ? 'text-[#1A3022]' : 'cursor-not-allowed text-[#C4BDB3]'
+        }`}
+      >
+        Clear all filters
+      </button>
 
       <MobileFilterSheetShell
         open={Boolean(sheet)}
