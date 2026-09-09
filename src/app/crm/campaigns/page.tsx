@@ -37,24 +37,42 @@ export default async function CampaignsPage() {
         <p className="text-xs text-[#7A7267] mt-1">Curate a subset of the internal catalogue, publish it to one client, and track their selections.</p>
       </div>
 
-      <form action={asFormAction(createCampaign)} className="grid gap-3 rounded-2xl border border-[#E5DFD5] bg-white p-5 text-xs md:grid-cols-3">
-        <input name="name" required placeholder="Campaign name" className="rounded-lg border px-3 py-2" />
+      <form action={asFormAction(createCampaign)} className="grid items-end gap-3 rounded-2xl border border-[#E5DFD5] bg-white p-5 text-xs md:grid-cols-3">
+        <label className="block space-y-1">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Campaign name</span>
+          <input name="name" required placeholder="e.g. Diwali 2026" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+        </label>
         <MobileSheetSelect
           name="company_id"
           label="Client company"
           required
-          emptyLabel="Client company"
+          showDesktopLabel
+          emptyLabel="Select company"
           options={[
-            { value: '', label: 'Client company' },
+            { value: '', label: 'Select company' },
             ...companyOptions.map((c: { id: string; name: string }) => ({ value: c.id, label: c.name })),
           ]}
         />
-        <input name="occasion" placeholder="Occasion (Diwali, onboarding…)" className="rounded-lg border px-3 py-2" />
-        <input name="employee_quantity" type="number" min="1" defaultValue={1000} placeholder="Employees" className="min-h-11 rounded-lg border px-3 py-2" />
-        <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={3000} placeholder="Budget per employee" className="min-h-11 rounded-lg border px-3 py-2" />
-        <SheetDateField name="required_delivery_date" label="Required delivery" />
-        <input name="description" placeholder="Notes" className="min-h-11 rounded-lg border px-3 py-2 md:col-span-2" />
-        <button className="min-h-11 rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white">Create campaign</button>
+        <label className="block space-y-1">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Occasion</span>
+          <input name="occasion" placeholder="Diwali, onboarding…" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+        </label>
+        <label className="block space-y-1">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Number of employees</span>
+          <input name="employee_quantity" type="number" min="1" defaultValue={1000} placeholder="e.g. 1000" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+        </label>
+        <label className="block space-y-1">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Budget per person</span>
+          <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={3000} placeholder="e.g. 3000" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+        </label>
+        <SheetDateField name="required_delivery_date" label="Required delivery" showDesktopLabel />
+        <label className="block space-y-1 md:col-span-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Notes</span>
+          <input name="description" placeholder="Optional notes" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+        </label>
+        <button className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white">
+          Create campaign
+        </button>
       </form>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

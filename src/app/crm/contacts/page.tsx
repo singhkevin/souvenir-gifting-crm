@@ -103,13 +103,13 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
               <th className="p-3">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-[#1B2430]/35">
             {contactRows.map((c: ContactRow) => {
               const company = oneRelation(c.company)
               return (
-                <tr key={c.id} className="border-t">
-                  <td className="p-3 font-medium">{c.full_name}</td>
-                  <td className="p-3">
+                <tr key={c.id}>
+                  <td className="p-3 font-medium align-top">{c.full_name}</td>
+                  <td className="p-3 align-top">
                     {company ? (
                       <Link href={`/crm/companies/${company.id}`} className="inline-flex items-center gap-2 hover:underline">
                         <CompanyAvatar name={company.name} logoPath={company.logo_path} size="sm" />
@@ -117,9 +117,9 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
                       </Link>
                     ) : '—'}
                   </td>
-                  <td className="p-3 text-gray-600">{c.email || '—'}</td>
-                  <td className="p-3 text-gray-600">{c.phone || '—'}</td>
-                  <td className="p-3 text-xs space-y-2">
+                  <td className="p-3 align-top text-gray-600">{c.email || '—'}</td>
+                  <td className="p-3 align-top text-gray-600">{c.phone || '—'}</td>
+                  <td className="space-y-2 p-3 align-top text-xs">
                     <form action={asFormAction(updateContact)} className="grid gap-1 max-w-xs">
                       <input type="hidden" name="id" value={c.id} />
                       <input name="full_name" defaultValue={c.full_name} required className="border rounded px-2 py-1" />

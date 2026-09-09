@@ -151,7 +151,7 @@ export function MobileFilterTrigger({
   )
 }
 
-/** Bottom-sheet filter bar for list pages. Navigates via router.push. */
+/** Filter bar: bottom sheets on mobile, native selects on desktop. */
 export function MobileFilterBar({
   fields,
   pathname,
@@ -177,7 +177,6 @@ export function MobileFilterBar({
     params.delete('page')
     if (value) params.set(key, value)
     else params.delete(key)
-    // Remove other field keys that are empty in preserve? Actually each field key should be set from current field values except the one changing
     fields.forEach((field) => {
       if (field.key === key) return
       if (field.value) params.set(field.key, field.value)
@@ -188,9 +187,17 @@ export function MobileFilterBar({
     router.push(`${pathname}${qs ? `?${qs}` : ''}`)
   }
 
+  const gridClass =
+    fields.length === 1
+      ? 'grid-cols-1'
+      : fields.length === 3
+        ? 'grid-cols-1 sm:grid-cols-3'
+        : 'grid-cols-1 sm:grid-cols-2'
+
   return (
     <div className={className}>
-      <div className={`grid w-full gap-3 ${fields.length === 1 ? 'grid-cols-1' : fields.length === 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+      {/* Mobile: bottom-sheet pickers */}
+      <div className={`grid w-full gap-3 md:hidden ${gridClass}`}>
         {fields.map((field) => {
           const current =
             field.options.find((option) => option.value === field.value)?.label || field.emptyLabel
@@ -222,6 +229,29 @@ export function MobileFilterBar({
             ))
           : null}
       </MobileFilterSheetShell>
+
+      {/* Desktop: native selects — no bottom sheet */}
+      <div className={`hidden w-full gap-3 md:grid ${gridClass}`}>
+        {fields.map((field) => (
+          <label key={field.key} className="block min-w-0 space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">
+              {field.label}
+            </span>
+            <select
+              value={field.value}
+              onChange={(event) => select(field.key, event.target.value)}
+              className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm text-[#1B2430]"
+            >
+              {field.options.map((option) => (
+                <option key={`${field.key}-${option.value || 'empty'}`} value={option.value}>
+                  {option.label}
+                  {option.meta ? ` (${option.meta})` : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </div>
     </div>
   )
 }
@@ -367,6 +397,7 @@ export function MobileSheetSelect({
   required,
   emptyLabel = 'Select',
   className = '',
+  showDesktopLabel = false,
 }: {
   name?: string
   label: string
@@ -377,6 +408,7 @@ export function MobileSheetSelect({
   required?: boolean
   emptyLabel?: string
   className?: string
+  showDesktopLabel?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [uncontrolled, setUncontrolled] = useState(defaultValue)
@@ -409,12 +441,14 @@ export function MobileSheetSelect({
         </MobileFilterSheetShell>
       </div>
       <label className="hidden w-full space-y-1 md:block">
-        <span className="sr-only">{label}</span>
+        <span className={showDesktopLabel ? 'text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]' : 'sr-only'}>
+          {label}
+        </span>
         <select
           value={value}
           required={required}
           onChange={(event) => setValue(event.target.value)}
-          className="min-h-10 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm"
+          className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm"
         >
           {options.map((option) => (
             <option key={`${name || label}-opt-${option.value || 'empty'}`} value={option.value}>
@@ -454,6 +488,8 @@ export function SheetDateField({
   className = '',
   min,
   max,
+  /** Show visible label above the desktop date input (portal forms). Compact CRM grids leave this off. */
+  showDesktopLabel = false,
 }: {
   name?: string
   label: string
@@ -464,6 +500,7 @@ export function SheetDateField({
   className?: string
   min?: string
   max?: string
+  showDesktopLabel?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [uncontrolled, setUncontrolled] = useState(defaultValue)
@@ -614,7 +651,7 @@ export function SheetDateField({
       </div>
 
       <label className="hidden w-full space-y-1 md:block">
-        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <span className={showDesktopLabel ? 'text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]' : 'sr-only'}>{label}</span>
         <input
           type="date"
           value={value}
@@ -622,7 +659,7 @@ export function SheetDateField({
           min={min}
           max={max}
           onChange={(event) => setValue(event.target.value)}
-          className="min-h-10 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm"
+          className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm"
         />
       </label>
     </div>

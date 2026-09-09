@@ -7,15 +7,23 @@ import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { asFormAction } from '@/lib/form-action'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
-export default async function SamplesPage() {
+export default async function SamplesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; received?: string; moved?: string }>
+}) {
   const profile = await requireStaff()
   const supabase = await createClient()
   const showCost = canSeeCosts(profile.role)
+  const params = await searchParams
+  const error = params.error || ''
+  const received = params.received === '1'
+  const moved = params.moved === '1'
 
   const [{ data: samples }, { data: movements }, { data: products }, { data: companies }] = await Promise.all([
     supabase.from('sample_stock').select('*, product:products(name, sku)'),
     supabase.from('sample_movements').select('*, product:products(name), company:companies(name)').order('created_at', { ascending: false }).limit(25),
-    supabase.from('products').select('id, name, sku').eq('status', 'active').order('name').limit(80),
+    supabase.from('products').select('id, name, sku').eq('status', 'active').order('name').limit(200),
     supabase.from('companies').select('id, name').order('name'),
   ])
 
@@ -31,6 +39,20 @@ export default async function SamplesPage() {
         <p className="text-xs text-[#7A7267] mt-1">Track physical samples in office, with the team, with a client, or pending from a supplier.</p>
       </div>
 
+      {error ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{error}</div>
+      ) : null}
+      {received ? (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          Sample received into office stock.
+        </div>
+      ) : null}
+      {moved ? (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+          Sample movement recorded.
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           ['In Office', totalInOffice],
@@ -45,21 +67,37 @@ export default async function SamplesPage() {
         ))}
       </div>
 
-      <form action={asFormAction(receiveSample)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-4">
+      <form action={asFormAction(receiveSample)} className="grid items-end gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-4">
         <MobileSheetSelect
           name="product_id"
           label="Product"
           required
-          emptyLabel="Receive product sample"
+          showDesktopLabel
+          emptyLabel="Select product to receive"
           className="md:col-span-2"
           options={[
-            { value: '', label: 'Receive product sample' },
+            { value: '', label: 'Select product to receive' },
             ...(products || []).map((p) => ({ value: p.id, label: `${p.name} · ${p.sku}` })),
           ]}
         />
-        <input name="quantity" type="number" min="1" defaultValue={1} className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" />
-        {showCost ? <input name="unit_cost" type="number" step="0.01" placeholder="Unit cost" className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" /> : <input type="hidden" name="unit_cost" value="0" />}
-        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white md:col-span-4 lg:col-span-1">Receive into office</button>
+        <label className="block space-y-1">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Quantity</span>
+          <input name="quantity" type="number" min="1" defaultValue={1} required className="min-h-11 w-full rounded-lg border px-2 py-2" />
+        </label>
+        {showCost ? (
+          <label className="block space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Unit cost</span>
+            <input name="unit_cost" type="number" step="0.01" min="0" placeholder="0.00" className="min-h-11 w-full rounded-lg border px-2 py-2" />
+          </label>
+        ) : (
+          <input type="hidden" name="unit_cost" value="0" />
+        )}
+        <button
+          type="submit"
+          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1A3022] px-4 py-2.5 font-semibold text-white md:col-span-4"
+        >
+          Receive into office
+        </button>
       </form>
 
       <div className="bg-white rounded-2xl border overflow-hidden">

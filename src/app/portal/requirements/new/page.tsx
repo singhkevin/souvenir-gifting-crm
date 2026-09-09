@@ -149,6 +149,7 @@ export default function NewRequirementPage() {
                 label="Required By Date"
                 value={formData.deadline}
                 onChange={(deadline) => setFormData({ ...formData, deadline })}
+                showDesktopLabel
               />
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Delivery City</label>

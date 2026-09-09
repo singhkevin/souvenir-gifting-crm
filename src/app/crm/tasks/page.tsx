@@ -49,13 +49,17 @@ export default async function TasksPage({
         </p>
       </div>
 
-      <form action={asFormAction(createTask)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-4">
-        <input name="title" required placeholder="Task title" className="min-h-11 rounded-lg border px-2 py-2 md:col-span-2" />
-        <SheetDateField name="due_at" label="Due date" />
+      <form action={asFormAction(createTask)} className="grid grid-cols-1 items-end gap-3 rounded-2xl border bg-white p-4 text-xs sm:grid-cols-2 lg:grid-cols-4">
+        <label className="block space-y-1 sm:col-span-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Task title</span>
+          <input name="title" required placeholder="e.g. Follow up with client" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+        </label>
+        <SheetDateField name="due_at" label="Due date" showDesktopLabel />
         <MobileSheetSelect
           name="priority"
           label="Priority"
           defaultValue="2"
+          showDesktopLabel
           options={[
             { value: '1', label: 'High' },
             { value: '2', label: 'Medium' },
@@ -66,13 +70,14 @@ export default async function TasksPage({
           name="assigned_to"
           label="Assigned to"
           defaultValue={profile.id}
-          className="md:col-span-2"
+          showDesktopLabel
           options={(team || []).map((p) => ({ value: p.id, label: p.full_name || 'Unnamed' }))}
         />
         <MobileSheetSelect
           name="company_id"
           label="Company"
           emptyLabel="Company (optional)"
+          showDesktopLabel
           options={[
             { value: '', label: 'Company (optional)' },
             ...(companies || []).map((company) => ({ value: company.id, label: company.name })),
@@ -82,6 +87,8 @@ export default async function TasksPage({
           name="order_id"
           label="Related order"
           emptyLabel="Related order (optional)"
+          showDesktopLabel
+          className="sm:col-span-2 lg:col-span-2"
           options={[
             { value: '', label: 'Related order (optional)' },
             ...(orders || []).map((order) => ({
@@ -90,8 +97,13 @@ export default async function TasksPage({
             })),
           ]}
         />
-        <input name="description" placeholder="Notes" className="rounded-lg border px-2 py-2 md:col-span-4" />
-        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white md:col-span-4">Create task</button>
+        <label className="block space-y-1 sm:col-span-2 lg:col-span-4">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Notes</span>
+          <input name="description" placeholder="Optional details" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+        </label>
+        <button className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1A3022] px-4 py-2.5 font-semibold text-white sm:col-span-2 lg:col-span-4">
+          Create task
+        </button>
       </form>
 
       <div className="md:hidden">
