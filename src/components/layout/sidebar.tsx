@@ -147,7 +147,12 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
     // Desktop sidebar (no mobileOpen) and mobile-open both scroll active into view.
     if (mobileOpen === undefined || mobileOpen) {
       requestAnimationFrame(() => {
-        activeRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+        const el = activeRef.current
+        if (!el) return
+        const navRect = nav.getBoundingClientRect()
+        const elRect = el.getBoundingClientRect()
+        if (elRect.top < navRect.top) nav.scrollTop -= navRect.top - elRect.top
+        else if (elRect.bottom > navRect.bottom) nav.scrollTop += elRect.bottom - navRect.bottom
       })
     }
   }, [pathname, mobileOpen])

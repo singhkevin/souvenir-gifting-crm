@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
@@ -23,7 +24,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
       campaign:campaign_id(name, employee_quantity),
       courier_partner:courier_partners(name),
       quotation:quotations(quotation_number, total),
-      items:order_items(id, quantity, unit_price, line_total, product:products(name, sku, image_url))
+      items:order_items(id, description, quantity, unit_price, line_total, product:products(id, name, sku, image_url, status))
     `)
     .eq('id', id)
     .maybeSingle()
@@ -37,6 +38,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
   const quotation = oneRelation(order.quotation)
   const items = (order.items ?? []).map((item) => ({
     id: item.id,
+    description: item.description,
     quantity: item.quantity,
     unit_price: item.unit_price,
     line_total: item.line_total,
@@ -97,22 +99,41 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
               <th className="py-2">Product</th><th>Qty</th><th className="text-right">Unit</th><th className="text-right">Amount</th>
             </tr></thead>
             <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td className="py-2">
-                    <div className="flex items-center gap-2">
-                      <ProductImage src={item.product?.image_url} alt={item.product?.name || 'Product'} size="xs" className="rounded" />
-                      <div>
-                        <p>{item.product?.name || 'Product'}</p>
-                        {item.product?.sku ? <p className="font-mono text-[10px] text-gray-400">{item.product.sku}</p> : null}
-                      </div>
-                    </div>
-                  </td>
-                  <td>{item.quantity}</td>
-                  <td className="text-right">{formatCurrency(item.unit_price)}</td>
-                  <td className="text-right">{formatCurrency(item.line_total ?? item.unit_price)}</td>
+              {items.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-gray-500">No products on this order yet.</td>
                 </tr>
-              ))}
+              ) : (
+                items.map((item) => {
+                  const name = item.product?.name || item.description || 'Product'
+                  const canOpen = Boolean(item.product?.id && item.product.status === 'active')
+                  return (
+                  <tr key={item.id} className="border-t">
+                    <td className="py-2">
+                      <div className="flex items-center gap-2">
+                        <ProductImage src={item.product?.image_url} alt={name} size="xs" className="rounded" />
+                        <div>
+                          {canOpen ? (
+                            <Link
+                              href={`/portal/catalogue/product/${item.product!.id}`}
+                              className="font-medium text-gray-900 hover:text-[#1A3022] hover:underline"
+                            >
+                              {name}
+                            </Link>
+                          ) : (
+                            <p>{name}</p>
+                          )}
+                          {item.product?.sku ? <p className="font-mono text-[10px] text-gray-400">{item.product.sku}</p> : null}
+                        </div>
+                      </div>
+                    </td>
+                    <td>{item.quantity}</td>
+                    <td className="text-right">{formatCurrency(item.unit_price)}</td>
+                    <td className="text-right">{formatCurrency(item.line_total ?? item.unit_price)}</td>
+                  </tr>
+                  )
+                })
+              )}
             </tbody>
           </table>
         </div>

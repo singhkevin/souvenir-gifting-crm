@@ -21,6 +21,8 @@ import {
   HEALTH_STYLES,
 } from '@/lib/order-workflow'
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
+import { ProductImage } from '@/components/ui/product-image'
+import { ClientTabs } from '@/components/ui/client-tabs'
 import { ShoppingBag, ChevronRight } from 'lucide-react'
 import { asFormAction } from '@/lib/form-action'
 
@@ -69,7 +71,7 @@ export default async function OrderDetailPage({
         .eq('id', id),
       profile
     ).maybeSingle(),
-    supabase.from('order_items').select('*, product:products(id, name, sku)').eq('order_id', id),
+    supabase.from('order_items').select('id, description, quantity, unit_price, line_total, product:products(id, name, sku, image_url, status)').eq('order_id', id),
     supabase.from('order_status_history').select('*, changer:changed_by(id, full_name)').eq('order_id', id).order('changed_at', { ascending: false }),
     supabase.from('order_assignments').select('*, assignee:assigned_to(full_name), department:department_id(name), assigner:assigned_by(full_name)').eq('order_id', id).order('created_at', { ascending: false }),
     supabase.from('suppliers').select('id, name').order('name'),
@@ -86,9 +88,14 @@ export default async function OrderDetailPage({
   const health = orderHealth(order.status, order.expected_delivery_date, order.stage_due_at)
   const showCosts = canSeeCosts(profile.role)
   const canStage = canChangeOrderStage(profile.role)
-  const assignee = Array.isArray(order.assignee) ? order.assignee[0] : order.assignee
-  const department = Array.isArray(order.department) ? order.department[0] : order.department
-  const campaign = Array.isArray(order.campaign) ? order.campaign[0] : order.campaign
+  const assignee = oneRelation(order.assignee)
+  const department = oneRelation(order.department)
+  const campaign = oneRelation(order.campaign)
+  const company = oneRelation(order.company)
+  const supplier = oneRelation(order.supplier)
+  const printingVendor = oneRelation(order.printing_vendor)
+  const courierPartner = oneRelation(order.courier_partner)
+  const quotation = oneRelation(order.quotation)
   const tabs = showCosts
     ? ['details', 'products', 'vendors', 'financials', 'history']
     : ['details', 'products', 'vendors', 'history']
@@ -112,7 +119,7 @@ export default async function OrderDetailPage({
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 p-6">
+    <div className="mx-auto max-w-5xl space-y-6 pb-10">
       <BackButton href="/crm/order-management" label="Back to Order Control" />
 
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -130,7 +137,7 @@ export default async function OrderDetailPage({
             </span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
-            {(order.company as { name?: string })?.name || 'Client'}
+            {company?.name || 'Client'}
             {campaign?.name ? ` · ${campaign.name}` : ''}
           </h1>
           <p className="text-xs text-gray-500 mt-1">
@@ -210,197 +217,224 @@ export default async function OrderDetailPage({
         </form>
       )}
 
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-6">
-          {tabs.map((t) => (
-            <Link
-              key={t}
-              href={`?tab=${t}`}
-              className={`pb-3 text-xs font-semibold capitalize transition-colors border-b-2 ${
-                tab === t ? 'border-[#1A3022] text-[#1A3022]' : 'border-transparent text-gray-500'
-              }`}
-            >
-              {t}
-            </Link>
-          ))}
-        </nav>
-      </div>
+      <ClientTabs
+        tabs={tabs}
+        initialTab={tabs.includes(tab) ? tab : 'details'}
+        panels={{
+          details: (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-2xl border text-xs space-y-3">
+                <h3 className="font-bold text-sm pb-2 border-b">Fulfillment</h3>
+                <div>PO: {order.po_number || '—'}</div>
+                <div>Dispatch: {formatDate(order.dispatch_date)}</div>
+                <div>Supplier: {supplier?.name || '—'}</div>
+                <div>Printing vendor: {printingVendor?.name || '—'}</div>
+                <div>Courier: {courierPartner?.name || '—'}</div>
+                <div>Tracking: {order.tracking_number || '—'}</div>
+                <div>Expected delivery: {formatDate(order.expected_delivery_date)}</div>
+                <div>Actual delivery: {formatDate(order.actual_delivery_date)}</div>
+                <div>Quote: {quotation?.quotation_number || '—'}</div>
+              </div>
+              <div className="bg-white p-6 rounded-2xl border text-xs space-y-3">
+                <h3 className="font-bold text-sm pb-2 border-b">Operational notes</h3>
+                <p className="whitespace-pre-wrap">{order.notes || 'No special operational instructions.'}</p>
+              </div>
+            </div>
+          ),
+          products: (
+            <div className="bg-white rounded-2xl border overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-gray-50"><tr>
+                  <th className="p-3">Item</th><th className="p-3 text-right">Qty</th><th className="p-3 text-right">Unit</th><th className="p-3 text-right">Total</th>
+                </tr></thead>
+                <tbody>
+                  {(orderItems || []).length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-gray-500">
+                        No products on this order yet.
+                        {order.quotation_id ? ' Converted quotations should copy line items automatically — check the linked quotation.' : ''}
+                      </td>
+                    </tr>
+                  ) : (
+                    orderItems?.map((item: {
+                      id: string
+                      description?: string | null
+                      quantity: number
+                      unit_price: number
+                      line_total: number
+                      product?:
+                        | { id?: string; name?: string; sku?: string; image_url?: string | null; status?: string }
+                        | { id?: string; name?: string; sku?: string; image_url?: string | null; status?: string }[]
+                        | null
+                    }) => {
+                      const product = oneRelation(item.product)
+                      const name = product?.name || item.description || 'Product'
+                      const canOpen = Boolean(product?.id && product.status === 'active')
+                      return (
+                        <tr key={item.id} className="border-t">
+                          <td className="p-3">
+                            <div className="flex items-center gap-3">
+                              <ProductImage
+                                src={product?.image_url}
+                                alt={name}
+                                size="xs"
+                                className="h-10 w-10 rounded-lg border border-gray-100"
+                              />
+                              <div>
+                                {canOpen ? (
+                                  <Link
+                                    href={`/crm/products/${product!.id}`}
+                                    className="font-semibold text-gray-900 hover:text-[#1A3022] hover:underline"
+                                  >
+                                    {name}
+                                  </Link>
+                                ) : (
+                                  <span className="font-semibold text-gray-900">{name}</span>
+                                )}
+                                {product?.sku ? <div className="font-mono text-[10px] text-gray-400">{product.sku}</div> : null}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3 text-right">{item.quantity}</td>
+                          <td className="p-3 text-right">{formatCurrency(item.unit_price)}</td>
+                          <td className="p-3 text-right">{formatCurrency(item.line_total)}</td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ),
+          vendors: (
+            <div className="grid md:grid-cols-2 gap-6">
+              <form action={handleAssignSupplier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+                <h3 className="font-bold">Supplier</h3>
+                <select name="supplier_id" defaultValue={order.supplier_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
+                  <option value="">Select</option>
+                  {suppliers?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save supplier</button>}
+              </form>
 
-      {tab === 'details' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-2xl border text-xs space-y-3">
-            <h3 className="font-bold text-sm pb-2 border-b">Fulfillment</h3>
-            <div>PO: {order.po_number || '—'}</div>
-            <div>Dispatch: {formatDate(order.dispatch_date)}</div>
-            <div>Supplier: {(order.supplier as { name?: string })?.name || '—'}</div>
-            <div>Printing vendor: {(order.printing_vendor as { name?: string })?.name || '—'}</div>
-            <div>Courier: {(order.courier_partner as { name?: string })?.name || '—'}</div>
-            <div>Tracking: {order.tracking_number || '—'}</div>
-            <div>Expected delivery: {formatDate(order.expected_delivery_date)}</div>
-            <div>Actual delivery: {formatDate(order.actual_delivery_date)}</div>
-            <div>Quote: {(order.quotation as { quotation_number?: string })?.quotation_number || '—'}</div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl border text-xs space-y-3">
-            <h3 className="font-bold text-sm pb-2 border-b">Operational notes</h3>
-            <p className="whitespace-pre-wrap">{order.notes || 'No special operational instructions.'}</p>
-          </div>
-        </div>
-      )}
+              <form action={asFormAction(assignPrintingVendor)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+                <input type="hidden" name="order_id" value={order.id} />
+                <h3 className="font-bold">Printing vendor</h3>
+                <select name="printing_vendor_id" defaultValue={order.printing_vendor_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
+                  <option value="">Select</option>
+                  {printingVendors?.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                </select>
+                {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save printing vendor</button>}
+              </form>
 
-      {tab === 'products' && (
-        <div className="bg-white rounded-2xl border overflow-hidden">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-gray-50"><tr>
-              <th className="p-3">Item</th><th className="p-3 text-right">Qty</th><th className="p-3 text-right">Unit</th><th className="p-3 text-right">Total</th>
-            </tr></thead>
-            <tbody>
-              {orderItems?.map((item: {
-                id: string
-                quantity: number
-                unit_price: number
-                line_total: number
-                product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null
-              }) => {
-                const product = oneRelation(item.product)
+              <form action={handleAssignCourier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+                <h3 className="font-bold">Courier</h3>
+                <select name="courier_partner_id" defaultValue={order.courier_partner_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
+                  <option value="">Select</option>
+                  {courierPartners?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <input name="tracking_number" defaultValue={order.tracking_number || ''} placeholder="AWB / tracking number" disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
+                {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save shipping</button>}
+              </form>
+
+              <form action={asFormAction(recordDelivery)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+                <input type="hidden" name="order_id" value={order.id} />
+                <h3 className="font-bold">Dispatch &amp; delivery</h3>
+                <label className="block space-y-1">
+                  <span className="text-gray-500">Dispatch date</span>
+                  <input type="date" name="dispatch_date" defaultValue={order.dispatch_date || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
+                </label>
+                <label className="block space-y-1">
+                  <span className="text-gray-500">Expected delivery</span>
+                  <input type="date" name="expected_delivery_date" defaultValue={order.expected_delivery_date || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
+                </label>
+                <label className="block space-y-1">
+                  <span className="text-gray-500">Actual delivery</span>
+                  <input type="date" name="actual_delivery_date" defaultValue={order.actual_delivery_date || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
+                </label>
+                {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save delivery dates</button>}
+              </form>
+            </div>
+          ),
+          ...(showCosts
+            ? {
+                financials: (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <form action={asFormAction(saveOrderCosting)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+                      <input type="hidden" name="order_id" value={order.id} />
+                      <h3 className="font-bold text-sm">Order costing</h3>
+                      {(
+                        [
+                          ['product_cost', 'Product cost'],
+                          ['printing_cost', 'Printing cost'],
+                          ['courier_cost', 'Courier cost'],
+                          ['other_cost', 'Other cost'],
+                        ] as const
+                      ).map(([field, label]) => (
+                        <label key={field} className="block space-y-1">
+                          <span className="text-gray-500">{label}</span>
+                          <input
+                            type="number"
+                            name={field}
+                            min={0}
+                            step="0.01"
+                            defaultValue={order[field] ?? 0}
+                            className="w-full border rounded-lg px-2 py-2"
+                          />
+                        </label>
+                      ))}
+                      <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg font-semibold">Save costing</button>
+                    </form>
+
+                    <div className="bg-white p-6 rounded-2xl border text-xs space-y-3">
+                      <h3 className="font-bold text-sm">Internal profitability</h3>
+                      <div className="flex justify-between"><span>Revenue</span><span>{formatCurrency(order.order_value)}</span></div>
+                      <div className="flex justify-between text-gray-500"><span>Product cost</span><span>{formatCurrency(order.product_cost)}</span></div>
+                      <div className="flex justify-between text-gray-500"><span>Printing cost</span><span>{formatCurrency(order.printing_cost)}</span></div>
+                      <div className="flex justify-between text-gray-500"><span>Courier cost</span><span>{formatCurrency(order.courier_cost)}</span></div>
+                      <div className="flex justify-between text-gray-500"><span>Other cost</span><span>{formatCurrency(order.other_cost)}</span></div>
+                      <div className="flex justify-between pt-2 border-t"><span>Total cost</span><span>{formatCurrency(order.total_cost)}</span></div>
+                      <div className="flex justify-between font-semibold text-[#1A3022]"><span>Gross profit</span><span>{formatCurrency(order.gross_profit)}</span></div>
+                      <div className="flex justify-between font-semibold">
+                        <span>Margin</span>
+                        <span>{Number(order.order_value) > 0 ? `${((Number(order.gross_profit || 0) / Number(order.order_value)) * 100).toFixed(1)}%` : '—'}</span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 pt-2 border-t">
+                        Total cost and gross profit are recalculated on the server and cannot be overwritten directly.
+                      </p>
+                    </div>
+                  </div>
+                ),
+              }
+            : {}),
+          history: (
+            <div className="bg-white p-6 rounded-2xl border space-y-4">
+              {(history || []).map((entry: { id: string; from_status?: string; to_status?: string; note?: string; changed_at?: string; created_at?: string; changer?: { full_name?: string } }) => {
+                const changer = Array.isArray(entry.changer) ? entry.changer[0] : entry.changer
                 return (
-                  <tr key={item.id} className="border-t">
-                    <td className="p-3">{product?.name}<div className="font-mono text-[10px] text-gray-400">{product?.sku}</div></td>
-                    <td className="p-3 text-right">{item.quantity}</td>
-                    <td className="p-3 text-right">{formatCurrency(item.unit_price)}</td>
-                    <td className="p-3 text-right">{formatCurrency(item.line_total)}</td>
-                  </tr>
+                  <div key={entry.id} className="flex gap-3 text-xs">
+                    <div className="w-2.5 h-2.5 mt-1 rounded-full bg-[#1A3022]" />
+                    <div>
+                      <p className="font-bold">{ORDER_STATUS_LABELS[entry.from_status || ''] || entry.from_status || '—'} → {ORDER_STATUS_LABELS[entry.to_status || ''] || entry.to_status}</p>
+                      <p className="text-gray-400">{formatDateTime(entry.changed_at || entry.created_at)} · {changer?.full_name || 'Team'}</p>
+                      {entry.note && <p className="mt-1 bg-gray-50 p-2 rounded">{entry.note}</p>}
+                    </div>
+                  </div>
                 )
               })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {tab === 'vendors' && (
-        <div className="grid md:grid-cols-2 gap-6">
-          <form action={handleAssignSupplier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
-            <h3 className="font-bold">Supplier</h3>
-            <select name="supplier_id" defaultValue={order.supplier_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
-              <option value="">Select</option>
-              {suppliers?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-            {canStage && <button className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save supplier</button>}
-          </form>
-
-          <form action={asFormAction(assignPrintingVendor)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
-            <input type="hidden" name="order_id" value={order.id} />
-            <h3 className="font-bold">Printing vendor</h3>
-            <select name="printing_vendor_id" defaultValue={order.printing_vendor_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
-              <option value="">Select</option>
-              {printingVendors?.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-            </select>
-            {canStage && <button className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save printing vendor</button>}
-          </form>
-
-          <form action={handleAssignCourier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
-            <h3 className="font-bold">Courier</h3>
-            <select name="courier_partner_id" defaultValue={order.courier_partner_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
-              <option value="">Select</option>
-              {courierPartners?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-            <input name="tracking_number" defaultValue={order.tracking_number || ''} placeholder="AWB / tracking number" disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
-            {canStage && <button className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save shipping</button>}
-          </form>
-
-          <form action={asFormAction(recordDelivery)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
-            <input type="hidden" name="order_id" value={order.id} />
-            <h3 className="font-bold">Dispatch &amp; delivery</h3>
-            <label className="block space-y-1">
-              <span className="text-gray-500">Dispatch date</span>
-              <input type="date" name="dispatch_date" defaultValue={order.dispatch_date || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-gray-500">Expected delivery</span>
-              <input type="date" name="expected_delivery_date" defaultValue={order.expected_delivery_date || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-gray-500">Actual delivery</span>
-              <input type="date" name="actual_delivery_date" defaultValue={order.actual_delivery_date || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
-            </label>
-            {canStage && <button className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save delivery dates</button>}
-          </form>
-        </div>
-      )}
-
-      {tab === 'financials' && showCosts && (
-        <div className="grid md:grid-cols-2 gap-6">
-          <form action={asFormAction(saveOrderCosting)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
-            <input type="hidden" name="order_id" value={order.id} />
-            <h3 className="font-bold text-sm">Order costing</h3>
-            {(
-              [
-                ['product_cost', 'Product cost'],
-                ['printing_cost', 'Printing cost'],
-                ['courier_cost', 'Courier cost'],
-                ['other_cost', 'Other cost'],
-              ] as const
-            ).map(([field, label]) => (
-              <label key={field} className="block space-y-1">
-                <span className="text-gray-500">{label}</span>
-                <input
-                  type="number"
-                  name={field}
-                  min={0}
-                  step="0.01"
-                  defaultValue={order[field] ?? 0}
-                  className="w-full border rounded-lg px-2 py-2"
-                />
-              </label>
-            ))}
-            <button className="px-4 py-2 bg-[#1A3022] text-white rounded-lg font-semibold">Save costing</button>
-          </form>
-
-          <div className="bg-white p-6 rounded-2xl border text-xs space-y-3">
-            <h3 className="font-bold text-sm">Internal profitability</h3>
-            <div className="flex justify-between"><span>Revenue</span><span>{formatCurrency(order.order_value)}</span></div>
-            <div className="flex justify-between text-gray-500"><span>Product cost</span><span>{formatCurrency(order.product_cost)}</span></div>
-            <div className="flex justify-between text-gray-500"><span>Printing cost</span><span>{formatCurrency(order.printing_cost)}</span></div>
-            <div className="flex justify-between text-gray-500"><span>Courier cost</span><span>{formatCurrency(order.courier_cost)}</span></div>
-            <div className="flex justify-between text-gray-500"><span>Other cost</span><span>{formatCurrency(order.other_cost)}</span></div>
-            <div className="flex justify-between pt-2 border-t"><span>Total cost</span><span>{formatCurrency(order.total_cost)}</span></div>
-            <div className="flex justify-between font-semibold text-[#1A3022]"><span>Gross profit</span><span>{formatCurrency(order.gross_profit)}</span></div>
-            <div className="flex justify-between font-semibold">
-              <span>Margin</span>
-              <span>{Number(order.order_value) > 0 ? `${((Number(order.gross_profit || 0) / Number(order.order_value)) * 100).toFixed(1)}%` : '—'}</span>
-            </div>
-            <p className="text-[10px] text-gray-400 pt-2 border-t">
-              Total cost and gross profit are recalculated on the server and cannot be overwritten directly.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {tab === 'history' && (
-        <div className="bg-white p-6 rounded-2xl border space-y-4">
-          {(history || []).map((entry: { id: string; from_status?: string; to_status?: string; note?: string; changed_at?: string; created_at?: string; changer?: { full_name?: string } }) => {
-            const changer = Array.isArray(entry.changer) ? entry.changer[0] : entry.changer
-            return (
-              <div key={entry.id} className="flex gap-3 text-xs">
-                <div className="w-2.5 h-2.5 mt-1 rounded-full bg-[#1A3022]" />
-                <div>
-                  <p className="font-bold">{ORDER_STATUS_LABELS[entry.from_status || ''] || entry.from_status || '—'} → {ORDER_STATUS_LABELS[entry.to_status || ''] || entry.to_status}</p>
-                  <p className="text-gray-400">{formatDateTime(entry.changed_at || entry.created_at)} · {changer?.full_name || 'Team'}</p>
-                  {entry.note && <p className="mt-1 bg-gray-50 p-2 rounded">{entry.note}</p>}
+              {(assignments || []).map((a: { id: string; note?: string; created_at: string; assignee?: { full_name?: string }; department?: { name?: string }; assigner?: { full_name?: string } }) => (
+                <div key={a.id} className="text-xs text-gray-600 pl-5">
+                  Assigned to {(Array.isArray(a.assignee) ? a.assignee[0] : a.assignee)?.full_name || '—'}
+                  {(Array.isArray(a.department) ? a.department[0] : a.department)?.name ? ` · ${(Array.isArray(a.department) ? a.department[0] : a.department)?.name}` : ''}
+                  {' · '}{formatDateTime(a.created_at)}
+                  {a.note ? ` · ${a.note}` : ''}
                 </div>
-              </div>
-            )
-          })}
-          {(assignments || []).map((a: { id: string; note?: string; created_at: string; assignee?: { full_name?: string }; department?: { name?: string }; assigner?: { full_name?: string } }) => (
-            <div key={a.id} className="text-xs text-gray-600 pl-5">
-              Assigned to {(Array.isArray(a.assignee) ? a.assignee[0] : a.assignee)?.full_name || '—'}
-              {(Array.isArray(a.department) ? a.department[0] : a.department)?.name ? ` · ${(Array.isArray(a.department) ? a.department[0] : a.department)?.name}` : ''}
-              {' · '}{formatDateTime(a.created_at)}
-              {a.note ? ` · ${a.note}` : ''}
+              ))}
+              {(!history || history.length === 0) && <p className="text-xs text-gray-400">No stage history yet.</p>}
             </div>
-          ))}
-          {(!history || history.length === 0) && <p className="text-xs text-gray-400">No stage history yet.</p>}
-        </div>
-      )}
+          ),
+        }}
+      />
     </div>
   )
 }

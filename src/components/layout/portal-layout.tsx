@@ -56,7 +56,15 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
     if (Number.isFinite(saved) && saved > 0) nav.scrollTop = saved
     if (mobileMenuOpen) {
       requestAnimationFrame(() => {
-        activeRef.current?.scrollIntoView({ block: 'nearest' })
+        activeRef.current && (() => {
+          const nav = navRef.current
+          const el = activeRef.current
+          if (!nav || !el) return
+          const navRect = nav.getBoundingClientRect()
+          const elRect = el.getBoundingClientRect()
+          if (elRect.top < navRect.top) nav.scrollTop -= navRect.top - elRect.top
+          else if (elRect.bottom > navRect.bottom) nav.scrollTop += elRect.bottom - navRect.bottom
+        })()
       })
     }
   }, [pathname, mobileMenuOpen])
