@@ -359,7 +359,11 @@ export default async function DashboardPage({
                 <h2 className="font-serif text-lg mb-3">Departments</h2>
                 <div className="grid md:grid-cols-3 gap-3">
                   {deptStats.map((d) => (
-                    <Link key={d.id} href={`/crm/order-management?department=${d.id}`} className="p-3 rounded-xl border bg-[#FAF7F2]">
+                    <Link
+                      key={d.id}
+                      href={`/crm/order-management?department=${d.id}`}
+                      className="rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-3 transition-colors hover:border-[#1A3022] hover:bg-white"
+                    >
                       <p className="text-sm font-semibold">{d.name}</p>
                       <p className="text-[11px] text-[#7A7267] mt-1">Active {d.active} · Overdue {d.overdue} · Unassigned {d.unassigned} · Done {d.completed}</p>
                     </Link>
