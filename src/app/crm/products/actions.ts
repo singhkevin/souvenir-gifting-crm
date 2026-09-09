@@ -256,10 +256,32 @@ export async function updateProduct(productId: string, formData: FormData) {
     return { error: error.message }
   }
 
+  if (update.status && update.status !== 'active') {
+    await hideDiscontinuedProductFromClients(supabase, productId)
+  }
+
   revalidatePath('/crm/products/' + productId)
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
   return { success: true }
+}
+
+/** When a master product is discontinued, hide it from client campaign/catalogue surfaces. */
+async function hideDiscontinuedProductFromClients(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  productId: string
+) {
+  await Promise.all([
+    supabase
+      .from('campaign_products')
+      .update({ visibility: 'unpublished' })
+      .eq('product_id', productId)
+      .eq('visibility', 'published'),
+    supabase.from('company_product_access').delete().eq('product_id', productId),
+  ])
+  revalidatePath('/portal/catalogue')
+  revalidatePath('/portal/shortlist')
+  revalidatePath('/crm/campaigns')
 }
 
 function isStoredProductImage(url: string | null | undefined): url is string {
@@ -421,10 +443,11 @@ export async function grantCompanyProductAccess(productId: string, companyId: st
 
   const { data: product } = await supabase
     .from('products')
-    .select('id, catalogue_access')
+    .select('id, catalogue_access, status')
     .eq('id', productId)
+    .eq('status', 'active')
     .maybeSingle()
-  if (!product) return { error: 'Product not found' }
+  if (!product) return { error: 'Choose an active catalogue product' }
 
   const { error: insertError } = await supabase
     .from('company_product_access')
@@ -526,6 +549,7 @@ export async function removeProduct(formData: FormData) {
       .update({ status: 'discontinued', updated_at: new Date().toISOString() })
       .eq('id', productId)
     if (error) return { error: error.message }
+    await hideDiscontinuedProductFromClients(supabase, productId)
     await writeAudit(supabase, {
       action: 'update',
       entity: 'products',
@@ -544,6 +568,7 @@ export async function removeProduct(formData: FormData) {
   const { error } = await supabase.from('products').delete().eq('id', productId)
   if (error) {
     await supabase.from('products').update({ status: 'discontinued' }).eq('id', productId)
+    await hideDiscontinuedProductFromClients(supabase, productId)
     return {
       error: 'This product cannot be permanently deleted because related records still exist. It was discontinued instead.',
     }

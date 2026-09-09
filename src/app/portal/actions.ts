@@ -60,6 +60,7 @@ export async function createPortalRequirement(formData: {
     const { data: products } = await supabase
       .from('products')
       .select('id, sku')
+      .eq('status', 'active')
       .in('sku', formData.products)
 
     if (products && products.length > 0) {

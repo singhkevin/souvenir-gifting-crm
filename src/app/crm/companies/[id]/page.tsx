@@ -54,7 +54,7 @@ export default async function CompanyDetailPage({
     supabase.from('quotations').select('*').eq('company_id', id).order('created_at', { ascending: false }),
     supabase.from('orders').select('*').eq('company_id', id).order('created_at', { ascending: false }),
     supabase.from('invoices').select('id, invoice_number, amount, status, created_at').eq('company_id', id).order('created_at', { ascending: false }),
-    supabase.from('company_product_access').select('*, product:products(*)').eq('company_id', id),
+    supabase.from('company_product_access').select('*, product:products!inner(*)').eq('company_id', id).eq('product.status', 'active'),
     supabase.from('products').select('id, name, sku, price').eq('status', 'active').order('name'),
     supabase.from('profiles').select('id, full_name, email, role, is_active').eq('company_id', id).in('role', ['client_admin', 'client_user']).order('full_name'),
     supabase.from('tasks').select('id, title, status, due_at, assigned_to, order_id, priority, assignee:profiles!assigned_to(full_name)').eq('company_id', id).order('due_at', { ascending: true }),

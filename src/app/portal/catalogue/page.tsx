@@ -30,9 +30,10 @@ export default async function PortalCataloguePage({
     const [{ data: offerings }, { data: selections }] = await Promise.all([
       supabase
         .from('campaign_products')
-        .select('id, display_name, client_description, client_image_url, selling_price, moq, campaign_id, campaign:campaigns(id, name, company_id)')
+        .select('id, display_name, client_description, client_image_url, selling_price, moq, campaign_id, campaign:campaigns(id, name, company_id), product:products!inner(status)')
         .eq('visibility', 'published')
         .eq('campaign_id', campaignFilter)
+        .eq('product.status', 'active')
         .order('display_order'),
       supabase.from('client_product_selections').select('campaign_product_id, kind').eq('company_id', companyId),
     ])

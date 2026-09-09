@@ -14,9 +14,10 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
 
   const { data: offering } = await supabase
     .from('campaign_products')
-    .select('id, display_name, client_description, client_image_url, selling_price, moq, campaign_id, personalization_options, estimated_delivery, campaign:campaigns(id, name)')
+    .select('id, display_name, client_description, client_image_url, selling_price, moq, campaign_id, personalization_options, estimated_delivery, campaign:campaigns(id, name), product:products!inner(status)')
     .eq('id', sku)
     .eq('visibility', 'published')
+    .eq('product.status', 'active')
     .maybeSingle()
 
   if (!offering) notFound()

@@ -10,9 +10,11 @@ export default async function PortalShortlistPage() {
   const { data: companyId } = await supabase.rpc('client_company_id')
   const { data: rows } = await supabase
     .from('client_product_selections')
-    .select('id, kind, quantity, campaign_product_id, campaign_id, offering:campaign_products(id, display_name, client_image_url, selling_price, moq, campaign:campaigns(name))')
+    .select('id, kind, quantity, campaign_product_id, campaign_id, offering:campaign_products!inner(id, display_name, client_image_url, selling_price, moq, visibility, campaign:campaigns(name), product:products!inner(status))')
     .eq('company_id', companyId)
     .in('kind', ['shortlisted', 'selected'])
+    .eq('offering.visibility', 'published')
+    .eq('offering.product.status', 'active')
     .order('updated_at', { ascending: false })
 
   const campaignRows = rows || []

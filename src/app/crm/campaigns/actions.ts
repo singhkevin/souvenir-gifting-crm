@@ -42,15 +42,22 @@ export async function addCampaignProduct(formData: FormData) {
   const sellingPrice = Number(formData.get('selling_price') || 0)
   if (!campaignId || !productId) return { error: 'Campaign and product are required' }
 
-  const { data: product } = await supabase.from('products').select('name, description, image_url, price, moq').eq('id', productId).single()
+  const { data: product } = await supabase
+    .from('products')
+    .select('name, description, image_url, price, moq, status')
+    .eq('id', productId)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (!product) return { error: 'Choose an active catalogue product' }
+
   const { error } = await supabase.from('campaign_products').insert({
     campaign_id: campaignId,
     product_id: productId,
-    display_name: product?.name,
-    client_description: product?.description,
-    client_image_url: product?.image_url,
-    selling_price: sellingPrice || product?.price || 0,
-    moq: product?.moq || 1,
+    display_name: product.name,
+    client_description: product.description,
+    client_image_url: product.image_url,
+    selling_price: sellingPrice || product.price || 0,
+    moq: product.moq || 1,
     visibility: 'draft',
     created_by: user.id,
   })
@@ -65,6 +72,19 @@ export async function setCampaignProductVisibility(formData: FormData) {
   const id = String(formData.get('id') || '')
   const visibility = String(formData.get('visibility') || 'draft')
   const { data: { user } } = await supabase.auth.getUser()
+
+  if (visibility === 'published') {
+    const { data: offering } = await supabase
+      .from('campaign_products')
+      .select('id, product:products!inner(status)')
+      .eq('id', id)
+      .maybeSingle()
+    const product = Array.isArray(offering?.product) ? offering?.product[0] : offering?.product
+    if (!offering || product?.status !== 'active') {
+      return { error: 'Only active catalogue products can be published to the client' }
+    }
+  }
+
   const { error } = await supabase.from('campaign_products').update({
     visibility,
     published_at: visibility === 'published' ? new Date().toISOString() : null,

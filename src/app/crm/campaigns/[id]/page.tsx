@@ -23,8 +23,8 @@ export default async function CampaignDetailPage({
 
   const [{ data: campaign }, { data: offerings }, { data: products }, { data: selections }] = await Promise.all([
     supabase.from('campaigns').select('*, company:companies(id, name)').eq('id', id).maybeSingle(),
-    supabase.from('campaign_products').select('*, product:products(id, name, sku, price)').eq('campaign_id', id).order('display_order'),
-    supabase.from('products').select('id, name, sku, price').eq('status', 'active').order('name').limit(80),
+    supabase.from('campaign_products').select('*, product:products(id, name, sku, price, status)').eq('campaign_id', id).order('display_order'),
+    supabase.from('products').select('id, name, sku, price').eq('status', 'active').order('name').limit(200),
     supabase.from('client_product_selections').select('*, selector:profiles!user_id(full_name, email), offering:campaign_products(display_name)').eq('campaign_id', id).order('created_at', { ascending: false }),
   ])
 
@@ -104,22 +104,32 @@ export default async function CampaignDetailPage({
           <tbody>
             {(offerings || []).map((row) => {
               const product = Array.isArray(row.product) ? row.product[0] : row.product
+              const discontinued = product?.status && product.status !== 'active'
               return (
                 <tr key={row.id} className="border-t">
                   <td className="p-3">
                     <p className="font-semibold">{row.display_name || product?.name}</p>
                     <p className="text-[#7A7267]">{product?.sku} · internal {formatCurrency(product?.price)}</p>
+                    {discontinued ? (
+                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                        Master product discontinued — unpublish or replace
+                      </p>
+                    ) : null}
                   </td>
                   <td className="p-3">{formatCurrency(row.selling_price)}</td>
                   <td className="p-3 capitalize">{row.visibility}</td>
                   <td className="p-3 space-x-2">
                     {row.visibility !== 'published' ? (
-                      <form action={asFormAction(setCampaignProductVisibility)} className="inline">
-                        <input type="hidden" name="campaign_id" value={campaign.id} />
-                        <input type="hidden" name="id" value={row.id} />
-                        <input type="hidden" name="visibility" value="published" />
-                        <button className="underline text-[#1A3022]">Publish to client</button>
-                      </form>
+                      discontinued ? (
+                        <span className="text-[#7A7267]">Cannot publish</span>
+                      ) : (
+                        <form action={asFormAction(setCampaignProductVisibility)} className="inline">
+                          <input type="hidden" name="campaign_id" value={campaign.id} />
+                          <input type="hidden" name="id" value={row.id} />
+                          <input type="hidden" name="visibility" value="published" />
+                          <button className="underline text-[#1A3022]">Publish to client</button>
+                        </form>
+                      )
                     ) : (
                       <form action={asFormAction(setCampaignProductVisibility)} className="inline">
                         <input type="hidden" name="campaign_id" value={campaign.id} />
