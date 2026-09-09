@@ -9,11 +9,11 @@ const SAMPLE_ROLES = ['admin', 'sales', 'operations'] as const
 
 async function requireSampleAccess() {
   const profile = await getProfile()
-  if (!profile) return { error: 'Not authenticated' as const }
+  if (!profile) return { ok: false as const, error: 'Not authenticated' }
   if (!SAMPLE_ROLES.includes(profile.role as (typeof SAMPLE_ROLES)[number])) {
-    return { error: 'Not permitted to manage samples' as const }
+    return { ok: false as const, error: 'Not permitted to manage samples' }
   }
-  return { profile }
+  return { ok: true as const, profile }
 }
 
 function fail(message: string): never {
@@ -36,7 +36,7 @@ type Holder = keyof typeof HOLDERS
 
 export async function receiveSample(formData: FormData) {
   const access = await requireSampleAccess()
-  if ('error' in access) fail(access.error)
+  if (!access.ok) fail(access.error)
 
   const supabase = await createClient()
   const productId = String(formData.get('product_id') || '').trim()
@@ -93,7 +93,7 @@ export async function receiveSample(formData: FormData) {
 
 export async function moveSample(formData: FormData) {
   const access = await requireSampleAccess()
-  if ('error' in access) fail(access.error)
+  if (!access.ok) fail(access.error)
 
   const supabase = await createClient()
   const user = { id: access.profile.id }
