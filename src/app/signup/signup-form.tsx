@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, Loader2, User } from 'lucide-react'
 import { signUp } from '@/app/login/actions'
 import { AuthShell } from '@/components/auth/auth-shell'
+import { BrandName } from '@/components/brand/brand-name'
 import { PasswordField } from '@/components/auth/password-field'
 
 export function SignupForm() {
@@ -61,7 +62,14 @@ export function SignupForm() {
   }
 
   return (
-    <AuthShell title="Create a Gifting Solutions account" subtitle="Public signup creates a client portal login. Staff roles are assigned by an admin.">
+    <AuthShell
+      title={
+        <>
+          Create a <BrandName /> account
+        </>
+      }
+      subtitle="Public signup creates a client portal login. Staff roles are assigned by an admin."
+    >
       <form onSubmit={onSubmit} className="space-y-5">
         {error && (
           <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">{error}</div>

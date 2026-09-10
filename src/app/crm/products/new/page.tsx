@@ -3,6 +3,7 @@ import { requireStaff } from '@/lib/auth'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { BackButton } from '@/components/ui/back-button'
+import { BrandName } from '@/components/brand/brand-name'
 import { createProduct } from '../actions'
 import { Package, Globe, Lock, EyeOff } from 'lucide-react'
 import { sortProductCategories } from '@/lib/products/categories'
@@ -43,7 +44,9 @@ export default async function NewProductPage({
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Add New Product</h1>
-            <p className="text-xs text-gray-500">Add a new gifting item or custom product to the Gifting Solutions catalogue.</p>
+            <p className="text-xs text-gray-500">
+              Add a new gifting item or custom product to the <BrandName /> catalogue.
+            </p>
           </div>
         </div>
 

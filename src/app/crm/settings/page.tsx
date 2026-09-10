@@ -28,7 +28,7 @@ export default async function SettingsPage() {
       <form action={asFormAction(updateOrgSettings)} className="bg-white p-6 rounded-lg border space-y-4 text-sm">
         <label className="block">
           <span className="text-gray-500 text-xs">Organisation name</span>
-          <input name="organisation_name" defaultValue={settings?.organisation_name || 'Gifting Solutions'} className="w-full border rounded-lg px-3 py-2 mt-1" />
+          <input name="organisation_name" defaultValue={settings?.organisation_name || 'Souvenir - Gifting Solutions'} className="w-full border rounded-lg px-3 py-2 mt-1" />
         </label>
         <label className="block">
           <span className="text-gray-500 text-xs">Default tax percent</span>

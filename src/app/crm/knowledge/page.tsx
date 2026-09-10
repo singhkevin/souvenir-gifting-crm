@@ -3,6 +3,7 @@ import { requireStaff } from '@/lib/auth'
 import { formatDateTime } from '@/lib/utils'
 import { ORDER_LIFECYCLE, ORDER_STATUS_LABELS } from '@/lib/order-workflow'
 import Link from 'next/link'
+import { BrandName } from '@/components/brand/brand-name'
 
 export default async function KnowledgePage() {
   const profile = await requireStaff()
@@ -17,7 +18,9 @@ export default async function KnowledgePage() {
     <div className="mx-auto max-w-4xl space-y-6 sm:space-y-8">
       <div>
         <h1 className="font-serif text-2xl text-[#1C1917]">Knowledge Center</h1>
-        <p className="mt-1 text-xs text-[#7A7267]">How Gifting Solutions runs a gift programme — from enquiry to payment.</p>
+        <p className="mt-1 text-xs text-[#7A7267]">
+          How <BrandName /> runs a gift programme — from enquiry to payment.
+        </p>
       </div>
 
       <section className="space-y-4 rounded-xl border border-[#E8E4DE] bg-white p-4 sm:p-5">

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { BrandName } from '@/components/brand/brand-name'
 import { SiteShell } from '@/components/site/site-shell'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
 import { MobileCatalogueFilters } from '@/components/site/mobile-catalogue-filters'
@@ -8,7 +9,7 @@ import { isUuid } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Catalogue',
-  description: 'Browse the Gifting Solutions corporate gifting catalogue.',
+  description: 'Browse the Souvenir - Gifting Solutions corporate gifting catalogue.',
 }
 
 const BUDGETS = [
@@ -121,7 +122,7 @@ export default async function CataloguePage({
           </p>
           <h1 className="store-section-title mt-3">Catalogue</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">
-            Browse live Gifting Solutions gifts — filter by category and budget, then request a quote.
+            Browse live <BrandName /> gifts — filter by category and budget, then request a quote.
           </p>
         </div>
       </div>

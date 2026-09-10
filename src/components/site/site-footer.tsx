@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { BrandName } from '@/components/brand/brand-name'
 
 const SHOP_BY_PRICE = [
   { href: '/catalogue?budget=0-500', label: 'Below ₹500' },
@@ -18,7 +19,7 @@ export function SiteFooter({
     <footer className="mt-0 border-t border-[#E8E4DE] bg-[#F6F4F1] text-[#1B2430]">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-14 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="md:col-span-2 lg:col-span-1">
-          <p className="font-serif text-2xl tracking-[0.04em] sm:text-3xl">Gifting Solutions</p>
+          <BrandName as="p" className="font-serif text-2xl tracking-[0.04em] sm:text-3xl" />
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#5C6570]">
             Your destination for curated corporate gifts — catalogue, quotation and fulfilment in one place.
           </p>
@@ -49,7 +50,7 @@ export function SiteFooter({
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A3022]">About us</p>
           <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
             <Link href="/about" className="hover:text-[#1B2430]">
-              About Gifting Solutions
+              About <BrandName />
             </Link>
             {workspaceHref && workspaceLabel ? (
               <Link href={workspaceHref} className="hover:text-[#1B2430]">
@@ -77,7 +78,9 @@ export function SiteFooter({
 
       <div className="border-t border-[#E8E4DE] bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-[#5C6570] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>© {new Date().getFullYear()} Gifting Solutions. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} <BrandName />. All rights reserved.
+          </p>
           <p>Corporate gifting for teams, clients and brands.</p>
         </div>
       </div>

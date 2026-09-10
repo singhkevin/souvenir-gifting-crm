@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ProductImage } from '@/components/ui/product-image'
 import { formatCurrency } from '@/lib/utils'
 import type { PublicProduct } from '@/lib/catalogue/products'
+import { BrandName } from '@/components/brand/brand-name'
 
 const SLOT_COUNT = 4
 const SLIDE_MS = 3500
@@ -122,9 +123,10 @@ export function HeroStage({
 
       <div className="relative mx-auto grid min-h-[auto] max-w-7xl items-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 lg:min-h-[78vh] lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
         <div>
-          <p className="font-serif text-[1.85rem] leading-tight tracking-[0.04em] text-white sm:text-5xl lg:text-6xl">
-            Gifting Solutions
-          </p>
+          <BrandName
+            as="p"
+            className="font-serif text-[1.85rem] leading-tight tracking-[0.04em] text-white sm:text-5xl lg:text-6xl"
+          />
           <h1 className="mt-4 max-w-xl font-serif text-[1.75rem] leading-tight tracking-tight text-white/95 sm:mt-5 sm:text-4xl lg:text-[2.75rem]">
             Corporate gifting, designed to be remembered.
           </h1>

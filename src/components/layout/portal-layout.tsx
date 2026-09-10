@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, PackageSearch, Heart, FileText, ShoppingBag, LayoutDashboard, FolderGit2, Files, ClipboardList } from 'lucide-react';
+import { BrandName } from '@/components/brand/brand-name';
 import { signOut } from '@/app/login/actions';
 import { CompanyAvatar } from '../ui/avatar';
 
@@ -84,12 +85,10 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
           <div className="flex h-14 items-center justify-between gap-3 sm:h-16">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex shrink-0 items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xl font-bold text-white">
-                  G
+                <div className="flex h-8 w-8 items-center justify-center rounded bg-primary font-serif text-lg font-normal text-white">
+                  S
                 </div>
-                <span className="hidden max-w-[9rem] truncate font-bold tracking-tight text-primary xl:block xl:text-lg">
-                  Gifting Solutions
-                </span>
+                <BrandName className="hidden max-w-[14rem] truncate font-serif text-base tracking-tight text-primary xl:block xl:text-lg" />
               </div>
               
               {/* Full labeled nav only on wide screens to avoid overlap with profile */}

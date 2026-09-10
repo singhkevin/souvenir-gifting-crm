@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { Bell, Menu, Search, X } from 'lucide-react'
+import { BrandName } from '@/components/brand/brand-name'
 import { markNotificationRead } from '@/app/crm/notifications/actions'
 
 type Note = {
@@ -53,7 +54,7 @@ export function Topbar({
             </button>
           ) : null}
           <Link href="/crm/dashboard" className="truncate font-serif text-lg tracking-tight text-[#1A3022] lg:hidden">
-            Gifting Solutions
+            <BrandName />
           </Link>
           <p className="hidden text-xs text-[#7A7267] lg:block">Corporate gifting, from enquiry to payment</p>
         </div>

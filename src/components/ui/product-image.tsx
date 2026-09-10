@@ -34,7 +34,7 @@ function Fallback({ alt, compact }: { alt: string; compact: boolean }) {
       role="img"
       aria-label={alt || 'Product'}
     >
-      <span className={cn('font-serif tracking-tight', compact ? 'text-xs' : 'text-lg')}>G</span>
+      <span className={cn('font-serif tracking-tight', compact ? 'text-xs' : 'text-lg')}>S</span>
       {!compact && <Package className="h-5 w-5 text-[#C4B8A8]" aria-hidden="true" />}
     </div>
   )
@@ -42,7 +42,7 @@ function Fallback({ alt, compact }: { alt: string; compact: boolean }) {
 
 /**
  * Safe product thumbnail. Broken, empty, null and failed URLs all resolve
- * to the same Gifting Solutions placeholder — never a browser broken-image icon.
+ * to the same Souvenir - Gifting Solutions placeholder — never a browser broken-image icon.
  */
 export function ProductImage({
   src,

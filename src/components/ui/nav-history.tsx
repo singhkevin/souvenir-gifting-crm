@@ -7,7 +7,7 @@ export const NAV_DEPTH_KEY = 'giffter:nav-depth';
 
 /**
  * Counts in-app navigations for the current tab so that BackButton can tell the
- * difference between "the user arrived here from another Gifting Solutions page" and "the
+ * difference between "the user arrived here from another Souvenir - Gifting Solutions page" and "the
  * user landed here directly via a deep link, refresh or external link".
  *
  * The counter only ever increases; it is a marker that in-app history exists,

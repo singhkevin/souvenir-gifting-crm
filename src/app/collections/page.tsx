@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { BrandName } from '@/components/brand/brand-name'
 import { SiteShell } from '@/components/site/site-shell'
 import { CATALOGUE_COLLECTIONS, CATALOGUE_OCCASIONS } from '@/lib/catalogue/collections'
 import { getPublicCatalogueProducts } from '@/lib/catalogue/products'
@@ -8,7 +9,7 @@ const ARROW = '\u2192'
 
 export const metadata: Metadata = {
   title: 'Collections',
-  description: 'Editorial Gifting Solutions collections and corporate occasions, grouped from the existing catalogue.',
+  description: 'Editorial Souvenir - Gifting Solutions collections and corporate occasions, grouped from the existing catalogue.',
 }
 
 export default async function CollectionsPage() {
@@ -21,7 +22,7 @@ export default async function CollectionsPage() {
           <p className="store-eyebrow">Collections</p>
           <h1 className="store-section-title mt-2">Curated programmes</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">
-            Each collection is a view over existing Gifting Solutions products — no separate catalogue, and no invented items.
+            Each collection is a view over existing <BrandName /> products — no separate catalogue, and no invented items.
           </p>
         </div>
       </div>
