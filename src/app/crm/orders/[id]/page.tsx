@@ -25,7 +25,6 @@ import { ProductImage } from '@/components/ui/product-image'
 import { ClientTabs } from '@/components/ui/client-tabs'
 import { ShoppingBag, ChevronRight } from 'lucide-react'
 import { asFormAction } from '@/lib/form-action'
-import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function OrderDetailPage({
   params,
@@ -123,17 +122,17 @@ export default async function OrderDetailPage({
     <div className="mx-auto max-w-5xl space-y-6 pb-10">
       <BackButton href="/crm/order-management" label="Back to Order Control" />
 
-      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:p-6">
-        <div className="min-w-0">
-          <div className="mb-1 flex flex-wrap items-center gap-2">
-            <span className="rounded-lg bg-[#1A3022]/10 p-1.5 text-[#1A3022]">
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="p-1.5 bg-[#1A3022]/10 text-[#1A3022] rounded-lg">
               <ShoppingBag size={16} />
             </span>
             <span className="font-mono text-xs font-bold text-gray-500">{order.order_number}</span>
-            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase text-[#1A3022]">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#1A3022] uppercase">
               {ORDER_STATUS_LABELS[order.status] || order.status}
             </span>
-            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${HEALTH_STYLES[health]}`}>
+            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${HEALTH_STYLES[health]}`}>
               {HEALTH_LABELS[health]}
             </span>
           </div>
@@ -141,30 +140,27 @@ export default async function OrderDetailPage({
             {company?.name || 'Client'}
             {campaign?.name ? ` · ${campaign.name}` : ''}
           </h1>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="text-xs text-gray-500 mt-1">
             Department: <span className="font-medium text-gray-700">{department?.name || '—'}</span>
             {' · '}Assigned: <span className="font-medium text-gray-700">{assignee?.full_name || 'Unassigned'}</span>
             {' · '}Stage due: <span className="font-medium text-gray-700">{formatDate(order.stage_due_at)}</span>
             {' · '}Delivery: <span className="font-medium text-gray-700">{formatDate(order.expected_delivery_date)}</span>
           </p>
-          {order.next_action && <p className="mt-2 text-xs text-[#1A3022]">Next: {order.next_action}</p>}
+          {order.next_action && <p className="text-xs mt-2 text-[#1A3022]">Next: {order.next_action}</p>}
         </div>
 
-        <div className="flex w-full min-w-0 flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
-          <div className="sm:text-right">
-            <p className="text-[10px] font-bold uppercase text-gray-400">Order Value</p>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="text-[10px] uppercase font-bold text-gray-400">Order Value</p>
             <p className="text-xl font-bold text-[#1A3022]">{formatCurrency(order.order_value)}</p>
           </div>
-          {canStage && !isDelivered ? (
-            <form action={handleAdvance} className="w-full sm:w-auto">
-              <button
-                type="submit"
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#1A3022] px-4 py-2 text-xs font-semibold text-white sm:w-auto"
-              >
+          {canStage && !isDelivered && (
+            <form action={handleAdvance}>
+              <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5">
                 Advance Stage <ChevronRight size={14} />
               </button>
             </form>
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -184,47 +180,27 @@ export default async function OrderDetailPage({
         <form action={asFormAction(handOffOrder)} className="bg-white p-6 rounded-2xl border border-gray-200 grid md:grid-cols-2 gap-3 text-xs">
           <input type="hidden" name="order_id" value={order.id} />
           <h3 className="md:col-span-2 font-bold text-sm">Stage hand-off</h3>
-          <div className="space-y-1">
-            <span className="hidden text-gray-500 md:block">New stage</span>
-            <MobileSheetSelect
-              name="status"
-              label="New stage"
-              defaultValue={order.status}
-              options={[
-                ...ORDER_LIFECYCLE.map((s) => ({ value: s, label: ORDER_STATUS_LABELS[s] })),
-                { value: 'cancelled', label: 'Cancelled' },
-              ]}
-              desktopClassName="w-full border rounded-lg px-2 py-2 text-xs"
-            />
-          </div>
-          <div className="space-y-1">
-            <span className="hidden text-gray-500 md:block">Department</span>
-            <MobileSheetSelect
-              name="department_id"
-              label="Department"
-              defaultValue={order.current_department_id || ''}
-              emptyLabel="Keep current"
-              options={[
-                { value: '', label: 'Keep current' },
-                ...(departments || []).map((d) => ({ value: d.id, label: d.name })),
-              ]}
-              desktopClassName="w-full border rounded-lg px-2 py-2 text-xs"
-            />
-          </div>
-          <div className="space-y-1">
-            <span className="hidden text-gray-500 md:block">Assignee</span>
-            <MobileSheetSelect
-              name="assigned_to"
-              label="Assignee"
-              defaultValue={order.assigned_to || ''}
-              emptyLabel="Keep current"
-              options={[
-                { value: '', label: 'Keep current' },
-                ...(staff || []).map((s) => ({ value: s.id, label: s.full_name || s.id })),
-              ]}
-              desktopClassName="w-full border rounded-lg px-2 py-2 text-xs"
-            />
-          </div>
+          <label className="space-y-1">
+            <span className="text-gray-500">New stage</span>
+            <select name="status" defaultValue={order.status} className="w-full border rounded-lg px-2 py-2">
+              {ORDER_LIFECYCLE.map((s) => <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>)}
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className="text-gray-500">Department</span>
+            <select name="department_id" defaultValue={order.current_department_id || ''} className="w-full border rounded-lg px-2 py-2">
+              <option value="">Keep current</option>
+              {(departments || []).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className="text-gray-500">Assignee</span>
+            <select name="assigned_to" defaultValue={order.assigned_to || ''} className="w-full border rounded-lg px-2 py-2">
+              <option value="">Keep current</option>
+              {(staff || []).map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+            </select>
+          </label>
           <label className="space-y-1">
             <span className="text-gray-500">Stage due date</span>
             <input type="date" name="stage_due" defaultValue={order.stage_due_at || ''} className="w-full border rounded-lg px-2 py-2" />
@@ -334,53 +310,29 @@ export default async function OrderDetailPage({
             <div className="grid md:grid-cols-2 gap-6">
               <form action={handleAssignSupplier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                 <h3 className="font-bold">Supplier</h3>
-                <MobileSheetSelect
-                  name="supplier_id"
-                  label="Supplier"
-                  defaultValue={order.supplier_id || ''}
-                  disabled={!canStage}
-                  emptyLabel="Select"
-                  options={[
-                    { value: '', label: 'Select' },
-                    ...(suppliers || []).map((s) => ({ value: s.id, label: s.name })),
-                  ]}
-                  desktopClassName="w-full border rounded-lg px-2 py-2 text-xs disabled:bg-gray-50"
-                />
+                <select name="supplier_id" defaultValue={order.supplier_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
+                  <option value="">Select</option>
+                  {suppliers?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
                 {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save supplier</button>}
               </form>
 
               <form action={asFormAction(assignPrintingVendor)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                 <input type="hidden" name="order_id" value={order.id} />
                 <h3 className="font-bold">Printing vendor</h3>
-                <MobileSheetSelect
-                  name="printing_vendor_id"
-                  label="Printing vendor"
-                  defaultValue={order.printing_vendor_id || ''}
-                  disabled={!canStage}
-                  emptyLabel="Select"
-                  options={[
-                    { value: '', label: 'Select' },
-                    ...(printingVendors || []).map((v) => ({ value: v.id, label: v.name })),
-                  ]}
-                  desktopClassName="w-full border rounded-lg px-2 py-2 text-xs disabled:bg-gray-50"
-                />
+                <select name="printing_vendor_id" defaultValue={order.printing_vendor_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
+                  <option value="">Select</option>
+                  {printingVendors?.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                </select>
                 {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save printing vendor</button>}
               </form>
 
               <form action={handleAssignCourier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                 <h3 className="font-bold">Courier</h3>
-                <MobileSheetSelect
-                  name="courier_partner_id"
-                  label="Courier"
-                  defaultValue={order.courier_partner_id || ''}
-                  disabled={!canStage}
-                  emptyLabel="Select"
-                  options={[
-                    { value: '', label: 'Select' },
-                    ...(courierPartners || []).map((c) => ({ value: c.id, label: c.name })),
-                  ]}
-                  desktopClassName="w-full border rounded-lg px-2 py-2 text-xs disabled:bg-gray-50"
-                />
+                <select name="courier_partner_id" defaultValue={order.courier_partner_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
+                  <option value="">Select</option>
+                  {courierPartners?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
                 <input name="tracking_number" defaultValue={order.tracking_number || ''} placeholder="AWB / tracking number" disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
                 {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save shipping</button>}
               </form>

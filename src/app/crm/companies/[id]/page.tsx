@@ -16,30 +16,6 @@ import { asFormAction } from '@/lib/form-action'
 import { PortalClientForm } from '../portal-client-form'
 import { ManageClientLogin } from '../manage-client-login'
 import { CLIENT_STATUS_LABELS, ORDER_LIFECYCLE, lifecycleIndex } from '@/lib/order-workflow'
-import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
-
-const INDUSTRY_OPTIONS = [
-  { value: '', label: 'Select Industry' },
-  { value: 'IT', label: 'IT' },
-  { value: 'Finance', label: 'Finance' },
-  { value: 'Healthcare', label: 'Healthcare' },
-  { value: 'Retail', label: 'Retail' },
-  { value: 'Manufacturing', label: 'Manufacturing' },
-  { value: 'Other', label: 'Other' },
-]
-
-const COMPANY_STATUS_OPTIONS = [
-  { value: 'prospect', label: 'Prospect' },
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-]
-
-const CONTACT_TYPE_OPTIONS = [
-  { value: 'primary', label: 'Primary' },
-  { value: 'billing', label: 'Billing' },
-  { value: 'procurement', label: 'Procurement' },
-  { value: 'other', label: 'Other' },
-]
 
 export default async function CompanyDetailPage({
   params,
@@ -141,102 +117,78 @@ export default async function CompanyDetailPage({
         ]}
       />
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
-        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
           <CompanyAvatar name={company.name} logoPath={company.logo_path} size="lg" />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h1 className="font-serif text-2xl font-normal tracking-tight text-gray-900 sm:text-3xl">{company.name}</h1>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
-                  <span>{company.industry || 'Corporate Client'}</span>
-                  <span aria-hidden="true" className="text-gray-400">
-                    ·
-                  </span>
-                  <span>{company.city || 'India'}</span>
-                  {company.website ? (
-                    <>
-                      <span aria-hidden="true" className="text-gray-400">
-                        ·
-                      </span>
-                      <a
-                        href={company.website}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="break-all font-medium text-[var(--color-primary)] hover:underline"
-                      >
-                        {company.website}
-                      </a>
-                    </>
-                  ) : null}
-                </div>
-              </div>
-              <div className="flex shrink-0 flex-wrap items-center gap-2">
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize ${
-                    company.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  {company.status}
-                </span>
-                {profile.role === 'admin' ? (
-                  <ConfirmAction
-                    title="Remove company?"
-                    confirmLabel="Delete"
-                    action={asFormAction(removeCompany)}
-                    hiddenFields={{ company_id: company.id }}
-                    description={
-                      <>
-                        <p>
-                          Company: <span className="font-semibold text-gray-900">{company.name}</span>
-                        </p>
-                        <p>
-                          Related records such as orders, invoices, payments, and portal users will not be destroyed. If
-                          this company has history it will be archived (set inactive) instead of permanently deleted.
-                        </p>
-                      </>
-                    }
-                  >
-                    Delete company
-                  </ConfirmAction>
-                ) : null}
-              </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{company.name}</h1>
+            <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+              <span>{company.industry || 'Corporate Client'}</span>
+              <span aria-hidden="true">·</span>
+              <span>{company.city || 'India'}</span>
+              {company.website && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <a href={company.website} target="_blank" rel="noreferrer" className="text-[var(--color-primary)] hover:underline font-medium">
+                    {company.website}
+                  </a>
+                </>
+              )}
             </div>
 
-            <div className="mt-3 space-y-2">
-              <form id={`upload-logo-${company.id}`} action={uploadLogoAction} className="space-y-2">
+            <div className="flex flex-wrap items-center gap-3 mt-3">
+              <form action={uploadLogoAction} className="flex items-center gap-2">
                 <input type="hidden" name="company_id" value={company.id} />
                 <input
                   type="file"
                   name="logo"
                   accept="image/png,image/jpeg,image/webp"
                   required
-                  className="block w-full max-w-full text-[11px] file:mr-2 file:rounded-md file:border file:border-gray-200 file:bg-white file:px-2.5 file:py-1 file:text-[11px] file:font-medium"
+                  className="text-[11px] file:mr-2 file:px-2 file:py-1 file:rounded-md file:border file:border-gray-200 file:bg-white file:text-[11px] file:font-medium"
                 />
-              </form>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="submit"
-                  form={`upload-logo-${company.id}`}
-                  className="inline-flex shrink-0 items-center justify-center rounded-md border border-gray-200 px-2.5 py-1 text-[11px] font-medium hover:bg-gray-50"
-                >
+                <button className="px-2.5 py-1 text-[11px] font-medium rounded-md border border-gray-200 hover:bg-gray-50">
                   {company.logo_path ? 'Change logo' : 'Upload logo'}
                 </button>
-                {company.logo_path ? (
-                  <form action={removeLogoAction}>
-                    <input type="hidden" name="company_id" value={company.id} />
-                    <button
-                      type="submit"
-                      className="inline-flex shrink-0 items-center justify-center rounded-md border border-gray-200 px-2.5 py-1 text-[11px] font-medium text-red-600 hover:bg-red-50"
-                    >
-                      Remove
-                    </button>
-                  </form>
-                ) : null}
-              </div>
-              <p className="text-[11px] text-gray-500">PNG, JPG or WebP · max 2 MB</p>
+              </form>
+              {company.logo_path && (
+                <form action={removeLogoAction}>
+                  <input type="hidden" name="company_id" value={company.id} />
+                  <button className="px-2.5 py-1 text-[11px] font-medium rounded-md border border-gray-200 text-red-600 hover:bg-red-50">
+                    Remove
+                  </button>
+                </form>
+              )}
+              <span className="text-[10px] text-gray-400">PNG, JPG or WebP · max 2 MB</span>
             </div>
           </div>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+            company.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
+          }`}>
+            {company.status}
+          </span>
+          {profile.role === 'admin' && (
+            <ConfirmAction
+              title="Remove company?"
+              confirmLabel="Delete"
+              action={asFormAction(removeCompany)}
+              hiddenFields={{ company_id: company.id }}
+              description={
+                <>
+                  <p>
+                    Company: <span className="font-semibold text-gray-900">{company.name}</span>
+                  </p>
+                  <p>
+                    Related records such as orders, invoices, payments, and portal users will not be destroyed.
+                    If this company has history it will be archived (set inactive) instead of permanently deleted.
+                  </p>
+                </>
+              }
+            >
+              Delete Company
+            </ConfirmAction>
+          )}
         </div>
       </div>
 
@@ -246,13 +198,13 @@ export default async function CompanyDetailPage({
         </div>
       )}
 
-      <div className="w-full border-b border-gray-200">
-        <nav className="-mb-px flex min-w-0 gap-5 overflow-x-auto sm:gap-6">
+      <div className="border-b border-gray-200">
+        <nav className="flex space-x-6 overflow-x-auto">
           {tabs.map((t) => (
             <Link
               key={t.id}
               href={`?tab=${t.id}`}
-              className={`shrink-0 border-b-2 pb-3 text-xs font-semibold whitespace-nowrap transition-colors ${
+              className={`pb-3 text-xs font-semibold whitespace-nowrap transition-colors border-b-2 ${
                 tab === t.id ? 'border-[#4A235A] text-[#4A235A]' : 'border-transparent text-gray-500 hover:text-gray-900'
               }`}
             >
@@ -270,17 +222,15 @@ export default async function CompanyDetailPage({
               <span className="font-semibold text-gray-500">Name</span>
               <input name="name" required defaultValue={company.name} className="mt-1 w-full border rounded-lg px-3 py-2" />
             </label>
-            <div className="block space-y-1">
-              <span className="hidden text-xs font-semibold text-gray-500 md:block">Industry</span>
-              <MobileSheetSelect
-                name="industry"
-                label="Industry"
-                defaultValue={company.industry || ''}
-                emptyLabel="Select Industry"
-                options={INDUSTRY_OPTIONS}
-                desktopClassName="mt-0 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs"
-              />
-            </div>
+            <label className="block">
+              <span className="font-semibold text-gray-500">Industry</span>
+              <select name="industry" defaultValue={company.industry || ''} className="mt-1 w-full border rounded-lg px-3 py-2 bg-white">
+                <option value="">Select Industry</option>
+                {['IT', 'Finance', 'Healthcare', 'Retail', 'Manufacturing', 'Other'].map((industry) => (
+                  <option key={industry} value={industry}>{industry}</option>
+                ))}
+              </select>
+            </label>
             <label className="block">
               <span className="font-semibold text-gray-500">Website</span>
               <input name="website" type="url" defaultValue={company.website || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
@@ -301,16 +251,14 @@ export default async function CompanyDetailPage({
               <span className="font-semibold text-gray-500">Country</span>
               <input name="country" defaultValue={company.country || 'India'} className="mt-1 w-full border rounded-lg px-3 py-2" />
             </label>
-            <div className="block space-y-1">
-              <span className="hidden text-xs font-semibold text-gray-500 md:block">Status</span>
-              <MobileSheetSelect
-                name="status"
-                label="Status"
-                defaultValue={company.status}
-                options={COMPANY_STATUS_OPTIONS}
-                desktopClassName="mt-0 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs"
-              />
-            </div>
+            <label className="block">
+              <span className="font-semibold text-gray-500">Status</span>
+              <select name="status" defaultValue={company.status} className="mt-1 w-full border rounded-lg px-3 py-2 bg-white">
+                <option value="prospect">Prospect</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>
             <label className="block md:col-span-2">
               <span className="font-semibold text-gray-500">Address</span>
               <textarea name="address" rows={2} defaultValue={company.address || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
@@ -346,42 +294,34 @@ export default async function CompanyDetailPage({
 
       {tab === 'catalogue' && (
         <div className="space-y-6">
-          <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold text-gray-900">Catalogue for {company.name}</h2>
-              <p className="mt-0.5 text-xs leading-relaxed text-gray-500">
-                Portal users at this company see all global catalogue products ({globalProductCount || 0}) plus the
-                personalized products listed below. Removing a company here hides a selected product from their portal.
+          <div className="bg-white p-6 rounded-xl border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className="font-bold text-sm text-gray-900">Catalogue for {company.name}</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Portal users at this company see all global catalogue products ({globalProductCount || 0}) plus the personalized products listed below. Removing a company here hides a selected product from their portal.
               </p>
             </div>
 
-            {canManageVisibility ? (
-              <form action={addProductAction} className="flex min-w-0 flex-col gap-2 md:flex-row md:items-end">
-                <MobileSheetSelect
-                  name="product_id"
-                  label="Product"
-                  required
-                  emptyLabel="Select product to add..."
-                  options={[
-                    { value: '', label: 'Select product to add...' },
-                    ...unassignedProducts.map((p) => ({
-                      value: p.id,
-                      label: p.name,
-                      meta: p.sku || undefined,
-                    })),
-                  ]}
-                  className="min-w-0 flex-1"
-                  desktopClassName="min-h-10 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs focus:ring-1 focus:ring-[#4A235A]"
-                />
-                <button
-                  type="submit"
-                  className="inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#4A235A] px-4 py-2.5 text-xs font-semibold whitespace-nowrap text-white transition-colors hover:bg-[#3d1c4a] hover:text-white md:w-auto"
-                >
-                  <Plus size={14} />
-                  Assign Product
-                </button>
-              </form>
-            ) : null}
+            {canManageVisibility && (
+            <form action={addProductAction} className="flex items-center gap-2 w-full sm:w-auto">
+              <select
+                name="product_id"
+                required
+                className="px-3 py-2 text-xs border border-gray-200 rounded-lg bg-white focus:ring-1 focus:ring-[#4A235A]"
+              >
+                <option value="">Select product to add...</option>
+                {unassignedProducts.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="px-3 py-2 text-xs font-semibold text-white bg-[#4A235A] hover:bg-[#3d1c4a] hover:text-white rounded-lg transition-colors whitespace-nowrap"
+              >
+                <Plus size={14} className="inline mr-1" /> Assign Product
+              </button>
+            </form>
+            )}
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -509,13 +449,12 @@ export default async function CompanyDetailPage({
             <input name="designation" placeholder="Designation" className="border rounded-lg px-3 py-2" />
             <input name="email" type="email" placeholder="Email" className="border rounded-lg px-3 py-2" />
             <input name="phone" placeholder="Phone" className="border rounded-lg px-3 py-2" />
-            <MobileSheetSelect
-              name="contact_type"
-              label="Contact type"
-              defaultValue="primary"
-              options={CONTACT_TYPE_OPTIONS}
-              desktopClassName="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs"
-            />
+            <select name="contact_type" className="border rounded-lg px-3 py-2 bg-white">
+              <option value="primary">Primary</option>
+              <option value="billing">Billing</option>
+              <option value="procurement">Procurement</option>
+              <option value="other">Other</option>
+            </select>
             <button className="bg-[#1A3022] text-white rounded-lg font-semibold py-2">Add contact</button>
           </form>
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

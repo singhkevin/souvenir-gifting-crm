@@ -12,7 +12,6 @@ export function ConfirmAction({
   children,
   destructive = true,
   hiddenFields,
-  className = '',
 }: {
   title: string
   description: ReactNode
@@ -22,7 +21,6 @@ export function ConfirmAction({
   children: ReactNode
   destructive?: boolean
   hiddenFields?: Record<string, string>
-  className?: string
 }) {
   const [open, setOpen] = useState(false)
 
@@ -33,8 +31,8 @@ export function ConfirmAction({
         onClick={() => setOpen(true)}
         className={
           destructive
-            ? `inline-flex shrink-0 items-center justify-center rounded-lg border border-red-200 px-2.5 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-50 ${className}`
-            : `inline-flex shrink-0 items-center justify-center rounded-lg border border-gray-200 px-2.5 py-1 text-[11px] font-semibold hover:bg-gray-50 ${className}`
+            ? 'px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 text-red-700 hover:bg-red-50'
+            : 'px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 hover:bg-gray-50'
         }
       >
         {children}

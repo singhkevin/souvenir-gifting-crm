@@ -8,7 +8,6 @@ import { createProduct } from '../actions'
 import { Package, Globe, Lock, EyeOff } from 'lucide-react'
 import { sortProductCategories } from '@/lib/products/categories'
 import { ProductImageField } from '@/components/products/product-image-field'
-import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function NewProductPage({
   searchParams,
@@ -82,38 +81,30 @@ export default async function NewProductPage({
             </div>
 
             <div>
-              <span className="mb-1.5 block text-xs font-semibold text-gray-700 hidden md:block">Category *</span>
-              <MobileSheetSelect
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Category *</label>
+              <select
                 name="category_id"
-                label="Category"
                 required
-                emptyLabel="Select Category"
-                options={[
-                  { value: '', label: 'Select Category' },
-                  ...sortProductCategories(categories || []).map((c) => ({
-                    value: c.id,
-                    label: c.name,
-                  })),
-                ]}
-                desktopClassName="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none bg-white"
-              />
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none bg-white"
+              >
+                <option value="">Select Category</option>
+                {sortProductCategories(categories || []).map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </div>
 
             <div>
-              <span className="mb-1.5 block text-xs font-semibold text-gray-700 hidden md:block">Brand</span>
-              <MobileSheetSelect
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Brand</label>
+              <select
                 name="brand_id"
-                label="Brand"
-                emptyLabel="Select Brand (Optional)"
-                options={[
-                  { value: '', label: 'Select Brand (Optional)' },
-                  ...(brands || []).map((b) => ({
-                    value: b.id,
-                    label: b.name,
-                  })),
-                ]}
-                desktopClassName="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none bg-white"
-              />
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none bg-white"
+              >
+                <option value="">Select Brand (Optional)</option>
+                {brands?.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -162,20 +153,16 @@ export default async function NewProductPage({
             </div>
 
             <div>
-              <span className="mb-1.5 block text-xs font-semibold text-gray-700 hidden md:block">Primary Supplier</span>
-              <MobileSheetSelect
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Primary Supplier</label>
+              <select
                 name="supplier_id"
-                label="Primary Supplier"
-                emptyLabel="Select Supplier (Optional)"
-                options={[
-                  { value: '', label: 'Select Supplier (Optional)' },
-                  ...(suppliers || []).map((s) => ({
-                    value: s.id,
-                    label: s.name,
-                  })),
-                ]}
-                desktopClassName="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none bg-white"
-              />
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none bg-white"
+              >
+                <option value="">Select Supplier (Optional)</option>
+                {suppliers?.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
             </div>
 
             <div>

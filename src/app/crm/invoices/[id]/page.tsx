@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { Receipt, Calendar, CreditCard, Building2, CheckCircle2 } from 'lucide-react'
 import { requireStaff } from '@/lib/auth'
-import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -157,21 +156,14 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
               </div>
 
               <div>
-                <span className="mb-1 block font-semibold text-gray-700 hidden md:block">Payment Method *</span>
-                <MobileSheetSelect
-                  name="method"
-                  label="Payment Method"
-                  required
-                  defaultValue="bank_transfer"
-                  options={[
-                    { value: 'bank_transfer', label: 'Bank Transfer (NEFT/RTGS/IMPS)' },
-                    { value: 'upi', label: 'UPI' },
-                    { value: 'cheque', label: 'Cheque' },
-                    { value: 'credit_card', label: 'Corporate Card' },
-                    { value: 'cash', label: 'Cash' },
-                  ]}
-                  desktopClassName="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-xs"
-                />
+                <label className="block font-semibold text-gray-700 mb-1">Payment Method *</label>
+                <select name="method" required className="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
+                  <option value="bank_transfer">Bank Transfer (NEFT/RTGS/IMPS)</option>
+                  <option value="upi">UPI</option>
+                  <option value="cheque">Cheque</option>
+                  <option value="credit_card">Corporate Card</option>
+                  <option value="cash">Cash</option>
+                </select>
               </div>
 
               <div>

@@ -71,11 +71,11 @@ export function ManageClientLogin({
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full border rounded-lg px-3 py-2"
                 />
-                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                  <button type="button" disabled={pending || password.length < 8} onClick={() => submit(false)} className="inline-flex items-center justify-center rounded-lg bg-[#4A235A] px-3 py-2 font-semibold text-white disabled:opacity-50">
+                <div className="flex gap-2">
+                  <button type="button" disabled={pending || password.length < 8} onClick={() => submit(false)} className="px-3 py-2 font-semibold text-white bg-[#4A235A] rounded-lg disabled:opacity-50">
                     {pending ? 'Saving…' : 'Set temporary password'}
                   </button>
-                  <button type="button" disabled={pending} onClick={() => submit(true)} className="inline-flex items-center justify-center rounded-lg border px-3 py-2 disabled:opacity-50">
+                  <button type="button" disabled={pending} onClick={() => submit(true)} className="px-3 py-2 border rounded-lg disabled:opacity-50">
                     Generate password
                   </button>
                 </div>
