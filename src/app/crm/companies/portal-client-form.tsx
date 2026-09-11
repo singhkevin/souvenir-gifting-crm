@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { createPortalClient } from './actions'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 function CredentialsOnce({
   email,
@@ -82,11 +83,17 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
       <input type="hidden" name="company_id" value={companyId} />
       <input name="full_name" required placeholder="Client name" className="border rounded-lg px-3 py-2" />
       <input name="email" type="email" required placeholder="Client ID / Login email" className="border rounded-lg px-3 py-2" />
-      <select name="role" defaultValue="client_user" className="border rounded-lg px-3 py-2 bg-white">
-        <option value="client_user">Client user</option>
-        <option value="client_admin">Client admin</option>
-      </select>
-      <div className="flex gap-2">
+      <MobileSheetSelect
+        name="role"
+        label="Role"
+        defaultValue="client_user"
+        options={[
+          { value: 'client_user', label: 'Client user' },
+          { value: 'client_admin', label: 'Client admin' },
+        ]}
+        desktopClassName="w-full border rounded-lg px-3 py-2 bg-white text-xs"
+      />
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
         <input
           name="password"
           type="password"
@@ -95,14 +102,14 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
           placeholder="Temporary password (min 8)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="border rounded-lg px-3 py-2 flex-1"
+          className="min-w-0 flex-1 rounded-lg border px-3 py-2"
         />
         <button
           type="submit"
           name="generate_password"
           value="1"
           disabled={pending}
-          className="px-3 py-2 border rounded-lg whitespace-nowrap disabled:opacity-50"
+          className="inline-flex shrink-0 items-center justify-center rounded-lg border px-3 py-2 whitespace-nowrap disabled:opacity-50"
         >
           Generate password
         </button>

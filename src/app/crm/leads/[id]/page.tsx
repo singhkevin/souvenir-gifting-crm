@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { TrendingUp, Building2, User, Calendar, DollarSign } from 'lucide-react'
 import { requireStaff } from '@/lib/auth'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -104,21 +105,23 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           })}
         </div>
 
-        <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-          <span className="text-xs text-gray-500 font-medium">Update Current Pipeline Stage:</span>
-          <form action={handleUpdateStage} className="flex gap-2">
-            <select
+        <div className="flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-xs font-medium text-gray-500">Update Current Pipeline Stage:</span>
+          <form action={handleUpdateStage} className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <MobileSheetSelect
               name="stage"
+              label="Stage"
               defaultValue={lead.stage}
-              className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:ring-1 focus:ring-[#4A235A]"
-            >
-              {stages.map(s => (
-                <option key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</option>
-              ))}
-            </select>
+              options={stages.map((s) => ({
+                value: s,
+                label: s.replace('_', ' ').toUpperCase(),
+              }))}
+              className="min-w-0 w-full sm:w-auto"
+              desktopClassName="min-w-0 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs focus:ring-1 focus:ring-[#4A235A] sm:w-auto"
+            />
             <button
               type="submit"
-              className="px-4 py-1.5 bg-[#4A235A] hover:bg-[#3d1c4a] text-white text-xs font-semibold rounded-lg transition-colors shadow-sm"
+              className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#4A235A] px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#3d1c4a]"
             >
               Save Stage
             </button>
@@ -158,20 +161,33 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           <h2 className="font-bold text-sm text-gray-900">Edit lead</h2>
           <form action={asFormAction(updateLead)} className="grid md:grid-cols-2 gap-3 text-xs">
             <input type="hidden" name="id" value={lead.id} />
-            <select name="contact_id" defaultValue={lead.contact_id || ''} className="border rounded-lg px-2 py-2">
-              <option value="">No contact</option>
-              {(contacts || []).filter((c) => c.company_id === lead.company_id).map((c) => (
-                <option key={c.id} value={c.id}>{c.full_name}</option>
-              ))}
-            </select>
-            <select name="source" defaultValue={lead.source || 'other'} className="border rounded-lg px-2 py-2">
-              <option value="inbound">Inbound</option>
-              <option value="referral">Referral</option>
-              <option value="event">Event</option>
-              <option value="outbound">Outbound</option>
-              <option value="website">Website</option>
-              <option value="other">Other</option>
-            </select>
+            <MobileSheetSelect
+              name="contact_id"
+              label="Contact"
+              defaultValue={lead.contact_id || ''}
+              emptyLabel="No contact"
+              options={[
+                { value: '', label: 'No contact' },
+                ...(contacts || [])
+                  .filter((c) => c.company_id === lead.company_id)
+                  .map((c) => ({ value: c.id, label: c.full_name })),
+              ]}
+              desktopClassName="w-full border rounded-lg px-2 py-2 text-xs"
+            />
+            <MobileSheetSelect
+              name="source"
+              label="Source"
+              defaultValue={lead.source || 'other'}
+              options={[
+                { value: 'inbound', label: 'Inbound' },
+                { value: 'referral', label: 'Referral' },
+                { value: 'event', label: 'Event' },
+                { value: 'outbound', label: 'Outbound' },
+                { value: 'website', label: 'Website' },
+                { value: 'other', label: 'Other' },
+              ]}
+              desktopClassName="w-full border rounded-lg px-2 py-2 text-xs"
+            />
             <input name="estimated_value" type="number" min="0" step="0.01" defaultValue={lead.estimated_value || 0} className="border rounded-lg px-2 py-2" />
             <input name="next_follow_up_at" type="date" defaultValue={lead.next_follow_up_at ? String(lead.next_follow_up_at).slice(0, 10) : ''} className="border rounded-lg px-2 py-2" />
             <textarea name="notes" rows={3} defaultValue={lead.notes || ''} className="md:col-span-2 border rounded-lg px-2 py-2" />

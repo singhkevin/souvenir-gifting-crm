@@ -1,8 +1,9 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Brand wordmark used everywhere.
- * Thin upright dash via inline styles so it never inherits Cormorant’s slanted/bold hyphen.
+ * Brand wordmark. Inherits surrounding font, weight, and color so inline
+ * body/footer copy doesn’t look thin or faded. Display spots pass font-serif.
+ * Dash is a plain horizontal rule (Cormorant’s hyphen glyph leans).
  */
 export function BrandName({
   className,
@@ -12,22 +13,18 @@ export function BrandName({
   as?: 'span' | 'h1' | 'p' | 'div'
 }) {
   return (
-    <Tag
-      className={cn('font-serif font-normal not-italic tracking-normal', className)}
-      style={{ fontWeight: 400, fontStyle: 'normal' }}
-    >
+    <Tag className={cn('not-italic', className)}>
       Souvenir
       <span
         aria-hidden="true"
         style={{
           display: 'inline-block',
-          width: '0.42em',
-          height: '0.06em',
+          width: '0.4em',
+          height: '0.08em',
           marginLeft: '0.28em',
           marginRight: '0.28em',
-          marginBottom: '0.22em',
+          marginBottom: '0.18em',
           backgroundColor: 'currentColor',
-          opacity: 0.7,
           verticalAlign: 'middle',
           borderRadius: 1,
           flexShrink: 0,

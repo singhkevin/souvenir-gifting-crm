@@ -3,6 +3,23 @@ import { requireStaff } from '@/lib/auth'
 import { createCompany } from '../actions'
 import { BackButton } from '@/components/ui/back-button'
 import { asFormAction } from '@/lib/form-action'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+
+const INDUSTRY_OPTIONS = [
+  { value: '', label: 'Select Industry' },
+  { value: 'IT', label: 'IT' },
+  { value: 'Finance', label: 'Finance' },
+  { value: 'Healthcare', label: 'Healthcare' },
+  { value: 'Retail', label: 'Retail' },
+  { value: 'Manufacturing', label: 'Manufacturing' },
+  { value: 'Other', label: 'Other' },
+]
+
+const COMPANY_STATUS_OPTIONS = [
+  { value: 'prospect', label: 'Prospect' },
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+]
 
 export default async function NewCompanyPage() {
   const profile = await requireStaff(['admin', 'sales'])
@@ -26,16 +43,14 @@ export default async function NewCompanyPage() {
             <input type="text" name="name" required className="w-full p-2 border border-[var(--color-border)] rounded" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Industry</label>
-            <select name="industry" className="w-full p-2 border border-[var(--color-border)] rounded">
-              <option value="">Select Industry</option>
-              <option value="IT">IT</option>
-              <option value="Finance">Finance</option>
-              <option value="Healthcare">Healthcare</option>
-              <option value="Retail">Retail</option>
-              <option value="Manufacturing">Manufacturing</option>
-              <option value="Other">Other</option>
-            </select>
+            <span className="mb-1 block text-sm font-medium hidden md:block">Industry</span>
+            <MobileSheetSelect
+              name="industry"
+              label="Industry"
+              emptyLabel="Select Industry"
+              options={INDUSTRY_OPTIONS}
+              desktopClassName="w-full p-2 border border-[var(--color-border)] rounded"
+            />
           </div>
         </div>
 
@@ -66,20 +81,27 @@ export default async function NewCompanyPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-1">Assigned salesperson</label>
-            <select name="owner_id" defaultValue={profile.id} className="w-full p-2 border border-[var(--color-border)] rounded">
-              {(owners || []).map((o) => (
-                <option key={o.id} value={o.id}>{o.full_name || o.id}</option>
-              ))}
-            </select>
+            <span className="mb-1 block text-sm font-medium hidden md:block">Assigned salesperson</span>
+            <MobileSheetSelect
+              name="owner_id"
+              label="Assigned salesperson"
+              defaultValue={profile.id}
+              options={(owners || []).map((o) => ({
+                value: o.id,
+                label: o.full_name || o.id,
+              }))}
+              desktopClassName="w-full p-2 border border-[var(--color-border)] rounded"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <select name="status" defaultValue="active" className="w-full p-2 border border-[var(--color-border)] rounded">
-              <option value="prospect">Prospect</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <span className="mb-1 block text-sm font-medium hidden md:block">Status</span>
+            <MobileSheetSelect
+              name="status"
+              label="Status"
+              defaultValue="active"
+              options={COMPANY_STATUS_OPTIONS}
+              desktopClassName="w-full p-2 border border-[var(--color-border)] rounded"
+            />
           </div>
         </div>
 
