@@ -1,4 +1,4 @@
-/* Souvenir Gifting Solutions PWA service worker */
+/* Souvenir - Gifting Solutions PWA service worker */
 const CACHE = 'souvenir-pwa-v2'
 const PRECACHE = ['/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png']
 

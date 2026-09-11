@@ -15,10 +15,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return { title: 'Product' }
   return {
     title: product.name,
-    description: product.description || `${product.name} — Souvenir Gifting Solutions corporate gifting catalogue.`,
+    description: product.description || `${product.name} — Souvenir - Gifting Solutions corporate gifting catalogue.`,
     openGraph: {
-      title: `${product.name} · Souvenir Gifting Solutions`,
-      description: product.description || 'Corporate gifting from Souvenir Gifting Solutions.',
+      title: `${product.name} · Souvenir - Gifting Solutions`,
+      description: product.description || 'Corporate gifting from Souvenir - Gifting Solutions.',
       images: product.image_url ? [{ url: product.image_url }] : undefined,
     },
   }

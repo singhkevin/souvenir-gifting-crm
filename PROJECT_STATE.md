@@ -1,9 +1,9 @@
-# Project state — Souvenir Gifting Solutions Corporate Gifting CRM
+# Project state — Souvenir - Gifting Solutions Corporate Gifting CRM
 
 Last updated: 2026-09-03
 
-This is the existing Souvenir Gifting Solutions application (not a new project). Earlier revisions
-carried an "Oaklane" product name in the UI; the displayed brand is now Souvenir Gifting Solutions.
+This is the existing Souvenir - Gifting Solutions application (not a new project). Earlier revisions
+carried an "Oaklane" product name in the UI; the displayed brand is now Souvenir - Gifting Solutions.
 The `*@oaklane.demo` login addresses are real Supabase credentials and must not be
 renamed.
 

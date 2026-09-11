@@ -9,7 +9,7 @@ import { isUuid } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Catalogue',
-  description: 'Browse the Souvenir Gifting Solutions corporate gifting catalogue.',
+  description: 'Browse the Souvenir - Gifting Solutions corporate gifting catalogue.',
 }
 
 const BUDGETS = [

@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const collection = collectionBySlug(slug)
   return {
     title: collection?.title || 'Collection',
-    description: collection?.description || 'A Souvenir Gifting Solutions catalogue collection.',
+    description: collection?.description || 'A Souvenir - Gifting Solutions catalogue collection.',
   }
 }
 
