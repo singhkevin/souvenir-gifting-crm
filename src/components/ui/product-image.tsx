@@ -42,7 +42,7 @@ function Fallback({ alt, compact }: { alt: string; compact: boolean }) {
 
 /**
  * Safe product thumbnail. Broken, empty, null and failed URLs all resolve
- * to the same Souvenir - Gifting Solutions placeholder — never a browser broken-image icon.
+ * to the same Souvenir Gifting Solutions placeholder — never a browser broken-image icon.
  */
 export function ProductImage({
   src,

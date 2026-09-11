@@ -27,10 +27,10 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 export const metadata: Metadata = {
-  title: 'Souvenir - Gifting Solutions — Corporate Gifting',
+  title: 'Souvenir Gifting Solutions — Corporate Gifting',
   description:
     'Curated corporate gifts for teams, clients and brands — catalogue, quotation and fulfilment in one place.',
-  applicationName: 'Souvenir - Gifting Solutions',
+  applicationName: 'Souvenir Gifting Solutions',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,

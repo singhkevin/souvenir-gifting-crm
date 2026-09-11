@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next'
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'Souvenir - Gifting Solutions',
+    name: 'Souvenir Gifting Solutions',
     short_name: 'Souvenir',
     description:
       'Corporate gifting CRM and catalogue - browse gifts, request quotes, and manage fulfilment.',
