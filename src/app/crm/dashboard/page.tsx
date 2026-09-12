@@ -4,6 +4,7 @@ import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { ORDER_LIFECYCLE, ORDER_STATUS_LABELS, orderHealth } from '@/lib/order-workflow'
 import { entityHref, describeAudit } from '@/lib/entity-href'
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { MobileDateRangeFilter } from '@/components/ui/mobile-filter-sheet'
 
 function Card({ label, value, href, warn }: { label: string; value: string | number; href?: string; warn?: boolean }) {
@@ -284,9 +285,20 @@ export default async function DashboardPage({
           <h1 className="font-serif text-2xl text-[#1C1917] sm:text-3xl">Good day, {greeting}</h1>
           <p className="mt-1 text-xs text-[#7A7267]">{roleTitle}</p>
         </div>
-        {(profile.role === 'admin' || profile.role === 'management') && (
-          <MobileDateRangeFilter from={from || ''} to={to || ''} submitLabel="Filter" className="w-full sm:w-auto" />
-        )}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          {(profile.role === 'admin' || profile.role === 'sales') && (
+            <Link
+              href="/crm/products/add"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#1A3022] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#274433] sm:w-auto"
+            >
+              <Plus size={16} />
+              Add Product
+            </Link>
+          )}
+          {(profile.role === 'admin' || profile.role === 'management') && (
+            <MobileDateRangeFilter from={from || ''} to={to || ''} submitLabel="Filter" className="w-full sm:w-auto" />
+          )}
+        </div>
       </div>
 
       {(profile.role === 'admin' || profile.role === 'management') && (

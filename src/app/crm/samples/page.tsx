@@ -36,7 +36,11 @@ export default async function SamplesPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">Sample Management</h1>
-        <p className="text-xs text-[#7A7267] mt-1">Track physical samples in office, with the team, with a client, or pending from a supplier.</p>
+        <p className="text-xs text-[#7A7267] mt-1">
+          Track physical samples in office, with the team, with a client, or pending from a supplier. Use{' '}
+          <span className="font-semibold text-[#1A3022]">Send to client</span> on any product below to dispatch samples
+          directly to a company.
+        </p>
       </div>
 
       {error ? (
@@ -128,43 +132,89 @@ export default async function SamplesPage({
                   <td className="p-3">{sample.pending_supplier || 0}</td>
                   {showCost && <td className="p-3">{formatCurrency(sample.unit_cost)}</td>}
                   <td className="p-3">
-                    <form action={asFormAction(moveSample)} className="grid grid-cols-2 gap-1 text-[11px] min-w-[220px]">
-                      <input type="hidden" name="stock_id" value={sample.id} />
-                      <MobileSheetSelect
-                        name="from_holder"
-                        label="From"
-                        defaultValue="office"
-                        options={[
-                          { value: 'office', label: 'From office' },
-                          { value: 'team', label: 'From team' },
-                          { value: 'client', label: 'From client' },
-                          { value: 'supplier', label: 'From supplier' },
-                        ]}
-                      />
-                      <MobileSheetSelect
-                        name="to_holder"
-                        label="To"
-                        defaultValue="team"
-                        options={[
-                          { value: 'team', label: 'To team' },
-                          { value: 'client', label: 'To client' },
-                          { value: 'office', label: 'To office' },
-                          { value: 'supplier', label: 'To supplier' },
-                        ]}
-                      />
-                      <input name="quantity" type="number" min="1" defaultValue={1} className="border rounded px-1 py-1" />
-                      <MobileSheetSelect
-                        name="company_id"
-                        label="Client"
-                        emptyLabel="Client (if needed)"
-                        options={[
-                          { value: '', label: 'Client (if needed)' },
-                          ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
-                        ]}
-                      />
-                      <input name="note" placeholder="Note / holder name" className="col-span-2 border rounded px-1 py-1" />
-                      <button className="col-span-2 border rounded py-1 font-semibold">Record movement</button>
-                    </form>
+                    <div className="min-w-[220px] space-y-2">
+                      <form
+                        action={asFormAction(moveSample)}
+                        className="space-y-1.5 rounded-lg border border-[#1A3022]/25 bg-[#F4EFE6] p-2 text-[11px]"
+                      >
+                        <input type="hidden" name="stock_id" value={sample.id} />
+                        <input type="hidden" name="to_holder" value="client" />
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#1A3022]">
+                          Send to client
+                        </p>
+                        <MobileSheetSelect
+                          name="from_holder"
+                          label="From"
+                          defaultValue="office"
+                          options={[
+                            { value: 'office', label: 'From office' },
+                            { value: 'team', label: 'From team' },
+                          ]}
+                        />
+                        <MobileSheetSelect
+                          name="company_id"
+                          label="Client"
+                          required
+                          emptyLabel="Select client"
+                          options={[
+                            { value: '', label: 'Select client' },
+                            ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
+                          ]}
+                        />
+                        <div className="grid grid-cols-2 gap-1">
+                          <input
+                            name="quantity"
+                            type="number"
+                            min="1"
+                            defaultValue={1}
+                            required
+                            className="rounded border px-1 py-1"
+                          />
+                          <button className="rounded bg-[#1A3022] py-1 font-semibold text-white">Send</button>
+                        </div>
+                        <input name="note" placeholder="Note (optional)" className="w-full rounded border px-1 py-1" />
+                      </form>
+
+                      <details className="text-[11px]">
+                        <summary className="cursor-pointer text-[#7A7267]">Other movement</summary>
+                        <form action={asFormAction(moveSample)} className="mt-1.5 grid grid-cols-2 gap-1">
+                          <input type="hidden" name="stock_id" value={sample.id} />
+                          <MobileSheetSelect
+                            name="from_holder"
+                            label="From"
+                            defaultValue="office"
+                            options={[
+                              { value: 'office', label: 'From office' },
+                              { value: 'team', label: 'From team' },
+                              { value: 'client', label: 'From client' },
+                              { value: 'supplier', label: 'From supplier' },
+                            ]}
+                          />
+                          <MobileSheetSelect
+                            name="to_holder"
+                            label="To"
+                            defaultValue="team"
+                            options={[
+                              { value: 'team', label: 'To team' },
+                              { value: 'office', label: 'To office' },
+                              { value: 'supplier', label: 'To supplier' },
+                            ]}
+                          />
+                          <input name="quantity" type="number" min="1" defaultValue={1} className="border rounded px-1 py-1" />
+                          <MobileSheetSelect
+                            name="company_id"
+                            label="Client"
+                            emptyLabel="Client (if needed)"
+                            options={[
+                              { value: '', label: 'Client (if needed)' },
+                              ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
+                            ]}
+                          />
+                          <input name="note" placeholder="Note / holder name" className="col-span-2 border rounded px-1 py-1" />
+                          <button className="col-span-2 border rounded py-1 font-semibold">Record movement</button>
+                        </form>
+                      </details>
+                    </div>
                   </td>
                 </tr>
               )
