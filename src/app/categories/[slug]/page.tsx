@@ -33,9 +33,6 @@ export default async function CategoryDetailPage({ params }: Props) {
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <p className="store-eyebrow">Category</p>
           <h1 className="store-section-title mt-2">{name}</h1>
-          <p className="mt-3 text-sm text-[#5C6570]">
-            {filtered.length} {filtered.length === 1 ? 'gift' : 'gifts'}
-          </p>
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

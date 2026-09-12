@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { BrandName } from '@/components/brand/brand-name'
 import { SiteShell } from '@/components/site/site-shell'
 import { CATALOGUE_COLLECTIONS, CATALOGUE_OCCASIONS } from '@/lib/catalogue/collections'
-import { getPublicCatalogueProducts } from '@/lib/catalogue/products'
 
 const ARROW = '\u2192'
 
@@ -12,9 +11,7 @@ export const metadata: Metadata = {
   description: 'Editorial Souvenir - Gifting Solutions collections and corporate occasions, grouped from the existing catalogue.',
 }
 
-export default async function CollectionsPage() {
-  const products = await getPublicCatalogueProducts()
-
+export default function CollectionsPage() {
   return (
     <SiteShell>
       <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
@@ -29,23 +26,20 @@ export default async function CollectionsPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {CATALOGUE_COLLECTIONS.map((collection) => {
-            const count = products.filter(collection.match).length
-            return (
-              <Link
-                key={collection.slug}
-                href={`/collections/${collection.slug}`}
-                className="rounded-md border border-[#E8E4DE] bg-white px-6 py-8 transition-shadow hover:shadow-[0_8px_24px_rgba(27,36,48,0.08)]"
-              >
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#5C6570]">{collection.kicker}</p>
-                <p className="mt-3 font-serif text-2xl text-[#1B2430]">{collection.title}</p>
-                <p className="mt-3 text-sm leading-relaxed text-[#5C6570]">{collection.description}</p>
-                <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]">
-                  {count} gifts · Explore {ARROW}
-                </p>
-              </Link>
-            )
-          })}
+          {CATALOGUE_COLLECTIONS.map((collection) => (
+            <Link
+              key={collection.slug}
+              href={`/collections/${collection.slug}`}
+              className="rounded-md border border-[#E8E4DE] bg-white px-6 py-8 transition-shadow hover:shadow-[0_8px_24px_rgba(27,36,48,0.08)]"
+            >
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#5C6570]">{collection.kicker}</p>
+              <p className="mt-3 font-serif text-2xl text-[#1B2430]">{collection.title}</p>
+              <p className="mt-3 text-sm leading-relaxed text-[#5C6570]">{collection.description}</p>
+              <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]">
+                Explore {ARROW}
+              </p>
+            </Link>
+          ))}
         </div>
 
         <section id="occasions" className="mt-16 scroll-mt-28 border-t border-[#E8E4DE] pt-14">

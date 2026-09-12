@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Menu, Search, User, X } from 'lucide-react'
@@ -8,11 +9,11 @@ import { BrandName } from '@/components/brand/brand-name'
 import { PwaInstallButton } from '@/components/pwa/pwa-install-button'
 
 const PRIMARY_NAV = [
+  { href: '/about', label: 'About' },
   { href: '/catalogue', label: 'Catalogue' },
   { href: '/collections', label: 'Collections' },
   { href: '/categories', label: 'Categories' },
   { href: '/collections#occasions', label: 'Occasions' },
-  { href: '/about', label: 'About' },
 ]
 
 type Suggestion = {
@@ -146,8 +147,8 @@ export function SiteHeader({
       {/* Main nav / mobile bar */}
       <div className="border-b border-[#E8E4DE] bg-white">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
-          <Link href="/home" className="font-serif text-lg tracking-[0.04em] text-[#1B2430] sm:text-xl">
-            <BrandName />
+          <Link href="/home" className="flex items-center">
+            <Image src="/logo.png" alt="Souvenir Gifting Solutions" width={196} height={85} className="h-10 w-auto sm:h-11" priority />
           </Link>
 
           <nav className="hidden items-center gap-5 text-[13px] text-[#1B2430] lg:flex xl:gap-7">
@@ -156,14 +157,6 @@ export function SiteHeader({
                 {item.label}
               </Link>
             ))}
-            {categoryLinks.slice(0, 3).map((item) => (
-              <Link key={item.href} href={item.href} className="hidden text-[#5C6570] hover:text-[#1A3022] xl:inline">
-                {item.label}
-              </Link>
-            ))}
-            <Link href="/catalogue" className="text-[12px] font-medium uppercase tracking-[0.12em] text-[#1A3022]">
-              Shop all
-            </Link>
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-2 lg:hidden">

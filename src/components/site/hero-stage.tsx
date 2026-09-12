@@ -6,18 +6,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ProductImage } from '@/components/ui/product-image'
 import { formatCurrency } from '@/lib/utils'
 import type { PublicProduct } from '@/lib/catalogue/products'
-import { BrandName } from '@/components/brand/brand-name'
 
 const SLOT_COUNT = 4
 const SLIDE_MS = 3500
 const FADE_MS = 700
-
-const SLOT_LAYOUT = [
-  { className: 'left-2 top-2 w-[14.5rem]', z: 20 },
-  { className: 'right-2 top-10 w-[13.5rem]', z: 30 },
-  { className: 'left-10 bottom-2 w-[15rem]', z: 40 },
-  { className: 'right-8 bottom-12 w-[13rem]', z: 10 },
-] as const
 
 type TransitionPhase = 'idle' | 'out' | 'in'
 
@@ -41,10 +33,8 @@ function nextBatch(pool: PublicProduct[], start: number, count: number, avoid: s
 
 export function HeroStage({
   products,
-  catalogueCount,
 }: {
   products: PublicProduct[]
-  catalogueCount: number
 }) {
   const pool = useMemo(
     () => products.filter((product) => Boolean(product.image_url?.trim())),
@@ -123,14 +113,15 @@ export function HeroStage({
 
       <div className="relative mx-auto grid min-h-[auto] max-w-7xl items-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 lg:min-h-[78vh] lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
         <div>
-          <BrandName
-            as="p"
-            className="font-serif text-[1.85rem] leading-tight tracking-[0.04em] text-white sm:text-5xl lg:text-6xl"
-          />
-          <h1 className="mt-4 max-w-xl font-serif text-[1.75rem] leading-tight tracking-tight text-white/95 sm:mt-5 sm:text-4xl lg:text-[2.75rem]">
-            Corporate gifting, designed to be remembered.
+          <h1 className="max-w-2xl font-serif leading-[1.2] tracking-tight">
+            <span className="block text-[1.75rem] font-semibold italic text-[#F4EFE6] sm:text-[2.1rem] lg:text-[2.5rem] xl:text-[3.3rem]">
+              Corporate gifting,
+            </span>
+            <span className="mt-1 block text-[1.75rem] font-semibold italic text-[#F4EFE6] sm:mt-2 sm:text-[2.1rem] lg:text-[2.5rem] xl:text-[3.3rem]">
+              designed to be remembered.
+            </span>
           </h1>
-          <p className="mt-4 max-w-md text-sm leading-relaxed text-white/80 sm:mt-5 sm:text-base">
+          <p className="mt-5 max-w-md text-sm leading-relaxed text-white/80 sm:mt-6 sm:text-base">
             Hand-picked gifts for teams, clients and brands — ready to quote and fulfil.
           </p>
           <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
@@ -147,9 +138,6 @@ export function HeroStage({
               Request a Quote
             </Link>
           </div>
-          <p className="mt-5 text-xs tracking-wide text-white/70 sm:mt-6">
-            {catalogueCount} gifts in the live catalogue
-          </p>
         </div>
 
         {/* Mobile product preview strip */}
@@ -186,36 +174,32 @@ export function HeroStage({
         ) : null}
 
         {/* Desktop collage */}
-        <div className="relative mx-auto hidden h-[32rem] w-full max-w-[30rem] lg:block">
-          {floats.map((product, index) => {
-            const layout = SLOT_LAYOUT[index % SLOT_LAYOUT.length]
-            return (
-              <Link
-                key={`slot-${index}`}
-                href={`/catalogue/${product.id}`}
-                className={`absolute overflow-hidden rounded-md bg-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] ${layout.className}`}
-                style={{ zIndex: layout.z }}
-              >
-                <div className={`transition-opacity duration-700 ease-in-out ${contentClass}`}>
-                  <div className="aspect-square catalogue-studio-field">
-                    <ProductImage
-                      src={product.image_url}
-                      alt={product.name}
-                      size="md"
-                      fit="contain"
-                      fadeEdges
-                      className="h-full w-full bg-transparent"
-                      imgClassName="catalogue-product-img scale-[1.04]"
-                    />
-                  </div>
-                  <div className="border-t border-[#E8E4DE] bg-white px-3 py-2.5 text-[#1B2430]">
-                    <p className="truncate text-center text-[12px] leading-snug">{product.name}</p>
-                    <p className="mt-0.5 text-center text-[11px] font-semibold text-[#1A3022]">View gift</p>
-                  </div>
+        <div className="mx-auto hidden w-full max-w-md grid-cols-2 gap-5 lg:grid">
+          {floats.map((product, index) => (
+            <Link
+              key={`slot-${index}`}
+              href={`/catalogue/${product.id}`}
+              className="overflow-hidden rounded-md bg-white shadow-[0_16px_40px_rgba(0,0,0,0.28)]"
+            >
+              <div className={`transition-opacity duration-700 ease-in-out ${contentClass}`}>
+                <div className="aspect-square catalogue-studio-field">
+                  <ProductImage
+                    src={product.image_url}
+                    alt={product.name}
+                    size="md"
+                    fit="contain"
+                    fadeEdges
+                    className="h-full w-full bg-transparent"
+                    imgClassName="catalogue-product-img scale-[1.04]"
+                  />
                 </div>
-              </Link>
-            )
-          })}
+                <div className="border-t border-[#E8E4DE] bg-white px-3 py-2.5 text-[#1B2430]">
+                  <p className="truncate text-center text-[12px] leading-snug">{product.name}</p>
+                  <p className="mt-0.5 text-center text-[11px] font-semibold text-[#1A3022]">View gift</p>
+                </div>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </section>

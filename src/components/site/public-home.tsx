@@ -6,7 +6,7 @@ import { SiteProductCard } from '@/components/site/site-product-card'
 import { HeroStage } from '@/components/site/hero-stage'
 import { ProductRail } from '@/components/site/product-rail'
 import { Reveal } from '@/components/site/reveal'
-import { formatCurrency, slugify } from '@/lib/utils'
+import { slugify } from '@/lib/utils'
 import {
   BUDGET_BANDS,
   CATALOGUE_COLLECTIONS,
@@ -31,7 +31,6 @@ export async function PublicHome() {
   const categories = homeCategoryTiles(await getPublicCategories(), 6)
   const collections = CATALOGUE_COLLECTIONS.filter((collection) => products.some(collection.match)).slice(0, 6)
   const {
-    story,
     heroProducts,
     categorySamples,
     collectionSamples,
@@ -70,10 +69,7 @@ export async function PublicHome() {
 
   return (
     <div className="bg-white">
-      <HeroStage
-        products={heroSlideshow.length ? heroSlideshow : heroProducts}
-        catalogueCount={products.length}
-      />
+      <HeroStage products={heroSlideshow.length ? heroSlideshow : heroProducts} />
 
       {/* Top Trending — Bombay Store pattern */}
       <section className="bg-white py-10 sm:py-14 lg:py-16">
@@ -112,7 +108,6 @@ export async function PublicHome() {
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:gap-5">
             {categories.map((category, index) => {
               const sample = categorySamples.get(category.id) || null
-              const count = products.filter((product) => product.category_id === category.id).length
               return (
                 <Reveal key={category.id} delay={(index % 3) * 50}>
                   <Link
@@ -134,9 +129,11 @@ export async function PublicHome() {
                     </div>
                     <div className="border-t border-[#E8E4DE] px-3 py-3 text-center sm:px-4 sm:py-4">
                       <p className="font-serif text-lg text-[#1B2430] sm:text-xl">{category.name}</p>
-                      <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#5C6570]">
-                        {CATEGORY_LINES[category.name] || `${count} gifts`}
-                      </p>
+                      {CATEGORY_LINES[category.name] ? (
+                        <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#5C6570]">
+                          {CATEGORY_LINES[category.name]}
+                        </p>
+                      ) : null}
                     </div>
                   </Link>
                 </Reveal>
@@ -154,8 +151,7 @@ export async function PublicHome() {
         </div>
         <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">Built for programmes</p>
-            <h2 className="mx-auto mt-4 max-w-3xl font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">
+            <h2 className="mx-auto max-w-3xl font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">
               Gifts that represent your brand.
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/80">
@@ -175,8 +171,15 @@ export async function PublicHome() {
       <section className="bg-white py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <p className="store-eyebrow">Collections</p>
-            <h2 className="store-section-title mt-2">Curated for every brief.</h2>
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="store-eyebrow">Collections</p>
+                <h2 className="store-section-title mt-2">Curated for every brief.</h2>
+              </div>
+              <Link href="/collections" className="store-link shrink-0">
+                View all {ARROW}
+              </Link>
+            </div>
           </Reveal>
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {collections.map((collection, index) => {
@@ -215,46 +218,6 @@ export async function PublicHome() {
           </div>
         </div>
       </section>
-
-      {/* Featured gift story */}
-      {story ? (
-        <section className="bg-[#F6F4F1] py-10 sm:py-16 lg:py-20">
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
-            <Reveal>
-              <div className="relative aspect-square overflow-hidden rounded-md catalogue-studio-field">
-                <ProductImage
-                  src={story.image_url}
-                  alt={story.name}
-                  size="md"
-                  fit="contain"
-                  fadeEdges
-                  className="h-full w-full bg-transparent"
-                  imgClassName="catalogue-product-img scale-[1.04]"
-                />
-              </div>
-            </Reveal>
-            <Reveal delay={100}>
-              <p className="store-eyebrow">Featured corporate gift</p>
-              <h2 className="mt-3 font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">
-                One gift. A lasting impression.
-              </h2>
-              <p className="mt-4 text-[11px] uppercase tracking-[0.16em] text-[#5C6570]">{story.category_name}</p>
-              <p className="mt-3 font-serif text-2xl text-[#1B2430]">{story.name}</p>
-              <p className="mt-4 max-w-md text-base leading-relaxed text-[#5C6570]">
-                {story.description ||
-                  'A catalogue piece selected for presence, practicality and programme-ready quoting.'}
-              </p>
-              <p className="mt-5 text-xl font-semibold text-[#1A3022]">{formatCurrency(story.price)}</p>
-              <Link
-                href={`/catalogue/${story.id}`}
-                className="mt-8 inline-flex bg-[#1A3022] px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
-              >
-                View Product
-              </Link>
-            </Reveal>
-          </div>
-        </section>
-      ) : null}
 
       {/* Shop by Occasion */}
       <section className="bg-white py-10 sm:py-14 lg:py-16">
@@ -309,13 +272,10 @@ export async function PublicHome() {
               {budgetCounts.map((band) => (
                 <Link
                   key={band.id}
-                  href={`/catalogue?budget=${band.id}`}
+                  href={`/catalogue?budget=${encodeURIComponent(band.id)}`}
                   className="rounded-md border border-[#E8E4DE] bg-white px-4 py-6 text-center transition-shadow hover:shadow-[0_8px_20px_rgba(27,36,48,0.07)]"
                 >
                   <p className="font-serif text-xl text-[#1B2430]">{band.label}</p>
-                  <p className="mt-2 text-xs text-[#5C6570]">
-                    {band.count} {band.count === 1 ? 'gift' : 'gifts'}
-                  </p>
                 </Link>
               ))}
             </div>
@@ -349,8 +309,15 @@ export async function PublicHome() {
         <section className="bg-[#F6F4F1] py-10 sm:py-14 lg:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Reveal>
-              <p className="store-eyebrow">Keep browsing</p>
-              <h2 className="store-section-title mt-2">More from the collection.</h2>
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <p className="store-eyebrow">Keep browsing</p>
+                  <h2 className="store-section-title mt-2">More from the collection.</h2>
+                </div>
+                <Link href="/catalogue" className="store-link shrink-0">
+                  View all {ARROW}
+                </Link>
+              </div>
             </Reveal>
             <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
               {more.map((product) => (

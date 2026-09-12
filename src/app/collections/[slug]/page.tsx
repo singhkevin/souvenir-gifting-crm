@@ -29,9 +29,6 @@ export default async function CollectionDetailPage({ params }: Props) {
           <p className="store-eyebrow">{collection.kicker}</p>
           <h1 className="store-section-title mt-2">{collection.title}</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">{collection.description}</p>
-          <p className="mt-4 text-xs text-[#5C6570]">
-            {products.length} {products.length === 1 ? 'gift' : 'gifts'}
-          </p>
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

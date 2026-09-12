@@ -5,6 +5,7 @@ import { SiteShell } from '@/components/site/site-shell'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
 import { MobileCatalogueFilters } from '@/components/site/mobile-catalogue-filters'
 import { getPublicCatalogueProducts, getPublicCategories, sanitiseCatalogueSearch } from '@/lib/catalogue/products'
+import { BUDGET_BANDS } from '@/lib/catalogue/collections'
 import { isUuid } from '@/lib/utils'
 
 export const metadata: Metadata = {
@@ -12,18 +13,7 @@ export const metadata: Metadata = {
   description: 'Browse the Souvenir - Gifting Solutions corporate gifting catalogue.',
 }
 
-const BUDGETS = [
-  { id: '', label: 'Any budget' },
-  { id: '0-500', label: 'Under ₹500', min: 0, max: 500 },
-  { id: '500-1000', label: '₹500–1,000', min: 500, max: 1000 },
-  { id: '500-1500', label: '₹500–1,500', min: 500, max: 1500 },
-  { id: '1000-2000', label: '₹1,000–₹2,000', min: 1000, max: 2000 },
-  { id: '1500-3000', label: '₹1,500–3,000', min: 1500, max: 3000 },
-  { id: '2000-5000', label: '₹2,000–₹5,000', min: 2000, max: 5000 },
-  { id: '2000+', label: 'Premium Gifts', min: 2000, max: Infinity },
-  { id: '5000+', label: 'Premium', min: 5000, max: Infinity },
-  { id: '3000+', label: '₹3,000+', min: 3000, max: Infinity },
-] as const
+const BUDGETS = [{ id: '', label: 'Any budget' }, ...BUDGET_BANDS] as const
 
 function parseBudget(value: string) {
   return BUDGETS.find((budget) => budget.id === value && 'min' in budget) as
@@ -86,10 +76,7 @@ export default async function CataloguePage({
 
   const budgetChips = [
     { id: '', label: 'Any budget' },
-    { id: '0-500', label: 'Under ₹500' },
-    { id: '500-1000', label: '₹500–1,000' },
-    { id: '1000-2000', label: '₹1,000–₹2,000' },
-    { id: '2000+', label: 'Premium Gifts' },
+    ...BUDGET_BANDS.map(({ id, label }) => ({ id, label })),
   ]
 
   const categoryCounts = new Map<string, number>()
