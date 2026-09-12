@@ -148,7 +148,7 @@ export function SiteHeader({
       <div className="border-b border-[#E8E4DE] bg-white">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
           <Link href="/home" className="flex items-center">
-            <Image src="/logo.png" alt="Souvenir Gifting Solutions" width={196} height={85} className="h-10 w-auto sm:h-11" priority />
+            <Image src="/logo.png" alt="Souvenir Gifting Solutions" width={196} height={85} className="h-[52px] w-auto sm:h-[60px]" priority />
           </Link>
 
           <nav className="hidden items-center gap-5 text-[13px] text-[#1B2430] lg:flex xl:gap-7">
