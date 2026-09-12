@@ -16,6 +16,7 @@ import { asFormAction } from '@/lib/form-action'
 import { PortalClientForm } from '../portal-client-form'
 import { ManageClientLogin } from '../manage-client-login'
 import { CLIENT_STATUS_LABELS, ORDER_LIFECYCLE, lifecycleIndex } from '@/lib/order-workflow'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function CompanyDetailPage({
   params,
@@ -118,35 +119,35 @@ export default async function CompanyDetailPage({
       />
 
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 w-full items-center gap-4 sm:w-auto">
           <CompanyAvatar name={company.name} logoPath={company.logo_path} size="lg" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{company.name}</h1>
-            <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-bold text-gray-900 truncate">{company.name}</h1>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 mt-1">
               <span>{company.industry || 'Corporate Client'}</span>
               <span aria-hidden="true">·</span>
               <span>{company.city || 'India'}</span>
               {company.website && (
                 <>
                   <span aria-hidden="true">·</span>
-                  <a href={company.website} target="_blank" rel="noreferrer" className="text-[var(--color-primary)] hover:underline font-medium">
+                  <a href={company.website} target="_blank" rel="noreferrer" className="inline-block truncate max-w-[200px] align-bottom text-[var(--color-primary)] hover:underline font-medium">
                     {company.website}
                   </a>
                 </>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 mt-3">
-              <form action={uploadLogoAction} className="flex items-center gap-2">
+            <div className="flex flex-col items-start gap-2 mt-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+              <form action={uploadLogoAction} className="flex w-full items-center gap-2 sm:w-auto">
                 <input type="hidden" name="company_id" value={company.id} />
                 <input
                   type="file"
                   name="logo"
                   accept="image/png,image/jpeg,image/webp"
                   required
-                  className="text-[11px] file:mr-2 file:px-2 file:py-1 file:rounded-md file:border file:border-gray-200 file:bg-white file:text-[11px] file:font-medium"
+                  className="min-w-0 flex-1 text-[11px] file:mr-2 file:px-2 file:py-1 file:rounded-md file:border file:border-gray-200 file:bg-white file:text-[11px] file:font-medium sm:flex-none"
                 />
-                <button className="px-2.5 py-1 text-[11px] font-medium rounded-md border border-gray-200 hover:bg-gray-50">
+                <button className="shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-md border border-gray-200 hover:bg-gray-50">
                   {company.logo_path ? 'Change logo' : 'Upload logo'}
                 </button>
               </form>
@@ -162,7 +163,7 @@ export default async function CompanyDetailPage({
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex w-full flex-row items-center justify-between gap-2 sm:w-auto sm:flex-col sm:items-end">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
             company.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'
           }`}>
@@ -222,15 +223,20 @@ export default async function CompanyDetailPage({
               <span className="font-semibold text-gray-500">Name</span>
               <input name="name" required defaultValue={company.name} className="mt-1 w-full border rounded-lg px-3 py-2" />
             </label>
-            <label className="block">
-              <span className="font-semibold text-gray-500">Industry</span>
-              <select name="industry" defaultValue={company.industry || ''} className="mt-1 w-full border rounded-lg px-3 py-2 bg-white">
-                <option value="">Select Industry</option>
-                {['IT', 'Finance', 'Healthcare', 'Retail', 'Manufacturing', 'Other'].map((industry) => (
-                  <option key={industry} value={industry}>{industry}</option>
-                ))}
-              </select>
-            </label>
+            <MobileSheetSelect
+              name="industry"
+              label="Industry"
+              showDesktopLabel
+              defaultValue={company.industry || ''}
+              emptyLabel="Select Industry"
+              options={[
+                { value: '', label: 'Select Industry' },
+                ...['IT', 'Finance', 'Healthcare', 'Retail', 'Manufacturing', 'Other'].map((industry) => ({
+                  value: industry,
+                  label: industry,
+                })),
+              ]}
+            />
             <label className="block">
               <span className="font-semibold text-gray-500">Website</span>
               <input name="website" type="url" defaultValue={company.website || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
@@ -251,14 +257,17 @@ export default async function CompanyDetailPage({
               <span className="font-semibold text-gray-500">Country</span>
               <input name="country" defaultValue={company.country || 'India'} className="mt-1 w-full border rounded-lg px-3 py-2" />
             </label>
-            <label className="block">
-              <span className="font-semibold text-gray-500">Status</span>
-              <select name="status" defaultValue={company.status} className="mt-1 w-full border rounded-lg px-3 py-2 bg-white">
-                <option value="prospect">Prospect</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </label>
+            <MobileSheetSelect
+              name="status"
+              label="Status"
+              showDesktopLabel
+              defaultValue={company.status}
+              options={[
+                { value: 'prospect', label: 'Prospect' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+              ]}
+            />
             <label className="block md:col-span-2">
               <span className="font-semibold text-gray-500">Address</span>
               <textarea name="address" rows={2} defaultValue={company.address || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
@@ -303,20 +312,21 @@ export default async function CompanyDetailPage({
             </div>
 
             {canManageVisibility && (
-            <form action={addProductAction} className="flex items-center gap-2 w-full sm:w-auto">
-              <select
+            <form action={addProductAction} className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+              <MobileSheetSelect
                 name="product_id"
+                label="Product"
                 required
-                className="px-3 py-2 text-xs border border-gray-200 rounded-lg bg-white focus:ring-1 focus:ring-[#4A235A]"
-              >
-                <option value="">Select product to add...</option>
-                {unassignedProducts.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
-                ))}
-              </select>
+                className="w-full sm:w-64"
+                emptyLabel="Select product to add..."
+                options={[
+                  { value: '', label: 'Select product to add...' },
+                  ...unassignedProducts.map((p) => ({ value: p.id, label: `${p.name} (${p.sku})` })),
+                ]}
+              />
               <button
                 type="submit"
-                className="px-3 py-2 text-xs font-semibold text-white bg-[#4A235A] hover:bg-[#3d1c4a] hover:text-white rounded-lg transition-colors whitespace-nowrap"
+                className="inline-flex w-full items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-[#4A235A] hover:bg-[#3d1c4a] hover:text-white rounded-lg transition-colors whitespace-nowrap sm:w-auto"
               >
                 <Plus size={14} className="inline mr-1" /> Assign Product
               </button>
@@ -449,12 +459,17 @@ export default async function CompanyDetailPage({
             <input name="designation" placeholder="Designation" className="border rounded-lg px-3 py-2" />
             <input name="email" type="email" placeholder="Email" className="border rounded-lg px-3 py-2" />
             <input name="phone" placeholder="Phone" className="border rounded-lg px-3 py-2" />
-            <select name="contact_type" className="border rounded-lg px-3 py-2 bg-white">
-              <option value="primary">Primary</option>
-              <option value="billing">Billing</option>
-              <option value="procurement">Procurement</option>
-              <option value="other">Other</option>
-            </select>
+            <MobileSheetSelect
+              name="contact_type"
+              label="Contact type"
+              defaultValue="primary"
+              options={[
+                { value: 'primary', label: 'Primary' },
+                { value: 'billing', label: 'Billing' },
+                { value: 'procurement', label: 'Procurement' },
+                { value: 'other', label: 'Other' },
+              ]}
+            />
             <button className="bg-[#1A3022] text-white rounded-lg font-semibold py-2">Add contact</button>
           </form>
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

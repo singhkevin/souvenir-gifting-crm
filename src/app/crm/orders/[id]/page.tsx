@@ -25,6 +25,7 @@ import { ProductImage } from '@/components/ui/product-image'
 import { ClientTabs } from '@/components/ui/client-tabs'
 import { ShoppingBag, ChevronRight } from 'lucide-react'
 import { asFormAction } from '@/lib/form-action'
+import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 
 export default async function OrderDetailPage({
   params,
@@ -180,31 +181,44 @@ export default async function OrderDetailPage({
         <form action={asFormAction(handOffOrder)} className="bg-white p-6 rounded-2xl border border-gray-200 grid md:grid-cols-2 gap-3 text-xs">
           <input type="hidden" name="order_id" value={order.id} />
           <h3 className="md:col-span-2 font-bold text-sm">Stage hand-off</h3>
-          <label className="space-y-1">
-            <span className="text-gray-500">New stage</span>
-            <select name="status" defaultValue={order.status} className="w-full border rounded-lg px-2 py-2">
-              {ORDER_LIFECYCLE.map((s) => <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>)}
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="text-gray-500">Department</span>
-            <select name="department_id" defaultValue={order.current_department_id || ''} className="w-full border rounded-lg px-2 py-2">
-              <option value="">Keep current</option>
-              {(departments || []).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="text-gray-500">Assignee</span>
-            <select name="assigned_to" defaultValue={order.assigned_to || ''} className="w-full border rounded-lg px-2 py-2">
-              <option value="">Keep current</option>
-              {(staff || []).map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="text-gray-500">Stage due date</span>
-            <input type="date" name="stage_due" defaultValue={order.stage_due_at || ''} className="w-full border rounded-lg px-2 py-2" />
-          </label>
+          <MobileSheetSelect
+            name="status"
+            label="New stage"
+            showDesktopLabel
+            defaultValue={order.status}
+            options={[
+              ...ORDER_LIFECYCLE.map((s) => ({ value: s, label: ORDER_STATUS_LABELS[s] })),
+              { value: 'cancelled', label: 'Cancelled' },
+            ]}
+          />
+          <MobileSheetSelect
+            name="department_id"
+            label="Department"
+            showDesktopLabel
+            defaultValue={order.current_department_id || ''}
+            emptyLabel="Keep current"
+            options={[
+              { value: '', label: 'Keep current' },
+              ...(departments || []).map((d) => ({ value: d.id, label: d.name })),
+            ]}
+          />
+          <MobileSheetSelect
+            name="assigned_to"
+            label="Assignee"
+            showDesktopLabel
+            defaultValue={order.assigned_to || ''}
+            emptyLabel="Keep current"
+            options={[
+              { value: '', label: 'Keep current' },
+              ...(staff || []).map((s) => ({ value: s.id, label: s.full_name })),
+            ]}
+          />
+          <SheetDateField
+            name="stage_due"
+            label="Stage due date"
+            showDesktopLabel
+            defaultValue={order.stage_due_at || ''}
+          />
           <label className="md:col-span-2 space-y-1">
             <span className="text-gray-500">Next action</span>
             <input name="next_action" defaultValue={order.next_action || ''} className="w-full border rounded-lg px-2 py-2" />
@@ -310,29 +324,50 @@ export default async function OrderDetailPage({
             <div className="grid md:grid-cols-2 gap-6">
               <form action={handleAssignSupplier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                 <h3 className="font-bold">Supplier</h3>
-                <select name="supplier_id" defaultValue={order.supplier_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
-                  <option value="">Select</option>
-                  {suppliers?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+                <MobileSheetSelect
+                  name="supplier_id"
+                  label="Supplier"
+                  defaultValue={order.supplier_id || ''}
+                  disabled={!canStage}
+                  emptyLabel="Select"
+                  options={[
+                    { value: '', label: 'Select' },
+                    ...(suppliers || []).map((s) => ({ value: s.id, label: s.name })),
+                  ]}
+                />
                 {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save supplier</button>}
               </form>
 
               <form action={asFormAction(assignPrintingVendor)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                 <input type="hidden" name="order_id" value={order.id} />
                 <h3 className="font-bold">Printing vendor</h3>
-                <select name="printing_vendor_id" defaultValue={order.printing_vendor_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
-                  <option value="">Select</option>
-                  {printingVendors?.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-                </select>
+                <MobileSheetSelect
+                  name="printing_vendor_id"
+                  label="Printing vendor"
+                  defaultValue={order.printing_vendor_id || ''}
+                  disabled={!canStage}
+                  emptyLabel="Select"
+                  options={[
+                    { value: '', label: 'Select' },
+                    ...(printingVendors || []).map((v) => ({ value: v.id, label: v.name })),
+                  ]}
+                />
                 {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save printing vendor</button>}
               </form>
 
               <form action={handleAssignCourier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                 <h3 className="font-bold">Courier</h3>
-                <select name="courier_partner_id" defaultValue={order.courier_partner_id || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50">
-                  <option value="">Select</option>
-                  {courierPartners?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <MobileSheetSelect
+                  name="courier_partner_id"
+                  label="Courier"
+                  defaultValue={order.courier_partner_id || ''}
+                  disabled={!canStage}
+                  emptyLabel="Select"
+                  options={[
+                    { value: '', label: 'Select' },
+                    ...(courierPartners || []).map((c) => ({ value: c.id, label: c.name })),
+                  ]}
+                />
                 <input name="tracking_number" defaultValue={order.tracking_number || ''} placeholder="AWB / tracking number" disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
                 {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save shipping</button>}
               </form>
@@ -340,18 +375,27 @@ export default async function OrderDetailPage({
               <form action={asFormAction(recordDelivery)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                 <input type="hidden" name="order_id" value={order.id} />
                 <h3 className="font-bold">Dispatch &amp; delivery</h3>
-                <label className="block space-y-1">
-                  <span className="text-gray-500">Dispatch date</span>
-                  <input type="date" name="dispatch_date" defaultValue={order.dispatch_date || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
-                </label>
-                <label className="block space-y-1">
-                  <span className="text-gray-500">Expected delivery</span>
-                  <input type="date" name="expected_delivery_date" defaultValue={order.expected_delivery_date || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
-                </label>
-                <label className="block space-y-1">
-                  <span className="text-gray-500">Actual delivery</span>
-                  <input type="date" name="actual_delivery_date" defaultValue={order.actual_delivery_date || ''} disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
-                </label>
+                <SheetDateField
+                  name="dispatch_date"
+                  label="Dispatch date"
+                  showDesktopLabel
+                  defaultValue={order.dispatch_date || ''}
+                  disabled={!canStage}
+                />
+                <SheetDateField
+                  name="expected_delivery_date"
+                  label="Expected delivery"
+                  showDesktopLabel
+                  defaultValue={order.expected_delivery_date || ''}
+                  disabled={!canStage}
+                />
+                <SheetDateField
+                  name="actual_delivery_date"
+                  label="Actual delivery"
+                  showDesktopLabel
+                  defaultValue={order.actual_delivery_date || ''}
+                  disabled={!canStage}
+                />
                 {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save delivery dates</button>}
               </form>
             </div>

@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { autoMapHeaders, parseCsv } from '@/lib/csv'
 import { importCatalogueCsv, type ImportSummary } from './import-actions'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'name', label: 'Product name', required: true },
@@ -121,21 +122,18 @@ export function CatalogueCsvImporter() {
           <h2 className="text-sm font-bold text-gray-900">Column mapping</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {FIELD_LABELS.map((field) => (
-              <label key={field.key} className="text-xs">
-                <span className="font-semibold text-gray-700">
-                  {field.label}{field.required ? ' *' : ''}
-                </span>
-                <select
-                  value={mapping[field.key] || ''}
-                  onChange={(e) => setMapping((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                  className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg bg-white"
-                >
-                  <option value="">Ignore</option>
-                  {headers.map((header) => (
-                    <option key={header} value={header}>{header}</option>
-                  ))}
-                </select>
-              </label>
+              <MobileSheetSelect
+                key={field.key}
+                label={`${field.label}${field.required ? ' *' : ''}`}
+                showDesktopLabel
+                value={mapping[field.key] || ''}
+                onChange={(next) => setMapping((prev) => ({ ...prev, [field.key]: next }))}
+                emptyLabel="Ignore"
+                options={[
+                  { value: '', label: 'Ignore' },
+                  ...headers.map((header) => ({ value: header, label: header })),
+                ]}
+              />
             ))}
           </div>
 

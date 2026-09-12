@@ -3,6 +3,7 @@ import { requireStaff } from '@/lib/auth'
 import { createCompany } from '../actions'
 import { BackButton } from '@/components/ui/back-button'
 import { asFormAction } from '@/lib/form-action'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function NewCompanyPage() {
   const profile = await requireStaff(['admin', 'sales'])
@@ -25,18 +26,21 @@ export default async function NewCompanyPage() {
             <label className="block text-sm font-medium mb-1">Company Name *</label>
             <input type="text" name="name" required className="w-full p-2 border border-[var(--color-border)] rounded" />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Industry</label>
-            <select name="industry" className="w-full p-2 border border-[var(--color-border)] rounded">
-              <option value="">Select Industry</option>
-              <option value="IT">IT</option>
-              <option value="Finance">Finance</option>
-              <option value="Healthcare">Healthcare</option>
-              <option value="Retail">Retail</option>
-              <option value="Manufacturing">Manufacturing</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
+          <MobileSheetSelect
+            name="industry"
+            label="Industry"
+            showDesktopLabel
+            emptyLabel="Select Industry"
+            options={[
+              { value: '', label: 'Select Industry' },
+              { value: 'IT', label: 'IT' },
+              { value: 'Finance', label: 'Finance' },
+              { value: 'Healthcare', label: 'Healthcare' },
+              { value: 'Retail', label: 'Retail' },
+              { value: 'Manufacturing', label: 'Manufacturing' },
+              { value: 'Other', label: 'Other' },
+            ]}
+          />
         </div>
 
         <div>
@@ -65,22 +69,24 @@ export default async function NewCompanyPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium mb-1">Assigned salesperson</label>
-            <select name="owner_id" defaultValue={profile.id} className="w-full p-2 border border-[var(--color-border)] rounded">
-              {(owners || []).map((o) => (
-                <option key={o.id} value={o.id}>{o.full_name || o.id}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Status</label>
-            <select name="status" defaultValue="active" className="w-full p-2 border border-[var(--color-border)] rounded">
-              <option value="prospect">Prospect</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+          <MobileSheetSelect
+            name="owner_id"
+            label="Assigned salesperson"
+            showDesktopLabel
+            defaultValue={profile.id}
+            options={(owners || []).map((o) => ({ value: o.id, label: o.full_name || o.id }))}
+          />
+          <MobileSheetSelect
+            name="status"
+            label="Status"
+            showDesktopLabel
+            defaultValue="active"
+            options={[
+              { value: 'prospect', label: 'Prospect' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+          />
         </div>
 
         <div>

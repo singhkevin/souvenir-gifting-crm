@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { Receipt, Calendar, CreditCard, Building2, CheckCircle2 } from 'lucide-react'
 import { requireStaff } from '@/lib/auth'
+import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -131,16 +132,13 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
             <form action={handleRecordPayment} className="space-y-3 text-xs">
               <input type="hidden" name="invoice_id" value={invoice.id} />
               
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">Payment Date *</label>
-                <input
-                  type="date"
-                  name="payment_date"
-                  required
-                  defaultValue={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-1.5 border border-gray-200 rounded-lg"
-                />
-              </div>
+              <SheetDateField
+                name="payment_date"
+                label="Payment Date *"
+                required
+                showDesktopLabel
+                defaultValue={new Date().toISOString().split('T')[0]}
+              />
               
               <div>
                 <label className="block font-semibold text-gray-700 mb-1">Amount (?) *</label>
@@ -155,16 +153,20 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                 />
               </div>
 
-              <div>
-                <label className="block font-semibold text-gray-700 mb-1">Payment Method *</label>
-                <select name="method" required className="w-full px-3 py-1.5 border border-gray-200 rounded-lg bg-white">
-                  <option value="bank_transfer">Bank Transfer (NEFT/RTGS/IMPS)</option>
-                  <option value="upi">UPI</option>
-                  <option value="cheque">Cheque</option>
-                  <option value="credit_card">Corporate Card</option>
-                  <option value="cash">Cash</option>
-                </select>
-              </div>
+              <MobileSheetSelect
+                name="method"
+                label="Payment Method *"
+                required
+                showDesktopLabel
+                defaultValue="bank_transfer"
+                options={[
+                  { value: 'bank_transfer', label: 'Bank Transfer (NEFT/RTGS/IMPS)' },
+                  { value: 'upi', label: 'UPI' },
+                  { value: 'cheque', label: 'Cheque' },
+                  { value: 'credit_card', label: 'Corporate Card' },
+                  { value: 'cash', label: 'Cash' },
+                ]}
+              />
 
               <div>
                 <label className="block font-semibold text-gray-700 mb-1">Reference / UTR</label>

@@ -129,16 +129,21 @@ export function MobileFilterTrigger({
   label,
   value,
   onClick,
+  disabled = false,
 }: {
   label: string
   value: string
   onClick: () => void
+  disabled?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-md border border-[#E8E4DE] bg-[#F6F4F1] px-3.5 py-3 text-left"
+      disabled={disabled}
+      className={`w-full rounded-md border border-[#E8E4DE] bg-[#F6F4F1] px-3.5 py-3 text-left ${
+        disabled ? 'cursor-not-allowed opacity-60' : ''
+      }`}
     >
       <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8A929C]">
         {label}
@@ -395,6 +400,7 @@ export function MobileSheetSelect({
   onChange,
   options,
   required,
+  disabled = false,
   emptyLabel = 'Select',
   className = '',
   showDesktopLabel = false,
@@ -406,6 +412,7 @@ export function MobileSheetSelect({
   onChange?: (value: string) => void
   options: MobileFilterOption[]
   required?: boolean
+  disabled?: boolean
   emptyLabel?: string
   className?: string
   showDesktopLabel?: boolean
@@ -422,9 +429,16 @@ export function MobileSheetSelect({
 
   return (
     <div className={`w-full min-w-0 ${className}`}>
-      {name ? <input type="hidden" name={name} value={value} required={required} /> : null}
+      {name ? <input type="hidden" name={name} value={value} required={required} disabled={disabled} /> : null}
       <div className="w-full md:hidden">
-        <MobileFilterTrigger label={label} value={currentLabel} onClick={() => setOpen(true)} />
+        <MobileFilterTrigger
+          label={label}
+          value={currentLabel}
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled) setOpen(true)
+          }}
+        />
         <MobileFilterSheetShell open={open} title={label} onClose={() => setOpen(false)}>
           {options.map((option) => (
             <MobileFilterSheetOption
@@ -447,8 +461,9 @@ export function MobileSheetSelect({
         <select
           value={value}
           required={required}
+          disabled={disabled}
           onChange={(event) => setValue(event.target.value)}
-          className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm"
+          className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
         >
           {options.map((option) => (
             <option key={`${name || label}-opt-${option.value || 'empty'}`} value={option.value}>
@@ -477,6 +492,11 @@ function shiftMonth(year: number, month: number, delta: number) {
   return { year: date.getFullYear(), month: date.getMonth() + 1 }
 }
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
 /** Mobile bottom-sheet calendar; desktop uses a normal date input. */
 export function SheetDateField({
   name,
@@ -485,6 +505,7 @@ export function SheetDateField({
   defaultValue = '',
   onChange,
   required,
+  disabled = false,
   className = '',
   min,
   max,
@@ -497,6 +518,7 @@ export function SheetDateField({
   defaultValue?: string
   onChange?: (value: string) => void
   required?: boolean
+  disabled?: boolean
   className?: string
   min?: string
   max?: string
@@ -526,13 +548,17 @@ export function SheetDateField({
 
   const daysInMonth = new Date(viewYear, viewMonth, 0).getDate()
   const startWeekday = new Date(viewYear, viewMonth - 1, 1).getDay()
-  const monthLabel = new Date(viewYear, viewMonth - 1, 1).toLocaleDateString('en-IN', {
-    month: 'long',
-    year: 'numeric',
-  })
 
   const minTime = min ? new Date(`${min}T00:00:00`).getTime() : null
   const maxTime = max ? new Date(`${max}T00:00:00`).getTime() : null
+
+  const nowYear = new Date().getFullYear()
+  const minYear = min ? new Date(`${min}T00:00:00`).getFullYear() : nowYear - 100
+  const maxYear = max ? new Date(`${max}T00:00:00`).getFullYear() : nowYear + 10
+  const yearOptions = Array.from(
+    { length: Math.max(maxYear - minYear + 1, 1) },
+    (_, index) => minYear + index,
+  )
 
   const pickDay = (day: number) => {
     const next = `${viewYear}-${String(viewMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -545,10 +571,17 @@ export function SheetDateField({
 
   return (
     <div className={`w-full min-w-0 ${className}`}>
-      {name ? <input type="hidden" name={name} value={value} required={required} /> : null}
+      {name ? <input type="hidden" name={name} value={value} required={required} disabled={disabled} /> : null}
 
       <div className="md:hidden">
-        <MobileFilterTrigger label={label} value={formatSheetDate(value)} onClick={() => setOpen(true)} />
+        <MobileFilterTrigger
+          label={label}
+          value={formatSheetDate(value)}
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled) setOpen(true)
+          }}
+        />
         <MobileFilterSheetShell
           open={open}
           title={label}
@@ -585,7 +618,7 @@ export function SheetDateField({
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#F6F4F1] text-[#1A3022]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F6F4F1] text-[#1A3022]"
                 onClick={() => {
                   const next = shiftMonth(viewYear, viewMonth, -1)
                   setViewYear(next.year)
@@ -595,10 +628,35 @@ export function SheetDateField({
               >
                 ‹
               </button>
-              <p className="text-sm font-semibold text-[#1B2430]">{monthLabel}</p>
+              <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5">
+                <select
+                  value={viewMonth}
+                  onChange={(event) => setViewMonth(Number(event.target.value))}
+                  aria-label="Select month"
+                  className="min-w-0 rounded-lg border border-[#E8E4DE] bg-white px-2 py-1.5 text-sm font-semibold text-[#1B2430]"
+                >
+                  {MONTH_NAMES.map((name, index) => (
+                    <option key={name} value={index + 1}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={viewYear}
+                  onChange={(event) => setViewYear(Number(event.target.value))}
+                  aria-label="Select year"
+                  className="min-w-0 rounded-lg border border-[#E8E4DE] bg-white px-2 py-1.5 text-sm font-semibold text-[#1B2430]"
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#F6F4F1] text-[#1A3022]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F6F4F1] text-[#1A3022]"
                 onClick={() => {
                   const next = shiftMonth(viewYear, viewMonth, 1)
                   setViewYear(next.year)
@@ -656,10 +714,11 @@ export function SheetDateField({
           type="date"
           value={value}
           required={required}
+          disabled={disabled}
           min={min}
           max={max}
           onChange={(event) => setValue(event.target.value)}
-          className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm"
+          className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
         />
       </label>
     </div>

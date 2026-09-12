@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { createPortalClient } from './actions'
+import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 function CredentialsOnce({
   email,
@@ -82,10 +83,15 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
       <input type="hidden" name="company_id" value={companyId} />
       <input name="full_name" required placeholder="Client name" className="border rounded-lg px-3 py-2" />
       <input name="email" type="email" required placeholder="Client ID / Login email" className="border rounded-lg px-3 py-2" />
-      <select name="role" defaultValue="client_user" className="border rounded-lg px-3 py-2 bg-white">
-        <option value="client_user">Client user</option>
-        <option value="client_admin">Client admin</option>
-      </select>
+      <MobileSheetSelect
+        name="role"
+        label="Role"
+        defaultValue="client_user"
+        options={[
+          { value: 'client_user', label: 'Client user' },
+          { value: 'client_admin', label: 'Client admin' },
+        ]}
+      />
       <div className="flex gap-2">
         <input
           name="password"
