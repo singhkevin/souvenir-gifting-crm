@@ -377,7 +377,7 @@ export async function PublicHome() {
         </div>
         <div className="relative mx-auto max-w-3xl px-4 sm:px-6">
           <Reveal>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">Request a quote</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#FFD001]">Request a quote</p>
             <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">
               Ready for your next gifting programme?
             </h2>

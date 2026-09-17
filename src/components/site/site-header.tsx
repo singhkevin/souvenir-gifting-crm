@@ -85,17 +85,17 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-40">
       {/* Desktop utility bar */}
-      <div className="hidden bg-[#806A50] text-white lg:block">
+      <div className="hidden bg-[#FFD001] text-[#241C12] lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5 lg:px-8">
           <form onSubmit={submitSearch} className="relative flex min-w-0 flex-1 items-center gap-2 max-w-md">
-            <Search size={16} className="shrink-0 text-white/80" />
+            <Search size={16} className="shrink-0 text-[#241C12]/70" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onFocus={() => setFocused(true)}
               onBlur={() => window.setTimeout(() => setFocused(false), 150)}
               placeholder="Search our catalogue"
-              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/65"
+              className="w-full bg-transparent text-sm text-[#241C12] outline-none placeholder:text-[#241C12]/60"
             />
             {focused && matches.length > 0 ? (
               <div className="absolute left-0 top-full z-50 mt-2 w-full overflow-hidden rounded-md border border-[#E8E4DE] bg-white shadow-lg">
@@ -119,24 +119,24 @@ export function SiteHeader({
           </form>
 
           <div className="flex shrink-0 items-center gap-4">
-            <Link href="/home" className="font-serif text-lg tracking-[0.04em] text-white">
+            <Link href="/home" className="font-serif text-lg tracking-[0.04em] text-[#241C12]">
               <BrandName />
             </Link>
-            <PwaInstallButton variant="dark" />
+            <PwaInstallButton variant="light" />
             {workspaceHref && workspaceLabel ? (
-              <Link href={workspaceHref} className="inline-flex items-center gap-1.5 text-xs text-white/90">
+              <Link href={workspaceHref} className="inline-flex items-center gap-1.5 text-xs text-[#241C12]/85">
                 <User size={14} />
                 {workspaceLabel}
               </Link>
             ) : (
-              <Link href="/login" className="inline-flex items-center gap-1.5 text-xs text-white/90">
+              <Link href="/login" className="inline-flex items-center gap-1.5 text-xs text-[#241C12]/85">
                 <User size={14} />
                 Account
               </Link>
             )}
             <Link
               href="/request-quote"
-              className="rounded-sm bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#806A50]"
+              className="rounded-sm bg-[#241C12] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
             >
               Quote
             </Link>

@@ -212,11 +212,11 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
                       onClick={onNavigate}
                       className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all ${
                         isActive
-                          ? 'bg-[#9C8567] font-semibold text-[#FAF7F2] shadow-sm'
+                          ? 'bg-[#FFD001] font-semibold text-[#241C12] shadow-sm'
                           : 'text-[#BEAE92] hover:bg-[#2F2313] hover:text-[#FAF7F2]'
                       }`}
                     >
-                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#FAF7F2]' : 'text-[#9C8A70]'}`} />
+                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#241C12]' : 'text-[#9C8A70]'}`} />
                       <span>{item.label}</span>
                     </Link>
                   );

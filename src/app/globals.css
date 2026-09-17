@@ -8,8 +8,13 @@
   --color-accent-hover: #624B32;
   --color-accent-fg: #FFFFFF;
   --color-sidebar: #241C12;
-  --color-sidebar-active: #9C8567;
+  --color-sidebar-active: #FFD001;
+  --color-sidebar-active-fg: #241C12;
   --color-sidebar-text: #C9BFAE;
+  /* Secondary brand accent — the old site's gold, used sparingly for highlights (active states, hero/CTA captions), not as the main color. */
+  --color-gold: #FFD001;
+  --color-gold-fg: #241C12;
+  --color-gold-deep: #8B6508;
   --color-background: #FFFFFF;
   --color-surface: #FFFFFF;
   --color-surface-subtle: #F6F4F1;
@@ -146,7 +151,7 @@
   }
 
   .store-eyebrow {
-    @apply text-[11px] font-medium uppercase tracking-[0.22em] text-[#5C6570];
+    @apply text-[11px] font-medium uppercase tracking-[0.22em] text-[#8B6508];
   }
 
   .crm-table-wrap {
