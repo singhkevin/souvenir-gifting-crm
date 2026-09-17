@@ -41,8 +41,9 @@ export function writeCart(items: CartItem[]) {
   window.dispatchEvent(new Event('giffter-cart-change'))
 }
 
+/** Number of distinct products in the cart (not the sum of their quantities). */
 export function getCartCount(items?: CartItem[]): number {
-  return (items || readCart()).reduce((sum, item) => sum + item.quantity, 0)
+  return (items || readCart()).length
 }
 
 export function addToCart(item: Omit<CartItem, 'quantity'>, quantity = 1) {
