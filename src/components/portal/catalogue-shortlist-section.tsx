@@ -39,10 +39,10 @@ export function CatalogueShortlistSection() {
             <ProductImage src={item.image_url} alt={item.name} size="md" />
             <div className="flex flex-1 flex-col gap-3 p-4">
               {item.category_name ? (
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#1A3022]">{item.category_name}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#806A50]">{item.category_name}</p>
               ) : null}
               <Link href={`/portal/catalogue/product/${item.id}`}>
-                <h3 className="font-semibold text-gray-900 hover:text-[#1A3022]">{item.name}</h3>
+                <h3 className="font-semibold text-gray-900 hover:text-[#806A50]">{item.name}</h3>
               </Link>
               <p className="text-sm text-gray-600">
                 {formatCurrency(item.price)} · {item.sku}
@@ -50,7 +50,7 @@ export function CatalogueShortlistSection() {
               <div className="mt-auto flex flex-col gap-2 sm:flex-row">
                 <Link
                   href={`/portal/catalogue/product/${item.id}`}
-                  className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#FAF7F2]"
+                  className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
                 >
                   View
                 </Link>
@@ -72,7 +72,7 @@ export function CatalogueShortlistSection() {
       </div>
       <Link
         href="/portal/requirements/new"
-        className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#1A3022] px-4 text-sm font-semibold text-white hover:bg-[#274433] sm:w-auto"
+        className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-[#FFFFFF] hover:bg-[#9C8567] sm:w-auto"
       >
         Create requirement from shortlist
       </Link>

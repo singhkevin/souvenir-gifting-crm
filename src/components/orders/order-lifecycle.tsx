@@ -56,9 +56,9 @@ export function OrderLifecycleBar({
                 cancelled
                   ? 'bg-gray-200'
                   : done
-                    ? 'bg-[#1A3022]'
+                    ? 'bg-[#806A50]'
                     : isCurrent
-                      ? 'bg-[#4A235A]'
+                      ? 'bg-[#624B32]'
                       : 'bg-[#E5DFD5]'
               }`}
             />
@@ -85,19 +85,19 @@ export function OrderLifecycleBar({
               key={step}
               className={`flex-1 min-w-[92px] rounded-xl border px-2.5 py-2 ${
                 isCurrent
-                  ? 'border-[#4A235A] bg-[#4A235A]/5'
+                  ? 'border-[#624B32] bg-[#624B32]/5'
                   : done
-                    ? 'border-[#1A3022]/20 bg-[#FAF7F2]'
+                    ? 'border-[#806A50]/20 bg-[#FAF7F2]'
                     : 'border-[#E5DFD5] bg-white'
               }`}
             >
               <p className={`text-[10px] font-semibold leading-tight ${
-                isCurrent ? 'text-[#4A235A]' : done ? 'text-[#1A3022]' : 'text-[#9A9288]'
+                isCurrent ? 'text-[#624B32]' : done ? 'text-[#806A50]' : 'text-[#9A9288]'
               }`}>
                 {done ? '✓' : isCurrent ? '●' : '○'} {labels[step] || step}
               </p>
               {isCurrent && (
-                <p className="text-[10px] font-medium text-[#4A235A] mt-1">Current</p>
+                <p className="text-[10px] font-medium text-[#624B32] mt-1">Current</p>
               )}
               {info?.at && (
                 <p className="text-[10px] text-[#7A7267] mt-1">{formatDate(info.at)}</p>

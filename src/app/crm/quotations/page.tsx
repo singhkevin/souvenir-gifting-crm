@@ -70,14 +70,14 @@ export default async function QuotationsPage(props: {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-[#1A3022]">Quotations</h1>
+          <h1 className="text-2xl font-semibold text-[#806A50]">Quotations</h1>
           <p className="text-xs text-gray-500 mt-1">
             {totalCount || 0} total · {conversion}% accepted · {formatCurrency(pipelineValue)} in this view
           </p>
         </div>
         <Link
           href="/crm/requirements"
-          className="bg-[#1A3022] text-white px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2"
+          className="bg-[#806A50] text-[#FFFFFF] px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2"
         >
           <FileText size={14} /> Create from a requirement
         </Link>
@@ -136,7 +136,7 @@ export default async function QuotationsPage(props: {
               key={s}
               href={`/crm/quotations?status=${s}${owner !== 'all' ? `&owner=${owner}` : ''}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
               className={`rounded-full px-3 py-1.5 text-xs font-medium capitalize ${
-                status === s ? 'bg-[#1A3022] text-white' : 'text-gray-500 hover:bg-gray-100'
+                status === s ? 'bg-[#806A50] text-[#FFFFFF]' : 'text-gray-500 hover:bg-gray-100'
               }`}
             >
               {s}
@@ -145,7 +145,7 @@ export default async function QuotationsPage(props: {
           <Link
             href={`/crm/quotations?status=${status}&owner=${owner === 'mine' ? 'all' : 'mine'}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
             className={`ml-auto rounded-full px-3 py-1.5 text-xs font-medium ${
-              owner === 'mine' ? 'bg-[#1A3022] text-white' : 'text-gray-500 hover:bg-gray-100'
+              owner === 'mine' ? 'bg-[#806A50] text-[#FFFFFF]' : 'text-gray-500 hover:bg-gray-100'
             }`}
           >
             My quotations
@@ -178,7 +178,7 @@ export default async function QuotationsPage(props: {
               return (
                 <tr key={quote.id} className="hover:bg-gray-50">
                   <td className="p-4">
-                    <Link href={`/crm/quotations/${quote.id}`} className="text-[#1A3022] hover:underline font-semibold font-mono">
+                    <Link href={`/crm/quotations/${quote.id}`} className="text-[#806A50] hover:underline font-semibold font-mono">
                       {quote.quotation_number || quote.id.slice(0, 8)}
                     </Link>
                   </td>

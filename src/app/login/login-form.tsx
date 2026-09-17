@@ -124,7 +124,7 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   required
-                  className="block w-full rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] py-3 pl-10 pr-3 text-base text-[#1C1917] placeholder-gray-400 transition-colors focus:border-[#1A3022] focus:outline-none focus:ring-1 focus:ring-[#1A3022] sm:py-2.5 sm:text-xs"
+                  className="block w-full rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] py-3 pl-10 pr-3 text-base text-[#1C1917] placeholder-gray-400 transition-colors focus:border-[#806A50] focus:outline-none focus:ring-1 focus:ring-[#806A50] sm:py-2.5 sm:text-xs"
                   placeholder="Enter your email"
                 />
               </div>
@@ -135,7 +135,7 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
                 <label className="block text-xs font-semibold text-[#5A5248] uppercase tracking-wider">
                   Password
                 </label>
-                <Link href="/forgot-password" className="text-[11px] font-semibold text-[#4A235A] hover:underline">
+                <Link href="/forgot-password" className="text-[11px] font-semibold text-[#624B32] hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -145,7 +145,7 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-white bg-[#1A3022] hover:bg-[#274433] hover:text-white focus:outline-none shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] hover:text-[#FFFFFF] focus:outline-none shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
             </button>
@@ -153,7 +153,7 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
 
           <p className="text-xs text-center text-[#7A7267] mt-5">
             Need an account?{' '}
-            <Link href="/signup" className="font-semibold text-[#4A235A] hover:underline">
+            <Link href="/signup" className="font-semibold text-[#624B32] hover:underline">
               Sign up
             </Link>
           </p>
@@ -181,7 +181,7 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-[#1C1917]">{account.email}</span>
                   </span>
-                  <span className="inline-flex min-h-10 w-full shrink-0 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-[11px] font-semibold text-white hover:bg-[#274433] sm:w-auto">
+                  <span className="inline-flex min-h-10 w-full shrink-0 items-center justify-center rounded-lg bg-[#806A50] px-3 text-[11px] font-semibold text-[#FFFFFF] hover:bg-[#9C8567] sm:w-auto">
                     {account.action}
                   </span>
                 </button>

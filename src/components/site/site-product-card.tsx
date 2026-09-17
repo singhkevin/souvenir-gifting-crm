@@ -48,7 +48,7 @@ export function SiteProductCard({
         >
           {product.name}
         </h3>
-        <p className="text-[15px] font-semibold text-[#1A3022]">{formatCurrency(product.price)}</p>
+        <p className="text-[15px] font-semibold text-[#806A50]">{formatCurrency(product.price)}</p>
       </div>
     </Link>
   )

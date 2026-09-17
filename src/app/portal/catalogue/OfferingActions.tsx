@@ -48,7 +48,7 @@ export function OfferingActions({
         <ActionButton
           label={selected ? 'Selected' : 'Select'}
           className={`inline-flex min-h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-semibold text-white ${
-            selected ? 'bg-[#1A3022]' : 'bg-[#1A3022] hover:bg-[#274433]'
+            selected ? 'bg-[#806A50]' : 'bg-[#806A50] hover:bg-[#9C8567]'
           }`}
         />
       </form>

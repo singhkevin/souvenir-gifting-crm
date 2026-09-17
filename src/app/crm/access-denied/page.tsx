@@ -16,7 +16,7 @@ export default function AccessDeniedPage() {
             </p>
             <Link
               href="/crm/dashboard"
-              className="inline-flex mt-4 px-3 py-1.5 rounded-md text-sm font-medium bg-[#1A3022] text-[#FAF7F2] hover:bg-[#274433] hover:text-[#FAF7F2]"
+              className="inline-flex mt-4 px-3 py-1.5 rounded-md text-sm font-medium bg-[#806A50] text-[#FAF7F2] hover:bg-[#9C8567] hover:text-[#FAF7F2]"
             >
               Back to dashboard
             </Link>

@@ -58,7 +58,7 @@ export default async function RequirementDetailPage({
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 bg-[#4A235A]/10 text-[#4A235A] rounded-lg">
+            <span className="p-1.5 bg-[#624B32]/10 text-[#624B32] rounded-lg">
               <ClipboardList size={16} />
             </span>
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Client Brief</span>
@@ -68,7 +68,7 @@ export default async function RequirementDetailPage({
           </div>
           <h1 className="text-2xl font-bold text-gray-900">{req.name}</h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            Company: <Link href={`/crm/companies/${(req.company as any)?.id}`} className="font-semibold text-[#4A235A] hover:underline">{(req.company as any)?.name}</Link> ? 
+            Company: <Link href={`/crm/companies/${(req.company as any)?.id}`} className="font-semibold text-[#624B32] hover:underline">{(req.company as any)?.name}</Link> ? 
             Owner: <span className="font-medium text-gray-700">{(req.owner as any)?.full_name || 'Unassigned'}</span>
           </p>
         </div>
@@ -76,7 +76,7 @@ export default async function RequirementDetailPage({
         <div className="flex items-center gap-4 bg-purple-50/50 p-4 rounded-xl border border-purple-100">
           <div>
             <p className="text-[10px] uppercase font-bold text-gray-400">Total Budget</p>
-            <p className="text-xl font-bold text-[#4A235A]">{formatCurrency(req.budget)}</p>
+            <p className="text-xl font-bold text-[#624B32]">{formatCurrency(req.budget)}</p>
           </div>
           <div className="border-l border-purple-200 pl-4">
             <p className="text-[10px] uppercase font-bold text-gray-400">Target Qty</p>
@@ -101,7 +101,7 @@ export default async function RequirementDetailPage({
               key={t}
               href={`?tab=${t}`}
               className={`pb-3 text-xs font-semibold capitalize transition-colors border-b-2 ${
-                tab === t ? 'border-[#4A235A] text-[#4A235A]' : 'border-transparent text-gray-500 hover:text-gray-900'
+                tab === t ? 'border-[#624B32] text-[#624B32]' : 'border-transparent text-gray-500 hover:text-gray-900'
               }`}
             >
               {t}
@@ -141,7 +141,7 @@ export default async function RequirementDetailPage({
                   ]}
                 />
                 <textarea name="description" rows={3} defaultValue={req.description || ''} className="rounded-lg border px-2 py-2 md:col-span-2" />
-                <button className="min-h-11 rounded-lg bg-[#1A3022] px-3 py-2 font-semibold text-white md:col-span-2">Save requirement</button>
+                <button className="min-h-11 rounded-lg bg-[#806A50] px-3 py-2 font-semibold text-[#FFFFFF] md:col-span-2">Save requirement</button>
               </form>
             </div>
 
@@ -181,7 +181,7 @@ export default async function RequirementDetailPage({
               {products?.map((item: any) => (
                 <tr key={item.id} className="hover:bg-gray-50/50">
                   <td className="p-3.5">
-                    <Link href={`/crm/products/${item.product?.id}`} className="font-bold text-gray-900 hover:text-[#4A235A]">
+                    <Link href={`/crm/products/${item.product?.id}`} className="font-bold text-gray-900 hover:text-[#624B32]">
                       {item.product?.name || 'Product'}
                     </Link>
                     <div className="text-gray-400 font-mono text-[10px]">{item.product?.sku}</div>
@@ -213,7 +213,7 @@ export default async function RequirementDetailPage({
               {quotations?.map((q: any) => (
                 <tr key={q.id} className="hover:bg-gray-50/50">
                   <td className="p-3.5">
-                    <Link href={`/crm/quotations/${q.id}`} className="font-bold text-[#4A235A] hover:underline">
+                    <Link href={`/crm/quotations/${q.id}`} className="font-bold text-[#624B32] hover:underline">
                       {q.quotation_number}
                     </Link>
                   </td>
@@ -236,7 +236,7 @@ export default async function RequirementDetailPage({
             {activities?.map((act: any) => (
               <div key={act.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                 <div className="flex justify-between font-bold text-gray-900 mb-1">
-                  <span className="uppercase text-[#4A235A]">{act.type}</span>
+                  <span className="uppercase text-[#624B32]">{act.type}</span>
                   <span className="text-gray-400 font-normal">{formatDate(act.created_at)}</span>
                 </div>
                 <p className="text-gray-700">{act.notes}</p>

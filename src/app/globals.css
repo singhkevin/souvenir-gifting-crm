@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #1A3022;
-  --color-primary-light: #274433;
+  --color-primary: #806A50;
+  --color-primary-light: #9C8567;
   --color-primary-fg: #FFFFFF;
-  --color-accent: #1A3022;
-  --color-accent-hover: #122018;
+  --color-accent: #806A50;
+  --color-accent-hover: #624B32;
   --color-accent-fg: #FFFFFF;
-  --color-sidebar: #16281E;
-  --color-sidebar-active: #274433;
-  --color-sidebar-text: #A3B5AA;
+  --color-sidebar: #241C12;
+  --color-sidebar-active: #9C8567;
+  --color-sidebar-text: #C9BFAE;
   --color-background: #FFFFFF;
   --color-surface: #FFFFFF;
   --color-surface-subtle: #F6F4F1;
@@ -187,14 +187,14 @@
     }
   }
 
-  button.bg-\[\#1A3022\]:hover,
-  a.bg-\[\#1A3022\]:hover,
-  button.bg-\[\#274433\]:hover,
-  a.bg-\[\#274433\]:hover,
-  button.bg-\[\#4A235A\]:hover,
-  a.bg-\[\#4A235A\]:hover,
-  button.bg-\[\#3d1c4a\]:hover,
-  a.bg-\[\#3d1c4a\]:hover,
+  button.bg-\[\#806A50\]:hover,
+  a.bg-\[\#806A50\]:hover,
+  button.bg-\[\#9C8567\]:hover,
+  a.bg-\[\#9C8567\]:hover,
+  button.bg-\[\#806A50\]:hover,
+  a.bg-\[\#806A50\]:hover,
+  button.bg-\[\#624b32\]:hover,
+  a.bg-\[\#624b32\]:hover,
   button.bg-primary:hover,
   a.bg-primary:hover,
   button.bg-accent:hover,

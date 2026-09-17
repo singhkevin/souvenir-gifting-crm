@@ -92,7 +92,7 @@ export default async function CataloguePage({
   const filterLinkClass = (active: boolean) =>
     `flex items-center justify-between gap-3 border-l-2 py-2 pl-3 text-sm transition-colors ${
       active
-        ? 'border-[#1A3022] font-medium text-[#1A3022]'
+        ? 'border-[#806A50] font-medium text-[#806A50]'
         : 'border-transparent text-[#5C6570] hover:border-[#C9C3BA] hover:text-[#1B2430]'
     }`
 
@@ -101,7 +101,7 @@ export default async function CataloguePage({
       <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <p className="text-sm text-[#5C6570]">
-            <Link href="/home" className="hover:text-[#1A3022]">
+            <Link href="/home" className="hover:text-[#806A50]">
               Home
             </Link>
             <span className="mx-2 text-[#C9C3BA]">/</span>
@@ -160,7 +160,7 @@ export default async function CataloguePage({
                 href="/catalogue"
                 className={`inline-flex min-h-10 w-full items-center text-[12px] font-bold uppercase tracking-[0.14em] transition-colors ${
                   hasFilters
-                    ? 'text-[#1A3022] hover:text-[#274433]'
+                    ? 'text-[#806A50] hover:text-[#9C8567]'
                     : 'pointer-events-none text-[#C4BDB3]'
                 }`}
                 aria-disabled={!hasFilters}
@@ -200,7 +200,7 @@ export default async function CataloguePage({
                 </label>
                 <button
                   type="submit"
-                  className="bg-[#1A3022] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white"
+                  className="bg-[#806A50] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white"
                 >
                   Apply
                 </button>
@@ -208,14 +208,14 @@ export default async function CataloguePage({
               {sort && sort !== 'name' ? <input type="hidden" name="sort" value={sort} className="lg:hidden" /> : null}
               <button
                 type="submit"
-                className="bg-[#1A3022] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white lg:hidden"
+                className="bg-[#806A50] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white lg:hidden"
               >
                 Apply
               </button>
             </form>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-[#1A3022]">
+              <p className="text-sm text-[#806A50]">
                 <span className="font-semibold">{filtered.length}</span>
                 <span className="text-[#5C6570]"> {filtered.length === 1 ? 'product' : 'products'}</span>
                 {activeCategoryName ? (

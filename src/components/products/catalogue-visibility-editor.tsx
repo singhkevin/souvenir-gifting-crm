@@ -82,7 +82,7 @@ export function CatalogueVisibilityEditor({
               placeholder="Search companies..."
               className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg"
             />
-            <button type="button" onClick={() => setSelected(filtered.map((c) => c.id))} className="text-xs text-[#1A3022] hover:underline">
+            <button type="button" onClick={() => setSelected(filtered.map((c) => c.id))} className="text-xs text-[#806A50] hover:underline">
               Select all
             </button>
             <button type="button" onClick={() => setSelected([])} className="text-xs text-gray-500 hover:underline">
@@ -113,7 +113,7 @@ export function CatalogueVisibilityEditor({
         type="button"
         onClick={save}
         disabled={pending}
-        className="px-4 py-2 text-xs font-semibold text-white bg-[#1A3022] hover:bg-[#274433] hover:text-white rounded-lg disabled:opacity-50"
+        className="px-4 py-2 text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] hover:text-[#FFFFFF] rounded-lg disabled:opacity-50"
       >
         {pending ? 'Saving…' : 'Save visibility'}
       </button>

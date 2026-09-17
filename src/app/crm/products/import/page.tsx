@@ -13,7 +13,7 @@ export default async function ImportProductsPage() {
         <h1 className="text-2xl font-bold text-gray-900">Import catalogue CSV</h1>
         <p className="text-xs text-gray-500 mt-1">
           Manual product creation remains available.{' '}
-          <Link href="/crm/products/new" className="text-[#4A235A] font-semibold hover:underline">
+          <Link href="/crm/products/new" className="text-[#624B32] font-semibold hover:underline">
             Add a product
           </Link>
         </p>

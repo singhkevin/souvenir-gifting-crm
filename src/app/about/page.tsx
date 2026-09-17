@@ -35,7 +35,7 @@ export default function AboutPage() {
         <div className="pt-4">
           <Link
             href="/catalogue"
-            className="inline-flex bg-[#1A3022] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
+            className="inline-flex bg-[#806A50] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
           >
             Explore Catalogue
           </Link>

@@ -44,7 +44,7 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
             onClick={() => choose('grid')}
             aria-pressed={view === 'grid'}
             className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-              view === 'grid' ? 'bg-[#1A3022] text-white' : 'bg-white text-[#5C6570]'
+              view === 'grid' ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-white text-[#5C6570]'
             }`}
           >
             <LayoutGrid size={13} /> Grid
@@ -54,7 +54,7 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
             onClick={() => choose('list')}
             aria-pressed={view === 'list'}
             className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-              view === 'list' ? 'bg-[#1A3022] text-white' : 'bg-white text-[#5C6570]'
+              view === 'list' ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-white text-[#5C6570]'
             }`}
           >
             <List size={13} /> List
@@ -93,7 +93,7 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
                 <p className="mt-1 font-mono text-[10px] text-[#5C6570]">{product.sku}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-[#1A3022]">{formatCurrency(product.price)}</p>
+                <p className="text-sm font-semibold text-[#806A50]">{formatCurrency(product.price)}</p>
                 <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">View</p>
               </div>
             </Link>

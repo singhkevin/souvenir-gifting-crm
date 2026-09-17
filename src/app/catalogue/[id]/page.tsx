@@ -52,7 +52,7 @@ export default async function PublicProductPage({ params }: Props) {
           ) : null}
           <h1 className="mt-3 font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">{product.name}</h1>
           {product.brand_name ? <p className="mt-3 text-sm text-[#5C6570]">{product.brand_name}</p> : null}
-          <p className="mt-6 text-2xl font-semibold text-[#1A3022]">{formatCurrency(product.price)}</p>
+          <p className="mt-6 text-2xl font-semibold text-[#806A50]">{formatCurrency(product.price)}</p>
           <p className="mt-2 text-xs text-[#5C6570]">Minimum order {product.moq || 1} units</p>
 
           <p className="mt-8 max-w-md text-sm leading-relaxed text-[#5C6570]">
@@ -74,13 +74,13 @@ export default async function PublicProductPage({ params }: Props) {
           <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4">
             <Link
               href={quoteHref}
-              className="inline-flex justify-center bg-[#1A3022] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white sm:py-3"
+              className="inline-flex justify-center bg-[#806A50] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white sm:py-3"
             >
               Request a Quote
             </Link>
             <Link
               href="/catalogue"
-              className="inline-flex justify-center py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]"
+              className="inline-flex justify-center py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#806A50]"
             >
               Back to catalogue
             </Link>

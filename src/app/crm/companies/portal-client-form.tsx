@@ -38,7 +38,7 @@ function CredentialsOnce({
         >
           Copy
         </button>
-        <button type="button" onClick={onDone} className="px-3 py-1.5 text-xs font-semibold text-white bg-[#4A235A] rounded-lg">
+        <button type="button" onClick={onDone} className="px-3 py-1.5 text-xs font-semibold text-white bg-[#806A50] rounded-lg">
           Done
         </button>
       </div>
@@ -126,7 +126,7 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="md:col-span-2 px-3 py-2 text-xs font-semibold text-white bg-[#4A235A] rounded-lg disabled:opacity-50"
+        className="md:col-span-2 px-3 py-2 text-xs font-semibold text-white bg-[#806A50] rounded-lg disabled:opacity-50"
       >
         {pending ? 'Creating login…' : 'Create client login'}
       </button>

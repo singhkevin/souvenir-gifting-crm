@@ -101,7 +101,7 @@ export default async function TasksPage({
           <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Notes</span>
           <input name="description" placeholder="Optional details" className="min-h-11 w-full rounded-lg border px-3 py-2" />
         </label>
-        <button className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1A3022] px-4 py-2.5 font-semibold text-white sm:col-span-2 lg:col-span-4">
+        <button className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 py-2.5 font-semibold text-[#FFFFFF] sm:col-span-2 lg:col-span-4">
           Create task
         </button>
       </form>
@@ -139,15 +139,15 @@ export default async function TasksPage({
         />
       </div>
       <div className="hidden flex-wrap gap-4 border-b md:flex">
-        <Link href="?tab=my_tasks" className={`px-1 pb-2 text-sm ${tab === 'my_tasks' ? 'border-b-2 border-[#1A3022] font-semibold' : 'text-gray-500'}`}>My Tasks</Link>
+        <Link href="?tab=my_tasks" className={`px-1 pb-2 text-sm ${tab === 'my_tasks' ? 'border-b-2 border-[#806A50] font-semibold' : 'text-gray-500'}`}>My Tasks</Link>
         {canSeeAll && (
-          <Link href="?tab=all_tasks" className={`px-1 pb-2 text-sm ${tab === 'all_tasks' ? 'border-b-2 border-[#1A3022] font-semibold' : 'text-gray-500'}`}>All Tasks</Link>
+          <Link href="?tab=all_tasks" className={`px-1 pb-2 text-sm ${tab === 'all_tasks' ? 'border-b-2 border-[#806A50] font-semibold' : 'text-gray-500'}`}>All Tasks</Link>
         )}
         {STATUS_OPTIONS.map((option) => (
           <Link
             key={option.value}
             href={`?tab=${tab}&status=${option.value}`}
-            className={`px-1 pb-2 text-sm ${status === option.value ? 'border-b-2 border-[#1A3022] font-semibold' : 'text-gray-500'}`}
+            className={`px-1 pb-2 text-sm ${status === option.value ? 'border-b-2 border-[#806A50] font-semibold' : 'text-gray-500'}`}
           >
             {option.label}
           </Link>
@@ -179,7 +179,7 @@ export default async function TasksPage({
                   <td className="p-3 text-xs text-gray-600">
                     <div>{company?.name || '—'}</div>
                     {order?.order_number && (
-                      <Link href={`/crm/orders/${task.order_id}`} className="font-mono text-[#4A235A]">{order.order_number}</Link>
+                      <Link href={`/crm/orders/${task.order_id}`} className="font-mono text-[#624B32]">{order.order_number}</Link>
                     )}
                   </td>
                   <td className="p-3 capitalize">{priority}</td>
@@ -196,7 +196,7 @@ export default async function TasksPage({
                             label: member.full_name || 'Unnamed',
                           }))}
                         />
-                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save</button>
+                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save</button>
                       </form>
                     ) : (
                       assignee?.full_name || 'Unassigned'
@@ -215,12 +215,12 @@ export default async function TasksPage({
                           label: option.label,
                         }))}
                       />
-                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Update</button>
+                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Update</button>
                     </form>
                     {task.status !== 'done' && !task.completed_at && (
                       <form action={asFormAction(completeTask)} className="mt-1">
                         <input type="hidden" name="id" value={task.id} />
-                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Complete</button>
+                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Complete</button>
                       </form>
                     )}
                   </td>

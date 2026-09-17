@@ -14,7 +14,7 @@ function Card({ label, value, href, warn }: { label: string; value: string | num
       <p className="font-serif text-lg text-[#1C1917] mt-1.5 sm:mt-2 sm:text-xl break-words">{value}</p>
     </div>
   )
-  return href ? <Link href={href} className="block hover:border-[#1A3022]">{inner}</Link> : inner
+  return href ? <Link href={href} className="block hover:border-[#806A50]">{inner}</Link> : inner
 }
 
 type DashOrder = {
@@ -250,7 +250,7 @@ export default async function DashboardPage({
       <div className="flex justify-between items-center mb-3">
         <h2 className="font-serif text-lg">Activity</h2>
         {(profile.role === 'admin' || profile.role === 'management') && (
-          <Link href="/crm/audit-log" className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Full audit log</Link>
+          <Link href="/crm/audit-log" className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Full audit log</Link>
         )}
       </div>
       <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -289,7 +289,7 @@ export default async function DashboardPage({
           {(profile.role === 'admin' || profile.role === 'sales') && (
             <Link
               href="/crm/products/add"
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#1A3022] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#274433] sm:w-auto"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#806A50] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#9C8567] sm:w-auto"
             >
               <Plus size={16} />
               Add Product
@@ -338,25 +338,25 @@ export default async function DashboardPage({
             <div className="bg-white rounded-xl border p-5">
               <h2 className="font-serif text-lg mb-3">Exceptions</h2>
               <p className="text-sm">Delayed: {delayed.length} · At risk: {atRisk.length} · Unassigned: {unassigned.length} · Lost requirements: {lost}</p>
-              <Link href="/crm/order-management?health=delayed" className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Open delayed orders</Link>
+              <Link href="/crm/order-management?health=delayed" className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-white hover:bg-[#9C8567] hover:text-white">Open delayed orders</Link>
             </div>
           )}
 
           <div className="rounded-xl border bg-white p-4 sm:p-6">
             <div className="mb-4 flex justify-between">
               <h2 className="font-serif text-lg">Order pipeline</h2>
-              <Link href="/crm/order-management?view=kanban" className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Kanban</Link>
+              <Link href="/crm/order-management?view=kanban" className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Kanban</Link>
             </div>
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 lg:grid-cols-6">
               {byStage.map((s) => (
-                <Link key={s.st} href={`/crm/order-management?stage=${s.st}`} className="rounded-xl border bg-[#FAF7F2] p-2.5 hover:border-[#1A3022] sm:p-3">
+                <Link key={s.st} href={`/crm/order-management?stage=${s.st}`} className="rounded-xl border bg-[#FAF7F2] p-2.5 hover:border-[#806A50] sm:p-3">
                   <p className="text-[11px] text-[#7A7267]">{ORDER_STATUS_LABELS[s.st]}</p>
                   <p className="mt-1 text-lg font-semibold sm:text-xl">{s.n}</p>
                   <p className="text-[10px] text-[#7A7267] sm:text-[11px]">{formatCurrency(s.value)} · {s.overdue} overdue</p>
                 </Link>
               ))}
               {canSeeFinance(profile.role) && financeStages.map((s) => (
-                <Link key={s.key} href={s.href} className="rounded-xl border bg-[#FAF7F2] p-2.5 hover:border-[#1A3022] sm:p-3">
+                <Link key={s.key} href={s.href} className="rounded-xl border bg-[#FAF7F2] p-2.5 hover:border-[#806A50] sm:p-3">
                   <p className="text-[11px] text-[#7A7267]">{s.label}</p>
                   <p className="mt-1 text-lg font-semibold sm:text-xl">{s.n}</p>
                   <p className="text-[10px] text-[#7A7267] sm:text-[11px]">{formatCurrency(s.value)}</p>
@@ -374,7 +374,7 @@ export default async function DashboardPage({
                     <Link
                       key={d.id}
                       href={`/crm/order-management?department=${d.id}`}
-                      className="rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-3 transition-colors hover:border-[#1A3022] hover:bg-white"
+                      className="rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-3 transition-colors hover:border-[#806A50] hover:bg-white"
                     >
                       <p className="text-sm font-semibold">{d.name}</p>
                       <p className="text-[11px] text-[#7A7267] mt-1">Active {d.active} · Overdue {d.overdue} · Unassigned {d.unassigned} · Done {d.completed}</p>
@@ -451,7 +451,7 @@ export default async function DashboardPage({
                 <p key={a.id} className="text-sm py-1">{a.type} · {a.title}</p>
               ))}
               {(!followUps.data || followUps.data.length === 0) && <p className="text-sm text-gray-500">No follow-ups due.</p>}
-              <Link href="/crm/activities" className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Activity feed</Link>
+              <Link href="/crm/activities" className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Activity feed</Link>
             </div>
             <ActivityFeed />
           </div>

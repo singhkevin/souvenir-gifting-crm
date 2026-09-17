@@ -35,7 +35,7 @@ export default function CollectionsPage() {
               <p className="text-[10px] uppercase tracking-[0.18em] text-[#5C6570]">{collection.kicker}</p>
               <p className="mt-3 font-serif text-2xl text-[#1B2430]">{collection.title}</p>
               <p className="mt-3 text-sm leading-relaxed text-[#5C6570]">{collection.description}</p>
-              <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]">
+              <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#806A50]">
                 Explore {ARROW}
               </p>
             </Link>
@@ -50,7 +50,7 @@ export default function CollectionsPage() {
               <Link
                 key={occasion.slug}
                 href={occasion.href}
-                className="rounded-md border border-[#E8E4DE] bg-[#F6F4F1] px-5 py-6 transition-colors hover:border-[#1A3022] hover:bg-white"
+                className="rounded-md border border-[#E8E4DE] bg-[#F6F4F1] px-5 py-6 transition-colors hover:border-[#806A50] hover:bg-white"
               >
                 <p className="font-serif text-xl text-[#1B2430]">{occasion.title}</p>
                 <p className="mt-2 text-sm text-[#5C6570]">{occasion.line}</p>

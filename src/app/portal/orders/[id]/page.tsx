@@ -59,7 +59,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
             {campaign?.employee_quantity && (
               <p className="text-xs text-gray-500 mt-1">{campaign.employee_quantity.toLocaleString('en-IN')} employees</p>
             )}
-            <p className="text-sm mt-2 font-medium text-[#1A3022]">
+            <p className="text-sm mt-2 font-medium text-[#806A50]">
               Current status: {CLIENT_STATUS_LABELS[order.status] || order.status}
             </p>
             {quotation?.quotation_number && (
@@ -71,7 +71,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
           </div>
           <div className="sm:text-right">
             <p className="text-[10px] uppercase font-bold text-gray-400">Order value</p>
-            <p className="text-2xl font-bold text-[#1A3022]">{formatCurrency(order.order_value)}</p>
+            <p className="text-2xl font-bold text-[#806A50]">{formatCurrency(order.order_value)}</p>
             <p className="text-xs text-gray-500 mt-0.5">Expected delivery: {formatDate(order.expected_delivery_date)}</p>
           </div>
         </div>
@@ -116,7 +116,7 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
                           {canOpen ? (
                             <Link
                               href={`/portal/catalogue/product/${item.product!.id}`}
-                              className="font-medium text-gray-900 hover:text-[#1A3022] hover:underline"
+                              className="font-medium text-gray-900 hover:text-[#806A50] hover:underline"
                             >
                               {name}
                             </Link>

@@ -29,7 +29,7 @@ export function QuoteForm({
   }
 
   const field =
-    'mt-2 w-full border-b border-[#E8E4DE] bg-transparent py-2 text-sm outline-none focus:border-[#1A3022]'
+    'mt-2 w-full border-b border-[#E8E4DE] bg-transparent py-2 text-sm outline-none focus:border-[#806A50]'
   const label = 'text-[10px] font-medium uppercase tracking-[0.16em] text-[#5C6570]'
 
   return (
@@ -95,7 +95,7 @@ export function QuoteForm({
       <button
         type="submit"
         disabled={pending}
-        className="mt-4 inline-flex min-w-[12rem] items-center justify-center bg-[#1A3022] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white disabled:opacity-60"
+        className="mt-4 inline-flex min-w-[12rem] items-center justify-center bg-[#806A50] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#FFFFFF] disabled:opacity-60"
       >
         {pending ? 'Sending…' : 'Send enquiry'}
       </button>

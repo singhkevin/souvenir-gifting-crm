@@ -169,14 +169,14 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
   }, [])
 
   return (
-    <aside className="flex h-full max-h-screen min-h-0 w-64 flex-shrink-0 select-none flex-col border-r border-[#1B3224] bg-[#16281E] text-[#A3B5AA]">
-      <div className="flex shrink-0 items-start justify-between gap-2 border-b border-[#21382A] px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
+    <aside className="flex h-full max-h-screen min-h-0 w-64 flex-shrink-0 select-none flex-col border-r border-[#33261A] bg-[#241C12] text-[#C9BFAE]">
+      <div className="flex shrink-0 items-start justify-between gap-2 border-b border-[#3A2C1B] px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
         <Link href="/crm/dashboard" onClick={onNavigate} className="group block min-w-0">
           <BrandName
             as="h1"
             className="font-serif text-xl font-normal leading-tight tracking-tight text-[#FAF7F2] transition-colors group-hover:text-white sm:text-2xl"
           />
-          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8B9E92]">
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#A8967A]">
             Corporate Gifting CRM
           </p>
         </Link>
@@ -184,7 +184,7 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#FAF7F2] hover:bg-[#1E3628]"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#FAF7F2] hover:bg-[#2F2313]"
             aria-label="Close navigation"
           >
             <X className="h-5 w-5" />
@@ -198,7 +198,7 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
       >
         {visibleGroups.map((group) => (
             <div key={group.label} className="space-y-1">
-              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#697D71]">
+              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#8A7860]">
                 {group.label}
               </div>
               <div className="space-y-0.5">
@@ -212,11 +212,11 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
                       onClick={onNavigate}
                       className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all ${
                         isActive
-                          ? 'bg-[#274433] font-semibold text-[#FAF7F2] shadow-sm'
-                          : 'text-[#9EB0A4] hover:bg-[#1E3628] hover:text-[#FAF7F2]'
+                          ? 'bg-[#9C8567] font-semibold text-[#FAF7F2] shadow-sm'
+                          : 'text-[#BEAE92] hover:bg-[#2F2313] hover:text-[#FAF7F2]'
                       }`}
                     >
-                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#FAF7F2]' : 'text-[#7D9385]'}`} />
+                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#FAF7F2]' : 'text-[#9C8A70]'}`} />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -226,15 +226,15 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
         ))}
       </nav>
 
-      <div className="shrink-0 border-t border-[#21382A] bg-[#122219] p-4">
+      <div className="shrink-0 border-t border-[#3A2C1B] bg-[#1A130B] p-4">
         <div className="mb-2 min-w-0">
           <p className="truncate text-sm font-medium text-[#FAF7F2]">{displayName}</p>
-          <p className="truncate text-xs text-[#7D9385]">{user?.email || roleName}</p>
-          <p className="text-[11px] text-[#697D71]">{roleName}</p>
+          <p className="truncate text-xs text-[#9C8A70]">{user?.email || roleName}</p>
+          <p className="text-[11px] text-[#8A7860]">{roleName}</p>
         </div>
         <button
           onClick={() => signOut()}
-          className="flex min-h-10 items-center gap-2 pt-1 text-xs text-[#A3B5AA] transition-colors hover:text-white"
+          className="flex min-h-10 items-center gap-2 pt-1 text-xs text-[#C9BFAE] transition-colors hover:text-white"
         >
           <LogOut className="h-3.5 w-3.5" />
           <span>Sign out</span>

@@ -85,7 +85,7 @@ export function TeamDirectory({
               />
               <button
                 type="submit"
-                className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white"
+                className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
               >
                 Save
               </button>
@@ -141,7 +141,7 @@ export function TeamDirectory({
                     />
                     <button
                       type="submit"
-                      className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white"
+                      className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
                     >
                       Save
                     </button>

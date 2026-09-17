@@ -88,7 +88,7 @@ export function SignupForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="block w-full pl-10 pr-3 py-2.5 bg-[#FAF7F2] border border-[#E5DFD5] rounded-xl text-xs text-[#1C1917] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1A3022] focus:border-[#1A3022]"
+              className="block w-full pl-10 pr-3 py-2.5 bg-[#FAF7F2] border border-[#E5DFD5] rounded-xl text-xs text-[#1C1917] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#806A50] focus:border-[#806A50]"
               placeholder="Your name"
             />
           </div>
@@ -105,7 +105,7 @@ export function SignupForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="block w-full pl-10 pr-3 py-2.5 bg-[#FAF7F2] border border-[#E5DFD5] rounded-xl text-xs text-[#1C1917] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1A3022] focus:border-[#1A3022]"
+              className="block w-full pl-10 pr-3 py-2.5 bg-[#FAF7F2] border border-[#E5DFD5] rounded-xl text-xs text-[#1C1917] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#806A50] focus:border-[#806A50]"
               placeholder="you@company.com"
             />
           </div>
@@ -121,14 +121,14 @@ export function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-white bg-[#1A3022] hover:bg-[#274433] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create account'}
         </button>
       </form>
       <p className="text-xs text-center text-[#7A7267] mt-5">
         Already have an account?{' '}
-        <Link href="/login" className="font-semibold text-[#4A235A] hover:underline">Sign in</Link>
+        <Link href="/login" className="font-semibold text-[#624B32] hover:underline">Sign in</Link>
       </p>
     </AuthShell>
   )

@@ -167,7 +167,7 @@ export default async function MyWorkPage({
             key={f.id}
             href={`/crm/my-work?filter=${f.id}`}
             className={`rounded-lg px-3 py-2 text-xs font-medium ${
-              filter === f.id ? 'bg-[#1A3022] text-white' : 'border bg-white text-gray-600 hover:bg-gray-50'
+              filter === f.id ? 'bg-[#806A50] text-[#FFFFFF]' : 'border bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
             {f.label}

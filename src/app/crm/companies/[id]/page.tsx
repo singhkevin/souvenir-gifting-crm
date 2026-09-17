@@ -206,7 +206,7 @@ export default async function CompanyDetailPage({
               key={t.id}
               href={`?tab=${t.id}`}
               className={`pb-3 text-xs font-semibold whitespace-nowrap transition-colors border-b-2 ${
-                tab === t.id ? 'border-[#4A235A] text-[#4A235A]' : 'border-transparent text-gray-500 hover:text-gray-900'
+                tab === t.id ? 'border-[#806A50] text-[#806A50]' : 'border-transparent text-gray-500 hover:text-gray-900'
               }`}
             >
               {t.label}
@@ -279,7 +279,7 @@ export default async function CompanyDetailPage({
             <p className="text-[11px] text-gray-500 md:col-span-2">
               Owner: {(company.owner as { full_name?: string } | null)?.full_name || 'Unassigned'}
             </p>
-            <button type="submit" className="md:col-span-2 px-4 py-2 text-xs font-semibold rounded-lg text-white bg-[#4A235A]">
+            <button type="submit" className="md:col-span-2 px-4 py-2 text-xs font-semibold rounded-lg text-white bg-[#806A50]">
               Save company
             </button>
           </form>
@@ -326,7 +326,7 @@ export default async function CompanyDetailPage({
               />
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-[#4A235A] hover:bg-[#3d1c4a] hover:text-white rounded-lg transition-colors whitespace-nowrap sm:w-auto"
+                className="inline-flex w-full items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] hover:text-white rounded-lg transition-colors whitespace-nowrap sm:w-auto"
               >
                 <Plus size={14} className="inline mr-1" /> Assign Product
               </button>
@@ -352,7 +352,7 @@ export default async function CompanyDetailPage({
                       <Link href={`/crm/products/${cp.product_id}`} className="flex items-center gap-3 group">
                         <ProductImage src={cp.product?.image_url} alt={cp.product?.name || 'Product'} size="xs" className="w-9 h-9 rounded-lg border border-gray-200" />
                         <div>
-                          <p className="font-bold text-gray-900 group-hover:text-[#4A235A]">{cp.product?.name}</p>
+                          <p className="font-bold text-gray-900 group-hover:text-[#806A50]">{cp.product?.name}</p>
                           <p className="font-mono text-[10px] text-gray-400">{cp.product?.sku}</p>
                         </div>
                       </Link>
@@ -470,7 +470,7 @@ export default async function CompanyDetailPage({
                 { value: 'other', label: 'Other' },
               ]}
             />
-            <button className="bg-[#1A3022] text-white rounded-lg font-semibold py-2">Add contact</button>
+            <button className="bg-[#806A50] text-white rounded-lg font-semibold py-2">Add contact</button>
           </form>
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <table className="w-full text-xs">
@@ -543,7 +543,7 @@ export default async function CompanyDetailPage({
             <tbody className="divide-y divide-gray-100">
               {requirements?.map(r => (
                 <tr key={r.id}>
-                  <td className="px-4 py-2.5 font-semibold text-[#4A235A]">
+                  <td className="px-4 py-2.5 font-semibold text-[#806A50]">
                     <Link href={`/crm/requirements/${r.id}`}>{r.name}</Link>
                   </td>
                   <td className="px-4 py-2.5 font-bold">{formatCurrency(r.budget)}</td>
@@ -574,7 +574,7 @@ export default async function CompanyDetailPage({
             <tbody className="divide-y divide-gray-100">
               {quotations?.map(q => (
                 <tr key={q.id}>
-                  <td className="px-4 py-2.5 font-semibold text-[#4A235A]">
+                  <td className="px-4 py-2.5 font-semibold text-[#806A50]">
                     <Link href={`/crm/quotations/${q.id}`}>{q.quotation_number}</Link>
                   </td>
                   <td className="px-4 py-2.5 font-bold">{formatCurrency(q.total)}</td>
@@ -604,7 +604,7 @@ export default async function CompanyDetailPage({
             <tbody className="divide-y divide-gray-100">
               {orders?.map(o => (
                 <tr key={o.id}>
-                  <td className="px-4 py-2.5 font-semibold text-[#4A235A]">
+                  <td className="px-4 py-2.5 font-semibold text-[#806A50]">
                     <Link href={`/crm/orders/${o.id}`}>{o.order_number}</Link>
                   </td>
                   <td className="px-4 py-2.5 font-bold">{formatCurrency(o.order_value)}</td>
@@ -641,7 +641,7 @@ export default async function CompanyDetailPage({
                   const idx = lifecycleIndex(order.status)
                   return (
                     <tr key={order.id}>
-                      <td className="px-4 py-2.5 font-semibold text-[#4A235A]">
+                      <td className="px-4 py-2.5 font-semibold text-[#806A50]">
                         <Link href={`/crm/orders/${order.id}`}>{order.order_number}</Link>
                       </td>
                       <td className="px-4 py-2.5">{CLIENT_STATUS_LABELS[order.status] || order.status}</td>
@@ -706,7 +706,7 @@ export default async function CompanyDetailPage({
             <tbody className="divide-y divide-gray-100">
               {invoices?.map((inv) => (
                 <tr key={inv.id}>
-                  <td className="px-4 py-2.5 font-semibold text-[#4A235A]">
+                  <td className="px-4 py-2.5 font-semibold text-[#806A50]">
                     <Link href={`/crm/invoices/${inv.id}`}>{inv.invoice_number}</Link>
                   </td>
                   <td className="px-4 py-2.5 font-bold">{formatCurrency(inv.amount)}</td>

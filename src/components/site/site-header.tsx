@@ -85,7 +85,7 @@ export function SiteHeader({
   return (
     <header className="sticky top-0 z-40">
       {/* Desktop utility bar */}
-      <div className="hidden bg-[#1A3022] text-white lg:block">
+      <div className="hidden bg-[#806A50] text-white lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5 lg:px-8">
           <form onSubmit={submitSearch} className="relative flex min-w-0 flex-1 items-center gap-2 max-w-md">
             <Search size={16} className="shrink-0 text-white/80" />
@@ -136,7 +136,7 @@ export function SiteHeader({
             )}
             <Link
               href="/request-quote"
-              className="rounded-sm bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]"
+              className="rounded-sm bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#806A50]"
             >
               Quote
             </Link>
@@ -153,7 +153,7 @@ export function SiteHeader({
 
           <nav className="hidden items-center gap-5 text-[13px] text-[#1B2430] lg:flex xl:gap-7">
             {PRIMARY_NAV.map((item) => (
-              <Link key={item.href} href={item.href} className="hover:text-[#1A3022]">
+              <Link key={item.href} href={item.href} className="hover:text-[#806A50]">
                 {item.label}
               </Link>
             ))}
@@ -164,7 +164,7 @@ export function SiteHeader({
             <button
               type="button"
               aria-label="Search catalogue"
-              className="flex h-11 w-11 items-center justify-center text-[#1A3022]"
+              className="flex h-11 w-11 items-center justify-center text-[#806A50]"
               onClick={() => {
                 setSearchOpen(true)
                 setOpen(false)
@@ -174,13 +174,13 @@ export function SiteHeader({
             </button>
             <Link
               href="/login"
-              className="rounded-sm bg-[#1A3022] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white"
+              className="rounded-sm bg-[#806A50] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white"
             >
               Sign in
             </Link>
             <button
               type="button"
-              className="flex h-11 w-11 items-center justify-center text-[#1A3022]"
+              className="flex h-11 w-11 items-center justify-center text-[#806A50]"
               aria-label={open ? 'Close menu' : 'Open menu'}
               aria-expanded={open}
               onClick={() => {
@@ -261,7 +261,7 @@ export function SiteHeader({
               <Link
                 href="/request-quote"
                 onClick={() => setOpen(false)}
-                className="mt-6 inline-flex items-center justify-center bg-[#1A3022] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+                className="mt-6 inline-flex items-center justify-center bg-[#806A50] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
               >
                 Request a Quote
               </Link>

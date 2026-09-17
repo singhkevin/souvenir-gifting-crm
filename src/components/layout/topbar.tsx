@@ -47,13 +47,13 @@ export function Topbar({
             <button
               type="button"
               onClick={onMenuClick}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white text-[#1A3022] lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white text-[#806A50] lg:hidden"
               aria-label="Open navigation"
             >
               <Menu className="h-5 w-5" />
             </button>
           ) : null}
-          <Link href="/crm/dashboard" className="truncate font-serif text-lg tracking-tight text-[#1A3022] lg:hidden">
+          <Link href="/crm/dashboard" className="truncate font-serif text-lg tracking-tight text-[#806A50] lg:hidden">
             <BrandName />
           </Link>
           <p className="hidden text-xs text-[#7A7267] lg:block">Corporate gifting, from enquiry to payment</p>
@@ -91,7 +91,7 @@ export function Topbar({
           >
             <Bell className="h-5 w-5" />
             {unread > 0 ? (
-              <span className="absolute right-1 top-1 min-w-[16px] rounded-full bg-[#1A3022] px-1 text-center text-[10px] leading-4 text-white">
+              <span className="absolute right-1 top-1 min-w-[16px] rounded-full bg-[#806A50] px-1 text-center text-[10px] leading-4 text-[#FFFFFF]">
                 {unread}
               </span>
             ) : null}

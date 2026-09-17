@@ -82,7 +82,7 @@ export function PartnerDirectory({
           )}
           <button
             type="submit"
-            className="min-h-10 rounded-lg bg-[#1A3022] py-2 font-semibold text-white hover:bg-[#274433] hover:text-white md:col-span-3"
+            className="min-h-10 rounded-lg bg-[#806A50] py-2 font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF] md:col-span-3"
           >
             Add
           </button>
@@ -184,7 +184,7 @@ export function PartnerDirectory({
                 />
                 <button
                   type="submit"
-                  className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white"
+                  className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
                 >
                   Save
                 </button>
@@ -328,7 +328,7 @@ export function PartnerDirectory({
                       />
                       <button
                         type="submit"
-                        className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white"
+                        className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
                       >
                         Save
                       </button>

@@ -40,7 +40,7 @@ export default async function NewProductPage({
 
       <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-          <div className="p-3 bg-[#4A235A]/10 text-[#4A235A] rounded-xl">
+          <div className="p-3 bg-[#806A50]/10 text-[#806A50] rounded-xl">
             <Package className="w-6 h-6" />
           </div>
           <div>
@@ -66,7 +66,7 @@ export default async function NewProductPage({
                 name="name"
                 required
                 placeholder="e.g. Premium Executive Leather Journal"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -77,7 +77,7 @@ export default async function NewProductPage({
                 name="sku"
                 required
                 placeholder="e.g. GIF-LJ001"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none font-mono uppercase"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none font-mono uppercase"
               />
             </div>
 
@@ -112,7 +112,7 @@ export default async function NewProductPage({
                 step="0.01"
                 required
                 placeholder="e.g. 750"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -124,7 +124,7 @@ export default async function NewProductPage({
                 defaultValue="50"
                 min="1"
                 required
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -135,7 +135,7 @@ export default async function NewProductPage({
                 name="supplier_cost"
                 step="0.01"
                 placeholder="e.g. 450"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -145,7 +145,7 @@ export default async function NewProductPage({
                 type="number"
                 name="internal_margin"
                 step="0.01"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -165,7 +165,7 @@ export default async function NewProductPage({
               <input
                 type="text"
                 name="hsn_code"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
           </div>
@@ -178,7 +178,7 @@ export default async function NewProductPage({
               type="url"
               name="image_url"
               placeholder="Only if the photo is already in product-images storage"
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none"
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
             />
             <p className="text-[11px] text-gray-400 mt-1">Prefer uploading a photo above. Do not use localhost or unrelated stock URLs.</p>
           </div>
@@ -189,7 +189,7 @@ export default async function NewProductPage({
               name="description"
               rows={3}
               placeholder="Dimensions, material composition, custom branding instructions..."
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A] focus:outline-none"
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
             />
           </div>
 
@@ -222,13 +222,13 @@ export default async function NewProductPage({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#4A235A] transition-colors">
+              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#806A50] transition-colors">
                 <input
                   type="radio"
                   name="catalogue_access"
                   value="all"
                   defaultChecked
-                  className="mt-1 text-[#4A235A] focus:ring-[#4A235A]"
+                  className="mt-1 text-[#806A50] focus:ring-[#806A50]"
                 />
                 <div>
                   <div className="flex items-center gap-1.5 font-bold text-xs text-gray-900">
@@ -241,16 +241,16 @@ export default async function NewProductPage({
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#4A235A] transition-colors">
+              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#806A50] transition-colors">
                 <input
                   type="radio"
                   name="catalogue_access"
                   value="selected"
-                  className="mt-1 text-[#4A235A] focus:ring-[#4A235A]"
+                  className="mt-1 text-[#806A50] focus:ring-[#806A50]"
                 />
                 <div>
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-[#4A235A]">
-                    <Lock className="w-3.5 h-3.5 text-[#4A235A]" />
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-[#806A50]">
+                    <Lock className="w-3.5 h-3.5 text-[#806A50]" />
                     Personalized / Specific
                   </div>
                   <p className="text-[11px] text-gray-500 mt-1">
@@ -259,12 +259,12 @@ export default async function NewProductPage({
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#4A235A] transition-colors">
+              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#806A50] transition-colors">
                 <input
                   type="radio"
                   name="catalogue_access"
                   value="none"
-                  className="mt-1 text-[#4A235A] focus:ring-[#4A235A]"
+                  className="mt-1 text-[#806A50] focus:ring-[#806A50]"
                 />
                 <div>
                   <div className="flex items-center gap-1.5 font-bold text-xs text-gray-700">
@@ -289,7 +289,7 @@ export default async function NewProductPage({
                       type="checkbox"
                       name="company_ids"
                       value={comp.id}
-                      className="rounded border-gray-300 text-[#4A235A] focus:ring-[#4A235A]"
+                      className="rounded border-gray-300 text-[#806A50] focus:ring-[#806A50]"
                     />
                     <span className="truncate font-medium">{comp.name}</span>
                   </label>
@@ -308,7 +308,7 @@ export default async function NewProductPage({
             </Link>
             <button
               type="submit"
-              className="px-6 py-2 text-xs font-semibold text-white bg-[#4A235A] hover:bg-[#3d1c4a] rounded-lg transition-colors shadow-sm"
+              className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg transition-colors shadow-sm"
             >
               Create Product
             </button>

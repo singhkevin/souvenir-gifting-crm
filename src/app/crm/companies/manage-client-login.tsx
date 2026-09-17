@@ -38,7 +38,7 @@ export function ManageClientLogin({
 
   return (
     <>
-      <button type="button" onClick={() => { setOpen(true); setIssued(null); setPassword(''); setRevealed(false) }} className="text-[11px] font-semibold text-[#4A235A] hover:underline">
+      <button type="button" onClick={() => { setOpen(true); setIssued(null); setPassword(''); setRevealed(false) }} className="text-[11px] font-semibold text-[#624B32] hover:underline">
         Manage Login
       </button>
       {open && (
@@ -72,7 +72,7 @@ export function ManageClientLogin({
                   className="w-full border rounded-lg px-3 py-2"
                 />
                 <div className="flex gap-2">
-                  <button type="button" disabled={pending || password.length < 8} onClick={() => submit(false)} className="px-3 py-2 font-semibold text-white bg-[#4A235A] rounded-lg disabled:opacity-50">
+                  <button type="button" disabled={pending || password.length < 8} onClick={() => submit(false)} className="px-3 py-2 font-semibold text-white bg-[#624B32] rounded-lg disabled:opacity-50">
                     {pending ? 'Saving…' : 'Set temporary password'}
                   </button>
                   <button type="button" disabled={pending} onClick={() => submit(true)} className="px-3 py-2 border rounded-lg disabled:opacity-50">

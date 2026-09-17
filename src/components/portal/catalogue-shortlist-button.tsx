@@ -42,12 +42,12 @@ export function CatalogueShortlistButton({
           ? `inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors ${
               active
                 ? 'border border-green-200 bg-green-50 text-green-800'
-                : 'bg-[#1A3022] text-white hover:bg-[#274433]'
+                : 'bg-[#806A50] text-[#FFFFFF] hover:bg-[#9C8567]'
             }`
           : `inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors ${
               active
                 ? 'border border-green-200 bg-green-50 text-green-800'
-                : 'border border-[#E5DFD5] bg-white text-[#1A3022] hover:bg-[#FAF7F2]'
+                : 'border border-[#E5DFD5] bg-white text-[#806A50] hover:bg-[#FAF7F2]'
             }`
       }
       aria-pressed={active}

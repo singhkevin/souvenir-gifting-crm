@@ -57,13 +57,13 @@ export function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-white bg-[#1A3022] hover:bg-[#274433] disabled:opacity-50"
+          className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] disabled:opacity-50"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send reset link'}
         </button>
       </form>
       <p className="text-xs text-center text-[#7A7267] mt-5">
-        <Link href="/login" className="font-semibold text-[#4A235A] hover:underline">Back to Sign in</Link>
+        <Link href="/login" className="font-semibold text-[#624B32] hover:underline">Back to Sign in</Link>
       </p>
     </AuthShell>
   )

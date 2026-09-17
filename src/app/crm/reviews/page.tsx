@@ -60,7 +60,7 @@ export default async function ReviewsPage() {
           }))}
         />
         <input name="feedback" placeholder="Feedback" className="border rounded-lg px-2 py-2" />
-        <button className="bg-[#1A3022] text-white rounded-lg font-semibold md:col-span-2 py-2">Log review</button>
+        <button className="bg-[#806A50] text-[#FFFFFF] rounded-lg font-semibold md:col-span-2 py-2">Log review</button>
       </form>
 
       <div className="bg-white rounded-lg border overflow-hidden">
@@ -106,7 +106,7 @@ export default async function ReviewsPage() {
                           }))}
                         />
                         <input name="feedback" defaultValue={review.feedback || ''} className="border rounded px-2 py-1" />
-                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save</button>
+                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save</button>
                       </form>
                       <ConfirmAction
                         title="Delete review?"

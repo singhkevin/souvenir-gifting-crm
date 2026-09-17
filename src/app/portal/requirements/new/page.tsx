@@ -96,7 +96,7 @@ export default function NewRequirementPage() {
         <div className="absolute left-0 right-0 top-1/2 -z-10 h-0.5 bg-gray-200"></div>
         {[1, 2, 3].map(i => (
           <div key={i} className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-            step >= i ? 'bg-[#1A3022] text-white' : 'bg-gray-200 text-gray-500'
+            step >= i ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-gray-200 text-gray-500'
           }`}>
             {i}
           </div>
@@ -116,7 +116,7 @@ export default function NewRequirementPage() {
               <h2 className="border-b pb-2 text-xl font-bold text-gray-900">Step 1: What do you need?</h2>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Requirement Name</label>
-                <input type="text" name="name" required value={formData.name} onChange={handleChange} className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#1A3022] focus:ring-1 focus:ring-[#1A3022]" placeholder="e.g. Diwali Gifts 2026" />
+                <input type="text" name="name" required value={formData.name} onChange={handleChange} className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="e.g. Diwali Gifts 2026" />
               </div>
               <MobileSheetSelect
                 label="Purpose / Occasion"
@@ -127,7 +127,7 @@ export default function NewRequirementPage() {
               />
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Description (Optional)</label>
-                <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#1A3022] focus:ring-1 focus:ring-[#1A3022]" placeholder="Any specific themes, colors, or preferences?"></textarea>
+                <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="Any specific themes, colors, or preferences?"></textarea>
               </div>
             </div>
           )}
@@ -138,11 +138,11 @@ export default function NewRequirementPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">Budget per unit ($)</label>
-                  <input type="number" name="budget_per_unit" required value={formData.budget_per_unit} onChange={handleChange} min="1" step="0.01" className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#1A3022] focus:ring-1 focus:ring-[#1A3022]" placeholder="e.g. 50" />
+                  <input type="number" name="budget_per_unit" required value={formData.budget_per_unit} onChange={handleChange} min="1" step="0.01" className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="e.g. 50" />
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">Total Quantity</label>
-                  <input type="number" name="quantity" required value={formData.quantity} onChange={handleChange} min="1" className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#1A3022] focus:ring-1 focus:ring-[#1A3022]" placeholder="e.g. 100" />
+                  <input type="number" name="quantity" required value={formData.quantity} onChange={handleChange} min="1" className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="e.g. 100" />
                 </div>
               </div>
               <SheetDateField
@@ -153,7 +153,7 @@ export default function NewRequirementPage() {
               />
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Delivery City</label>
-                <input type="text" name="delivery_city" required value={formData.delivery_city} onChange={handleChange} className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#1A3022] focus:ring-1 focus:ring-[#1A3022]" placeholder="e.g. New York" />
+                <input type="text" name="delivery_city" required value={formData.delivery_city} onChange={handleChange} className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="e.g. New York" />
               </div>
             </div>
           )}
@@ -189,7 +189,7 @@ export default function NewRequirementPage() {
               <div className="hidden sm:block"></div>
             )}
             
-            <button type="submit" disabled={loading} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1A3022] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#274433] disabled:opacity-50">
+            <button type="submit" disabled={loading} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-6 text-sm font-semibold text-[#FFFFFF] transition-colors hover:bg-[#9C8567] disabled:opacity-50">
               {step < 3 ? 'Next Step' : loading ? 'Submitting...' : 'Submit Requirement'}
             </button>
           </div>

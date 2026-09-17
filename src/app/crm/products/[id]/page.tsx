@@ -91,7 +91,7 @@ export default async function ProductDetailPage({
               </span>
             )}
             {product.catalogue_access === 'selected' && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-purple-100 text-[#4A235A] px-2.5 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-purple-100 text-[#806A50] px-2.5 py-0.5 rounded-full">
                 <Lock className="w-3 h-3" /> {accessRecords?.length || 0} companies
               </span>
             )}
@@ -139,7 +139,7 @@ export default async function ProductDetailPage({
           <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-100">
             <div>
               <p className="text-[10px] text-gray-400 uppercase font-semibold">Retail Price</p>
-              <p className="text-xl font-bold text-[#4A235A]">{formatCurrency(product.price)}</p>
+              <p className="text-xl font-bold text-[#806A50]">{formatCurrency(product.price)}</p>
             </div>
             {showCost && (
             <div>
@@ -169,7 +169,7 @@ export default async function ProductDetailPage({
                 name="name"
                 defaultValue={product.name}
                 required
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#4A235A]"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50]"
               />
             </div>
 
@@ -181,7 +181,7 @@ export default async function ProductDetailPage({
                   name="sku"
                   defaultValue={product.sku}
                   required
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg font-mono uppercase focus:ring-1 focus:ring-[#4A235A]"
+                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg font-mono uppercase focus:ring-1 focus:ring-[#806A50]"
                 />
                 <p className="text-[10px] text-gray-400 mt-1">Permanent identifier. Admin-only to change; changes are audited.</p>
               </div>
@@ -286,7 +286,7 @@ export default async function ProductDetailPage({
 
             <button
               type="submit"
-              className="w-full py-2.5 text-xs font-semibold text-white bg-[#4A235A] hover:bg-[#3d1c4a] hover:text-white rounded-lg shadow-sm transition-colors"
+              className="w-full py-2.5 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] hover:text-white rounded-lg shadow-sm transition-colors"
             >
               Save Product Details
             </button>

@@ -54,7 +54,7 @@ export default async function PortalQuotationsPage() {
                 <p className="text-base font-semibold text-gray-900">{formatCurrency(quote.total)}</p>
                 <Link
                   href={`/portal/quotations/${quote.id}`}
-                  className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433]"
+                  className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
                 >
                   View details
                 </Link>
@@ -94,7 +94,7 @@ export default async function PortalQuotationsPage() {
                       <td className="px-6 py-4 text-right">
                         <Link
                           href={`/portal/quotations/${quote.id}`}
-                          className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#FAF7F2]"
+                          className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
                         >
                           View details
                         </Link>

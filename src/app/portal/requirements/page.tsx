@@ -30,7 +30,7 @@ export default async function PortalRequirementsPage() {
         </div>
         <Link 
           href="/portal/requirements/new"
-          className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#1A3022] px-4 text-sm font-semibold text-white hover:bg-[#274433] sm:w-auto"
+          className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-[#FFFFFF] hover:bg-[#9C8567] sm:w-auto"
         >
           Create New Requirement
         </Link>

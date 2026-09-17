@@ -126,11 +126,11 @@ export default async function OrderDetailPage({
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="p-1.5 bg-[#1A3022]/10 text-[#1A3022] rounded-lg">
+            <span className="p-1.5 bg-[#806A50]/10 text-[#806A50] rounded-lg">
               <ShoppingBag size={16} />
             </span>
             <span className="font-mono text-xs font-bold text-gray-500">{order.order_number}</span>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#1A3022] uppercase">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#806A50] uppercase">
               {ORDER_STATUS_LABELS[order.status] || order.status}
             </span>
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${HEALTH_STYLES[health]}`}>
@@ -147,17 +147,17 @@ export default async function OrderDetailPage({
             {' · '}Stage due: <span className="font-medium text-gray-700">{formatDate(order.stage_due_at)}</span>
             {' · '}Delivery: <span className="font-medium text-gray-700">{formatDate(order.expected_delivery_date)}</span>
           </p>
-          {order.next_action && <p className="text-xs mt-2 text-[#1A3022]">Next: {order.next_action}</p>}
+          {order.next_action && <p className="text-xs mt-2 text-[#806A50]">Next: {order.next_action}</p>}
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-right">
             <p className="text-[10px] uppercase font-bold text-gray-400">Order Value</p>
-            <p className="text-xl font-bold text-[#1A3022]">{formatCurrency(order.order_value)}</p>
+            <p className="text-xl font-bold text-[#806A50]">{formatCurrency(order.order_value)}</p>
           </div>
           {canStage && !isDelivered && (
             <form action={handleAdvance}>
-              <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5">
+              <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5">
                 Advance Stage <ChevronRight size={14} />
               </button>
             </form>
@@ -227,7 +227,7 @@ export default async function OrderDetailPage({
             <span className="text-gray-500">Comment / reason</span>
             <textarea name="comment" rows={2} className="w-full border rounded-lg px-2 py-2" placeholder="Why is this moving?" />
           </label>
-          <button className="md:col-span-2 bg-[#1A3022] text-white rounded-lg py-2 font-semibold">Record hand-off</button>
+          <button className="md:col-span-2 bg-[#806A50] text-white rounded-lg py-2 font-semibold">Record hand-off</button>
         </form>
       )}
 
@@ -298,7 +298,7 @@ export default async function OrderDetailPage({
                                 {canOpen ? (
                                   <Link
                                     href={`/crm/products/${product!.id}`}
-                                    className="font-semibold text-gray-900 hover:text-[#1A3022] hover:underline"
+                                    className="font-semibold text-gray-900 hover:text-[#806A50] hover:underline"
                                   >
                                     {name}
                                   </Link>
@@ -335,7 +335,7 @@ export default async function OrderDetailPage({
                     ...(suppliers || []).map((s) => ({ value: s.id, label: s.name })),
                   ]}
                 />
-                {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save supplier</button>}
+                {canStage && <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg">Save supplier</button>}
               </form>
 
               <form action={asFormAction(assignPrintingVendor)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
@@ -352,7 +352,7 @@ export default async function OrderDetailPage({
                     ...(printingVendors || []).map((v) => ({ value: v.id, label: v.name })),
                   ]}
                 />
-                {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save printing vendor</button>}
+                {canStage && <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg">Save printing vendor</button>}
               </form>
 
               <form action={handleAssignCourier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
@@ -369,7 +369,7 @@ export default async function OrderDetailPage({
                   ]}
                 />
                 <input name="tracking_number" defaultValue={order.tracking_number || ''} placeholder="AWB / tracking number" disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
-                {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save shipping</button>}
+                {canStage && <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg">Save shipping</button>}
               </form>
 
               <form action={asFormAction(recordDelivery)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
@@ -396,7 +396,7 @@ export default async function OrderDetailPage({
                   defaultValue={order.actual_delivery_date || ''}
                   disabled={!canStage}
                 />
-                {canStage && <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg">Save delivery dates</button>}
+                {canStage && <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg">Save delivery dates</button>}
               </form>
             </div>
           ),
@@ -427,7 +427,7 @@ export default async function OrderDetailPage({
                           />
                         </label>
                       ))}
-                      <button type="submit" className="px-4 py-2 bg-[#1A3022] text-white rounded-lg font-semibold">Save costing</button>
+                      <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-semibold">Save costing</button>
                     </form>
 
                     <div className="bg-white p-6 rounded-2xl border text-xs space-y-3">
@@ -438,7 +438,7 @@ export default async function OrderDetailPage({
                       <div className="flex justify-between text-gray-500"><span>Courier cost</span><span>{formatCurrency(order.courier_cost)}</span></div>
                       <div className="flex justify-between text-gray-500"><span>Other cost</span><span>{formatCurrency(order.other_cost)}</span></div>
                       <div className="flex justify-between pt-2 border-t"><span>Total cost</span><span>{formatCurrency(order.total_cost)}</span></div>
-                      <div className="flex justify-between font-semibold text-[#1A3022]"><span>Gross profit</span><span>{formatCurrency(order.gross_profit)}</span></div>
+                      <div className="flex justify-between font-semibold text-[#806A50]"><span>Gross profit</span><span>{formatCurrency(order.gross_profit)}</span></div>
                       <div className="flex justify-between font-semibold">
                         <span>Margin</span>
                         <span>{Number(order.order_value) > 0 ? `${((Number(order.gross_profit || 0) / Number(order.order_value)) * 100).toFixed(1)}%` : '—'}</span>
@@ -457,7 +457,7 @@ export default async function OrderDetailPage({
                 const changer = Array.isArray(entry.changer) ? entry.changer[0] : entry.changer
                 return (
                   <div key={entry.id} className="flex gap-3 text-xs">
-                    <div className="w-2.5 h-2.5 mt-1 rounded-full bg-[#1A3022]" />
+                    <div className="w-2.5 h-2.5 mt-1 rounded-full bg-[#806A50]" />
                     <div>
                       <p className="font-bold">{ORDER_STATUS_LABELS[entry.from_status || ''] || entry.from_status || '—'} → {ORDER_STATUS_LABELS[entry.to_status || ''] || entry.to_status}</p>
                       <p className="text-gray-400">{formatDateTime(entry.changed_at || entry.created_at)} · {changer?.full_name || 'Team'}</p>

@@ -38,7 +38,7 @@ export default async function SettingsPage() {
           <span className="text-gray-500 text-xs">Currency</span>
           <input name="currency" defaultValue={settings?.currency || 'INR'} className="w-full border rounded-lg px-3 py-2 mt-1" />
         </label>
-        <button className="px-4 py-2 bg-[#1A3022] text-white rounded-lg font-medium text-sm">Save settings</button>
+        <button className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm">Save settings</button>
       </form>
     </div>
   )

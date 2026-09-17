@@ -147,7 +147,7 @@ export async function PublicHome() {
       <section className="relative overflow-hidden py-20 text-white">
         <div className="absolute inset-0">
           <Image src="/site/banner-brand.webp" alt="" fill sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-[#1A3022]/88" />
+          <div className="absolute inset-0 bg-[#806A50]/88" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
@@ -207,7 +207,7 @@ export async function PublicHome() {
                       <p className="text-[10px] uppercase tracking-[0.18em] text-[#5C6570]">{collection.kicker}</p>
                       <p className="mt-2 font-serif text-2xl text-[#1B2430]">{collection.title}</p>
                       <p className="mt-2 flex-1 text-sm leading-relaxed text-[#5C6570]">{collection.description}</p>
-                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]">
+                      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#806A50]">
                         Open collection {ARROW}
                       </p>
                     </div>
@@ -249,7 +249,7 @@ export async function PublicHome() {
                   <div className="min-w-0 flex-1 py-1">
                     <p className="font-serif text-xl text-[#1B2430]">{occasion.title}</p>
                     <p className="mt-1 text-sm text-[#5C6570]">{occasion.line}</p>
-                    <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1A3022]">
+                    <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#806A50]">
                       Browse {ARROW}
                     </p>
                   </div>
@@ -360,7 +360,7 @@ export async function PublicHome() {
                 body: 'Quotations, orders, courier partners and invoicing in the same system.',
               },
             ].map((item) => (
-              <div key={item.title} className="border-t border-[#1A3022]/15 pt-5">
+              <div key={item.title} className="border-t border-[#806A50]/15 pt-5">
                 <p className="font-serif text-xl">{item.title}</p>
                 <p className="mt-3 text-sm leading-relaxed text-[#5C6570]">{item.body}</p>
               </div>
@@ -373,7 +373,7 @@ export async function PublicHome() {
       <section className="relative overflow-hidden py-14 text-center text-white sm:py-20">
         <div className="absolute inset-0">
           <Image src="/site/cta-dark.webp" alt="" fill sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-[#0E1A13]/86" />
+          <div className="absolute inset-0 bg-[#1A1108]/86" />
         </div>
         <div className="relative mx-auto max-w-3xl px-4 sm:px-6">
           <Reveal>
@@ -386,7 +386,7 @@ export async function PublicHome() {
             </p>
             <Link
               href="/request-quote"
-              className="mt-8 inline-flex bg-white px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1A3022]"
+              className="mt-8 inline-flex bg-white px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#806A50]"
             >
               Request a Quote
             </Link>

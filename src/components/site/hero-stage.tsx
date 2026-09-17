@@ -13,6 +13,23 @@ const FADE_MS = 700
 
 type TransitionPhase = 'idle' | 'out' | 'in'
 
+function preloadImages(urls: string[]): Promise<void> {
+  if (typeof window === 'undefined' || !urls.length) return Promise.resolve()
+  const loaders = urls.map(
+    (url) =>
+      new Promise<void>((resolve) => {
+        const img = new window.Image()
+        img.onload = () => resolve()
+        img.onerror = () => resolve()
+        img.src = url
+      }),
+  )
+  const timeout = new Promise<void>((resolve) => {
+    window.setTimeout(resolve, 1500)
+  })
+  return Promise.race([Promise.all(loaders).then(() => undefined), timeout])
+}
+
 function nextBatch(pool: PublicProduct[], start: number, count: number, avoid: string[] = []) {
   const ids: string[] = []
   let idx = start % pool.length
@@ -68,6 +85,7 @@ export function HeroStage({
       typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) return
 
+    let cancelled = false
     const timers: number[] = []
     const timer = window.setInterval(() => {
       if (!slotIdsRef.current.length) return
@@ -76,15 +94,26 @@ export function HeroStage({
         window.setTimeout(() => {
           const current = slotIdsRef.current
           const { ids, nextCursor } = nextBatch(pool, cursorRef.current, current.length, current)
-          cursorRef.current = nextCursor
-          setSlotIds(ids)
-          setPhase('in')
-          timers.push(window.setTimeout(() => setPhase('idle'), 40))
+          const nextProducts = ids
+            .map((id) => pool.find((product) => product.id === id))
+            .filter(Boolean) as PublicProduct[]
+          const urls = nextProducts.map((product) => product.image_url).filter(Boolean) as string[]
+
+          // Preload every image in the next batch so they all appear together —
+          // otherwise slower-loading photos pop in after the faster ones.
+          preloadImages(urls).then(() => {
+            if (cancelled) return
+            cursorRef.current = nextCursor
+            setSlotIds(ids)
+            setPhase('in')
+            timers.push(window.setTimeout(() => setPhase('idle'), 40))
+          })
         }, FADE_MS),
       )
     }, SLIDE_MS)
 
     return () => {
+      cancelled = true
       window.clearInterval(timer)
       timers.forEach((id) => window.clearTimeout(id))
     }
@@ -98,7 +127,7 @@ export function HeroStage({
   const mobilePreview = floats.slice(0, 3)
 
   return (
-    <section className="relative isolate overflow-hidden bg-[#1A3022] text-white">
+    <section className="relative isolate overflow-hidden bg-[#806A50] text-white">
       <div className="absolute inset-0">
         <Image
           src="/site/hero-composition.webp"
@@ -108,7 +137,7 @@ export function HeroStage({
           sizes="100vw"
           className="object-cover opacity-35"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0E1A13] via-[#1A3022]/92 to-[#1A3022]/75" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1A1108] via-[#806A50]/92 to-[#806A50]/75" />
       </div>
 
       <div className="relative mx-auto grid min-h-[auto] max-w-7xl items-center gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 lg:min-h-[78vh] lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-20">
@@ -127,7 +156,7 @@ export function HeroStage({
           <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
             <Link
               href="/catalogue"
-              className="inline-flex items-center justify-center bg-white px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1A3022] sm:py-3"
+              className="inline-flex items-center justify-center bg-white px-6 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#806A50] sm:py-3"
             >
               Explore Catalogue
             </Link>
@@ -163,7 +192,7 @@ export function HeroStage({
                   </div>
                   <div className="border-t border-[#E8E4DE] px-2.5 py-2 text-[#1B2430]">
                     <p className="truncate text-center text-[11px] leading-snug">{product.name}</p>
-                    <p className="mt-0.5 text-center text-[11px] font-semibold text-[#1A3022]">
+                    <p className="mt-0.5 text-center text-[11px] font-semibold text-[#806A50]">
                       {formatCurrency(product.price)}
                     </p>
                   </div>
@@ -195,7 +224,7 @@ export function HeroStage({
                 </div>
                 <div className="border-t border-[#E8E4DE] bg-white px-3 py-2.5 text-[#1B2430]">
                   <p className="truncate text-center text-[12px] leading-snug">{product.name}</p>
-                  <p className="mt-0.5 text-center text-[11px] font-semibold text-[#1A3022]">View gift</p>
+                  <p className="mt-0.5 text-center text-[11px] font-semibold text-[#806A50]">View gift</p>
                 </div>
               </div>
             </Link>

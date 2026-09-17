@@ -38,7 +38,7 @@ export default async function SamplesPage({
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">Sample Management</h1>
         <p className="text-xs text-[#7A7267] mt-1">
           Track physical samples in office, with the team, with a client, or pending from a supplier. Use{' '}
-          <span className="font-semibold text-[#1A3022]">Send to client</span> on any product below to dispatch samples
+          <span className="font-semibold text-[#806A50]">Send to client</span> on any product below to dispatch samples
           directly to a company.
         </p>
       </div>
@@ -98,7 +98,7 @@ export default async function SamplesPage({
         )}
         <button
           type="submit"
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#1A3022] px-4 py-2.5 font-semibold text-white md:col-span-4"
+          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 py-2.5 font-semibold text-white md:col-span-4"
         >
           Receive into office
         </button>
@@ -135,11 +135,11 @@ export default async function SamplesPage({
                     <div className="min-w-[220px] space-y-2">
                       <form
                         action={asFormAction(moveSample)}
-                        className="space-y-1.5 rounded-lg border border-[#1A3022]/25 bg-[#F4EFE6] p-2 text-[11px]"
+                        className="space-y-1.5 rounded-lg border border-[#806A50]/25 bg-[#F4EFE6] p-2 text-[11px]"
                       >
                         <input type="hidden" name="stock_id" value={sample.id} />
                         <input type="hidden" name="to_holder" value="client" />
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#1A3022]">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#806A50]">
                           Send to client
                         </p>
                         <MobileSheetSelect
@@ -170,7 +170,7 @@ export default async function SamplesPage({
                             required
                             className="rounded border px-1 py-1"
                           />
-                          <button className="rounded bg-[#1A3022] py-1 font-semibold text-white">Send</button>
+                          <button className="rounded bg-[#806A50] py-1 font-semibold text-white">Send</button>
                         </div>
                         <input name="note" placeholder="Note (optional)" className="w-full rounded border px-1 py-1" />
                       </form>

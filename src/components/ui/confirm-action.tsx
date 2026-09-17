@@ -62,7 +62,7 @@ export function ConfirmAction({
                 className={
                   destructive
                     ? 'px-3 py-2 text-xs font-semibold rounded-lg bg-red-700 text-white hover:bg-red-800'
-                    : 'px-3 py-2 text-xs font-semibold rounded-lg bg-[#1A3022] text-white'
+                    : 'px-3 py-2 text-xs font-semibold rounded-lg bg-[#806A50] text-[#FFFFFF]'
                 }
               >
                 {confirmLabel}

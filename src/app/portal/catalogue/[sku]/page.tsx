@@ -39,7 +39,7 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
 
         <div className="flex flex-col justify-between space-y-6">
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-[#1A3022]">{campaign?.name}</p>
+            <p className="text-xs font-semibold uppercase text-[#806A50]">{campaign?.name}</p>
             <h1 className="text-2xl font-bold text-gray-900">{offering.display_name}</h1>
             <div className="border-t border-gray-100 pt-3">
               <p className="text-3xl font-bold text-gray-900">{formatCurrency(offering.selling_price)}</p>
@@ -64,7 +64,7 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
             />
             <Link
               href="/portal/requirements/new"
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#1A3022] px-4 text-xs font-semibold text-white hover:bg-[#274433]"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#806A50] px-4 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
             >
               Request a quotation
             </Link>

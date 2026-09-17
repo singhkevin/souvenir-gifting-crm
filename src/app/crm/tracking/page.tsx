@@ -78,7 +78,7 @@ export default async function AdminTrackingPage() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <h2 className="font-bold text-sm">Orders</h2>
-          <Link href="/crm/order-management" className="text-xs text-[#4A235A] font-semibold">Order management</Link>
+          <Link href="/crm/order-management" className="text-xs text-[#624B32] font-semibold">Order management</Link>
         </div>
         <table className="w-full text-xs">
           <thead className="bg-gray-50 text-gray-500">
@@ -99,7 +99,7 @@ export default async function AdminTrackingPage() {
               return (
                 <tr key={order.id}>
                   <td className="px-4 py-2 font-semibold">
-                    <Link href={`/crm/orders/${order.id}`} className="text-[#4A235A]">{order.order_number}</Link>
+                    <Link href={`/crm/orders/${order.id}`} className="text-[#624B32]">{order.order_number}</Link>
                   </td>
                   <td className="px-4 py-2">{company?.name || '—'}</td>
                   <td className="px-4 py-2">{assignee?.full_name || 'Unassigned'}</td>
@@ -123,7 +123,7 @@ export default async function AdminTrackingPage() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <h2 className="font-bold text-sm">Tasks</h2>
-          <Link href="/crm/tasks?tab=all_tasks" className="text-xs text-[#4A235A] font-semibold">All tasks</Link>
+          <Link href="/crm/tasks?tab=all_tasks" className="text-xs text-[#624B32] font-semibold">All tasks</Link>
         </div>
         <table className="w-full text-xs">
           <thead className="bg-gray-50 text-gray-500">
@@ -161,7 +161,7 @@ export default async function AdminTrackingPage() {
                           label: member.full_name || 'Unnamed',
                         }))}
                       />
-                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save</button>
+                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save</button>
                     </form>
                     ) : (
                       assignee?.full_name || 'Unassigned'
@@ -179,12 +179,12 @@ export default async function AdminTrackingPage() {
                         defaultValue={task.status || 'open'}
                         options={TASK_STATUS_OPTIONS}
                       />
-                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Update</button>
+                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Update</button>
                     </form>
                     {task.status !== 'done' && (
                       <form action={asFormAction(completeTask)}>
                         <input type="hidden" name="id" value={task.id} />
-                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#1A3022] px-3 text-xs font-semibold text-[#1A3022] hover:bg-[#F4EFE6]">Complete</button>
+                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Complete</button>
                       </form>
                     )}
                     </>
@@ -224,7 +224,7 @@ export default async function AdminTrackingPage() {
                 <tr key={row.id}>
                   <td className="px-4 py-2 font-semibold">
                     {order?.id ? (
-                      <Link href={`/crm/orders/${order.id}`} className="text-[#4A235A]">{order.order_number}</Link>
+                      <Link href={`/crm/orders/${order.id}`} className="text-[#624B32]">{order.order_number}</Link>
                     ) : '—'}
                     {order?.status ? <span className="ml-2 text-gray-400">{ORDER_STATUS_LABELS[order.status] || order.status}</span> : null}
                   </td>
@@ -258,7 +258,7 @@ export default async function AdminTrackingPage() {
 
 function Stat({ href, label, value }: { href: string; label: string; value: number }) {
   return (
-    <Link href={href} className="bg-white border border-gray-200 rounded-xl px-3 py-3 hover:border-[#4A235A]">
+    <Link href={href} className="bg-white border border-gray-200 rounded-xl px-3 py-3 hover:border-[#624B32]">
       <p className="text-[10px] uppercase font-semibold text-gray-400">{label}</p>
       <p className="text-xl font-bold text-gray-900">{value}</p>
     </Link>

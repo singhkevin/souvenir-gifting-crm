@@ -79,7 +79,7 @@ export default async function ActivitiesPage({
         />
         <input name="related_id" placeholder="Related record ID" className="rounded-lg border px-2 py-2" />
         <textarea name="notes" placeholder="Notes" className="min-h-[70px] rounded-lg border px-2 py-2 md:col-span-2" />
-        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white md:col-span-2">Log activity</button>
+        <button className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] md:col-span-2">Log activity</button>
       </form>
 
       <div className="md:hidden">
@@ -135,7 +135,7 @@ export default async function ActivitiesPage({
                   </div>
                   <p className="text-sm font-medium">{activity.title}</p>
                   {activity.related_type && (
-                    <p className="text-xs text-[#1A3022] mt-1">
+                    <p className="text-xs text-[#806A50] mt-1">
                       {activity.related_type}
                       {activity.related_id ? (
                         <Link href={

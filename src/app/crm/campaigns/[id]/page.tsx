@@ -68,7 +68,7 @@ export default async function CampaignDetailPage({
         <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={campaign.budget_per_employee || 0} className="border rounded-lg px-3 py-2" />
         <SheetDateField name="required_delivery_date" label="Required delivery" defaultValue={campaign.required_delivery_date || ''} />
         <input name="description" defaultValue={campaign.description || ''} placeholder="Notes" className="min-h-11 rounded-lg border px-3 py-2" />
-        <button className="min-h-11 rounded-lg bg-[#1A3022] font-semibold text-white">Save campaign</button>
+        <button className="min-h-11 rounded-lg bg-[#806A50] font-semibold text-[#FFFFFF]">Save campaign</button>
       </form>
 
       <form action={asFormAction(addCampaignProduct)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3">
@@ -88,7 +88,7 @@ export default async function CampaignDetailPage({
           ]}
         />
         <input name="selling_price" type="number" step="0.01" placeholder="Client selling price" className="border rounded-lg px-2 py-2" />
-        <button className="bg-[#1A3022] text-white rounded-lg font-semibold">Add as draft offering</button>
+        <button className="bg-[#806A50] text-[#FFFFFF] rounded-lg font-semibold">Add as draft offering</button>
       </form>
 
       <div className="bg-white border rounded-2xl overflow-hidden">
@@ -127,7 +127,7 @@ export default async function CampaignDetailPage({
                           <input type="hidden" name="campaign_id" value={campaign.id} />
                           <input type="hidden" name="id" value={row.id} />
                           <input type="hidden" name="visibility" value="published" />
-                          <button className="underline text-[#1A3022]">Publish to client</button>
+                          <button className="underline text-[#806A50]">Publish to client</button>
                         </form>
                       )
                     ) : (

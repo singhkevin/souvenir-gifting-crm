@@ -56,7 +56,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
 
           <div className="sm:text-right">
             <p className="text-[10px] uppercase font-bold text-gray-400">Total Estimate</p>
-            <p className="text-2xl font-bold text-[#4A235A]">{formatCurrency(quote.total)}</p>
+            <p className="text-2xl font-bold text-[#624B32]">{formatCurrency(quote.total)}</p>
             <p className="text-xs text-gray-500 mt-0.5">
               Valid until: <span className="font-bold text-gray-800">{quote.valid_until ? formatDate(quote.valid_until) : '30 Days'}</span>
             </p>
@@ -153,7 +153,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
               )}
               <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
                 <span>Total Amount:</span>
-                <span className="text-[#4A235A]">{formatCurrency(quote.total)}</span>
+                <span className="text-[#624B32]">{formatCurrency(quote.total)}</span>
               </div>
             </div>
           </div>

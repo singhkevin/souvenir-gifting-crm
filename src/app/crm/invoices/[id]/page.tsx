@@ -38,7 +38,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 bg-[#4A235A]/10 text-[#4A235A] rounded-lg">
+            <span className="p-1.5 bg-[#806A50]/10 text-[#806A50] rounded-lg">
               <Receipt size={16} />
             </span>
             <span className="font-mono text-xs font-bold text-gray-500">{invoice.invoice_number}</span>
@@ -55,7 +55,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           </h1>
           {order && (
             <p className="text-xs text-gray-500 mt-0.5">
-              Linked Order: <Link href={`/crm/orders/${order.id}`} className="font-semibold text-[#4A235A] hover:underline">{order.order_number}</Link>
+              Linked Order: <Link href={`/crm/orders/${order.id}`} className="font-semibold text-[#806A50] hover:underline">{order.order_number}</Link>
             </p>
           )}
         </div>
@@ -63,7 +63,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         <div className="flex items-center gap-6 bg-purple-50/50 p-4 rounded-xl border border-purple-100">
           <div>
             <p className="text-[10px] uppercase font-bold text-gray-400">Total Amount</p>
-            <p className="text-xl font-bold text-[#4A235A]">{formatCurrency(invoice.amount)}</p>
+            <p className="text-xl font-bold text-[#806A50]">{formatCurrency(invoice.amount)}</p>
           </div>
           <div className="border-l border-purple-200 pl-4">
             <p className="text-[10px] uppercase font-bold text-gray-400">Balance Due</p>
@@ -127,7 +127,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         {balanceDue > 0 && (
           <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
             <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
-              <CreditCard size={14} className="text-[#4A235A]" /> Record Payment
+              <CreditCard size={14} className="text-[#806A50]" /> Record Payment
             </h2>
             <form action={handleRecordPayment} className="space-y-3 text-xs">
               <input type="hidden" name="invoice_id" value={invoice.id} />
@@ -180,7 +180,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
 
               <button
                 type="submit"
-                className="w-full py-2 bg-[#4A235A] hover:bg-[#3d1c4a] text-white rounded-lg font-semibold transition-colors shadow-sm mt-2"
+                className="w-full py-2 bg-[#806A50] hover:bg-[#624b32] text-white rounded-lg font-semibold transition-colors shadow-sm mt-2"
               >
                 Save Payment
               </button>

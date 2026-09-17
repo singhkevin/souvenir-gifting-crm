@@ -20,7 +20,7 @@ export function SiteFooter({
         </div>
 
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A3022]">Shop</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#806A50]">Shop</p>
           <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
             <Link href="/catalogue" className="hover:text-[#1B2430]">
               Catalogue
@@ -41,7 +41,7 @@ export function SiteFooter({
         </div>
 
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A3022]">About us</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#806A50]">About us</p>
           <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
             <Link href="/about" className="hover:text-[#1B2430]">
               About
@@ -59,7 +59,7 @@ export function SiteFooter({
         </div>
 
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A3022]">Shop by price</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#806A50]">Shop by price</p>
           <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
             {BUDGET_BANDS.map((band) => (
               <Link key={band.id} href={`/catalogue?budget=${encodeURIComponent(band.id)}`} className="hover:text-[#1B2430]">

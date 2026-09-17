@@ -55,7 +55,7 @@ export function CrmFrame({
         <button
           type="button"
           tabIndex={open ? 0 : -1}
-          className={`absolute inset-0 bg-[#122018]/50 backdrop-blur-[1px] transition-opacity duration-200 ${
+          className={`absolute inset-0 bg-[#624B32]/50 backdrop-blur-[1px] transition-opacity duration-200 ${
             open ? 'opacity-100' : 'opacity-0'
           }`}
           aria-label="Close menu"

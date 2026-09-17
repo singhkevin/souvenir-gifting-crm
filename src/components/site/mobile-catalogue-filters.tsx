@@ -85,7 +85,7 @@ export function MobileCatalogueFilters({
           router.push('/catalogue')
         }}
         className={`inline-flex min-h-10 w-full items-center text-[12px] font-bold uppercase tracking-[0.14em] transition-colors ${
-          hasFilters ? 'text-[#1A3022]' : 'cursor-not-allowed text-[#C4BDB3]'
+          hasFilters ? 'text-[#806A50]' : 'cursor-not-allowed text-[#C4BDB3]'
         }`}
       >
         Clear all filters

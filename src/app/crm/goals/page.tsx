@@ -116,7 +116,7 @@ export default async function GoalsPage() {
             ...teamRows.map((p: TeamMember) => ({ value: p.id, label: p.full_name ?? '' })),
           ]}
         />
-        <button className="rounded-lg bg-[#1A3022] py-2.5 font-semibold text-white hover:text-white md:col-span-3">Add goal</button>
+        <button className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] hover:text-[#FFFFFF] md:col-span-3">Add goal</button>
       </form>
       )}
 
@@ -170,7 +170,7 @@ export default async function GoalsPage() {
                         ...teamRows.map((p: TeamMember) => ({ value: p.id, label: p.full_name ?? '' })),
                       ]}
                     />
-                    <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#1A3022] px-3 text-xs font-semibold text-white hover:bg-[#274433] hover:text-white">Save goal</button>
+                    <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save goal</button>
                   </form>
                   <ConfirmAction
                     title="Delete goal?"

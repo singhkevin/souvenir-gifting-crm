@@ -46,7 +46,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 bg-[#4A235A]/10 text-[#4A235A] rounded-lg">
+            <span className="p-1.5 bg-[#806A50]/10 text-[#806A50] rounded-lg">
               <TrendingUp size={16} />
             </span>
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Corporate Lead</span>
@@ -61,7 +61,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
         <div className="bg-purple-50/50 p-4 rounded-xl border border-purple-100 text-right">
           <p className="text-[10px] uppercase font-bold text-gray-400">Estimated Pipeline Value</p>
-          <p className="text-2xl font-bold text-[#4A235A]">
+          <p className="text-2xl font-bold text-[#806A50]">
             {lead.estimated_value ? formatCurrency(lead.estimated_value) : '?'}
           </p>
           {['admin', 'sales'].includes(profile.role) && (
@@ -91,12 +91,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             return (
               <div key={stage} className="flex flex-col items-center relative z-10">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                  isCompleted ? 'bg-[#4A235A] text-white ring-4 ring-purple-50' : 'bg-gray-100 text-gray-400'
+                  isCompleted ? 'bg-[#806A50] text-white ring-4 ring-purple-50' : 'bg-gray-100 text-gray-400'
                 }`}>
                   {idx + 1}
                 </div>
                 <p className={`mt-2 text-[11px] font-semibold capitalize ${
-                  isCompleted ? 'text-[#4A235A]' : 'text-gray-400'
+                  isCompleted ? 'text-[#806A50]' : 'text-gray-400'
                 }`}>
                   {stage.replace('_', ' ')}
                 </p>
@@ -116,7 +116,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             />
             <button
               type="submit"
-              className="w-full px-4 py-1.5 bg-[#4A235A] hover:bg-[#3d1c4a] text-white text-xs font-semibold rounded-lg transition-colors shadow-sm sm:w-auto"
+              className="w-full px-4 py-1.5 bg-[#806A50] hover:bg-[#624b32] text-white text-xs font-semibold rounded-lg transition-colors shadow-sm sm:w-auto"
             >
               Save Stage
             </button>
@@ -127,9 +127,9 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-3 text-xs">
           <h2 className="font-bold text-sm text-gray-900 pb-2 border-b border-gray-100 flex items-center gap-2">
-            <Building2 size={16} className="text-[#4A235A]" /> Company Details
+            <Building2 size={16} className="text-[#806A50]" /> Company Details
           </h2>
-          <div><span className="font-semibold text-gray-500 w-24 inline-block">Company:</span> {company?.id ? <Link href={`/crm/companies/${company.id}`} className="text-[#4A235A] hover:underline font-bold">{company.name}</Link> : '—'}</div>
+          <div><span className="font-semibold text-gray-500 w-24 inline-block">Company:</span> {company?.id ? <Link href={`/crm/companies/${company.id}`} className="text-[#806A50] hover:underline font-bold">{company.name}</Link> : '—'}</div>
           <div><span className="font-semibold text-gray-500 w-24 inline-block">Industry:</span> {company?.industry || '?'}</div>
           <div><span className="font-semibold text-gray-500 w-24 inline-block">Location:</span> {[company?.city, company?.state].filter(Boolean).join(', ') || '?'}</div>
           <div><span className="font-semibold text-gray-500 w-24 inline-block">Source:</span> {lead.source || 'Direct Outreach'}</div>
@@ -138,7 +138,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-3 text-xs">
           <h2 className="font-bold text-sm text-gray-900 pb-2 border-b border-gray-100 flex items-center gap-2">
-            <User size={16} className="text-[#4A235A]" /> Primary Contact
+            <User size={16} className="text-[#806A50]" /> Primary Contact
           </h2>
           {contact ? (
             <>
@@ -188,7 +188,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               defaultValue={lead.next_follow_up_at ? String(lead.next_follow_up_at).slice(0, 10) : ''}
             />
             <textarea name="notes" rows={3} defaultValue={lead.notes || ''} className="md:col-span-2 border rounded-lg px-2 py-2" />
-            <button className="md:col-span-2 px-4 py-2 rounded-lg text-white bg-[#4A235A] font-semibold">Save lead</button>
+            <button className="md:col-span-2 px-4 py-2 rounded-lg text-white bg-[#806A50] font-semibold">Save lead</button>
           </form>
         </div>
       </div>

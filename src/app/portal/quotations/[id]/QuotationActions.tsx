@@ -30,7 +30,7 @@ export function QuotationActions({ quotationId }: { quotationId: string }) {
           <textarea 
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="mb-4 w-full rounded-md border p-2 outline-none focus:ring-[#1A3022]"
+            className="mb-4 w-full rounded-md border p-2 outline-none focus:ring-[#806A50]"
             rows={3}
           />
           <div className="flex flex-col gap-3 sm:flex-row">
