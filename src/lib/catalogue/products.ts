@@ -17,6 +17,7 @@ export type PublicProduct = {
   moq: number | null
   category_id: string | null
   category_name: string | null
+  brand_id: string | null
   brand_name: string | null
   status: string
   created_at: string | null
@@ -33,6 +34,7 @@ function toPublicProduct(row: {
   price: number | null
   moq: number | null
   category_id: string | null
+  brand_id?: string | null
   status: string
   created_at?: string | null
   category?: Named | Named[] | null
@@ -48,6 +50,7 @@ function toPublicProduct(row: {
     moq: row.moq,
     category_id: row.category_id,
     category_name: oneRelation(row.category)?.name || null,
+    brand_id: row.brand_id || null,
     brand_name: oneRelation(row.brand)?.name || null,
     status: row.status,
     created_at: row.created_at || null,
@@ -104,6 +107,18 @@ export async function getPublicCategories() {
     ).entries()
   ).map(([id, name]) => ({ id, name }))
   return sortProductCategories(unique)
+}
+
+export async function getPublicBrands() {
+  const products = await getPublicCatalogueProducts()
+  const unique = Array.from(
+    new Map(
+      products
+        .filter((product) => product.brand_id && product.brand_name)
+        .map((product) => [product.brand_id as string, product.brand_name as string])
+    ).entries()
+  ).map(([id, name]) => ({ id, name }))
+  return unique.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export function sanitiseCatalogueSearch(value: string) {

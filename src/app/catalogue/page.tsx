@@ -4,33 +4,49 @@ import { BrandName } from '@/components/brand/brand-name'
 import { SiteShell } from '@/components/site/site-shell'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
 import { MobileCatalogueFilters } from '@/components/site/mobile-catalogue-filters'
-import { getPublicCatalogueProducts, getPublicCategories, sanitiseCatalogueSearch } from '@/lib/catalogue/products'
-import { BUDGET_BANDS } from '@/lib/catalogue/collections'
-import { isUuid } from '@/lib/utils'
+import { PriceRangeFilter } from '@/components/site/price-range-filter'
+import {
+  getPublicCatalogueProducts,
+  getPublicCategories,
+  getPublicBrands,
+  sanitiseCatalogueSearch,
+} from '@/lib/catalogue/products'
+import { formatCurrency, isUuid } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Catalogue',
   description: 'Browse the Souvenir - Gifting Solutions corporate gifting catalogue.',
 }
 
-const BUDGETS = [{ id: '', label: 'Any budget' }, ...BUDGET_BANDS] as const
-
-function parseBudget(value: string) {
-  return BUDGETS.find((budget) => budget.id === value && 'min' in budget) as
-    | { id: string; label: string; min: number; max: number }
-    | undefined
-}
-
 export default async function CataloguePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; budget?: string; sort?: string }>
+  searchParams: Promise<{
+    q?: string
+    category?: string
+    brand?: string
+    priceMin?: string
+    priceMax?: string
+    sort?: string
+  }>
 }) {
-  const { q = '', category = '', budget = '', sort = 'name' } = await searchParams
+  const { q = '', category = '', brand = '', priceMin = '', priceMax = '', sort = 'name' } = await searchParams
   const search = sanitiseCatalogueSearch(q)
-  const [products, categories] = await Promise.all([getPublicCatalogueProducts(), getPublicCategories()])
+  const [products, categories, brands] = await Promise.all([
+    getPublicCatalogueProducts(),
+    getPublicCategories(),
+    getPublicBrands(),
+  ])
   const categoryFilter = isUuid(category) ? category : ''
-  const budgetFilter = parseBudget(budget)
+  const brandFilter = isUuid(brand) ? brand : ''
+
+  const priceBounds = {
+    min: 0,
+    max: Math.max(100, Math.ceil((Math.max(0, ...products.map((p) => p.price || 0)) || 100) / 100) * 100),
+  }
+  const priceMinFilter = Math.max(priceBounds.min, Number(priceMin) || priceBounds.min)
+  const priceMaxFilter = priceMax ? Math.min(priceBounds.max, Number(priceMax) || priceBounds.max) : priceBounds.max
+  const priceIsFiltered = priceMinFilter > priceBounds.min || priceMaxFilter < priceBounds.max
 
   let filtered = products
   if (search) {
@@ -46,10 +62,13 @@ export default async function CataloguePage({
   if (categoryFilter) {
     filtered = filtered.filter((product) => product.category_id === categoryFilter)
   }
-  if (budgetFilter) {
+  if (brandFilter) {
+    filtered = filtered.filter((product) => product.brand_id === brandFilter)
+  }
+  if (priceIsFiltered) {
     filtered = filtered.filter((product) => {
       const price = product.price || 0
-      return price >= budgetFilter.min && price < budgetFilter.max
+      return price >= priceMinFilter && price <= priceMaxFilter
     })
   }
   if (sort === 'price_low') filtered = [...filtered].sort((a, b) => (a.price || 0) - (b.price || 0))
@@ -64,7 +83,9 @@ export default async function CataloguePage({
     const params = new URLSearchParams()
     if (search) params.set('q', search)
     if (categoryFilter) params.set('category', categoryFilter)
-    if (budget) params.set('budget', budget)
+    if (brandFilter) params.set('brand', brandFilter)
+    if (priceMinFilter > priceBounds.min) params.set('priceMin', String(priceMinFilter))
+    if (priceMaxFilter < priceBounds.max) params.set('priceMax', String(priceMaxFilter))
     if (sort && sort !== 'name') params.set('sort', sort)
     Object.entries(overrides).forEach(([key, value]) => {
       if (value) params.set(key, value)
@@ -74,20 +95,18 @@ export default async function CataloguePage({
     return `/catalogue${qs ? `?${qs}` : ''}`
   }
 
-  const budgetChips = [
-    { id: '', label: 'Any budget' },
-    ...BUDGET_BANDS.map(({ id, label }) => ({ id, label })),
-  ]
-
   const categoryCounts = new Map<string, number>()
+  const brandCounts = new Map<string, number>()
   for (const product of products) {
-    if (!product.category_id) continue
-    categoryCounts.set(product.category_id, (categoryCounts.get(product.category_id) || 0) + 1)
+    if (product.category_id) categoryCounts.set(product.category_id, (categoryCounts.get(product.category_id) || 0) + 1)
+    if (product.brand_id) brandCounts.set(product.brand_id, (brandCounts.get(product.brand_id) || 0) + 1)
   }
 
   const activeCategoryName = categories.find((item) => item.id === categoryFilter)?.name
-  const activeBudgetLabel = budgetChips.find((item) => item.id === budget)?.label
-  const hasFilters = Boolean(search || categoryFilter || budget || (sort && sort !== 'name'))
+  const activeBrandName = brands.find((item) => item.id === brandFilter)?.name
+  const hasFilters = Boolean(
+    search || categoryFilter || brandFilter || priceIsFiltered || (sort && sort !== 'name'),
+  )
 
   const filterLinkClass = (active: boolean) =>
     `flex items-center justify-between gap-3 border-l-2 py-2 pl-3 text-sm transition-colors ${
@@ -109,7 +128,7 @@ export default async function CataloguePage({
           </p>
           <h1 className="store-section-title mt-3">Catalogue</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">
-            Browse live <BrandName /> gifts — filter by category and budget, then request a quote.
+            Browse live <BrandName /> gifts — filter by category, brand and price, then request a quote.
           </p>
         </div>
       </div>
@@ -139,19 +158,43 @@ export default async function CataloguePage({
                 </nav>
               </div>
 
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Shop by price</p>
-                <nav className="mt-3 space-y-0.5 border-t border-[#E8E4DE] pt-2">
-                  {budgetChips.map((item) => (
-                    <Link
-                      key={item.id || 'any'}
-                      href={hrefFor({ budget: item.id })}
-                      className={filterLinkClass(budget === item.id)}
-                    >
-                      <span>{item.label}</span>
+              {brands.length ? (
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Brand</p>
+                  <nav className="mt-3 space-y-0.5 border-t border-[#E8E4DE] pt-2">
+                    <Link href={hrefFor({ brand: '' })} className={filterLinkClass(!brandFilter)}>
+                      <span>All brands</span>
                     </Link>
-                  ))}
-                </nav>
+                    {brands.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={hrefFor({ brand: item.id })}
+                        className={filterLinkClass(brandFilter === item.id)}
+                      >
+                        <span className="truncate">{item.name}</span>
+                        <span className="shrink-0 text-xs text-[#8A929C]">{brandCounts.get(item.id) || 0}</span>
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+              ) : null}
+
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Price</p>
+                <div className="mt-3 border-t border-[#E8E4DE] pt-4">
+                  <PriceRangeFilter
+                    key={`${priceMinFilter}-${priceMaxFilter}`}
+                    bounds={priceBounds}
+                    value={{ min: priceMinFilter, max: priceMaxFilter }}
+                    basePath="/catalogue"
+                    preserveParams={{
+                      q: search,
+                      category: categoryFilter,
+                      brand: brandFilter,
+                      sort: sort !== 'name' ? sort : '',
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -174,7 +217,13 @@ export default async function CataloguePage({
           <div className="min-w-0">
             <form className="flex flex-col gap-3 border border-[#E8E4DE] bg-white p-3 sm:flex-row sm:items-center sm:gap-6 sm:p-4">
               {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
-              {budget ? <input type="hidden" name="budget" value={budget} /> : null}
+              {brandFilter ? <input type="hidden" name="brand" value={brandFilter} /> : null}
+              {priceMinFilter > priceBounds.min ? (
+                <input type="hidden" name="priceMin" value={priceMinFilter} />
+              ) : null}
+              {priceMaxFilter < priceBounds.max ? (
+                <input type="hidden" name="priceMax" value={priceMaxFilter} />
+              ) : null}
               <label className="min-w-0 flex-1">
                 <span className="sr-only">Search products</span>
                 <input
@@ -221,8 +270,12 @@ export default async function CataloguePage({
                 {activeCategoryName ? (
                   <span className="text-[#5C6570]"> in {activeCategoryName}</span>
                 ) : null}
-                {activeBudgetLabel && budget ? (
-                  <span className="text-[#5C6570]"> · {activeBudgetLabel}</span>
+                {activeBrandName ? <span className="text-[#5C6570]"> · {activeBrandName}</span> : null}
+                {priceIsFiltered ? (
+                  <span className="text-[#5C6570]">
+                    {' '}
+                    · {formatCurrency(priceMinFilter)} – {formatCurrency(priceMaxFilter)}
+                  </span>
                 ) : null}
                 {search ? <span className="text-[#5C6570]"> · “{search}”</span> : null}
               </p>
@@ -232,11 +285,15 @@ export default async function CataloguePage({
             <MobileCatalogueFilters
               categories={categories}
               categoryFilter={categoryFilter}
-              budget={budget}
-              budgetChips={budgetChips}
+              brands={brands}
+              brandFilter={brandFilter}
+              priceBounds={priceBounds}
+              priceMin={priceMinFilter}
+              priceMax={priceMaxFilter}
               search={search}
               sort={sort}
               categoryCounts={Object.fromEntries(categoryCounts)}
+              brandCounts={Object.fromEntries(brandCounts)}
               productTotal={products.length}
             />
 

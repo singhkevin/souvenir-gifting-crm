@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ProductImage } from '@/components/ui/product-image'
+import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { formatCurrency } from '@/lib/utils'
 import type { PublicProduct } from '@/lib/catalogue/products'
 import { cn } from '@/lib/utils'
@@ -36,6 +37,17 @@ export function SiteProductCard({
           fadeEdges
           className="absolute inset-0 h-full w-full bg-transparent"
           imgClassName="catalogue-product-img scale-[1.03]"
+        />
+        <AddToCartButton
+          compact
+          product={{
+            id: product.id,
+            sku: product.sku,
+            name: product.name,
+            price: product.price,
+            image_url: product.image_url,
+          }}
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#806A50] opacity-100 shadow-sm transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
         />
       </div>
 

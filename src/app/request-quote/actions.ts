@@ -21,6 +21,7 @@ export async function submitPublicQuote(formData: FormData): Promise<{ error?: s
   const message = clean(formData.get('message'))
   const productId = clean(formData.get('product_id'))
   const productName = clean(formData.get('product_name'))
+  const itemsRaw = clean(formData.get('items_json'))
 
   if (!fullName) return { error: 'Please share your name.' }
   if (!email || !email.includes('@')) return { error: 'Please share a valid work email.' }
@@ -37,7 +38,41 @@ export async function submitPublicQuote(formData: FormData): Promise<{ error?: s
   }
 
   let productLine = ''
-  if (productId && isUuid(productId)) {
+  let cartItems: { id: string; name: string; quantity: number }[] = []
+  if (itemsRaw) {
+    try {
+      const parsed = JSON.parse(itemsRaw)
+      if (Array.isArray(parsed)) {
+        cartItems = parsed
+          .filter((row) => row && typeof row === 'object' && row.id && row.name)
+          .map((row) => ({
+            id: String(row.id),
+            name: String(row.name),
+            quantity: Math.max(1, Math.round(Number(row.quantity) || 1)),
+          }))
+      }
+    } catch {
+      cartItems = []
+    }
+  }
+
+  if (cartItems.length) {
+    const ids = cartItems.map((item) => item.id).filter((id) => isUuid(id))
+    const { data: products } = ids.length
+      ? await admin.from('products').select('id, name, sku').in('id', ids).eq('status', 'active').eq('catalogue_access', 'all')
+      : { data: null }
+    const bySku = new Map((products || []).map((p) => [p.id, p]))
+    productLine =
+      'Products:\n' +
+      cartItems
+        .map((item) => {
+          const match = bySku.get(item.id)
+          const label = match ? `${match.name} (${match.sku})` : item.name
+          return `  - ${label} x ${item.quantity}`
+        })
+        .join('\n') +
+      '\n'
+  } else if (productId && isUuid(productId)) {
     const { data: product } = await admin
       .from('products')
       .select('id, name, sku')
@@ -55,7 +90,7 @@ export async function submitPublicQuote(formData: FormData): Promise<{ error?: s
   const notes = [
     'Website catalogue enquiry',
     productLine.trim(),
-    quantity ? `Quantity: ${quantity}` : '',
+    !cartItems.length && quantity ? `Quantity: ${quantity}` : '',
     message,
   ]
     .filter(Boolean)

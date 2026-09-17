@@ -7,9 +7,11 @@ import {
   MobileFilterSheetShell,
   MobileFilterTrigger,
 } from '@/components/ui/mobile-filter-sheet'
+import { PriceRangeFilter } from '@/components/site/price-range-filter'
+import { formatCurrency } from '@/lib/utils'
 
 type CategoryOption = { id: string; name: string }
-type BudgetOption = { id: string; label: string }
+type BrandOption = { id: string; name: string }
 
 const SORT_OPTIONS = [
   { value: 'name', label: 'A–Z' },
@@ -21,33 +23,45 @@ const SORT_OPTIONS = [
 export function MobileCatalogueFilters({
   categories,
   categoryFilter,
-  budget,
-  budgetChips,
+  brands,
+  brandFilter,
+  priceBounds,
+  priceMin,
+  priceMax,
   search,
   sort,
   categoryCounts,
+  brandCounts,
   productTotal,
 }: {
   categories: CategoryOption[]
   categoryFilter: string
-  budget: string
-  budgetChips: BudgetOption[]
+  brands: BrandOption[]
+  brandFilter: string
+  priceBounds: { min: number; max: number }
+  priceMin: number
+  priceMax: number
   search: string
   sort: string
   categoryCounts: Record<string, number>
+  brandCounts: Record<string, number>
   productTotal: number
 }) {
   const router = useRouter()
-  const [sheet, setSheet] = useState<'category' | 'budget' | 'sort' | null>(null)
+  const [sheet, setSheet] = useState<'category' | 'brand' | 'price' | 'sort' | null>(null)
 
-  const go = (overrides: { category?: string; budget?: string; sort?: string }) => {
+  const priceIsFiltered = priceMin > priceBounds.min || priceMax < priceBounds.max
+
+  const go = (overrides: { category?: string; brand?: string; sort?: string }) => {
     const params = new URLSearchParams()
     if (search) params.set('q', search)
     const nextCategory = overrides.category !== undefined ? overrides.category : categoryFilter
-    const nextBudget = overrides.budget !== undefined ? overrides.budget : budget
+    const nextBrand = overrides.brand !== undefined ? overrides.brand : brandFilter
     const nextSort = overrides.sort !== undefined ? overrides.sort : sort
     if (nextCategory) params.set('category', nextCategory)
-    if (nextBudget) params.set('budget', nextBudget)
+    if (nextBrand) params.set('brand', nextBrand)
+    if (priceMin > priceBounds.min) params.set('priceMin', String(priceMin))
+    if (priceMax < priceBounds.max) params.set('priceMax', String(priceMax))
     if (nextSort && nextSort !== 'name') params.set('sort', nextSort)
     const qs = params.toString()
     setSheet(null)
@@ -56,10 +70,13 @@ export function MobileCatalogueFilters({
 
   const categoryLabel =
     categories.find((item) => item.id === categoryFilter)?.name || 'All gifts'
-  const budgetLabel = budgetChips.find((item) => item.id === budget)?.label || 'Any budget'
+  const brandLabel = brands.find((item) => item.id === brandFilter)?.name || 'All brands'
+  const priceLabel = priceIsFiltered
+    ? `${formatCurrency(priceMin)} – ${formatCurrency(priceMax)}`
+    : 'Any price'
   const sortLabel = SORT_OPTIONS.find((item) => item.value === sort)?.label || 'A–Z'
 
-  const hasFilters = Boolean(search || categoryFilter || budget || (sort && sort !== 'name'))
+  const hasFilters = Boolean(search || categoryFilter || brandFilter || priceIsFiltered || (sort && sort !== 'name'))
 
   return (
     <div className="mt-5 space-y-3 lg:hidden">
@@ -69,13 +86,18 @@ export function MobileCatalogueFilters({
           value={categoryLabel}
           onClick={() => setSheet('category')}
         />
-        <MobileFilterTrigger
-          label="Budget"
-          value={budgetLabel}
-          onClick={() => setSheet('budget')}
-        />
+        {brands.length ? (
+          <MobileFilterTrigger label="Brand" value={brandLabel} onClick={() => setSheet('brand')} />
+        ) : (
+          <MobileFilterTrigger label="Sort by" value={sortLabel} onClick={() => setSheet('sort')} />
+        )}
       </div>
-      <MobileFilterTrigger label="Sort by" value={sortLabel} onClick={() => setSheet('sort')} />
+      <div className="grid grid-cols-2 gap-3">
+        <MobileFilterTrigger label="Price" value={priceLabel} onClick={() => setSheet('price')} />
+        {brands.length ? (
+          <MobileFilterTrigger label="Sort by" value={sortLabel} onClick={() => setSheet('sort')} />
+        ) : null}
+      </div>
 
       <button
         type="button"
@@ -94,7 +116,13 @@ export function MobileCatalogueFilters({
       <MobileFilterSheetShell
         open={Boolean(sheet)}
         title={
-          sheet === 'category' ? 'Category' : sheet === 'budget' ? 'Shop by price' : 'Sort by'
+          sheet === 'category'
+            ? 'Category'
+            : sheet === 'brand'
+              ? 'Brand'
+              : sheet === 'price'
+                ? 'Price'
+                : 'Sort by'
         }
         onClose={() => setSheet(null)}
       >
@@ -118,16 +146,41 @@ export function MobileCatalogueFilters({
           </>
         ) : null}
 
-        {sheet === 'budget'
-          ? budgetChips.map((item) => (
+        {sheet === 'brand' ? (
+          <>
+            <MobileFilterSheetOption
+              label="All brands"
+              active={!brandFilter}
+              onSelect={() => go({ brand: '' })}
+            />
+            {brands.map((item) => (
               <MobileFilterSheetOption
-                key={item.id || 'any'}
-                label={item.label}
-                active={budget === item.id}
-                onSelect={() => go({ budget: item.id })}
+                key={item.id}
+                label={item.name}
+                meta={`${brandCounts[item.id] || 0}`}
+                active={brandFilter === item.id}
+                onSelect={() => go({ brand: item.id })}
               />
-            ))
-          : null}
+            ))}
+          </>
+        ) : null}
+
+        {sheet === 'price' ? (
+          <div className="px-2 py-3">
+            <PriceRangeFilter
+              key={`${priceMin}-${priceMax}`}
+              bounds={priceBounds}
+              value={{ min: priceMin, max: priceMax }}
+              basePath="/catalogue"
+              preserveParams={{
+                q: search,
+                category: categoryFilter,
+                brand: brandFilter,
+                sort: sort !== 'name' ? sort : '',
+              }}
+            />
+          </div>
+        ) : null}
 
         {sheet === 'sort'
           ? SORT_OPTIONS.map((item) => (

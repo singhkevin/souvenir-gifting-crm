@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Menu, Search, User, X } from 'lucide-react'
 import { BrandName } from '@/components/brand/brand-name'
 import { PwaInstallButton } from '@/components/pwa/pwa-install-button'
+import { CartDrawer } from '@/components/site/cart-drawer'
 
 const PRIMARY_NAV = [
   { href: '/about', label: 'About' },
@@ -134,6 +135,7 @@ export function SiteHeader({
                 Account
               </Link>
             )}
+            <CartDrawer iconClassName="text-[#241C12]" />
             <Link
               href="/request-quote"
               className="rounded-sm bg-[#241C12] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
@@ -172,6 +174,7 @@ export function SiteHeader({
             >
               <Search size={20} />
             </button>
+            <CartDrawer iconClassName="text-[#806A50]" />
             <Link
               href="/login"
               className="rounded-sm bg-[#806A50] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white"

@@ -4,14 +4,21 @@ import { useState } from 'react'
 import { submitPublicQuote } from '@/app/request-quote/actions'
 import { BrandName } from '@/components/brand/brand-name'
 
+export type QuoteFormItem = { id: string; name: string; sku?: string; quantity: number }
+
 export function QuoteForm({
   productId,
   productName,
+  items,
   portalHref,
+  onSuccess,
 }: {
   productId?: string
   productName?: string
+  /** Cart mode: multiple products with per-item quantity, in place of a single product. */
+  items?: QuoteFormItem[]
   portalHref?: string | null
+  onSuccess?: () => void
 }) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -47,6 +54,7 @@ export function QuoteForm({
           return
         }
         setSuccess(true)
+        onSuccess?.()
       }}
     >
       {portalHref ? (
@@ -58,13 +66,32 @@ export function QuoteForm({
           if you prefer.
         </p>
       ) : null}
-      {productName ? (
+      {items && items.length ? (
+        <div className="space-y-1.5 rounded-md border border-[#E8E4DE] bg-[#FAF7F2] p-3">
+          <p className={label}>Enquiring about {items.length} product{items.length === 1 ? '' : 's'}</p>
+          <ul className="space-y-1 text-sm text-[#1B2430]">
+            {items.map((item) => (
+              <li key={item.id} className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate">{item.name}</span>
+                <span className="shrink-0 text-[#5C6570]">x {item.quantity}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : productName ? (
         <p className="text-sm text-[#5C6570]">
           Enquiring about <span className="font-medium text-[#1B2430]">{productName}</span>
         </p>
       ) : null}
-      {productId ? <input type="hidden" name="product_id" value={productId} /> : null}
-      {productName ? <input type="hidden" name="product_name" value={productName} /> : null}
+      {items && items.length ? (
+        <input
+          type="hidden"
+          name="items_json"
+          value={JSON.stringify(items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity })))}
+        />
+      ) : null}
+      {!items?.length && productId ? <input type="hidden" name="product_id" value={productId} /> : null}
+      {!items?.length && productName ? <input type="hidden" name="product_name" value={productName} /> : null}
       <input type="text" name="fax" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
       <label className="block">
@@ -83,10 +110,12 @@ export function QuoteForm({
         <span className={label}>Phone</span>
         <input name="phone" className={field} />
       </label>
-      <label className="block">
-        <span className={label}>Estimated quantity</span>
-        <input name="quantity" className={field} />
-      </label>
+      {items && items.length ? null : (
+        <label className="block">
+          <span className={label}>Estimated quantity</span>
+          <input name="quantity" className={field} />
+        </label>
+      )}
       <label className="block">
         <span className={label}>Tell us about the occasion</span>
         <textarea required name="message" rows={4} className={field} />

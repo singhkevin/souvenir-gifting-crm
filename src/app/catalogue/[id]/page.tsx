@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
 import { ProductImage } from '@/components/ui/product-image'
+import { QuoteModal } from '@/components/site/quote-modal'
+import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { getPublicProduct } from '@/lib/catalogue/products'
 
@@ -29,8 +31,6 @@ export default async function PublicProductPage({ params }: Props) {
   if (!isUuid(id)) notFound()
   const product = await getPublicProduct(id)
   if (!product) notFound()
-
-  const quoteHref = `/request-quote?product=${product.id}`
 
   return (
     <SiteShell>
@@ -72,12 +72,23 @@ export default async function PublicProductPage({ params }: Props) {
           </dl>
 
           <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4">
-            <Link
-              href={quoteHref}
-              className="inline-flex justify-center bg-[#806A50] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white sm:py-3"
+            <QuoteModal
+              productId={product.id}
+              productName={product.name}
+              triggerClassName="inline-flex justify-center bg-[#806A50] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#9C8567] sm:py-3"
             >
               Request a Quote
-            </Link>
+            </QuoteModal>
+            <AddToCartButton
+              product={{
+                id: product.id,
+                sku: product.sku,
+                name: product.name,
+                price: product.price,
+                image_url: product.image_url,
+              }}
+              className="inline-flex justify-center border border-[#E5DFD5] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#806A50] hover:bg-[#FAF7F2] sm:py-3"
+            />
             <Link
               href="/catalogue"
               className="inline-flex justify-center py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#806A50]"
