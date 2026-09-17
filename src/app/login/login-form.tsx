@@ -8,18 +8,6 @@ import { Mail, Loader2 } from 'lucide-react';
 import { PasswordField } from '@/components/auth/password-field';
 import { BrandName } from '@/components/brand/brand-name';
 
-/** Dedicated demo identities from the original Oaklane seed. Same password for every seeded user. */
-const DEMO_PASSWORD = 'Oaklane-Demo-2026!'
-
-const DEMO_ACCOUNTS = [
-  { email: 'admin@oaklane.demo', role: 'Admin', action: 'Login as Admin' },
-  { email: 'sales@oaklane.demo', role: 'Sales', action: 'Login as Sales' },
-  { email: 'ops@oaklane.demo', role: 'Operations', action: 'Login as Operations' },
-  { email: 'accounts@oaklane.demo', role: 'Accounts', action: 'Login as Accounts' },
-  { email: 'management@oaklane.demo', role: 'Management', action: 'Login as Management' },
-  { email: 'priya@wipro.example', role: 'Client', action: 'Login as Client' },
-] as const
-
 function isNextRedirect(err: unknown) {
   const digest =
     typeof err === 'object' && err && 'digest' in err
@@ -69,12 +57,6 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     await authenticate(email, password);
-  };
-
-  const loginDemo = async (accountEmail: string) => {
-    setEmail(accountEmail);
-    setPassword(DEMO_PASSWORD);
-    await authenticate(accountEmail, DEMO_PASSWORD);
   };
 
   return (
@@ -157,37 +139,6 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
               Sign up
             </Link>
           </p>
-
-          <div className="mt-8 pt-6 border-t border-[#EFE9E0]">
-            <p className="text-xs font-semibold text-[#1C1917] uppercase tracking-wider">Demo Accounts</p>
-            <p className="text-[11px] font-semibold text-[#92400E] mt-1">
-              DEMO / TEST ACCOUNT — NOT FOR CLIENT USE
-            </p>
-            <p className="text-[11px] text-[#7A7267] mt-1 mb-3">
-              Seeded test identities for QA. Normal email/password sign-in still works.
-            </p>
-            <div className="space-y-2">
-              {DEMO_ACCOUNTS.map((account) => (
-                <button
-                  key={account.email}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => loginDemo(account.email)}
-                  className="flex w-full flex-col gap-3 rounded-xl border border-[#EFE9E0] bg-[#FAF7F2] p-3 text-left transition-all hover:bg-[#EFE9E0] disabled:opacity-50 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <span className="min-w-0">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-[#7A7267]">
-                      {account.role}
-                    </span>
-                    <span className="mt-0.5 block truncate text-xs text-[#1C1917]">{account.email}</span>
-                  </span>
-                  <span className="inline-flex min-h-10 w-full shrink-0 items-center justify-center rounded-lg bg-[#806A50] px-3 text-[11px] font-semibold text-[#FFFFFF] hover:bg-[#9C8567] sm:w-auto">
-                    {account.action}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>
