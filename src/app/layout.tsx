@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Cormorant_Garamond, Outfit } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'sonner'
 import { NavHistoryTracker } from '@/components/ui/nav-history'
@@ -7,18 +6,8 @@ import { TabSessionProvider } from '@/components/auth/tab-session-provider'
 import { RecoveryHashRedirect } from '@/components/auth/recovery-hash-redirect'
 import { PwaInstallProvider } from '@/components/pwa/pwa-install-provider'
 
-const outfit = Outfit({
-  subsets: ['latin'],
-  variable: '--font-outfit',
-  display: 'swap',
-})
-
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-cormorant',
-  display: 'swap',
-})
+const FONT_STYLESHEET =
+  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap'
 
 export const viewport: Viewport = {
   themeColor: '#806A50',
@@ -55,7 +44,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${outfit.variable} ${cormorant.variable}`}>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="stylesheet" href={FONT_STYLESHEET} />
+      </head>
       <body className="h-full antialiased">
         <RecoveryHashRedirect />
         <PwaInstallProvider>
