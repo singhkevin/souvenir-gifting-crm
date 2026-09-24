@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { addCampaignProduct, setCampaignProductVisibility, removeCampaignProduct, updateCampaign, removeCampaign } from '../actions'
+import { BudgetPackGenerator } from '../BudgetPackGenerator'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { BackButton } from '@/components/ui/back-button'
 import { asFormAction } from '@/lib/form-action'
@@ -32,6 +33,16 @@ export default async function CampaignDetailPage({
   const company = Array.isArray(campaign.company) ? campaign.company[0] : campaign.company
   const offeredIds = new Set((offerings || []).map((o) => o.product_id))
   const available = (products || []).filter((p) => !offeredIds.has(p.id))
+  const packKits = (offerings || []).filter((o) => o.pack_option && o.pack_kit_role !== 'line')
+  const draftPackCount = packKits.filter((o) => o.visibility === 'draft').length
+  const publishedPackCount = packKits.filter((o) => o.visibility === 'published').length
+  const kitMembersById = new Map<string, NonNullable<typeof offerings>>()
+  for (const row of offerings || []) {
+    if (!row.pack_kit_id) continue
+    const list = kitMembersById.get(row.pack_kit_id) || []
+    list.push(row)
+    kitMembersById.set(row.pack_kit_id, list)
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -71,6 +82,13 @@ export default async function CampaignDetailPage({
         <button className="min-h-11 rounded-lg bg-[#806A50] font-semibold text-[#FFFFFF]">Save campaign</button>
       </form>
 
+      <BudgetPackGenerator
+        campaignId={campaign.id}
+        budgetPerEmployee={campaign.budget_per_employee}
+        draftPackCount={draftPackCount}
+        publishedPackCount={publishedPackCount}
+      />
+
       <form action={asFormAction(addCampaignProduct)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3">
         <input type="hidden" name="campaign_id" value={campaign.id} />
         <MobileSheetSelect
@@ -87,7 +105,14 @@ export default async function CampaignDetailPage({
             })),
           ]}
         />
-        <input name="selling_price" type="number" step="0.01" placeholder="Client selling price" className="border rounded-lg px-2 py-2" />
+        <input
+          name="selling_price"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="Blank = company margin price"
+          className="border rounded-lg px-2 py-2"
+        />
         <button className="bg-[#806A50] text-[#FFFFFF] rounded-lg font-semibold">Add as draft offering</button>
       </form>
 
@@ -95,6 +120,7 @@ export default async function CampaignDetailPage({
         <table className="w-full text-xs">
           <thead className="bg-[#FAF7F2] text-left">
             <tr>
+              <th className="p-3">Pack</th>
               <th className="p-3">Client offering</th>
               <th className="p-3">Client price</th>
               <th className="p-3">Visibility</th>
@@ -102,21 +128,47 @@ export default async function CampaignDetailPage({
             </tr>
           </thead>
           <tbody>
-            {(offerings || []).map((row) => {
+            {(offerings || [])
+              .filter((row) => row.pack_kit_role !== 'line')
+              .map((row) => {
               const product = Array.isArray(row.product) ? row.product[0] : row.product
               const discontinued = product?.status && product.status !== 'active'
+              const kitMembers = row.pack_kit_id ? kitMembersById.get(row.pack_kit_id) || [] : []
+              const kitLines = kitMembers.filter((line) => line.id !== row.id)
               return (
                 <tr key={row.id} className="border-t">
+                  <td className="p-3 font-semibold text-[#806A50]">{row.pack_option || '—'}</td>
                   <td className="p-3">
                     <p className="font-semibold">{row.display_name || product?.name}</p>
                     <p className="text-[#7A7267]">{product?.sku} · internal {formatCurrency(product?.price)}</p>
+                    {kitLines.length > 0 && (
+                      <ul className="mt-2 space-y-0.5 text-[11px] text-[#5A5248]">
+                        {kitLines.map((line) => {
+                          const lp = Array.isArray(line.product) ? line.product[0] : line.product
+                          return (
+                            <li key={line.id}>
+                              + {line.display_name || lp?.name} ({formatCurrency(line.selling_price)})
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
                     {discontinued ? (
                       <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
                         Master product discontinued — unpublish or replace
                       </p>
                     ) : null}
                   </td>
-                  <td className="p-3">{formatCurrency(row.selling_price)}</td>
+                  <td className="p-3">
+                    {row.pack_kit_total != null ? (
+                      <>
+                        <p className="font-semibold">{formatCurrency(row.pack_kit_total)}</p>
+                        <p className="text-[10px] text-[#7A7267]">kit total</p>
+                      </>
+                    ) : (
+                      formatCurrency(row.selling_price)
+                    )}
+                  </td>
                   <td className="p-3 capitalize">{row.visibility}</td>
                   <td className="p-3 space-x-2">
                     {row.visibility !== 'published' ? (

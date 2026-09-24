@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { signIn } from './actions';
 import { Mail, Loader2 } from 'lucide-react';
 import { PasswordField } from '@/components/auth/password-field';
 import { BrandName } from '@/components/brand/brand-name';
+import { assignWithTab } from '@/lib/supabase/client';
 
 function isNextRedirect(err: unknown) {
   const digest =
@@ -17,7 +17,6 @@ function isNextRedirect(err: unknown) {
 }
 
 export function LoginForm({ next = '', resetSuccess = false }: { next?: string; resetSuccess?: boolean }) {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -42,8 +41,7 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
         return;
       }
       if (res?.redirectTo) {
-        router.push(res.redirectTo);
-        router.refresh();
+        assignWithTab(res.redirectTo);
         return;
       }
       setLoading(false);

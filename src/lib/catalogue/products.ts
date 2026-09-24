@@ -2,10 +2,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
+import { getMarginSettings, resolveProductSellPrice } from '@/lib/pricing/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const PUBLIC_PRODUCT_SELECT =
-  'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)'
+  'id, name, sku, description, image_url, price, moq, supplier_cost, internal_margin, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)'
 
 export type PublicProduct = {
   id: string
@@ -25,28 +26,31 @@ export type PublicProduct = {
 
 type Named = { id: string; name: string }
 
-function toPublicProduct(row: {
-  id: string
-  name: string
-  sku: string
-  description: string | null
-  image_url: string | null
-  price: number | null
-  moq: number | null
-  category_id: string | null
-  brand_id?: string | null
-  status: string
-  created_at?: string | null
-  category?: Named | Named[] | null
-  brand?: Named | Named[] | null
-}): PublicProduct {
+function toPublicProduct(
+  row: {
+    id: string
+    name: string
+    sku: string
+    description: string | null
+    image_url: string | null
+    price: number | null
+    moq: number | null
+    category_id: string | null
+    brand_id?: string | null
+    status: string
+    created_at?: string | null
+    category?: Named | Named[] | null
+    brand?: Named | Named[] | null
+  },
+  sellPrice: number | null
+): PublicProduct {
   return {
     id: row.id,
     name: row.name,
     sku: row.sku,
     description: row.description,
     image_url: row.image_url,
-    price: row.price,
+    price: sellPrice,
     moq: row.moq,
     category_id: row.category_id,
     category_name: oneRelation(row.category)?.name || null,
@@ -80,7 +84,13 @@ export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
     console.error('[catalogue] public products fetch failed:', error?.message || 'no data')
     return []
   }
-  return data.map(toPublicProduct)
+  const settings = await getMarginSettings()
+  return Promise.all(
+    data.map(async (row) => {
+      const resolved = await resolveProductSellPrice(row, { channel: 'b2c', settings })
+      return toPublicProduct(row, resolved.sellPrice)
+    })
+  )
 }
 
 export async function getPublicProduct(id: string): Promise<PublicProduct | null> {
@@ -94,7 +104,9 @@ export async function getPublicProduct(id: string): Promise<PublicProduct | null
     .eq('catalogue_access', 'all')
     .maybeSingle()
   if (error || !data) return null
-  return toPublicProduct(data)
+  const settings = await getMarginSettings()
+  const resolved = await resolveProductSellPrice(data, { channel: 'b2c', settings })
+  return toPublicProduct(data, resolved.sellPrice)
 }
 
 export async function getPublicCategories() {

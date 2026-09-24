@@ -426,6 +426,7 @@ export function MobileSheetSelect({
   }
   const currentLabel =
     options.find((option) => option.value === value)?.label || emptyLabel
+  const hasEmptyOption = options.some((option) => option.value === '')
 
   return (
     <div className={`w-full min-w-0 ${className}`}>
@@ -465,6 +466,9 @@ export function MobileSheetSelect({
           onChange={(event) => setValue(event.target.value)}
           className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
         >
+          {hasEmptyOption ? null : (
+            <option value="">{emptyLabel}</option>
+          )}
           {options.map((option) => (
             <option key={`${name || label}-opt-${option.value || 'empty'}`} value={option.value}>
               {option.label}

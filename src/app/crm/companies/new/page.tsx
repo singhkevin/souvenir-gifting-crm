@@ -48,6 +48,30 @@ export default async function NewCompanyPage() {
           <input type="url" name="website" placeholder="https://" className="w-full p-2 border border-[var(--color-border)] rounded" />
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">Company margin %</label>
+            <input
+              type="number"
+              name="margin_percent"
+              step="0.01"
+              min="0"
+              placeholder="Leave empty for org B2B default"
+              className="w-full p-2 border border-[var(--color-border)] rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Allowed portal email domains</label>
+            <input
+              type="text"
+              name="allowed_email_domains"
+              placeholder="acme.com, acme.co.in"
+              className="w-full p-2 border border-[var(--color-border)] rounded"
+            />
+            <p className="text-[11px] text-gray-500 mt-1">Optional. When set, portal logins must use these domains.</p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium mb-1">City</label>

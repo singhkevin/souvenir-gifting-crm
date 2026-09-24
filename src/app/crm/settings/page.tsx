@@ -38,6 +38,53 @@ export default async function SettingsPage() {
           <span className="text-gray-500 text-xs">Currency</span>
           <input name="currency" defaultValue={settings?.currency || 'INR'} className="w-full border rounded-lg px-3 py-2 mt-1" />
         </label>
+
+        <div className="border-t pt-4 space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">Sell-price margins (%)</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Customer price = supplier cost (or list price if cost is blank) × (1 + margin%).
+              Public store uses the B2C %. Corporate catalogue uses that company’s %, then the B2B %.
+              A product margin % is used only when the channel % is blank.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <label className="block">
+              <span className="text-gray-500 text-xs">Global fallback %</span>
+              <input
+                name="default_margin_percent"
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={settings?.default_margin_percent ?? 35}
+                className="w-full border rounded-lg px-3 py-2 mt-1"
+              />
+            </label>
+            <label className="block">
+              <span className="text-gray-500 text-xs">Public / B2C %</span>
+              <input
+                name="b2c_margin_percent"
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={settings?.b2c_margin_percent ?? 40}
+                className="w-full border rounded-lg px-3 py-2 mt-1"
+              />
+            </label>
+            <label className="block">
+              <span className="text-gray-500 text-xs">Corporate / B2B default %</span>
+              <input
+                name="b2b_margin_percent"
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={settings?.b2b_margin_percent ?? 35}
+                className="w-full border rounded-lg px-3 py-2 mt-1"
+              />
+            </label>
+          </div>
+        </div>
+
         <button className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm">Save settings</button>
       </form>
     </div>

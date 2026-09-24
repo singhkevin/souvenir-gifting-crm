@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "A premium corporate gifting catalogue for teams, clients and brands.",
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function RootPage({
   searchParams,
 }: {

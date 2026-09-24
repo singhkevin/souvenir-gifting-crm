@@ -42,6 +42,11 @@ export interface Company {
   status: string
   notes: string | null
   logo_path: string | null
+  /** Company-specific sell margin %. Null = use org B2B / product / global hierarchy. */
+  margin_percent: number | null
+  /** If non-empty, portal client emails must match one of these domains. */
+  allowed_email_domains: string[]
+  gst_number?: string | null
   created_at: string
   updated_at: string
   // Joined

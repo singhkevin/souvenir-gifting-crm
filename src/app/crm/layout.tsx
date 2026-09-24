@@ -6,6 +6,8 @@ import type { Role } from '@/lib/types';
 import { getRequestTabId } from '@/lib/auth/tab-server';
 import { TabSessionRevive } from '@/components/auth/tab-session-revive';
 
+export const dynamic = 'force-dynamic'
+
 export default async function CrmLayout({ children }: { children: React.ReactNode }) {
   if (!(await getRequestTabId())) return <TabSessionRevive />;
 

@@ -1,5 +1,5 @@
 /* Souvenir - Gifting Solutions PWA service worker */
-const CACHE = 'souvenir-pwa-v2'
+const CACHE = 'souvenir-pwa-v3'
 const PRECACHE = ['/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png']
 
 self.addEventListener('install', (event) => {
@@ -40,14 +40,19 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.mode === 'navigate') {
+    // Never cache CRM/portal HTML — a stale "restoring session" document
+    // would block login and tab-scoped auth.
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone()
-          caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {})
-          return response
-        })
-        .catch(async () => (await caches.match(request)) || (await caches.match('/')) || Response.error()),
+      fetch(request).catch(async () => {
+        if (
+          url.pathname.startsWith('/crm') ||
+          url.pathname.startsWith('/portal') ||
+          url.pathname.startsWith('/login')
+        ) {
+          return Response.error()
+        }
+        return (await caches.match(request)) || (await caches.match('/')) || Response.error()
+      }),
     )
     return
   }

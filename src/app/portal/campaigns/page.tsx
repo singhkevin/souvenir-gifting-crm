@@ -27,7 +27,7 @@ export default async function PortalCampaignsPage() {
                 href={`/portal/catalogue?campaign=${c.id}`}
                 className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
               >
-                View published products
+                Compare budget options
               </Link>
               <Link
                 href="/portal/orders"

@@ -7,6 +7,7 @@ import { writeAudit } from '@/lib/audit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateTemporaryPassword, SERVICE_ROLE_MISSING, validateNewPassword } from '@/lib/auth/password'
 import { findReusableLogo } from '@/lib/companies/identity'
+import { parseAllowedEmailDomains, isEmailAllowedForDomains } from '@/lib/pricing/domains'
 
 const LOGO_BUCKET = 'company-logos'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
@@ -84,6 +85,14 @@ export async function createCompany(formData: FormData) {
     access.profile.role === 'admin'
       ? ((formData.get('owner_id') as string) || user.id)
       : user.id
+
+  const marginRaw = String(formData.get('margin_percent') || '').trim()
+  const marginPercent = marginRaw === '' ? null : Number(marginRaw)
+  if (marginRaw !== '' && (!Number.isFinite(marginPercent) || (marginPercent as number) < 0)) {
+    return { error: 'Margin % must be a number ≥ 0' }
+  }
+  const allowedEmailDomains = parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
+
   const { data, error } = await supabase.from('companies').insert({
     name: formData.get('name') as string,
     industry: formData.get('industry') as string || null,
@@ -95,6 +104,8 @@ export async function createCompany(formData: FormData) {
     notes: formData.get('notes') as string || null,
     owner_id: ownerId,
     status: (formData.get('status') as string) || 'active',
+    margin_percent: marginPercent,
+    allowed_email_domains: allowedEmailDomains,
   }).select('id').single()
   if (error) return { error: error.message }
 
@@ -132,6 +143,13 @@ export async function updateCompany(companyId: string, formData: FormData) {
   const access = await requireCompanyEditor()
   if ('error' in access) return { error: access.error }
 
+  const marginRaw = String(formData.get('margin_percent') || '').trim()
+  const marginPercent = marginRaw === '' ? null : Number(marginRaw)
+  if (marginRaw !== '' && (!Number.isFinite(marginPercent) || (marginPercent as number) < 0)) {
+    return { error: 'Margin % must be a number ≥ 0' }
+  }
+  const allowedEmailDomains = parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
+
   const supabase = await createClient()
   const { error } = await supabase.from('companies').update({
     name: formData.get('name') as string,
@@ -144,6 +162,8 @@ export async function updateCompany(companyId: string, formData: FormData) {
     notes: formData.get('notes') as string || null,
     gst_number: (formData.get('gst_number') as string) || null,
     status: (formData.get('status') as string) || undefined,
+    margin_percent: marginPercent,
+    allowed_email_domains: allowedEmailDomains,
   }).eq('id', companyId)
   if (error) return { error: error.message }
 
@@ -302,8 +322,21 @@ export async function createPortalClient(formData: FormData) {
   if (passwordError) return { error: passwordError }
 
   const supabase = await createClient()
-  const { data: company } = await supabase.from('companies').select('id, name').eq('id', companyId).maybeSingle()
+  const { data: company } = await supabase
+    .from('companies')
+    .select('id, name, allowed_email_domains')
+    .eq('id', companyId)
+    .maybeSingle()
   if (!company) return { error: 'Company not found' }
+
+  if (!isEmailAllowedForDomains(email, company.allowed_email_domains)) {
+    const domains = (company.allowed_email_domains || []).join(', ')
+    return {
+      error: domains
+        ? `Portal login email must use an allowed domain (${domains}).`
+        : 'Portal login email is not allowed for this company.',
+    }
+  }
 
   const admin = createAdminClient()
   if (!admin) {

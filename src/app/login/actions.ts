@@ -8,6 +8,7 @@ import { isSafeNext, landingPathForRole } from '@/lib/safe-next'
 import { requestOrigin, recoveryRedirectTo } from '@/lib/auth/request-origin'
 import { validateNewPassword } from '@/lib/auth/password'
 import { sendEmail, passwordResetEmailHtml } from '@/lib/email/resend'
+import { isEmailAllowedForDomains } from '@/lib/pricing/domains'
 
 export async function signIn(formData: FormData): Promise<{ error?: string; redirectTo?: string } | undefined> {
   const email = String(formData.get('email') || '').trim()
@@ -31,7 +32,7 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
   if (data.user) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, is_active')
+      .select('role, is_active, company_id')
       .eq('id', data.user.id)
       .maybeSingle()
 
@@ -40,9 +41,21 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
       return { error: 'This account is inactive' }
     }
 
+    const isClient = profile?.role === 'client_admin' || profile?.role === 'client_user'
+    if (isClient && profile.company_id) {
+      const { data: company } = await supabase
+        .from('companies')
+        .select('allowed_email_domains')
+        .eq('id', profile.company_id)
+        .maybeSingle()
+      if (company && !isEmailAllowedForDomains(email, company.allowed_email_domains)) {
+        await supabase.auth.signOut()
+        return { error: 'This email domain is not allowed for your company portal login.' }
+      }
+    }
+
     const home = landingPathForRole(profile?.role)
     if (isSafeNext(next)) {
-      const isClient = profile?.role === 'client_admin' || profile?.role === 'client_user'
       const nextIsPortal = next.startsWith('/portal')
       const nextIsCrm = next.startsWith('/crm') || next.startsWith('/dashboard') || next === '/dashboard'
       if (isClient && nextIsPortal) return { redirectTo: next }

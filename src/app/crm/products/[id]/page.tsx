@@ -11,6 +11,8 @@ import { ProductImageEditor } from '@/components/products/product-image-editor'
 import { CatalogueVisibilityEditor } from '@/components/products/catalogue-visibility-editor'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { getMarginSettings } from '@/lib/pricing/server'
+import { resolveSellPrice } from '@/lib/pricing/resolve'
 
 export default async function ProductDetailPage({
   params,
@@ -33,6 +35,7 @@ export default async function ProductDetailPage({
     { data: suppliers },
     { data: allCompanies },
     { data: accessRecords },
+    marginSettings,
   ] = await Promise.all([
     supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
     supabase.from('categories').select('id, name'),
@@ -40,9 +43,19 @@ export default async function ProductDetailPage({
     supabase.from('suppliers').select('id, name').order('name'),
     supabase.from('companies').select('id, name, logo_path').eq('status', 'active').order('name'),
     supabase.from('company_product_access').select('*, company:companies(id, name, city)').eq('product_id', id),
+    getMarginSettings(),
   ])
 
   if (!product) notFound()
+
+  const priceBase = {
+    supplierCost: product.supplier_cost,
+    listPrice: product.price,
+    productMarginPercent: product.internal_margin,
+    settings: marginSettings,
+  }
+  const b2cPrice = resolveSellPrice({ ...priceBase, channel: 'b2c' })
+  const b2bPrice = resolveSellPrice({ ...priceBase, channel: 'b2b' })
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
 
@@ -138,8 +151,14 @@ export default async function ProductDetailPage({
 
           <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-100">
             <div>
-              <p className="text-[10px] text-gray-400 uppercase font-semibold">Retail Price</p>
-              <p className="text-xl font-bold text-[#806A50]">{formatCurrency(product.price)}</p>
+              <p className="text-[10px] text-gray-400 uppercase font-semibold">Public (B2C)</p>
+              <p className="text-xl font-bold text-[#806A50]">{formatCurrency(b2cPrice.sellPrice)}</p>
+              <p className="text-[10px] text-gray-400">{b2cPrice.marginPercent ?? '—'}% margin</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase font-semibold">Corporate (B2B)</p>
+              <p className="text-xl font-bold text-[#806A50]">{formatCurrency(b2bPrice.sellPrice)}</p>
+              <p className="text-[10px] text-gray-400">{b2bPrice.marginPercent ?? '—'}% before company override</p>
             </div>
             {showCost && (
             <div>
@@ -201,7 +220,7 @@ export default async function ProductDetailPage({
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Retail (?)</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">List price (fallback)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -213,12 +232,26 @@ export default async function ProductDetailPage({
               </div>
               {showCost && (
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Cost (?)</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Supplier cost</label>
                 <input
                   type="number"
                   step="0.01"
                   name="supplier_cost"
                   defaultValue={product.supplier_cost || ''}
+                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
+                />
+              </div>
+              )}
+              {showCost && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Product margin %</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  name="internal_margin"
+                  defaultValue={product.internal_margin ?? ''}
+                  placeholder="Used only if channel % is blank"
                   className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
                 />
               </div>

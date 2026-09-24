@@ -117,6 +117,25 @@
   }
 
   button,
+  a[role='button'],
+  [role='button'],
+  summary,
+  input[type='button'],
+  input[type='submit'],
+  input[type='reset'],
+  label[for],
+  label:has(input, select) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  [role='button'][aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  button,
   a[role='button'] {
     transition-property: background-color, color, border-color, box-shadow, opacity;
     transition-duration: 180ms;

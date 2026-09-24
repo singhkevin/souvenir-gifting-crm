@@ -1,5 +1,6 @@
 export const TAB_HEADER = 'x-giffter-tab'
 export const TAB_QUERY = 'giffter_tab'
+export const TAB_URL_HEADER = 'x-giffter-url'
 export const TAB_STORAGE_KEY = 'giffter.tab-id'
 export const AUTH_COOKIE_PREFIX = 'gf-auth-'
 export const RECOVERY_COOKIE_NAME = `${AUTH_COOKIE_PREFIX}recovery`
@@ -66,6 +67,17 @@ export function createTabId() {
   const bytes = new Uint8Array(8)
   crypto.getRandomValues(bytes)
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+export function tabIdFromUrlLike(raw: string | null | undefined) {
+  if (!raw) return null
+  try {
+    const url = new URL(raw, 'http://localhost')
+    const queryTab = url.searchParams.get(TAB_QUERY)
+    return isTabId(queryTab) ? queryTab : null
+  } catch {
+    return null
+  }
 }
 
 export function isTabId(value: string | null | undefined): value is string {

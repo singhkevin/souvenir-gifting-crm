@@ -8,6 +8,7 @@ import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { uploadCompanyLogo, removeCompanyLogo, updateCompany, removeCompany } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { formatCurrency, formatDate, isUuid } from '@/lib/utils'
+import { formatAllowedEmailDomains } from '@/lib/pricing/domains'
 import { Plus, Trash2 } from 'lucide-react'
 import { grantCompanyProductAccess, revokeCompanyProductAccess } from '@/app/crm/products/actions'
 import { requireStaff } from '@/lib/auth'
@@ -246,6 +247,30 @@ export default async function CompanyDetailPage({
               <input name="gst_number" defaultValue={company.gst_number || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
             </label>
             <label className="block">
+              <span className="font-semibold text-gray-500">Company margin %</span>
+              <input
+                name="margin_percent"
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={company.margin_percent ?? ''}
+                placeholder="Uses org B2B default if empty"
+                className="mt-1 w-full border rounded-lg px-3 py-2"
+              />
+            </label>
+            <label className="block md:col-span-2">
+              <span className="font-semibold text-gray-500">Allowed portal email domains</span>
+              <input
+                name="allowed_email_domains"
+                defaultValue={formatAllowedEmailDomains(company.allowed_email_domains)}
+                placeholder="e.g. acme.com, acme.co.in — leave empty for no restriction"
+                className="mt-1 w-full border rounded-lg px-3 py-2"
+              />
+              <span className="mt-1 block text-[11px] text-gray-500">
+                When set, portal client logins must use one of these domains.
+              </span>
+            </label>
+            <label className="block">
               <span className="font-semibold text-gray-500">City</span>
               <input name="city" defaultValue={company.city || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
             </label>
@@ -289,6 +314,14 @@ export default async function CompanyDetailPage({
             <h2 className="font-bold text-sm text-gray-900 pb-2 border-b">Company Information</h2>
             <div><span className="font-semibold text-gray-500 w-24 inline-block">Owner:</span> {(company.owner as any)?.full_name || '?'}</div>
             <div><span className="font-semibold text-gray-500 w-24 inline-block">GST:</span> {company.gst_number || '?'}</div>
+            <div>
+              <span className="font-semibold text-gray-500 w-24 inline-block">Margin %:</span>{' '}
+              {company.margin_percent != null ? `${company.margin_percent}%` : 'Org B2B default'}
+            </div>
+            <div>
+              <span className="font-semibold text-gray-500 w-24 inline-block">Domains:</span>{' '}
+              {formatAllowedEmailDomains(company.allowed_email_domains) || 'Any email'}
+            </div>
             <div><span className="font-semibold text-gray-500 w-24 inline-block">Address:</span> {company.address || '?'}</div>
             <div><span className="font-semibold text-gray-500 w-24 inline-block">City/State:</span> {company.city || '?'}, {company.state || 'India'}</div>
           </div>

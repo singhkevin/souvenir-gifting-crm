@@ -47,6 +47,15 @@ function installTabFetch(tabId: string) {
   w.__giffterTabFetchInstalled = true
 }
 
+function installClientTabPlumbing() {
+  if (typeof window === 'undefined') return
+  if (!sessionStorage.getItem(TAB_STORAGE_KEY)) {
+    sessionStorage.setItem(TAB_STORAGE_KEY, createTabId())
+  }
+  installTabFetch(getTabId())
+  installHistoryPatch()
+}
+
 function installHistoryPatch() {
   const w = window as Window & { __giffterHistoryPatched?: boolean }
   if (w.__giffterHistoryPatched) return
@@ -66,6 +75,8 @@ function installHistoryPatch() {
   }
   w.__giffterHistoryPatched = true
 }
+
+installClientTabPlumbing()
 
 export function TabSessionProvider({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
@@ -95,8 +106,7 @@ export function TabSessionProvider({ children }: { children: ReactNode }) {
       }
     }
     channel.postMessage({ type: 'claim', tabId, nonce })
-    installTabFetch(getTabId())
-    installHistoryPatch()
+    installClientTabPlumbing()
     ensureTabQuery()
     return () => channel.close()
   }, [])

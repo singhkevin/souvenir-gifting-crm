@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function createPortalRequirement(formData: {
   name: string
@@ -36,7 +36,12 @@ export async function createPortalRequirement(formData: {
     .eq('id', companyId)
     .maybeSingle()
 
-  const { data: requirement, error } = await supabase
+  // Clients may read their requirements, but insert is staff-only under RLS.
+  // Write with the service role after the company check above.
+  const admin = createAdminClient()
+  if (!admin) return { error: 'Unable to save this requirement just now. Please try again shortly.' }
+
+  const { data: requirement, error } = await admin
     .from('requirements')
     .insert({
       name: formData.name.trim(),
@@ -55,18 +60,18 @@ export async function createPortalRequirement(formData: {
 
   if (error) return { error: error.message }
 
-  // If products (SKUs) provided, link them to requirement
+  // Attach only SKUs this client can already see.
   if (formData.products?.length && requirement) {
     const { data: products } = await supabase
-      .from('products')
+      .from('client_products')
       .select('id, sku')
-      .eq('status', 'active')
       .in('sku', formData.products)
 
     if (products && products.length > 0) {
-      await supabase.from('requirement_products').insert(
+      const { error: linkError } = await admin.from('requirement_products').insert(
         products.map(p => ({ requirement_id: requirement.id, product_id: p.id }))
       )
+      if (linkError) return { error: linkError.message }
     }
   }
 

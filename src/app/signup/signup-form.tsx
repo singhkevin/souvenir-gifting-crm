@@ -3,15 +3,14 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Mail, Loader2, User } from 'lucide-react'
 import { signUp } from '@/app/login/actions'
+import { assignWithTab } from '@/lib/supabase/client'
 import { AuthShell } from '@/components/auth/auth-shell'
 import { BrandName } from '@/components/brand/brand-name'
 import { PasswordField } from '@/components/auth/password-field'
 
 export function SignupForm() {
-  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -53,8 +52,7 @@ export function SignupForm() {
       return
     }
     if (result.redirectTo) {
-      router.push(result.redirectTo)
-      router.refresh()
+      assignWithTab(result.redirectTo)
       return
     }
     setMessage(result.message || 'Account created.')

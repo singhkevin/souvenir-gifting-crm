@@ -1,11 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { isSafeNext } from '@/lib/safe-next'
-import { TAB_HEADER, TAB_QUERY, authCookieName, isPublicAuthPath, isPublicSitePath, isTabId } from '@/lib/auth/tab'
+import { TAB_HEADER, TAB_QUERY, TAB_URL_HEADER, authCookieName, isPublicAuthPath, isPublicSitePath, isTabId } from '@/lib/auth/tab'
 
-function withTabHeader(request: NextRequest, tabId: string) {
+function requestUrlHint(request: NextRequest) {
+  return `${request.nextUrl.pathname}${request.nextUrl.search}`
+}
+
+function withTabRequest(request: NextRequest, tabId?: string | null) {
   const requestHeaders = new Headers(request.headers)
-  requestHeaders.set(TAB_HEADER, tabId)
+  requestHeaders.set(TAB_URL_HEADER, requestUrlHint(request))
+  if (isTabId(tabId)) requestHeaders.set(TAB_HEADER, tabId)
   return NextResponse.next({ request: { headers: requestHeaders } })
 }
 
@@ -25,10 +30,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!isTabId(tabId)) {
-    return NextResponse.next({ request })
+    return withTabRequest(request)
   }
 
-  let supabaseResponse = withTabHeader(request, tabId)
+  let supabaseResponse = withTabRequest(request, tabId)
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -39,7 +44,7 @@ export async function proxy(request: NextRequest) {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = withTabHeader(request, tabId)
+          supabaseResponse = withTabRequest(request, tabId)
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )

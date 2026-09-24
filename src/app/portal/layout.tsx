@@ -5,6 +5,8 @@ import { PortalLayout } from '@/components/layout/portal-layout'
 import { getRequestTabId } from '@/lib/auth/tab-server'
 import { TabSessionRevive } from '@/components/auth/tab-session-revive'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PortalLayoutWrapper({ children }: { children: React.ReactNode }) {
   if (!(await getRequestTabId())) return <TabSessionRevive />
 

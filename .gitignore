@@ -52,3 +52,4 @@ scripts/collect-deploy-files.py
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+scratchpaduser.txt

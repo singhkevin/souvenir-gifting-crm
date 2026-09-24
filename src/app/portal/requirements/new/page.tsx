@@ -120,6 +120,7 @@ export default function NewRequirementPage() {
               </div>
               <MobileSheetSelect
                 label="Purpose / Occasion"
+                showDesktopLabel
                 emptyLabel="Select an occasion"
                 value={formData.purpose}
                 onChange={(purpose) => setFormData({ ...formData, purpose })}
