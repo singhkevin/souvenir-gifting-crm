@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node --max-http-header-size=131072 ./node_modules/next/dist/bin/next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "node --max-http-header-size=131072 ./node_modules/next/dist/bin/next start",
     "lint": "eslint"
   },
