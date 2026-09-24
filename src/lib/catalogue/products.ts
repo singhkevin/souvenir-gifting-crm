@@ -72,41 +72,46 @@ async function publicDbClient(): Promise<SupabaseClient | null> {
 }
 
 export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
-  const client = await publicDbClient()
-  if (!client) return []
-  const { data, error } = await client
-    .from('products')
-    .select(PUBLIC_PRODUCT_SELECT)
-    .eq('status', 'active')
-    .eq('catalogue_access', 'all')
-    .order('name')
-  if (error || !data) {
-    console.error('[catalogue] public products fetch failed:', error?.message || 'no data')
+  try {
+    const client = await publicDbClient()
+    if (!client) return []
+    const { data, error } = await client
+      .from('products')
+      .select(PUBLIC_PRODUCT_SELECT)
+      .eq('status', 'active')
+      .eq('catalogue_access', 'all')
+      .order('name')
+    if (error || !data) return []
+    const settings = await getMarginSettings()
+    return Promise.all(
+      data.map(async (row) => {
+        const resolved = await resolveProductSellPrice(row, { channel: 'b2c', settings })
+        return toPublicProduct(row, resolved.sellPrice)
+      })
+    )
+  } catch {
     return []
   }
-  const settings = await getMarginSettings()
-  return Promise.all(
-    data.map(async (row) => {
-      const resolved = await resolveProductSellPrice(row, { channel: 'b2c', settings })
-      return toPublicProduct(row, resolved.sellPrice)
-    })
-  )
 }
 
 export async function getPublicProduct(id: string): Promise<PublicProduct | null> {
-  const client = await publicDbClient()
-  if (!client) return null
-  const { data, error } = await client
-    .from('products')
-    .select(PUBLIC_PRODUCT_SELECT)
-    .eq('id', id)
-    .eq('status', 'active')
-    .eq('catalogue_access', 'all')
-    .maybeSingle()
-  if (error || !data) return null
-  const settings = await getMarginSettings()
-  const resolved = await resolveProductSellPrice(data, { channel: 'b2c', settings })
-  return toPublicProduct(data, resolved.sellPrice)
+  try {
+    const client = await publicDbClient()
+    if (!client) return null
+    const { data, error } = await client
+      .from('products')
+      .select(PUBLIC_PRODUCT_SELECT)
+      .eq('id', id)
+      .eq('status', 'active')
+      .eq('catalogue_access', 'all')
+      .maybeSingle()
+    if (error || !data) return null
+    const settings = await getMarginSettings()
+    const resolved = await resolveProductSellPrice(data, { channel: 'b2c', settings })
+    return toPublicProduct(data, resolved.sellPrice)
+  } catch {
+    return null
+  }
 }
 
 export async function getPublicCategories() {

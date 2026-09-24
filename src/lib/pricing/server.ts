@@ -14,18 +14,22 @@ export type ProductPriceRow = {
 }
 
 async function loadMarginSettings(): Promise<MarginSettings | null> {
-  const admin = createAdminClient()
-  const client = admin || (await createClient())
-  const { data } = await client
-    .from('org_settings')
-    .select('default_margin_percent, b2c_margin_percent, b2b_margin_percent')
-    .limit(1)
-    .maybeSingle()
-  if (!data) return null
-  return {
-    default_margin_percent: data.default_margin_percent == null ? null : Number(data.default_margin_percent),
-    b2c_margin_percent: data.b2c_margin_percent == null ? null : Number(data.b2c_margin_percent),
-    b2b_margin_percent: data.b2b_margin_percent == null ? null : Number(data.b2b_margin_percent),
+  try {
+    const admin = createAdminClient()
+    const client = admin || (await createClient())
+    const { data } = await client
+      .from('org_settings')
+      .select('default_margin_percent, b2c_margin_percent, b2b_margin_percent')
+      .limit(1)
+      .maybeSingle()
+    if (!data) return null
+    return {
+      default_margin_percent: data.default_margin_percent == null ? null : Number(data.default_margin_percent),
+      b2c_margin_percent: data.b2c_margin_percent == null ? null : Number(data.b2c_margin_percent),
+      b2b_margin_percent: data.b2b_margin_percent == null ? null : Number(data.b2b_margin_percent),
+    }
+  } catch {
+    return null
   }
 }
 
