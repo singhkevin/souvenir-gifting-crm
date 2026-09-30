@@ -9,8 +9,10 @@ import { requestOrigin, recoveryRedirectTo } from '@/lib/auth/request-origin'
 import { validateNewPassword } from '@/lib/auth/password'
 import { sendEmail, passwordResetEmailHtml } from '@/lib/email/resend'
 import { isEmailAllowedForDomains } from '@/lib/pricing/domains'
+import { companyIdForSlug, resolveHost, tenantPortalUrl } from '@/lib/portal-host'
+import { headers } from 'next/headers'
 
-export async function signIn(formData: FormData): Promise<{ error?: string; redirectTo?: string } | undefined> {
+export async function signIn(formData: FormData): Promise<{ error?: string; redirectTo?: string; externalPortal?: boolean } | undefined> {
   const email = String(formData.get('email') || '').trim()
   const password = String(formData.get('password') || '')
   const next = formData.get('next') as string | null
@@ -45,12 +47,26 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
     if (isClient && profile.company_id) {
       const { data: company } = await supabase
         .from('companies')
-        .select('allowed_email_domains')
+        .select('allowed_email_domains, portal_slug')
         .eq('id', profile.company_id)
         .maybeSingle()
       if (company && !isEmailAllowedForDomains(email, company.allowed_email_domains)) {
         await supabase.auth.signOut()
         return { error: 'This email domain is not allowed for your company portal login.' }
+      }
+
+      const headerStore = await headers()
+      const host = headerStore.get('x-forwarded-host') || headerStore.get('host')
+      const resolved = resolveHost(host)
+      if (resolved.kind === 'tenant') {
+        const hostCompanyId = await companyIdForSlug(resolved.slug)
+        if (!hostCompanyId || hostCompanyId !== profile.company_id) {
+          await supabase.auth.signOut()
+          return { error: 'This account cannot sign in on this portal.' }
+        }
+      } else if (company?.portal_slug) {
+        const portalUrl = tenantPortalUrl(company.portal_slug, host)
+        if (portalUrl) return { redirectTo: portalUrl, externalPortal: true }
       }
     }
 

@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { PortalLayout } from '@/components/layout/portal-layout'
 import { getRequestTabId } from '@/lib/auth/tab-server'
 import { TabSessionRevive } from '@/components/auth/tab-session-revive'
+import { headers } from 'next/headers'
+import { companyIdForSlug, resolveHost } from '@/lib/portal-host'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +32,18 @@ export default async function PortalLayoutWrapper({ children }: { children: Reac
   if (profile.is_active === false) {
     await supabase.auth.signOut()
     redirect('/login')
+  }
+
+  const headerStore = await headers()
+  const host = headerStore.get('x-forwarded-host') || headerStore.get('host')
+  const resolved = resolveHost(host)
+  if (resolved.kind === 'tenant') {
+    const hostCompanyId = await companyIdForSlug(resolved.slug)
+    const isClient = profile.role === 'client_admin' || profile.role === 'client_user'
+    if (!isClient || hostCompanyId !== profile.company_id) {
+      await supabase.auth.signOut()
+      redirect('/login?error=portal')
+    }
   }
 
   if (profile.role !== 'client_admin' && profile.role !== 'client_user') {

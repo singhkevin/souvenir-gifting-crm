@@ -16,7 +16,7 @@ function isNextRedirect(err: unknown) {
   return digest.startsWith('NEXT_REDIRECT')
 }
 
-export function LoginForm({ next = '', resetSuccess = false }: { next?: string; resetSuccess?: boolean }) {
+export function LoginForm({ next = '', resetSuccess = false, portalError = false }: { next?: string; resetSuccess?: boolean; portalError?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -38,6 +38,10 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
       if (res?.error) {
         setError(res.error);
         setLoading(false);
+        return;
+      }
+      if (res?.externalPortal && res.redirectTo) {
+        window.location.assign(res.redirectTo);
         return;
       }
       if (res?.redirectTo) {
@@ -81,6 +85,11 @@ export function LoginForm({ next = '', resetSuccess = false }: { next?: string; 
             {resetSuccess && !error && (
               <div className="p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
                 Password updated successfully. Please sign in with your new password.
+              </div>
+            )}
+            {portalError && !error && (
+              <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
+                This account cannot be used on this portal.
               </div>
             )}
             {error && (

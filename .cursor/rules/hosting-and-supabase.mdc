@@ -1,0 +1,12 @@
+---
+description: Production is Hostinger; run SQL on the project Supabase account via MCP
+alwaysApply: true
+---
+
+# Hosting and database
+
+- Production is Hostinger at https://giftingstore.online. Do not treat Vercel as the deploy target.
+- Company portals are `https://{portal_slug}.giftingstore.online`. `ROOT_DOMAIN=giftingstore.online` belongs in the Hostinger env, with wildcard DNS and the domain `*.giftingstore.online` on that host.
+- This app's Supabase project is `ajysowosgjaipczrwpfv` (`corporate-gifting-crm`, ap-south-1) in org `smoddqkpbnbvcqjujvmu`. Ignore `robust-gifting-crm` and `vilms-saas-local-dev` on the same account.
+- Run schema changes and SQL with the Supabase MCP (`plugin-supabase-supabase`: `list_projects`, `apply_migration`, `execute_sql`). Do not ask the user to paste or run SQL.
+- The MCP is often signed into another account (projects such as `meerav` or `vtech-facades`). If `ajysowosgjaipczrwpfv` is missing from `list_projects`, call `mcp_auth` and have the user sign into the account that owns that project before applying migrations.

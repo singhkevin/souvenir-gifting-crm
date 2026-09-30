@@ -9,6 +9,7 @@ import { uploadCompanyLogo, removeCompanyLogo, updateCompany, removeCompany } fr
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { formatCurrency, formatDate, isUuid } from '@/lib/utils'
 import { formatAllowedEmailDomains } from '@/lib/pricing/domains'
+import { portalUrlForSlug } from '@/lib/portal-host'
 import { Plus, Trash2 } from 'lucide-react'
 import { grantCompanyProductAccess, revokeCompanyProductAccess } from '@/app/crm/products/actions'
 import { requireStaff } from '@/lib/auth'
@@ -270,6 +271,18 @@ export default async function CompanyDetailPage({
                 When set, portal client logins must use one of these domains.
               </span>
             </label>
+            <label className="block md:col-span-2">
+              <span className="font-semibold text-gray-500">Portal address</span>
+              <input
+                name="portal_slug"
+                defaultValue={company.portal_slug || ''}
+                placeholder="acme"
+                className="mt-1 w-full border rounded-lg px-3 py-2"
+              />
+              <span className="mt-1 block text-[11px] text-gray-500">
+                {portalUrlForSlug(company.portal_slug) || 'Leave empty to keep this company on the main site.'}
+              </span>
+            </label>
             <label className="block">
               <span className="font-semibold text-gray-500">City</span>
               <input name="city" defaultValue={company.city || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />
@@ -321,6 +334,10 @@ export default async function CompanyDetailPage({
             <div>
               <span className="font-semibold text-gray-500 w-24 inline-block">Domains:</span>{' '}
               {formatAllowedEmailDomains(company.allowed_email_domains) || 'Any email'}
+            </div>
+            <div>
+              <span className="font-semibold text-gray-500 w-24 inline-block">Portal:</span>{' '}
+              {portalUrlForSlug(company.portal_slug) || company.portal_slug || 'Main site'}
             </div>
             <div><span className="font-semibold text-gray-500 w-24 inline-block">Address:</span> {company.address || '?'}</div>
             <div><span className="font-semibold text-gray-500 w-24 inline-block">City/State:</span> {company.city || '?'}, {company.state || 'India'}</div>

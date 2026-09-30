@@ -6,9 +6,9 @@ import { confirmSearchFromParams, hasRecoveryQuery } from '@/lib/auth/recovery'
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; reset?: string; code?: string; type?: string; token_hash?: string }>
+  searchParams: Promise<{ next?: string; reset?: string; error?: string; code?: string; type?: string; token_hash?: string }>
 }) {
-  const { next = '', reset = '', code = '', type = '', token_hash = '' } = await searchParams
+  const { next = '', reset = '', error = '', code = '', type = '', token_hash = '' } = await searchParams
   const query = new URLSearchParams()
   if (code) query.set('code', code)
   if (token_hash) query.set('token_hash', token_hash)
@@ -16,5 +16,5 @@ export default async function LoginPage({
   if (hasRecoveryQuery(query)) {
     redirect(`/auth/confirm?${confirmSearchFromParams({ code, type, token_hash })}`)
   }
-  return <LoginForm next={isSafeNext(next) ? next : ''} resetSuccess={reset === 'success'} />
+  return <LoginForm next={isSafeNext(next) ? next : ''} resetSuccess={reset === 'success'} portalError={error === 'portal'} />
 }

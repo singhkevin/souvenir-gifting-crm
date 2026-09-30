@@ -70,6 +70,16 @@ export default async function NewCompanyPage() {
             />
             <p className="text-[11px] text-gray-500 mt-1">Optional. When set, portal logins must use these domains.</p>
           </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium mb-1">Portal address</label>
+            <input
+              type="text"
+              name="portal_slug"
+              placeholder="acme"
+              className="w-full p-2 border border-[var(--color-border)] rounded"
+            />
+            <p className="text-[11px] text-gray-500 mt-1">Optional. Leave empty to keep this company on the main site.</p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

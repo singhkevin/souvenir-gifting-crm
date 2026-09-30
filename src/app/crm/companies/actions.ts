@@ -8,11 +8,19 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generateTemporaryPassword, SERVICE_ROLE_MISSING, validateNewPassword } from '@/lib/auth/password'
 import { findReusableLogo } from '@/lib/companies/identity'
 import { parseAllowedEmailDomains, isEmailAllowedForDomains } from '@/lib/pricing/domains'
+import { parsePortalSlug } from '@/lib/portal-host'
 
 const LOGO_BUCKET = 'company-logos'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
 // SVG is intentionally excluded: it can carry script, and these files are served
 // from a public bucket. The bucket itself still permits it for other tooling.
+function portalSlugError(message: string) {
+  if (message.includes('companies_portal_slug_key') || message.includes('portal_slug')) {
+    return 'That portal address is already in use.'
+  }
+  return message
+}
+
 const ALLOWED_LOGO_TYPES: Record<string, string> = {
   'image/png': 'png',
   'image/jpeg': 'jpg',
@@ -92,6 +100,8 @@ export async function createCompany(formData: FormData) {
     return { error: 'Margin % must be a number ≥ 0' }
   }
   const allowedEmailDomains = parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
+  const portalSlug = parsePortalSlug(String(formData.get('portal_slug') || ''))
+  if (portalSlug.error) return { error: portalSlug.error }
 
   const { data, error } = await supabase.from('companies').insert({
     name: formData.get('name') as string,
@@ -106,8 +116,9 @@ export async function createCompany(formData: FormData) {
     status: (formData.get('status') as string) || 'active',
     margin_percent: marginPercent,
     allowed_email_domains: allowedEmailDomains,
+    portal_slug: portalSlug.slug,
   }).select('id').single()
-  if (error) return { error: error.message }
+  if (error) return { error: portalSlugError(error.message) }
 
   const file = formData.get('logo')
   if (file instanceof File && file.size > 0) {
@@ -149,6 +160,8 @@ export async function updateCompany(companyId: string, formData: FormData) {
     return { error: 'Margin % must be a number ≥ 0' }
   }
   const allowedEmailDomains = parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
+  const portalSlug = parsePortalSlug(String(formData.get('portal_slug') || ''))
+  if (portalSlug.error) return { error: portalSlug.error }
 
   const supabase = await createClient()
   const { error } = await supabase.from('companies').update({
@@ -164,8 +177,9 @@ export async function updateCompany(companyId: string, formData: FormData) {
     status: (formData.get('status') as string) || undefined,
     margin_percent: marginPercent,
     allowed_email_domains: allowedEmailDomains,
+    portal_slug: portalSlug.slug,
   }).eq('id', companyId)
-  if (error) return { error: error.message }
+  if (error) return { error: portalSlugError(error.message) }
 
   const { data: current } = await supabase
     .from('companies')

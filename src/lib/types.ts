@@ -46,6 +46,8 @@ export interface Company {
   margin_percent: number | null
   /** If non-empty, portal client emails must match one of these domains. */
   allowed_email_domains: string[]
+  /** Host label for https://{portal_slug}.{ROOT_DOMAIN}. Null keeps the main site. */
+  portal_slug?: string | null
   gst_number?: string | null
   created_at: string
   updated_at: string
