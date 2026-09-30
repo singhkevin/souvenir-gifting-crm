@@ -39,6 +39,7 @@ export interface Company {
   state: string | null
   country: string | null
   owner_id: string | null
+  /** CRM sales status: prospect | active | inactive. */
   status: string
   notes: string | null
   logo_path: string | null
@@ -48,6 +49,15 @@ export interface Company {
   allowed_email_domains: string[]
   /** Host label for https://{portal_slug}.{ROOT_DOMAIN}. Null keeps the main site. */
   portal_slug?: string | null
+  /** Portal access lifecycle: trial | active | suspended | cancelled. */
+  portal_status?: 'trial' | 'active' | 'suspended' | 'cancelled' | null
+  /** When portal_status=trial, portal access ends after this timestamp. */
+  trial_ends_at?: string | null
+  /** Hostinger subdomain provisioning state. */
+  subdomain_status?: 'none' | 'pending' | 'provisioning' | 'ssl_pending' | 'live' | 'failed' | null
+  subdomain_attempts?: number | null
+  subdomain_last_error?: string | null
+  subdomain_updated_at?: string | null
   gst_number?: string | null
   created_at: string
   updated_at: string

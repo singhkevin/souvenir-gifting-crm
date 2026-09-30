@@ -8,17 +8,55 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generateTemporaryPassword, SERVICE_ROLE_MISSING, validateNewPassword } from '@/lib/auth/password'
 import { findReusableLogo } from '@/lib/companies/identity'
 import { parseAllowedEmailDomains, isEmailAllowedForDomains } from '@/lib/pricing/domains'
-import { parsePortalSlug } from '@/lib/portal-host'
+import { parsePortalSlug, isSlugReservedInHistory } from '@/lib/portal-host'
 
 const LOGO_BUCKET = 'company-logos'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
 // SVG is intentionally excluded: it can carry script, and these files are served
 // from a public bucket. The bucket itself still permits it for other tooling.
+const SALES_STATUSES = new Set(['prospect', 'active', 'inactive'])
+const PORTAL_STATUSES = new Set(['trial', 'active', 'suspended', 'cancelled'])
+
 function portalSlugError(message: string) {
   if (message.includes('companies_portal_slug_key') || message.includes('portal_slug')) {
     return 'That portal address is already in use.'
   }
+  if (message.includes('slug_history')) {
+    return 'That portal address was recently used and is still reserved.'
+  }
   return message
+}
+
+async function assertPortalSlugAvailable(slug: string | null): Promise<string | null> {
+  if (!slug) return null
+  if (await isSlugReservedInHistory(slug)) {
+    return 'That portal address was recently used and is still reserved.'
+  }
+  return null
+}
+
+function parseSalesStatus(raw: FormDataEntryValue | null, fallback: string): string | { error: string } {
+  const value = String(raw || fallback).trim()
+  if (!SALES_STATUSES.has(value)) {
+    return { error: 'Invalid company status.' }
+  }
+  return value
+}
+
+function parsePortalStatus(raw: FormDataEntryValue | null, fallback: string): string | { error: string } {
+  const value = String(raw || fallback).trim()
+  if (!PORTAL_STATUSES.has(value)) {
+    return { error: 'Invalid portal status.' }
+  }
+  return value
+}
+
+function parseTrialEndsAt(raw: FormDataEntryValue | null): string | null | { error: string } {
+  const value = String(raw || '').trim()
+  if (!value) return null
+  const ms = Date.parse(value)
+  if (!Number.isFinite(ms)) return { error: 'Trial end date is invalid.' }
+  return new Date(ms).toISOString()
 }
 
 const ALLOWED_LOGO_TYPES: Record<string, string> = {
@@ -102,6 +140,14 @@ export async function createCompany(formData: FormData) {
   const allowedEmailDomains = parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
   const portalSlug = parsePortalSlug(String(formData.get('portal_slug') || ''))
   if (portalSlug.error) return { error: portalSlug.error }
+  const reserved = await assertPortalSlugAvailable(portalSlug.slug)
+  if (reserved) return { error: reserved }
+  const status = parseSalesStatus(formData.get('status'), 'active')
+  if (typeof status === 'object') return status
+  const portalStatus = parsePortalStatus(formData.get('portal_status'), 'active')
+  if (typeof portalStatus === 'object') return portalStatus
+  const trialEndsAt = parseTrialEndsAt(formData.get('trial_ends_at'))
+  if (typeof trialEndsAt === 'object') return trialEndsAt
 
   const { data, error } = await supabase.from('companies').insert({
     name: formData.get('name') as string,
@@ -113,7 +159,9 @@ export async function createCompany(formData: FormData) {
     address: formData.get('address') as string || null,
     notes: formData.get('notes') as string || null,
     owner_id: ownerId,
-    status: (formData.get('status') as string) || 'active',
+    status,
+    portal_status: portalStatus,
+    trial_ends_at: trialEndsAt,
     margin_percent: marginPercent,
     allowed_email_domains: allowedEmailDomains,
     portal_slug: portalSlug.slug,
@@ -162,8 +210,24 @@ export async function updateCompany(companyId: string, formData: FormData) {
   const allowedEmailDomains = parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
   const portalSlug = parsePortalSlug(String(formData.get('portal_slug') || ''))
   if (portalSlug.error) return { error: portalSlug.error }
+  const status = parseSalesStatus(formData.get('status'), 'active')
+  if (typeof status === 'object') return status
+  const portalStatus = parsePortalStatus(formData.get('portal_status'), 'active')
+  if (typeof portalStatus === 'object') return portalStatus
+  const trialEndsAt = parseTrialEndsAt(formData.get('trial_ends_at'))
+  if (typeof trialEndsAt === 'object') return trialEndsAt
 
   const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from('companies')
+    .select('portal_slug')
+    .eq('id', companyId)
+    .maybeSingle()
+  if (portalSlug.slug && portalSlug.slug !== existing?.portal_slug) {
+    const reserved = await assertPortalSlugAvailable(portalSlug.slug)
+    if (reserved) return { error: reserved }
+  }
+
   const { error } = await supabase.from('companies').update({
     name: formData.get('name') as string,
     industry: formData.get('industry') as string || null,
@@ -174,7 +238,9 @@ export async function updateCompany(companyId: string, formData: FormData) {
     address: formData.get('address') as string || null,
     notes: formData.get('notes') as string || null,
     gst_number: (formData.get('gst_number') as string) || null,
-    status: (formData.get('status') as string) || undefined,
+    status,
+    portal_status: portalStatus,
+    trial_ends_at: trialEndsAt,
     margin_percent: marginPercent,
     allowed_email_domains: allowedEmailDomains,
     portal_slug: portalSlug.slug,

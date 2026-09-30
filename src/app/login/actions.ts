@@ -9,7 +9,7 @@ import { requestOrigin, recoveryRedirectTo } from '@/lib/auth/request-origin'
 import { validateNewPassword } from '@/lib/auth/password'
 import { sendEmail, passwordResetEmailHtml } from '@/lib/email/resend'
 import { isEmailAllowedForDomains } from '@/lib/pricing/domains'
-import { companyIdForSlug, resolveHost, tenantPortalUrl } from '@/lib/portal-host'
+import { readTenantFromHeaders, resolveHost, tenantPortalUrl } from '@/lib/portal-host'
 import { headers } from 'next/headers'
 
 export async function signIn(formData: FormData): Promise<{ error?: string; redirectTo?: string; externalPortal?: boolean } | undefined> {
@@ -58,9 +58,9 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
       const headerStore = await headers()
       const host = headerStore.get('x-forwarded-host') || headerStore.get('host')
       const resolved = resolveHost(host)
+      const tenant = readTenantFromHeaders(headerStore)
       if (resolved.kind === 'tenant') {
-        const hostCompanyId = await companyIdForSlug(resolved.slug)
-        if (!hostCompanyId || hostCompanyId !== profile.company_id) {
+        if (!tenant || tenant.id !== profile.company_id) {
           await supabase.auth.signOut()
           return { error: 'This account cannot sign in on this portal.' }
         }
