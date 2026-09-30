@@ -306,6 +306,32 @@ export default async function CompanyDetailPage({
                 { value: 'inactive', label: 'Inactive' },
               ]}
             />
+            <MobileSheetSelect
+              name="portal_status"
+              label="Portal status"
+              showDesktopLabel
+              defaultValue={company.portal_status || 'active'}
+              options={[
+                { value: 'trial', label: 'Trial' },
+                { value: 'active', label: 'Active' },
+                { value: 'suspended', label: 'Suspended' },
+                { value: 'cancelled', label: 'Cancelled' },
+              ]}
+            />
+            <label className="block">
+              <span className="font-semibold text-gray-500">Trial ends</span>
+              <input
+                type="datetime-local"
+                name="trial_ends_at"
+                defaultValue={
+                  company.trial_ends_at
+                    ? new Date(company.trial_ends_at).toISOString().slice(0, 16)
+                    : ''
+                }
+                className="mt-1 w-full border rounded-lg px-3 py-2"
+              />
+              <span className="mt-1 block text-[11px] text-gray-500">Used when portal status is Trial.</span>
+            </label>
             <label className="block md:col-span-2">
               <span className="font-semibold text-gray-500">Address</span>
               <textarea name="address" rows={2} defaultValue={company.address || ''} className="mt-1 w-full border rounded-lg px-3 py-2" />

@@ -78,7 +78,9 @@ export default async function NewCompanyPage() {
               placeholder="acme"
               className="w-full p-2 border border-[var(--color-border)] rounded"
             />
-            <p className="text-[11px] text-gray-500 mt-1">Optional. Leave empty to keep this company on the main site.</p>
+            <p className="text-[11px] text-gray-500 mt-1">
+              Optional. 3–40 characters, lowercase letters, numbers, and hyphens. Leave empty to keep this company on the main site.
+            </p>
           </div>
         </div>
 
@@ -121,6 +123,24 @@ export default async function NewCompanyPage() {
               { value: 'inactive', label: 'Inactive' },
             ]}
           />
+          <MobileSheetSelect
+            name="portal_status"
+            label="Portal status"
+            showDesktopLabel
+            defaultValue="active"
+            options={[
+              { value: 'trial', label: 'Trial' },
+              { value: 'active', label: 'Active' },
+              { value: 'suspended', label: 'Suspended' },
+              { value: 'cancelled', label: 'Cancelled' },
+            ]}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Trial ends</label>
+          <input type="datetime-local" name="trial_ends_at" className="w-full p-2 border border-[var(--color-border)] rounded" />
+          <p className="text-[11px] text-gray-500 mt-1">Optional. Used when portal status is Trial.</p>
         </div>
 
         <div>

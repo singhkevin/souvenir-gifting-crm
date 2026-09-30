@@ -1,0 +1,23 @@
+# Migration apply order
+
+Apply forward migrations in this order. Pair each forward file with its `.rollback.sql` when rolling back (reverse order).
+
+Do **not** run these against production from the agent unless explicitly requested. Deliver as files for Hostinger/ops apply.
+
+1. `20260903_operational_crm_control_center.sql`
+2. `20260903_assignment_rls_isolation.sql`
+3. `20260903_tighten_write_policies.sql`
+4. `20260903_prevent_lead_hot_downgrade.sql`
+5. `20260903_product_images_bucket.sql`
+6. `20260903_client_catalogue_access.sql`
+7. `20260903_sample_team_and_client_mockups.sql`
+8. `20260904_contacts_goals_isolation.sql`
+9. `20260907_product_category_taxonomy.sql`
+10. `20260909_convert_order_active_catalogue_only.sql`
+11. `20260922_pricing_margins_domains.sql`
+12. `20260923_campaign_budget_pack_options.sql`
+13. `20260924_campaign_pack_kits.sql`
+14. `20260924_channel_sell_price.sql`
+15. `20260924_client_requirement_insert.sql`
+16. `20260924_company_portal_slug.sql`
+17. **`20260930_tenant_status_and_slug.sql`** ← Phase 1 (rollback: `20260930_tenant_status_and_slug.rollback.sql`)
