@@ -30,6 +30,12 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
     notFound()
   }
 
+  const isExpired =
+    Boolean(quote.valid_until) &&
+    new Date(quote.valid_until) < new Date() &&
+    ['sent', 'viewed'].includes(quote.status || '')
+  const canRespond = ['sent', 'viewed'].includes(quote.status || '') && !isExpired
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <BackButton href="/portal/quotations" label="Back to Quotations" />
@@ -58,7 +64,11 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
             <p className="text-[10px] uppercase font-bold text-gray-400">Total Estimate</p>
             <p className="text-2xl font-bold text-[#624B32]">{formatCurrency(quote.total)}</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              Valid until: <span className="font-bold text-gray-800">{quote.valid_until ? formatDate(quote.valid_until) : '30 Days'}</span>
+              Valid until:{' '}
+              <span className={`font-bold ${isExpired ? 'text-red-600' : 'text-gray-800'}`}>
+                {quote.valid_until ? formatDate(quote.valid_until) : '30 Days'}
+                {isExpired ? ' (Expired)' : ''}
+              </span>
             </p>
           </div>
         </div>
@@ -158,7 +168,25 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
             </div>
           </div>
 
-          {quote.status === 'sent' && (
+          {isExpired && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              This quotation is past its validity date. Contact your account manager for a revised proposal.
+            </div>
+          )}
+          {quote.status === 'accepted' && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+              You accepted this quotation
+              {quote.responded_at ? ` on ${formatDate(quote.responded_at)}` : ''}. Your account team will confirm next steps.
+            </div>
+          )}
+          {quote.status === 'rejected' && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
+              You declined this quotation
+              {quote.responded_at ? ` on ${formatDate(quote.responded_at)}` : ''}.
+              {quote.client_comment ? ` Note: ${quote.client_comment}` : ''}
+            </div>
+          )}
+          {canRespond && (
             <div className="pt-4 border-t border-gray-100">
               <QuotationActions quotationId={quote.id} />
             </div>

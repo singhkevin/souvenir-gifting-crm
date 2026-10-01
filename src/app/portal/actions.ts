@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { revalidatePath } from 'next/cache'
 
 export async function createPortalRequirement(formData: {
   name: string
@@ -87,14 +88,14 @@ export async function respondToQuotation(quotationId: string, status: 'accepted'
   const { data: companyId } = await supabase.rpc('client_company_id')
   const { data: quotation } = await supabase
     .from('quotations')
-    .select('company_id, status')
+    .select('company_id, status, requirement_id')
     .eq('id', quotationId)
     .single()
 
   if (!quotation || quotation.company_id !== companyId) {
     return { error: 'Quotation not found' }
   }
-  if (quotation.status !== 'sent') {
+  if (!['sent', 'viewed'].includes(quotation.status || '')) {
     return { error: 'Quotation cannot be responded to in its current state' }
   }
 
@@ -105,5 +106,11 @@ export async function respondToQuotation(quotationId: string, status: 'accepted'
   })
 
   if (error) return { error: error.message }
+
+  revalidatePath('/portal/quotations')
+  revalidatePath(`/portal/quotations/${quotationId}`)
+  if (quotation.requirement_id) {
+    revalidatePath(`/crm/requirements/${quotation.requirement_id}`)
+  }
   return { success: true }
 }

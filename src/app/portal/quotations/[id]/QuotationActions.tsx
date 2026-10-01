@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { respondToQuotation } from '../../actions'
 
 export function QuotationActions({ quotationId }: { quotationId: string }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [rejecting, setRejecting] = useState(false)
   const [comment, setComment] = useState('')
@@ -15,9 +18,17 @@ export function QuotationActions({ quotationId }: { quotationId: string }) {
     }
 
     setLoading(true)
-    await respondToQuotation(quotationId, status, comment)
+    const result = await respondToQuotation(quotationId, status, comment)
     setLoading(false)
+
+    if (result && typeof result === 'object' && 'error' in result && result.error) {
+      toast.error(String(result.error))
+      return
+    }
+
+    toast.success(status === 'accepted' ? 'Quotation accepted' : 'Response recorded')
     setRejecting(false)
+    router.refresh()
   }
 
   return (

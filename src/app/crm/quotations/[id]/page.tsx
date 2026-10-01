@@ -35,7 +35,10 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     supabase.from('orders').select('id, order_number').eq('quotation_id', quote.id).maybeSingle(),
   ])
 
-  const isExpired = quote.valid_until && new Date(quote.valid_until) < new Date() && quote.status === 'sent'
+  const isExpired =
+    quote.valid_until &&
+    new Date(quote.valid_until) < new Date() &&
+    ['sent', 'viewed'].includes(quote.status || '')
 
   const markSentAction = async () => {
     'use server'
@@ -99,7 +102,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               </button>
             </form>
           )}
-          {quote.status === 'sent' && (
+          {['sent', 'viewed'].includes(quote.status || '') && !isExpired && (
             <>
               <form action={markAcceptedAction}>
                 <button type="submit" className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors inline-flex items-center gap-1">
@@ -154,6 +157,17 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               {isExpired && ' (Expired)'}
             </span>
           </div>
+          {quote.responded_at && (
+            <div>
+              <span className="text-gray-500 w-20 inline-block">Responded:</span>{' '}
+              {formatDate(quote.responded_at)}
+            </div>
+          )}
+          {quote.client_comment && (
+            <div className="pt-1 text-gray-600">
+              <span className="text-gray-500">Client note:</span> {quote.client_comment}
+            </div>
+          )}
         </div>
       </div>
 

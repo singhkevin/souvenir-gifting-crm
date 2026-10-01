@@ -7,10 +7,13 @@ import { writeAudit } from '@/lib/audit'
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   draft: ['sent'],
   sent: ['accepted', 'rejected', 'expired'],
+  viewed: ['accepted', 'rejected', 'expired'],
   accepted: [],
   rejected: [],
   expired: ['sent'],
 }
+
+const RESPONSE_STATUSES = new Set(['accepted', 'rejected'])
 
 export async function updateQuotationStatus(quotationId: string, newStatus: string) {
   const profile = await getProfile()
@@ -22,7 +25,7 @@ export async function updateQuotationStatus(quotationId: string, newStatus: stri
   const supabase = await createClient()
   const { data: quote, error: readError } = await supabase
     .from('quotations')
-    .select('id, status')
+    .select('id, status, requirement_id')
     .eq('id', quotationId)
     .maybeSingle()
   if (readError) return { error: readError.message }
@@ -33,8 +36,17 @@ export async function updateQuotationStatus(quotationId: string, newStatus: stri
     return { error: `A ${current} quotation cannot move to ${newStatus}` }
   }
 
-  const { error } = await supabase.from('quotations').update({ status: newStatus }).eq('id', quotationId)
-  if (error) return { error: error.message }
+  if (RESPONSE_STATUSES.has(newStatus)) {
+    const { error } = await supabase.rpc('respond_quotation', {
+      p_quotation_id: quotationId,
+      p_status: newStatus,
+      p_comment: null,
+    })
+    if (error) return { error: error.message }
+  } else {
+    const { error } = await supabase.from('quotations').update({ status: newStatus }).eq('id', quotationId)
+    if (error) return { error: error.message }
+  }
 
   await writeAudit(supabase, {
     action: 'status_change',
@@ -47,6 +59,9 @@ export async function updateQuotationStatus(quotationId: string, newStatus: stri
 
   revalidatePath(`/crm/quotations/${quotationId}`)
   revalidatePath('/crm/quotations')
+  if (quote.requirement_id) {
+    revalidatePath(`/crm/requirements/${quote.requirement_id}`)
+  }
   return { success: true }
 }
 export async function convertToOrder(quotationId: string) {
