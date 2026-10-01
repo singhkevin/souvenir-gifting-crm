@@ -15,8 +15,25 @@ type CompanyRow = {
   industry: string | null
   city: string | null
   status: string | null
+  portal_slug?: string | null
   created_at: string
   owner?: CompanyOwner | CompanyOwner[] | null
+}
+
+function portalDotClass(status: string | undefined) {
+  switch (status) {
+    case 'live':
+      return 'bg-green-500'
+    case 'failed':
+    case 'blocked':
+      return 'bg-red-500'
+    case 'queued':
+    case 'parking':
+    case 'verifying':
+      return 'bg-amber-400'
+    default:
+      return 'bg-gray-300'
+  }
 }
 
 export default async function Companies(props: { searchParams: Promise<{ q?: string; status?: string; removed?: string }> }) {
@@ -36,6 +53,20 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
 
   const { data: companies } = await query;
   const companyRows = asRows<CompanyRow>(companies)
+  const ids = companyRows.map((c) => c.id)
+  const hostStatusByCompany = new Map<string, string>()
+  if (ids.length) {
+    const { data: hosts } = await supabase
+      .from('portal_hosts')
+      .select('company_id, status')
+      .in('company_id', ids)
+      .eq('role', 'primary')
+      .eq('desired', 'parked')
+      .neq('status', 'removed')
+    for (const row of hosts || []) {
+      if (row.company_id) hostStatusByCompany.set(row.company_id, row.status)
+    }
+  }
 
   return (
     <div>
@@ -110,7 +141,15 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
                   <td className="p-4">
                     <Link href={`/crm/companies/${c.id}`} className="flex items-center gap-3 hover:text-[var(--color-primary)]">
                       <CompanyAvatar name={c.name} logoPath={c.logo_path} size="md" />
-                      <span className="font-medium">{c.name}</span>
+                      <span className="font-medium inline-flex items-center gap-2">
+                        {c.name}
+                        {c.portal_slug ? (
+                          <span
+                            title={`Portal ${hostStatusByCompany.get(c.id) || 'pending'}: ${c.portal_slug}`}
+                            className={`inline-block h-2 w-2 rounded-full ${portalDotClass(hostStatusByCompany.get(c.id))}`}
+                          />
+                        ) : null}
+                      </span>
                     </Link>
                   </td>
                   <td className="p-4 text-gray-600">{c.industry || '-'}</td>

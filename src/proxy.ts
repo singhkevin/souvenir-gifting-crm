@@ -4,11 +4,15 @@ import { isSafeNext } from '@/lib/safe-next'
 import { TAB_HEADER, TAB_QUERY, TAB_URL_HEADER, authCookieName, isPublicAuthPath, isPublicSitePath, isTabId } from '@/lib/auth/tab'
 import {
   applyTenantHeaders,
+  isInternalApiPath,
+  isPortalPingPath,
   isTenantAuthPath,
   isTenantGatePath,
   isTrialExpired,
   mainOrigin,
+  portalUrlForSlug,
   resolveHost,
+  resolvePortalRedirect,
   resolveTenantBySlug,
   type ResolvedTenant,
 } from '@/lib/portal-host'
@@ -76,10 +80,37 @@ export async function proxy(request: NextRequest) {
 
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
   const resolved = resolveHost(host)
+
+  // Health ping: no auth, no tenant gate, never cache
+  if (isPortalPingPath(pathname)) {
+    return withTabRequest(request, tabId, null)
+  }
+
+  // Internal worker routes: apex only; tenant hosts get 404
+  if (isInternalApiPath(pathname)) {
+    if (resolved.kind === 'tenant') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+    }
+    return withTabRequest(request, tabId, null)
+  }
+
   const tenant = resolved.kind === 'tenant' ? await resolveTenantBySlug(resolved.slug) : null
 
   if (resolved.kind === 'tenant') {
     if (!tenant) {
+      const redirect = await resolvePortalRedirect(resolved.slug)
+      if (redirect?.kind === 'live') {
+        const targetBase = portalUrlForSlug(redirect.targetSlug)
+        if (targetBase) {
+          const dest = new URL(targetBase)
+          dest.pathname = pathname
+          dest.search = search
+          return NextResponse.redirect(dest, 307)
+        }
+      }
+      if (redirect?.kind === 'pending') {
+        return NextResponse.redirect(new URL('/login', mainOrigin(host)), 307)
+      }
       if (isTenantGatePath(pathname) && pathname.startsWith('/tenant/not-found')) {
         return withTabRequest(request, tabId, null)
       }

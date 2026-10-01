@@ -9,7 +9,7 @@ import { requestOrigin, recoveryRedirectTo } from '@/lib/auth/request-origin'
 import { validateNewPassword } from '@/lib/auth/password'
 import { sendEmail, passwordResetEmailHtml } from '@/lib/email/resend'
 import { isEmailAllowedForDomains } from '@/lib/pricing/domains'
-import { readTenantFromHeaders, resolveHost, tenantPortalUrl } from '@/lib/portal-host'
+import { readTenantFromHeaders, resolveHost, tenantPortalUrl, isPrimaryPortalLive } from '@/lib/portal-host'
 import { headers } from 'next/headers'
 
 export async function signIn(formData: FormData): Promise<{ error?: string; redirectTo?: string; externalPortal?: boolean } | undefined> {
@@ -65,8 +65,13 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
           return { error: 'This account cannot sign in on this portal.' }
         }
       } else if (company?.portal_slug) {
-        const portalUrl = tenantPortalUrl(company.portal_slug, host)
-        if (portalUrl) return { redirectTo: portalUrl, externalPortal: true }
+        const live = await isPrimaryPortalLive(profile.company_id)
+        if (live) {
+          const portalUrl = tenantPortalUrl(company.portal_slug, host)
+          if (portalUrl) return { redirectTo: portalUrl, externalPortal: true }
+        }
+        // Subdomain not live yet — keep the client on the apex path fallback.
+        return { redirectTo: '/portal' }
       }
     }
 

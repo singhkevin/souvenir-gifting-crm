@@ -362,3 +362,89 @@ export async function isSlugReservedInHistory(slug: string): Promise<boolean> {
   const graceMs = 30 * 24 * 60 * 60 * 1000
   return released + graceMs > Date.now()
 }
+
+/** Drop cached tenant for a slug after CRM slug/status changes. */
+export function clearTenantCache(slug?: string | null) {
+  if (!slug) {
+    tenantCache.clear()
+    return
+  }
+  tenantCache.delete(slug.toLowerCase())
+}
+
+/**
+ * Grace-period redirect host lookup.
+ * - live: primary is live → 307 to new host
+ * - pending: redirect row exists but primary not live → apex /login
+ * - null: not a redirect host
+ */
+export async function resolvePortalRedirect(
+  slug: string,
+): Promise<{ kind: 'live'; targetSlug: string } | { kind: 'pending' } | null> {
+  const admin = createAdminClient()
+  if (!admin) return null
+  const key = slug.toLowerCase()
+  const { data: redirectRow } = await admin
+    .from('portal_hosts')
+    .select('company_id, redirect_until, status, desired, role')
+    .eq('slug', key)
+    .eq('role', 'redirect')
+    .neq('status', 'removed')
+    .maybeSingle()
+  if (!redirectRow?.company_id) return null
+  if (redirectRow.redirect_until) {
+    const until = Date.parse(redirectRow.redirect_until)
+    if (Number.isFinite(until) && until < Date.now()) return null
+  }
+  const { data: primary } = await admin
+    .from('portal_hosts')
+    .select('slug, status')
+    .eq('company_id', redirectRow.company_id)
+    .eq('role', 'primary')
+    .eq('desired', 'parked')
+    .neq('status', 'removed')
+    .maybeSingle()
+  if (!primary?.slug || primary.slug === key) return { kind: 'pending' }
+  if (primary.status !== 'live') return { kind: 'pending' }
+  return { kind: 'live', targetSlug: primary.slug }
+}
+
+/**
+ * If this slug is a grace-period redirect host with a live primary, return the new slug.
+ */
+export async function findPortalRedirectTarget(slug: string): Promise<string | null> {
+  const result = await resolvePortalRedirect(slug)
+  return result?.kind === 'live' ? result.targetSlug : null
+}
+
+/** True when the company's primary portal host is verified live. */
+export async function isPrimaryPortalLive(companyId: string): Promise<boolean> {
+  const admin = createAdminClient()
+  if (!admin) return false
+  const { data: rows } = await admin
+    .from('portal_hosts')
+    .select('status, role, desired')
+    .eq('company_id', companyId)
+    .neq('status', 'removed')
+
+  if (rows && rows.length > 0) {
+    const primary = rows.find((row) => row.role === 'primary' && row.desired === 'parked')
+    return primary?.status === 'live'
+  }
+
+  // Fallback only when there are zero portal_hosts rows
+  const { data: company } = await admin
+    .from('companies')
+    .select('subdomain_status')
+    .eq('id', companyId)
+    .maybeSingle()
+  return company?.subdomain_status === 'live'
+}
+
+export function isInternalApiPath(pathname: string) {
+  return pathname === '/api/internal' || pathname.startsWith('/api/internal/')
+}
+
+export function isPortalPingPath(pathname: string) {
+  return pathname === '/api/portal-ping' || pathname.startsWith('/api/portal-ping/')
+}

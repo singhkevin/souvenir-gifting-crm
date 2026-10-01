@@ -1,5 +1,6 @@
 -- Rollback for 20260930_tenant_status_and_slug.sql
 -- Does not touch companies.status (prospect|active|inactive).
+begin;
 
 drop trigger if exists companies_portal_slug_history on public.companies;
 drop function if exists public.companies_record_slug_history();
@@ -21,3 +22,5 @@ alter table public.companies drop column if exists subdomain_status;
 alter table public.companies drop column if exists subdomain_attempts;
 alter table public.companies drop column if exists subdomain_last_error;
 alter table public.companies drop column if exists subdomain_updated_at;
+
+commit;

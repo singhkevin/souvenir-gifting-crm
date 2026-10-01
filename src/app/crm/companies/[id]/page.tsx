@@ -17,8 +17,10 @@ import { createContact } from '@/app/crm/contacts/actions'
 import { asFormAction } from '@/lib/form-action'
 import { PortalClientForm } from '../portal-client-form'
 import { ManageClientLogin } from '../manage-client-login'
+import { PortalHostCard } from '../portal-host-card'
 import { CLIENT_STATUS_LABELS, ORDER_LIFECYCLE, lifecycleIndex } from '@/lib/order-workflow'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import type { PortalHost } from '@/lib/portal-hosts/types'
 
 export default async function CompanyDetailPage({
   params,
@@ -49,6 +51,7 @@ export default async function CompanyDetailPage({
     { data: clients },
     { data: companyTasks },
     { count: globalProductCount },
+    { data: portalHosts },
   ] = await Promise.all([
     supabase.from('companies').select('*, owner:profiles!companies_owner_id_fkey(id, full_name, email)').eq('id', id).maybeSingle(),
     supabase.from('contacts').select('*').eq('company_id', id).order('full_name'),
@@ -62,9 +65,18 @@ export default async function CompanyDetailPage({
     supabase.from('profiles').select('id, full_name, email, role, is_active').eq('company_id', id).in('role', ['client_admin', 'client_user']).order('full_name'),
     supabase.from('tasks').select('id, title, status, due_at, assigned_to, order_id, priority, assignee:profiles!assigned_to(full_name)').eq('company_id', id).order('due_at', { ascending: true }),
     supabase.from('products').select('id', { count: 'exact', head: true }).eq('status', 'active').eq('catalogue_access', 'all'),
+    supabase.from('portal_hosts').select('*').eq('company_id', id).neq('status', 'removed').order('created_at', { ascending: false }),
   ])
 
   if (!company) notFound()
+
+  const hostRows = (portalHosts || []) as PortalHost[]
+  const primaryHost = hostRows.find((h) => h.role === 'primary' && h.desired === 'parked') || null
+  const redirectHosts = hostRows.filter((h) => h.role === 'redirect' || (h.desired === 'unparked' && h.role !== 'primary'))
+  const primaryUrl = primaryHost ? portalUrlForSlug(primaryHost.slug) : null
+  const redirectUrls = Object.fromEntries(
+    redirectHosts.map((row) => [row.id, portalUrlForSlug(row.slug)]),
+  )
 
   const assignedProductIds = companyProducts?.map(cp => cp.product_id) || []
   const unassignedProducts = allProducts?.filter(p => !assignedProductIds.includes(p.id)) || []
@@ -219,6 +231,7 @@ export default async function CompanyDetailPage({
 
       {tab === 'overview' && (
         canEdit ? (
+          <div className="space-y-6">
           <form action={saveCompanyAction} className="bg-white p-6 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <h2 className="font-bold text-sm text-gray-900 md:col-span-2">Edit Company</h2>
             <label className="block">
@@ -280,8 +293,18 @@ export default async function CompanyDetailPage({
                 className="mt-1 w-full border rounded-lg px-3 py-2"
               />
               <span className="mt-1 block text-[11px] text-gray-500">
-                {portalUrlForSlug(company.portal_slug) || 'Leave empty to keep this company on the main site.'}
+                Becomes {portalUrlForSlug(company.portal_slug || 'your-slug') || 'https://{slug}.giftingstore.online'} — usually live in a few minutes (SSL can take up to 2 hours). Leave empty for the main site only.
               </span>
+            </label>
+            <label className="flex items-start gap-2 md:col-span-2 text-[11px] text-gray-600">
+              <input
+                type="checkbox"
+                name="notify_client_admins_on_live"
+                value="1"
+                defaultChecked={Boolean(primaryHost?.notify_client_admins)}
+                className="mt-0.5"
+              />
+              <span>Email client admins when the portal goes live (staff who set the address are always notified).</span>
             </label>
             <label className="block">
               <span className="font-semibold text-gray-500">City</span>
@@ -347,6 +370,16 @@ export default async function CompanyDetailPage({
               Save company
             </button>
           </form>
+          <PortalHostCard
+            companyId={company.id}
+            primary={primaryHost}
+            primaryUrl={primaryUrl}
+            redirects={redirectHosts}
+            redirectUrls={redirectUrls}
+            canAdmin={profile.role === 'admin'}
+            canResync={profile.role === 'admin'}
+          />
+          </div>
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-xl border border-gray-200 text-xs space-y-3">
@@ -369,7 +402,17 @@ export default async function CompanyDetailPage({
             <div><span className="font-semibold text-gray-500 w-24 inline-block">City/State:</span> {company.city || '?'}, {company.state || 'India'}</div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl border border-gray-200 text-xs space-y-3">
+          <PortalHostCard
+            companyId={company.id}
+            primary={primaryHost}
+            primaryUrl={primaryUrl}
+            redirects={redirectHosts}
+            redirectUrls={redirectUrls}
+            canAdmin={profile.role === 'admin'}
+            canResync={profile.role === 'admin'}
+          />
+
+          <div className="bg-white p-6 rounded-xl border border-gray-200 text-xs space-y-3 md:col-span-2">
             <h2 className="font-bold text-sm text-gray-900 pb-2 border-b">Relationship Notes</h2>
             <p className="text-gray-700 whitespace-pre-wrap">{company.notes || 'No notes added for this company yet.'}</p>
           </div>

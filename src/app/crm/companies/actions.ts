@@ -1,6 +1,7 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
@@ -8,7 +9,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generateTemporaryPassword, SERVICE_ROLE_MISSING, validateNewPassword } from '@/lib/auth/password'
 import { findReusableLogo } from '@/lib/companies/identity'
 import { parseAllowedEmailDomains, isEmailAllowedForDomains } from '@/lib/pricing/domains'
-import { parsePortalSlug, isSlugReservedInHistory } from '@/lib/portal-host'
+import { parsePortalSlug, isSlugReservedInHistory, clearTenantCache } from '@/lib/portal-host'
+import { schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
 
 const LOGO_BUCKET = 'company-logos'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
@@ -18,13 +20,36 @@ const SALES_STATUSES = new Set(['prospect', 'active', 'inactive'])
 const PORTAL_STATUSES = new Set(['trial', 'active', 'suspended', 'cancelled'])
 
 function portalSlugError(message: string) {
-  if (message.includes('companies_portal_slug_key') || message.includes('portal_slug')) {
+  if (message.includes('PORTAL_SLUG_HELD') || message.includes('companies_portal_slug_key') || message.includes('portal_slug')) {
     return 'That portal address is already in use.'
   }
-  if (message.includes('slug_history')) {
+  if (message.includes('PORTAL_SLUG_COOLOFF') || message.includes('slug_history')) {
     return 'That portal address was recently used and is still reserved.'
   }
   return message
+}
+
+function kickPortalWorker(companyId: string, ...slugs: Array<string | null | undefined>) {
+  for (const slug of slugs) {
+    if (slug) clearTenantCache(slug)
+  }
+  after(schedulePortalHostsWorker(companyId))
+}
+
+async function stampPortalHostMeta(companyId: string, userId: string, notifyClientAdmins: boolean) {
+  const admin = createAdminClient()
+  if (!admin) return
+  await admin
+    .from('portal_hosts')
+    .update({
+      created_by: userId,
+      notify_client_admins: notifyClientAdmins,
+    })
+    .eq('company_id', companyId)
+    .eq('role', 'primary')
+    .eq('desired', 'parked')
+    .neq('status', 'removed')
+    .is('notified_live_at', null)
 }
 
 async function assertPortalSlugAvailable(slug: string | null): Promise<string | null> {
@@ -192,9 +217,15 @@ export async function createCompany(formData: FormData) {
     action: 'create',
     entity: 'companies',
     entityId: data.id,
-    next: { name: formData.get('name'), owner_id: ownerId },
+    next: { name: formData.get('name'), owner_id: ownerId, portal_slug: portalSlug.slug },
     userId: user.id,
   })
+
+  if (portalSlug.slug) {
+    const notifyClients = String(formData.get('notify_client_admins_on_live') || '') === '1'
+    await stampPortalHostMeta(data.id, user.id, notifyClients)
+    kickPortalWorker(data.id, portalSlug.slug)
+  }
 
   redirect(`/crm/companies/${data.id}`)
 }
@@ -220,7 +251,7 @@ export async function updateCompany(companyId: string, formData: FormData) {
   const supabase = await createClient()
   const { data: existing } = await supabase
     .from('companies')
-    .select('portal_slug')
+    .select('portal_slug, portal_status')
     .eq('id', companyId)
     .maybeSingle()
   if (portalSlug.slug && portalSlug.slug !== existing?.portal_slug) {
@@ -259,9 +290,19 @@ export async function updateCompany(companyId: string, formData: FormData) {
     action: 'update',
     entity: 'companies',
     entityId: companyId,
-    next: { name: formData.get('name') },
+    previous: { portal_slug: existing?.portal_slug, portal_status: existing?.portal_status },
+    next: { name: formData.get('name'), portal_slug: portalSlug.slug, portal_status: portalStatus },
     userId: access.profile.id,
   })
+
+  const slugChanged = portalSlug.slug !== (existing?.portal_slug ?? null)
+  const statusChanged = portalStatus !== (existing?.portal_status ?? 'active')
+  if (slugChanged || statusChanged) {
+    const notifyClients = String(formData.get('notify_client_admins_on_live') || '') === '1'
+    if (portalSlug.slug) await stampPortalHostMeta(companyId, access.profile.id, notifyClients)
+    kickPortalWorker(companyId, existing?.portal_slug, portalSlug.slug)
+  }
+
   redirect(`/crm/companies/${companyId}`)
 }
 

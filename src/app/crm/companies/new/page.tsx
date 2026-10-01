@@ -79,8 +79,12 @@ export default async function NewCompanyPage() {
               className="w-full p-2 border border-[var(--color-border)] rounded"
             />
             <p className="text-[11px] text-gray-500 mt-1">
-              Optional. 3–40 characters, lowercase letters, numbers, and hyphens. Leave empty to keep this company on the main site.
+              Optional. Becomes https://{'{slug}'}.giftingstore.online — usually live in a few minutes (SSL can take up to 2 hours). Leave empty for the main site only.
             </p>
+            <label className="mt-2 flex items-start gap-2 text-[11px] text-gray-600">
+              <input type="checkbox" name="notify_client_admins_on_live" value="1" className="mt-0.5" />
+              <span>Email client admins when the portal goes live</span>
+            </label>
           </div>
         </div>
 

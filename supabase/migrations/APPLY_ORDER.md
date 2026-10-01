@@ -1,6 +1,6 @@
 # Migration apply order
 
-Apply forward migrations in this order. Pair each forward file with its `.rollback.sql` when rolling back (reverse order).
+Apply forward migrations in this order. Pair each forward file with its rollback when rolling back (reverse order).
 
 Do **not** run these against production from the agent unless explicitly requested. Deliver as files for Hostinger/ops apply.
 
@@ -20,4 +20,29 @@ Do **not** run these against production from the agent unless explicitly request
 14. `20260924_channel_sell_price.sql`
 15. `20260924_client_requirement_insert.sql`
 16. `20260924_company_portal_slug.sql`
-17. **`20260930_tenant_status_and_slug.sql`** ← Phase 1 (rollback: `20260930_tenant_status_and_slug.rollback.sql`)
+17. `20260930_tenant_status_and_slug.sql` ← Phase 1 (rollback: `supabase/rollbacks/20260930_tenant_status_and_slug_rollback.sql`)
+18. **`20261001_portal_hosts.sql`** ← Phase 2 (rollback: `supabase/rollbacks/20261001_portal_hosts_rollback.sql`)
+
+## Phase 2 verification SQL (after applying `20261001_portal_hosts.sql`)
+
+```sql
+-- Tables exist
+select to_regclass('public.portal_hosts') as portal_hosts,
+       to_regclass('public.portal_host_runs') as portal_host_runs;
+
+-- Backfill for existing portal_slug companies (e.g. tcs)
+select c.portal_slug, ph.status, ph.role, ph.desired, ph.notify_on_live
+from public.companies c
+left join public.portal_hosts ph
+  on ph.company_id = c.id and ph.role = 'primary' and ph.status <> 'removed'
+where c.portal_slug is not null
+order by c.portal_slug;
+
+-- Claim function exists and is service_role-only
+select p.proname, r.rolname as grantee
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+left join lateral aclexplode(p.proacl) a on true
+left join pg_roles r on r.oid = a.grantee
+where n.nspname = 'public' and p.proname = 'claim_portal_host_jobs';
+```
