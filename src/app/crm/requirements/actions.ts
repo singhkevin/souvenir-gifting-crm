@@ -44,7 +44,7 @@ export async function createRequirement(formData: FormData) {
     userId: user.id,
   })
   revalidatePath('/crm/requirements')
-  redirect(`/crm/requirements/${data.id}`)
+  redirect(`/crm/requirements/${data.id}?tab=products`)
 }
 
 export async function createRequirementFromLead(formData: FormData) {
@@ -65,6 +65,15 @@ export async function createQuotationFromRequirement(formData: FormData) {
     .eq('id', requirementId)
     .single()
   if (!req) return { error: 'Requirement not found' }
+
+  const { data: reqProducts } = await supabase
+    .from('requirement_products')
+    .select('product_id, quantity, product:products(id, name, price)')
+    .eq('requirement_id', req.id)
+
+  if (!reqProducts?.length) {
+    return { error: 'Add at least one product before creating a quotation' }
+  }
 
   const { data: quoteNumber, error: numError } = await supabase.rpc('next_quotation_number')
   if (numError || !quoteNumber) return { error: numError?.message || 'Could not allocate quote number' }
@@ -88,29 +97,24 @@ export async function createQuotationFromRequirement(formData: FormData) {
     .single()
   if (error) return { error: error.message }
 
-  const { data: reqProducts } = await supabase
-    .from('requirement_products')
-    .select('product_id, quantity, product:products(id, name, price)')
-    .eq('requirement_id', req.id)
+  const items = reqProducts.map((row) => {
+    const product = Array.isArray(row.product) ? row.product[0] : row.product
+    const qty = row.quantity || req.quantity || 1
+    const unit = Number(product?.price || 0)
+    return {
+      quotation_id: quote.id,
+      product_id: row.product_id,
+      description: product?.name || null,
+      quantity: qty,
+      unit_price: unit,
+      line_total: qty * unit,
+    }
+  })
+  const { error: itemError } = await supabase.from('quotation_items').insert(items)
+  if (itemError) return { error: itemError.message }
+  await supabase.rpc('recalc_quotation_totals', { p_quotation_id: quote.id })
 
-  if (reqProducts && reqProducts.length > 0) {
-    const items = reqProducts.map((row) => {
-      const product = Array.isArray(row.product) ? row.product[0] : row.product
-      const qty = row.quantity || req.quantity || 1
-      const unit = Number(product?.price || 0)
-      return {
-        quotation_id: quote.id,
-        product_id: row.product_id,
-        description: product?.name || null,
-        quantity: qty,
-        unit_price: unit,
-        line_total: qty * unit,
-      }
-    })
-    const { error: itemError } = await supabase.from('quotation_items').insert(items)
-    if (itemError) return { error: itemError.message }
-    await supabase.rpc('recalc_quotation_totals', { p_quotation_id: quote.id })
-  }
+  await supabase.from('requirements').update({ status: 'quoted' }).eq('id', req.id)
 
   await writeAudit(supabase, {
     action: 'create',
@@ -126,19 +130,81 @@ export async function createQuotationFromRequirement(formData: FormData) {
 
 export async function addProductToRequirement(formData: FormData) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
   const requirementId = String(formData.get('requirement_id') || '')
   const productId = String(formData.get('product_id') || '')
   const quantity = Number(formData.get('quantity') || 1)
   if (!requirementId || !productId) return { error: 'Requirement and product are required' }
+  const qty = quantity > 0 ? quantity : 1
 
-  const { error } = await supabase.from('requirement_products').insert({
-    requirement_id: requirementId,
-    product_id: productId,
-    quantity: quantity > 0 ? quantity : 1,
-  })
-  if (error) return { error: error.message }
+  const { data: existing } = await supabase
+    .from('requirement_products')
+    .select('id, quantity')
+    .eq('requirement_id', requirementId)
+    .eq('product_id', productId)
+    .maybeSingle()
+
+  if (existing) {
+    const { error } = await supabase
+      .from('requirement_products')
+      .update({ quantity: qty })
+      .eq('id', existing.id)
+    if (error) return { error: error.message }
+  } else {
+    const { error } = await supabase.from('requirement_products').insert({
+      requirement_id: requirementId,
+      product_id: productId,
+      quantity: qty,
+    })
+    if (error) return { error: error.message }
+  }
+
   revalidatePath(`/crm/requirements/${requirementId}`)
-  return { success: true }
+  redirect(`/crm/requirements/${requirementId}?tab=products`)
+}
+
+export async function removeProductFromRequirement(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = String(formData.get('id') || '')
+  const requirementId = String(formData.get('requirement_id') || '')
+  if (!id || !requirementId) return { error: 'Product line is required' }
+
+  const { error } = await supabase
+    .from('requirement_products')
+    .delete()
+    .eq('id', id)
+    .eq('requirement_id', requirementId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/crm/requirements/${requirementId}`)
+  redirect(`/crm/requirements/${requirementId}?tab=products`)
+}
+
+export async function updateRequirementProductQty(formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const id = String(formData.get('id') || '')
+  const requirementId = String(formData.get('requirement_id') || '')
+  const quantity = Number(formData.get('quantity') || 1)
+  if (!id || !requirementId) return { error: 'Product line is required' }
+  const qty = quantity > 0 ? quantity : 1
+
+  const { error } = await supabase
+    .from('requirement_products')
+    .update({ quantity: qty })
+    .eq('id', id)
+    .eq('requirement_id', requirementId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/crm/requirements/${requirementId}`)
+  redirect(`/crm/requirements/${requirementId}?tab=products`)
 }
 
 export async function updateRequirement(id: string, data: Record<string, unknown>) {

@@ -1,12 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { formatCurrency, formatDate, asRows, oneRelation } from '@/lib/utils'
 
 const STATUS_COLORS: Record<string, string> = {
+  draft: 'bg-gray-100 text-gray-700',
   active: 'bg-blue-100 text-blue-800',
+  quoted: 'bg-indigo-100 text-indigo-800',
   closed: 'bg-gray-100 text-gray-800',
   won: 'bg-green-100 text-green-800',
-  lost: 'bg-red-100 text-red-800'
+  lost: 'bg-red-100 text-red-800',
 }
 
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
@@ -46,15 +49,19 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
   const { data: requirements, error } = await query
   const requirementRows = asRows<RequirementRow>(requirements)
 
-  const statuses = ['all', 'active', 'won', 'lost', 'closed']
+  const statuses = ['all', 'active', 'quoted', 'won', 'lost', 'closed', 'draft']
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-[var(--color-primary)]">Requirements</h1>
-        <button className="bg-[var(--color-primary)] text-white hover:text-white px-4 py-2 rounded-md hover:opacity-90">
+        <Link
+          href="/crm/requirements/new"
+          className="inline-flex items-center gap-2 bg-[var(--color-primary)] text-white hover:text-white px-4 py-2 rounded-md hover:opacity-90"
+        >
+          <Plus size={16} />
           Add Requirement
-        </button>
+        </Link>
       </div>
 
       <div className="mb-6 md:hidden">

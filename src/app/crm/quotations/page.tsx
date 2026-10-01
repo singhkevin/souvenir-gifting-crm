@@ -79,7 +79,7 @@ export default async function QuotationsPage(props: {
           href="/crm/requirements"
           className="bg-[#806A50] text-[#FFFFFF] px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2"
         >
-          <FileText size={14} /> Create from a requirement
+          <FileText size={14} /> Open a requirement to quote
         </Link>
       </div>
 

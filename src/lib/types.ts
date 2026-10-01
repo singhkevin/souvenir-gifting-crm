@@ -15,7 +15,7 @@ export type OrderStatus =
   | "cancelled"
 export type InvoiceStatus = "draft" | "issued" | "partially_paid" | "paid" | "overdue" | "cancelled"
 export type ProductStatus = "active" | "inactive" | "discontinued"
-export type RequirementStatus = "active" | "closed" | "won" | "lost"
+export type RequirementStatus = "draft" | "active" | "quoted" | "closed" | "won" | "lost"
 
 export interface Profile {
   id: string
