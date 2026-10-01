@@ -15,6 +15,7 @@ import { grantCompanyProductAccess, revokeCompanyProductAccess } from '@/app/crm
 import { requireStaff } from '@/lib/auth'
 import { createContact } from '@/app/crm/contacts/actions'
 import { asFormAction } from '@/lib/form-action'
+import { ActionForm } from '@/components/ui/action-form'
 import { PortalClientForm } from '../portal-client-form'
 import { ManageClientLogin } from '../manage-client-login'
 import { PortalHostCard } from '../portal-host-card'
@@ -101,11 +102,6 @@ export default async function CompanyDetailPage({
   const removeLogoAction = async (formData: FormData) => {
     'use server'
     await removeCompanyLogo(formData)
-  }
-
-  const saveCompanyAction = async (formData: FormData) => {
-    'use server'
-    await updateCompany(id, formData)
   }
 
   const tabs = [
@@ -232,7 +228,7 @@ export default async function CompanyDetailPage({
       {tab === 'overview' && (
         canEdit ? (
           <div className="space-y-6">
-          <form action={saveCompanyAction} className="bg-white p-6 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <ActionForm action={updateCompany.bind(null, id)} className="bg-white p-6 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
             <h2 className="font-bold text-sm text-gray-900 md:col-span-2">Edit Company</h2>
             <label className="block">
               <span className="font-semibold text-gray-500">Name</span>
@@ -369,7 +365,7 @@ export default async function CompanyDetailPage({
             <button type="submit" className="md:col-span-2 px-4 py-2 text-xs font-semibold rounded-lg text-white bg-[#806A50]">
               Save company
             </button>
-          </form>
+          </ActionForm>
           <PortalHostCard
             companyId={company.id}
             primary={primaryHost}

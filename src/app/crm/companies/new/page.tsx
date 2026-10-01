@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
 import { createCompany } from '../actions'
 import { BackButton } from '@/components/ui/back-button'
-import { asFormAction } from '@/lib/form-action'
+import { ActionForm } from '@/components/ui/action-form'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 export default async function NewCompanyPage() {
@@ -20,7 +20,7 @@ export default async function NewCompanyPage() {
       <BackButton href="/crm/companies" label="Back to companies" />
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6 mt-4">Add New Company</h1>
 
-      <form action={asFormAction(createCompany)} className="bg-white p-6 rounded-lg border border-[var(--color-border)] shadow-sm flex flex-col gap-6">
+      <ActionForm action={createCompany} className="bg-white p-6 rounded-lg border border-[var(--color-border)] shadow-sm flex flex-col gap-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium mb-1">Company Name *</label>
@@ -166,7 +166,7 @@ export default async function NewCompanyPage() {
             Create Company
           </button>
         </div>
-      </form>
+      </ActionForm>
     </div>
   )
 }

@@ -191,7 +191,10 @@ export async function createCompany(formData: FormData) {
     allowed_email_domains: allowedEmailDomains,
     portal_slug: portalSlug.slug,
   }).select('id').single()
-  if (error) return { error: portalSlugError(error.message) }
+  if (error) {
+    console.error('[createCompany]', error.code, error.message)
+    return { error: portalSlugError(error.message) }
+  }
 
   const file = formData.get('logo')
   if (file instanceof File && file.size > 0) {
@@ -276,7 +279,10 @@ export async function updateCompany(companyId: string, formData: FormData) {
     allowed_email_domains: allowedEmailDomains,
     portal_slug: portalSlug.slug,
   }).eq('id', companyId)
-  if (error) return { error: portalSlugError(error.message) }
+  if (error) {
+    console.error('[updateCompany]', error.code, error.message)
+    return { error: portalSlugError(error.message) }
+  }
 
   const { data: current } = await supabase
     .from('companies')
