@@ -12,6 +12,6 @@ export function isSafeNext(value: string | null | undefined): value is string {
 }
 
 export function landingPathForRole(role: string | null | undefined): string {
-  if (role === 'client_admin' || role === 'client_user') return '/portal'
+  if (role === 'client_admin' || role === 'client_user') return '/portal/catalogue'
   return '/crm/dashboard'
 }

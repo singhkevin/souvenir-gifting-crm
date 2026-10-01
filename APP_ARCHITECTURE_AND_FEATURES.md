@@ -59,7 +59,7 @@ Restricted to client profiles (`client_admin`, `client_user`), strictly scoped t
 * **Client Dashboard (`/portal`)**: High-level snapshot of active orders, pending quotations requiring action, recent briefs, and company announcements.
 * **Personalized Catalogue (`/portal/catalogue`, `/portal/catalogue/product/[id]`)**:
   * Powered by the secure PostgreSQL view `client_products`.
-  * Clients see **only** items where `status = 'active'` AND either `catalogue_access = 'all'` or their company has an explicit grant in `company_product_access`.
+  * Clients see **only** items where `status = 'active'` AND either `catalogue_access = 'all'` or their company has an explicit grant in `company_product_access`, minus any rows in `company_product_exclusions` for that company.
   * Completely strips internal fields (supplier identity, supplier cost, profit margin, internal notes).
 * **Campaign Offerings (`/portal/campaigns`, `/portal/catalogue/[sku]`)**: Curated client-specific campaigns created by sales reps (e.g. "Wipro Diwali 2026"). Displays published campaign products with tailored corporate pricing.
 * **Shortlist / Wishlist (`/portal/shortlist`)**: Clients shortlist products from active campaigns (`client_product_selections`) to collaborate internally before submitting final requirements.
@@ -88,7 +88,7 @@ Divided into logical functional clusters with granular role-based access:
 * **Tasks Center (`/crm/tasks`)**: Operational task management with status filtering (`open`, `in_progress`, `blocked`, `done`, `cancelled`), priority weights, due dates, order associations, and audit trail of completion.
 
 #### B. Customer Hub (`admin`, `sales`, `management`)
-* **Companies (`/crm/companies`, `/crm/companies/[id]`, `/crm/companies/new`)**: Master corporate account directory. Tracks corporate details, logo uploads (`company-logos` storage bucket), assigned sales owner, account status (`prospect`, `active`, `inactive`), billing addresses, GSTIN, and linked branches/departments.
+* **Companies (`/crm/companies`, `/crm/companies/[id]`, `/crm/companies/new`)**: Master corporate account directory. Tracks corporate details, logo uploads (`company-logos` storage bucket), assigned sales owner, account status (`prospect`, `active`, `inactive`), billing addresses, GSTIN, and linked branches/departments. The **Catalogue** tab is a searchable Visible/Hidden browser over globals + personalized grants; admins can hide/show per company via `company_product_exclusions`, assign personalized products, open the product record, or jump to product-level catalogue visibility.
 * **Contacts (`/crm/contacts`)**: Stakeholder management per company. Stores designations, emails, phone numbers, and contact types (`primary`, `billing`, `operations`, `executive`).
 
 #### C. Sales Engine (`admin`, `sales`, `management`)
@@ -105,7 +105,7 @@ Divided into logical functional clusters with granular role-based access:
 * **Product Master (`/crm/products`, `/crm/products/[id]`, `/crm/products/new`, `/crm/products/import`)**:
   * Product catalogue CRUD: SKU, name, brand, category, subcategory, base price, supplier cost, internal target margin, MOQ, image URL.
   * **Catalogue Access Rules**:
-    * `all`: Globally visible to all portal clients and public store.
+    * `all`: Globally visible to all portal clients and public store (individual companies can still hide via `company_product_exclusions`).
     * `selected`: Accessible only to companies explicitly granted access in `company_product_access`.
     * `none`: Strictly internal product (hidden from all portals/storefronts).
   * Bulk CSV product import tool with column validation.
@@ -301,6 +301,7 @@ The system maintains 30+ relational tables with foreign keys and cascade protect
 | `client_product_selections`| Client wishlist selections | `campaign_id`, `campaign_product_id`, `selected_by`, `notes` |
 | `products` | Master catalogue items | `id`, `sku` (unique), `name`, `price`, `supplier_cost`, `catalogue_access`, `moq` |
 | `company_product_access` | Specific product grants | `company_id`, `product_id` (composite primary key) |
+| `company_product_exclusions` | Per-company catalogue hides | `company_id`, `product_id` (composite primary key) |
 | `quotations` | Quotation documents | `id`, `quotation_number`, `company_id`, `owner_id`, `subtotal`, `tax_amount`, `total`, `status` |
 | `quotation_items` | Products in quotation | `quotation_id`, `product_id`, `quantity`, `unit_price`, `line_total` |
 | `orders` | Confirmed fulfillment orders | `id`, `order_number`, `company_id`, `status`, `expected_delivery_date`, `order_value` |

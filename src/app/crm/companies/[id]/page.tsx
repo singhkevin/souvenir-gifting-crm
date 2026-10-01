@@ -3,15 +3,12 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { CompanyAvatar } from '@/components/ui/avatar'
-import { ProductImage } from '@/components/ui/product-image'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { uploadCompanyLogo, removeCompanyLogo, updateCompany, removeCompany } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { formatCurrency, formatDate, isUuid } from '@/lib/utils'
 import { formatAllowedEmailDomains } from '@/lib/pricing/domains'
 import { portalUrlForSlug } from '@/lib/portal-host'
-import { Plus, Trash2 } from 'lucide-react'
-import { grantCompanyProductAccess, revokeCompanyProductAccess } from '@/app/crm/products/actions'
 import { requireStaff } from '@/lib/auth'
 import { createContact } from '@/app/crm/contacts/actions'
 import { asFormAction } from '@/lib/form-action'
@@ -22,6 +19,11 @@ import { PortalHostCard } from '../portal-host-card'
 import { CLIENT_STATUS_LABELS, ORDER_LIFECYCLE, lifecycleIndex } from '@/lib/order-workflow'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 import type { PortalHost } from '@/lib/portal-hosts/types'
+import {
+  CompanyCatalogueBrowser,
+  type CatalogueBrowserProduct,
+  type CatalogueBrowserRow,
+} from '@/components/companies/company-catalogue-browser'
 
 export default async function CompanyDetailPage({
   params,
@@ -49,9 +51,9 @@ export default async function CompanyDetailPage({
     { data: invoices },
     { data: companyProducts },
     { data: allProducts },
+    { data: productExclusions },
     { data: clients },
     { data: companyTasks },
-    { count: globalProductCount },
     { data: portalHosts },
   ] = await Promise.all([
     supabase.from('companies').select('*, owner:profiles!companies_owner_id_fkey(id, full_name, email)').eq('id', id).maybeSingle(),
@@ -61,11 +63,15 @@ export default async function CompanyDetailPage({
     supabase.from('quotations').select('*').eq('company_id', id).order('created_at', { ascending: false }),
     supabase.from('orders').select('*').eq('company_id', id).order('created_at', { ascending: false }),
     supabase.from('invoices').select('id, invoice_number, amount, status, created_at').eq('company_id', id).order('created_at', { ascending: false }),
-    supabase.from('company_product_access').select('*, product:products!inner(*)').eq('company_id', id).eq('product.status', 'active'),
-    supabase.from('products').select('id, name, sku, price').eq('status', 'active').order('name'),
+    supabase.from('company_product_access').select('product_id, created_at').eq('company_id', id),
+    supabase
+      .from('products')
+      .select('id, name, sku, price, moq, image_url, catalogue_access')
+      .eq('status', 'active')
+      .order('name'),
+    supabase.from('company_product_exclusions').select('product_id, created_at').eq('company_id', id),
     supabase.from('profiles').select('id, full_name, email, role, is_active').eq('company_id', id).in('role', ['client_admin', 'client_user']).order('full_name'),
     supabase.from('tasks').select('id, title, status, due_at, assigned_to, order_id, priority, assignee:profiles!assigned_to(full_name)').eq('company_id', id).order('due_at', { ascending: true }),
-    supabase.from('products').select('id', { count: 'exact', head: true }).eq('status', 'active').eq('catalogue_access', 'all'),
     supabase.from('portal_hosts').select('*').eq('company_id', id).neq('status', 'removed').order('created_at', { ascending: false }),
   ])
 
@@ -79,20 +85,36 @@ export default async function CompanyDetailPage({
     redirectHosts.map((row) => [row.id, portalUrlForSlug(row.slug)]),
   )
 
-  const assignedProductIds = companyProducts?.map(cp => cp.product_id) || []
-  const unassignedProducts = allProducts?.filter(p => !assignedProductIds.includes(p.id)) || []
+  const assignedProductIds = new Set((companyProducts || []).map((cp) => cp.product_id))
+  const excludedProductIds = new Set((productExclusions || []).map((e) => e.product_id))
+  const products = (allProducts || []) as CatalogueBrowserProduct[]
 
-  const addProductAction = async (formData: FormData) => {
-    'use server'
-    const productId = formData.get('product_id') as string
-    await grantCompanyProductAccess(productId, id)
-  }
+  const catalogueRows: CatalogueBrowserRow[] = products
+    .map((product) => {
+      const granted = assignedProductIds.has(product.id)
+      const excluded = excludedProductIds.has(product.id)
+      const isGlobal = product.catalogue_access === 'all'
+      const inBrowser = isGlobal || granted || excluded
+      if (!inBrowser) return null
+      const visible = (isGlobal || granted) && !excluded
+      return {
+        ...product,
+        granted,
+        excluded,
+        visible,
+        type: isGlobal ? ('global' as const) : ('personalized' as const),
+      }
+    })
+    .filter((row): row is CatalogueBrowserRow => row !== null)
 
-  const removeProductAction = async (formData: FormData) => {
-    'use server'
-    const productId = formData.get('product_id') as string
-    await revokeCompanyProductAccess(productId, id)
-  }
+  const assignableProducts = products.filter(
+    (p) =>
+      p.catalogue_access !== 'all' &&
+      !assignedProductIds.has(p.id) &&
+      !excludedProductIds.has(p.id)
+  )
+
+  const visibleCatalogueCount = catalogueRows.filter((r) => r.visible).length
 
   const uploadLogoAction = async (formData: FormData) => {
     'use server'
@@ -107,7 +129,7 @@ export default async function CompanyDetailPage({
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'clients', label: `Clients (${clients?.length || 0})` },
-    { id: 'catalogue', label: `Catalogue (${companyProducts?.length || 0})` },
+    { id: 'catalogue', label: `Catalogue (${visibleCatalogueCount})` },
     { id: 'contacts', label: `Contacts (${contacts?.length || 0})` },
     { id: 'leads', label: `Leads (${leads?.length || 0})` },
     { id: 'requirements', label: `Requirements (${requirements?.length || 0})` },
@@ -417,97 +439,13 @@ export default async function CompanyDetailPage({
       )}
 
       {tab === 'catalogue' && (
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className="font-bold text-sm text-gray-900">Catalogue for {company.name}</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Portal users at this company see all global catalogue products ({globalProductCount || 0}) plus the personalized products listed below. Removing a company here hides a selected product from their portal.
-              </p>
-            </div>
-
-            {canManageVisibility && (
-            <form action={addProductAction} className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-              <MobileSheetSelect
-                name="product_id"
-                label="Product"
-                required
-                className="w-full sm:w-64"
-                emptyLabel="Select product to add..."
-                options={[
-                  { value: '', label: 'Select product to add...' },
-                  ...unassignedProducts.map((p) => ({ value: p.id, label: `${p.name} (${p.sku})` })),
-                ]}
-              />
-              <button
-                type="submit"
-                className="inline-flex w-full items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] hover:text-white rounded-lg transition-colors whitespace-nowrap sm:w-auto"
-              >
-                <Plus size={14} className="inline mr-1" /> Assign Product
-              </button>
-            </form>
-            )}
-          </div>
-
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-            <table className="w-full text-xs">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500">Personalized Product</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500">Price (?)</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500">MOQ</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-500">Assigned On</th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-500">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {companyProducts?.map((cp: any) => (
-                  <tr key={cp.product_id} className="hover:bg-gray-50/80">
-                    <td className="px-4 py-3">
-                      <Link href={`/crm/products/${cp.product_id}`} className="flex items-center gap-3 group">
-                        <ProductImage src={cp.product?.image_url} alt={cp.product?.name || 'Product'} size="xs" className="w-9 h-9 rounded-lg border border-gray-200" />
-                        <div>
-                          <p className="font-bold text-gray-900 group-hover:text-[#806A50]">{cp.product?.name}</p>
-                          <p className="font-mono text-[10px] text-gray-400">{cp.product?.sku}</p>
-                        </div>
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 font-bold text-gray-900">
-                      {formatCurrency(cp.product?.price)}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {cp.product?.moq || 1} units
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {formatDate(cp.created_at)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {canManageVisibility && (
-                      <form action={removeProductAction} className="inline">
-                        <input type="hidden" name="product_id" value={cp.product_id} />
-                        <button
-                          type="submit"
-                          className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50 transition-colors"
-                          title="Remove from this company's catalogue"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </form>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {(!companyProducts || companyProducts.length === 0) && (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-400">
-                      No personalized products assigned to {company.name} yet. Standard catalogue items will be visible.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <CompanyCatalogueBrowser
+          companyId={id}
+          companyName={company.name}
+          rows={catalogueRows}
+          assignableProducts={assignableProducts}
+          canManageVisibility={canManageVisibility}
+        />
       )}
 
       {tab === 'clients' && (

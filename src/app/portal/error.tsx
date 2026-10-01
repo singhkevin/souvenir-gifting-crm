@@ -32,7 +32,7 @@ export default function PortalError({
               Try again
             </button>
             <Link
-              href="/portal"
+              href="/portal/catalogue"
               className="px-3 py-1.5 rounded-md text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50"
             >
               Home

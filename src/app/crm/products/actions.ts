@@ -455,6 +455,13 @@ export async function grantCompanyProductAccess(productId: string, companyId: st
 
   if (insertError) return { error: insertError.message }
 
+  // Assign clears any company-scoped hide so the product is visible again.
+  await supabase
+    .from('company_product_exclusions')
+    .delete()
+    .eq('product_id', productId)
+    .eq('company_id', companyId)
+
   if (product.catalogue_access !== 'all') {
     const { error: updateError } = await supabase
       .from('products')
@@ -478,6 +485,13 @@ export async function revokeCompanyProductAccess(productId: string, companyId: s
   }
 
   const supabase = await createClient()
+
+  const { data: product } = await supabase
+    .from('products')
+    .select('catalogue_access')
+    .eq('id', productId)
+    .maybeSingle()
+
   const { error } = await supabase
     .from('company_product_access')
     .delete()
@@ -486,21 +500,124 @@ export async function revokeCompanyProductAccess(productId: string, companyId: s
 
   if (error) return { error: error.message }
 
-  const { data: remaining } = await supabase
-    .from('company_product_access')
-    .select('company_id')
-    .eq('product_id', productId)
-  if (!remaining?.length) {
-    const { data: product } = await supabase
-      .from('products')
-      .select('catalogue_access')
-      .eq('id', productId)
-      .maybeSingle()
-    if (product?.catalogue_access === 'selected') {
+  // Hiding a global product for one company uses exclusions (CPA alone is a no-op).
+  if (product?.catalogue_access === 'all') {
+    const { error: hideError } = await supabase
+      .from('company_product_exclusions')
+      .upsert({ product_id: productId, company_id: companyId }, { onConflict: 'company_id,product_id' })
+    if (hideError) return { error: hideError.message }
+  } else {
+    const { data: remaining } = await supabase
+      .from('company_product_access')
+      .select('company_id')
+      .eq('product_id', productId)
+    if (!remaining?.length && product?.catalogue_access === 'selected') {
       await supabase
         .from('products')
         .update({ catalogue_access: 'none', visibility: 'internal_only' })
         .eq('id', productId)
+    }
+  }
+
+  revalidatePath('/crm/products/' + productId)
+  revalidatePath('/crm/companies/' + companyId)
+  revalidatePath('/crm/products')
+  revalidatePath('/portal/catalogue')
+  return { success: true }
+}
+
+/** Hide a product from one company's portal catalogue. */
+export async function hideCompanyProduct(productId: string, companyId: string) {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!VISIBILITY_ROLES.includes(profile.role as (typeof VISIBILITY_ROLES)[number])) {
+    return { error: 'Not permitted to change catalogue visibility' }
+  }
+  if (!productId || !companyId) return { error: 'Product and company are required' }
+
+  const supabase = await createClient()
+  const { data: product } = await supabase
+    .from('products')
+    .select('id, catalogue_access, status')
+    .eq('id', productId)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (!product) return { error: 'Choose an active catalogue product' }
+
+  const { error: excludeError } = await supabase
+    .from('company_product_exclusions')
+    .upsert({ product_id: productId, company_id: companyId }, { onConflict: 'company_id,product_id' })
+  if (excludeError) {
+    if (/schema cache|could not find the table/i.test(excludeError.message)) {
+      return { error: 'Catalogue exclusions are not available yet. Apply migration 20261002_company_product_exclusions, then retry.' }
+    }
+    return { error: excludeError.message }
+  }
+
+  // For selected products, also drop the grant so Hide is a single clear action.
+  if (product.catalogue_access === 'selected') {
+    await supabase
+      .from('company_product_access')
+      .delete()
+      .eq('product_id', productId)
+      .eq('company_id', companyId)
+
+    const { data: remaining } = await supabase
+      .from('company_product_access')
+      .select('company_id')
+      .eq('product_id', productId)
+    if (!remaining?.length) {
+      await supabase
+        .from('products')
+        .update({ catalogue_access: 'none', visibility: 'internal_only' })
+        .eq('id', productId)
+    }
+  }
+
+  revalidatePath('/crm/products/' + productId)
+  revalidatePath('/crm/companies/' + companyId)
+  revalidatePath('/crm/products')
+  revalidatePath('/portal/catalogue')
+  return { success: true }
+}
+
+/** Show a previously hidden product in one company's portal catalogue. */
+export async function showCompanyProduct(productId: string, companyId: string) {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!VISIBILITY_ROLES.includes(profile.role as (typeof VISIBILITY_ROLES)[number])) {
+    return { error: 'Not permitted to change catalogue visibility' }
+  }
+  if (!productId || !companyId) return { error: 'Product and company are required' }
+
+  const supabase = await createClient()
+  const { data: product } = await supabase
+    .from('products')
+    .select('id, catalogue_access, status')
+    .eq('id', productId)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (!product) return { error: 'Choose an active catalogue product' }
+
+  await supabase
+    .from('company_product_exclusions')
+    .delete()
+    .eq('product_id', productId)
+    .eq('company_id', companyId)
+
+  // Non-global products need an explicit grant to become visible.
+  if (product.catalogue_access !== 'all') {
+    const { error: insertError } = await supabase
+      .from('company_product_access')
+      .upsert({ product_id: productId, company_id: companyId }, { onConflict: 'company_id,product_id' })
+    if (insertError) return { error: insertError.message }
+
+    if (product.catalogue_access !== 'selected') {
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ catalogue_access: 'selected', visibility: 'selected_companies' })
+        .eq('id', productId)
+      if (updateError) return { error: updateError.message }
     }
   }
 

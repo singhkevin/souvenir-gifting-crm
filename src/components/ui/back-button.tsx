@@ -22,7 +22,7 @@ export function parentRoute(pathname: string | null): string {
   if (!pathname) return '/crm/dashboard';
   const segments = pathname.split('/').filter(Boolean);
   if (segments.length > 2) return `/${segments.slice(0, -1).join('/')}`;
-  if (segments[0] === 'portal') return '/portal';
+  if (segments[0] === 'portal') return '/portal/catalogue';
   return '/crm/dashboard';
 }
 

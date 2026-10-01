@@ -172,7 +172,7 @@ export async function createCompany(formData: FormData) {
   const portalStatus = parsePortalStatus(formData.get('portal_status'), 'active')
   if (typeof portalStatus === 'object') return portalStatus
   const trialEndsAt = parseTrialEndsAt(formData.get('trial_ends_at'))
-  if (typeof trialEndsAt === 'object') return trialEndsAt
+  if (trialEndsAt !== null && typeof trialEndsAt === 'object') return trialEndsAt
 
   const { data, error } = await supabase.from('companies').insert({
     name: formData.get('name') as string,
@@ -249,7 +249,7 @@ export async function updateCompany(companyId: string, formData: FormData) {
   const portalStatus = parsePortalStatus(formData.get('portal_status'), 'active')
   if (typeof portalStatus === 'object') return portalStatus
   const trialEndsAt = parseTrialEndsAt(formData.get('trial_ends_at'))
-  if (typeof trialEndsAt === 'object') return trialEndsAt
+  if (trialEndsAt !== null && typeof trialEndsAt === 'object') return trialEndsAt
 
   const supabase = await createClient()
   const { data: existing } = await supabase

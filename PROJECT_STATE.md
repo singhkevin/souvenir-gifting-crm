@@ -87,7 +87,8 @@ Clients read through two complementary layers:
    Resolves the caller's company server-side via `client_company_id()` and returns
    only products where `status = 'active'`, `catalogue_access <> 'none'`, and
    either `catalogue_access = 'all'` or the company has a `company_product_access`
-   grant. Exposes client-safe columns only. All portal search, filtering, sorting,
+   grant, minus any `company_product_exclusions` for that company. Exposes
+   client-safe columns only. All portal search, filtering, sorting,
    pagination and counts must go through this view.
 2. **`campaign_products`** — campaign-specific curated offerings, read where
    `visibility = 'published'` for the client's campaign. This is the layer clients

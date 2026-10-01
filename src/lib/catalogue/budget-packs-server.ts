@@ -23,12 +23,13 @@ async function db() {
 /** Products this company may see in portal (same rules as client_products). */
 export async function loadCompanyCatalogueProducts(companyId: string): Promise<ProductRow[]> {
   const client = await db()
-  const { data: grants } = await client
-    .from('company_product_access')
-    .select('product_id')
-    .eq('company_id', companyId)
+  const [{ data: grants }, { data: exclusions }] = await Promise.all([
+    client.from('company_product_access').select('product_id').eq('company_id', companyId),
+    client.from('company_product_exclusions').select('product_id').eq('company_id', companyId),
+  ])
 
   const grantedIds = new Set((grants || []).map((g) => g.product_id))
+  const excludedIds = new Set((exclusions || []).map((e) => e.product_id))
 
   const { data: products, error } = await client
     .from('products')
@@ -41,7 +42,9 @@ export async function loadCompanyCatalogueProducts(companyId: string): Promise<P
   if (error || !products) return []
 
   return products.filter(
-    (p) => p.catalogue_access === 'all' || grantedIds.has(p.id)
+    (p) =>
+      !excludedIds.has(p.id) &&
+      (p.catalogue_access === 'all' || grantedIds.has(p.id))
   ) as ProductRow[]
 }
 

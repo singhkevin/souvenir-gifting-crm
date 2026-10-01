@@ -22,6 +22,7 @@ Do **not** run these against production from the agent unless explicitly request
 16. `20260924_company_portal_slug.sql`
 17. `20260930_tenant_status_and_slug.sql` ← Phase 1 (rollback: `supabase/rollbacks/20260930_tenant_status_and_slug_rollback.sql`)
 18. **`20261001_portal_hosts.sql`** ← Phase 2 (rollback: `supabase/rollbacks/20261001_portal_hosts_rollback.sql`)
+19. **`20261002_company_product_exclusions.sql`** ← company catalogue hide/show (rollback: `supabase/rollbacks/20261002_company_product_exclusions_rollback.sql`)
 
 ## Phase 2 verification SQL (after applying `20261001_portal_hosts.sql`)
 

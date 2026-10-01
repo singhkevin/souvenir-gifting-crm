@@ -489,4 +489,11 @@ export interface Notification {
 export interface CompanyProductAccess {
   company_id: string
   product_id: string
+  created_at?: string
+}
+
+export interface CompanyProductExclusion {
+  company_id: string
+  product_id: string
+  created_at?: string
 }
