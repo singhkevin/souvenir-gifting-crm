@@ -2,7 +2,7 @@
 
 > **Product**: Souvenir - Gifting Solutions (Corporate Gifting CRM / ERP)  
 > **Repository**: `VIAayush/corporate-gifting-crm`  
-> **Production URL**: [https://giffter.vercel.app/](https://giffter.vercel.app/)  
+> **Production URL**: [https://www.giftingstore.online/](https://www.giftingstore.online/) (Vercel). Company portals use `https://{slug}.giftingstore.online` on the same project.  
 > **Primary Database**: Supabase Postgres (`ajysowosgjaipczrwpfv`, AWS `ap-south-1`)  
 > **Framework**: Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS 4  
 
@@ -240,7 +240,7 @@ flowchart LR
 * **UI Components**: Radix UI primitives (Dialog, Dropdown, Popover, Select, Tabs, Checkbox, Avatar, Toast) + Lucide Icons + Sonner
 * **Database & Auth**: Supabase (PostgreSQL 15+, Supabase Auth, Storage, Row-Level Security)
 * **Client Library**: `@supabase/ssr` 0.12.5 and `@supabase/supabase-js` 2.112.4
-* **Hosting**: Vercel Serverless Edge Platform
+* **Hosting**: Vercel. Apex and `www.giftingstore.online` are the main CRM. Company portals are the wildcard `*.giftingstore.online` on the same project (`ROOT_DOMAIN`). `*.vercel.app` stays the main site. Hostinger parked-domain provisioning is not used in production.
 * **Database Hosting**: AWS `ap-south-1` (Mumbai)
 
 ### 4.2. Tab-Isolated Authentication Architecture

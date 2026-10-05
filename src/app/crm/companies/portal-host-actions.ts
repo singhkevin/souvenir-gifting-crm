@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
 import { clearTenantCache, parsePortalSlug } from '@/lib/portal-host'
+import { portalDnsMode } from '@/lib/portal-hosts/mode'
 import { deleteConflictingSubdomain, schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
 
 async function requirePortalEditor(adminOnly = false) {
@@ -171,10 +172,12 @@ export async function deleteBlockedSubdomain(companyId: string, clientSlug: stri
     return { error: 'Slug mismatch. Refresh the page and try again.' }
   }
 
-  try {
-    await deleteConflictingSubdomain(parsed.slug)
-  } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Could not delete the subdomain.' }
+  if (portalDnsMode() !== 'vercel') {
+    try {
+      await deleteConflictingSubdomain(parsed.slug)
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Could not delete the subdomain.' }
+    }
   }
 
   await admin

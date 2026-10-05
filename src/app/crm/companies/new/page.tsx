@@ -4,6 +4,7 @@ import { createCompany } from '../actions'
 import { BackButton } from '@/components/ui/back-button'
 import { ActionForm } from '@/components/ui/action-form'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { portalAddressHelp } from '@/lib/portal-host'
 
 export default async function NewCompanyPage() {
   const profile = await requireStaff(['admin', 'sales'])
@@ -79,7 +80,7 @@ export default async function NewCompanyPage() {
               className="w-full p-2 border border-[var(--color-border)] rounded"
             />
             <p className="text-[11px] text-gray-500 mt-1">
-              Optional. Becomes https://{'{slug}'}.giftingstore.online — usually live in a few minutes (SSL can take up to 2 hours). Leave empty for the main site only.
+              Optional. {portalAddressHelp('your-slug')}
             </p>
             <label className="mt-2 flex items-start gap-2 text-[11px] text-gray-600">
               <input type="checkbox" name="notify_client_admins_on_live" value="1" className="mt-0.5" />

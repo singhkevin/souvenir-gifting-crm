@@ -1,3 +1,6 @@
+// Optional maintenance hook. On Vercel this reconciles portal_hosts rows only;
+// it does not call the Hostinger parked-domain API. Company hostnames resolve
+// from ROOT_DOMAIN + the *.ROOT_DOMAIN wildcard without this route.
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveHost } from '@/lib/portal-host'
