@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
+import { isUuid } from '@/lib/utils'
+import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const VISIBILITY_ROLES = ['admin'] as const
@@ -712,4 +714,79 @@ export async function removeProduct(formData: FormData) {
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
   redirect('/crm/products?removed=deleted')
+}
+
+const PRICING_ROLES = ['admin', 'sales', 'management', 'accounts']
+
+function pricingDenied() {
+  return { error: 'Not permitted to edit supplier offers' }
+}
+
+function readOffer(formData: FormData) {
+  const productId = String(formData.get('product_id') || '')
+  const supplierId = String(formData.get('supplier_id') || '')
+  const cost = Number(formData.get('cost'))
+  const moq = Number.parseInt(String(formData.get('moq') || '1'), 10)
+  const leadRaw = String(formData.get('lead_time_days') || '').trim()
+  const lead = leadRaw === '' ? null : Number.parseInt(leadRaw, 10)
+  if (!isUuid(productId) || !isUuid(supplierId)) return { error: 'Product and supplier are required' }
+  if (!Number.isFinite(cost) || cost < 0) return { error: 'Cost must be zero or more' }
+  if (!Number.isInteger(moq) || moq < 1) return { error: 'MOQ must be a whole number of at least 1' }
+  if (lead != null && (!Number.isInteger(lead) || lead < 0)) return { error: 'Lead time must be a whole number of days' }
+  return {
+    product_id: productId,
+    supplier_id: supplierId,
+    supplier_sku: String(formData.get('supplier_sku') || '').trim() || null,
+    cost,
+    moq,
+    lead_time_days: lead,
+    in_stock: String(formData.get('in_stock')) === 'on',
+    is_active: String(formData.get('is_active') || 'on') !== 'off',
+    is_preferred: String(formData.get('is_preferred')) === 'on',
+  }
+}
+
+async function clearOtherPreferred(productId: string, keepId?: string) {
+  const supabase = await createClient()
+  let query = supabase.from('product_supplier_offers').update({ is_preferred: false }).eq('product_id', productId).eq('is_preferred', true)
+  if (keepId) query = query.neq('id', keepId)
+  await query
+}
+
+export async function saveSupplierOffer(formData: FormData) {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!PRICING_ROLES.includes(profile.role)) return pricingDenied()
+  const parsed = readOffer(formData)
+  if ('error' in parsed) return parsed
+  const supabase = await createClient()
+  const offerId = String(formData.get('offer_id') || '')
+  if (parsed.is_preferred) await clearOtherPreferred(parsed.product_id, isUuid(offerId) ? offerId : undefined)
+
+  const payload = { ...parsed, updated_at: new Date().toISOString() }
+  const result = isUuid(offerId)
+    ? await supabase.from('product_supplier_offers').update(payload).eq('id', offerId).eq('product_id', parsed.product_id)
+    : await supabase.from('product_supplier_offers').insert(payload)
+  if (result.error) {
+    if (/product_supplier_offers_product_id_supplier_id|duplicate key/i.test(result.error.message)) {
+      return { error: 'That supplier is already listed on this product.' }
+    }
+    return { error: supplierSchemaHint(result.error.message) }
+  }
+  revalidatePath(`/crm/products/${parsed.product_id}`)
+  return { success: true }
+}
+
+export async function deleteSupplierOffer(formData: FormData) {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!PRICING_ROLES.includes(profile.role)) return pricingDenied()
+  const id = String(formData.get('offer_id') || '')
+  const productId = String(formData.get('product_id') || '')
+  if (!isUuid(id) || !isUuid(productId)) return { error: 'Offer not found' }
+  const supabase = await createClient()
+  const { error } = await supabase.from('product_supplier_offers').delete().eq('id', id).eq('product_id', productId)
+  if (error) return { error: supplierSchemaHint(error.message) }
+  revalidatePath(`/crm/products/${productId}`)
+  return { success: true }
 }

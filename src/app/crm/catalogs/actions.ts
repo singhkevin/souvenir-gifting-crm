@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { sendEmail } from '@/lib/email/resend'
-import { resolveProductSellPrice, getCompanyMarginPercent, getMarginSettings } from '@/lib/pricing/server'
+import { resolveProductSellPrice, getCompanyMarginPercent, getMarginSettings, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
+import { offersByProduct } from '@/lib/pricing/offers'
 import { buildBudgetPackCandidates, planBudgetPacks } from '@/lib/catalogue/budget-packs-server'
 import { formatKitItemNames, PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
 import { sharePath } from '@/lib/catalogs/share'
@@ -255,17 +256,21 @@ export async function unassignCatalogCompany(formData: FormData) {
 }
 
 async function priceForCompany(
-  product: { supplier_cost?: number | null; price?: number | null; internal_margin?: number | null },
+  product: { id?: string; moq?: number | null; supplier_cost?: number | null; price?: number | null; internal_margin?: number | null },
   companyId: string | null,
   settings: Awaited<ReturnType<typeof getMarginSettings>>,
   companyMargin: number | null,
+  supplierCost?: number | null,
 ) {
-  const resolved = await resolveProductSellPrice(product, {
-    channel: 'b2b',
-    companyId,
-    companyMarginPercent: companyMargin,
-    settings,
-  })
+  const resolved = await resolveProductSellPrice(
+    { ...product, supplier_cost: supplierCost === undefined ? product.supplier_cost : supplierCost },
+    {
+      channel: 'b2b',
+      companyId,
+      companyMarginPercent: companyMargin,
+      settings,
+    },
+  )
   return resolved.sellPrice
 }
 
@@ -281,7 +286,7 @@ export async function addCatalogProducts(formData: FormData) {
   const { data: catalog } = await supabase.from('campaigns').select('id, company_id').eq('id', campaignId).maybeSingle()
   if (!catalog) return { error: 'Catalog not found' }
 
-  const [{ data: existing }, { data: products }, settings, companyMargin] = await Promise.all([
+  const [{ data: existing }, { data: products }, settings, pricing, companyMargin] = await Promise.all([
     supabase.from('campaign_products').select('product_id').eq('campaign_id', campaignId),
     supabase
       .from('products')
@@ -289,8 +294,12 @@ export async function addCatalogProducts(formData: FormData) {
       .in('id', productIds)
       .eq('status', 'active'),
     getMarginSettings(),
+    getPricingSettings(),
     catalog.company_id ? getCompanyMarginPercent(catalog.company_id) : Promise.resolve(null),
   ])
+  const offerGroups = pricing.surfaces.portal.useBestCost
+    ? offersByProduct(await loadSupplierOffers(supabase, (products || []).map((product) => product.id)))
+    : new Map()
 
   const taken = new Set((existing || []).map((row) => row.product_id))
   const byId = new Map((products || []).map((product) => [product.id, product]))
@@ -307,7 +316,17 @@ export async function addCatalogProducts(formData: FormData) {
       skipped += 1
       continue
     }
-    const sellingPrice = await priceForCompany(product, catalog.company_id, settings, companyMargin)
+    const sellingPrice = await priceForCompany(
+      product,
+      catalog.company_id,
+      settings,
+      companyMargin,
+      supplierCostForProduct(product, offerGroups.get(product.id) || [], {
+        useBestCost: pricing.surfaces.portal.useBestCost,
+        requireInStock: pricing.requireInStock,
+        quantity: product.moq,
+      }),
+    )
     const { error } = await supabase.from('campaign_products').insert({
       campaign_id: campaignId,
       product_id: productId,

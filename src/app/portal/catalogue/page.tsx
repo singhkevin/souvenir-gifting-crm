@@ -9,6 +9,9 @@ import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 import { CatalogueShortlistButton } from '@/components/portal/catalogue-shortlist-button'
 import { PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
 import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
+import { headers } from 'next/headers'
+import { readTenantFromHeaders } from '@/lib/portal-host'
+import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 
 const PAGE_SIZE = 24
 
@@ -218,7 +221,7 @@ export default async function PortalCataloguePage({
   else if (sort === 'price_high') query = query.order('price', { ascending: false })
   else query = query.order('name', { ascending: true })
 
-  const [{ data: products, count }, { data: categoryRows }] = await Promise.all([
+  const [{ data: productRows, count }, { data: categoryRows }] = await Promise.all([
     query.range(from, from + PAGE_SIZE - 1),
     supabase.from('client_products').select('category_id, category_name').not('category_id', 'is', null),
   ])
@@ -232,6 +235,19 @@ export default async function PortalCataloguePage({
       ).entries()
     ).map(([id, name]) => ({ id, name }))
   )
+
+  let products = productRows || []
+  const tenant = readTenantFromHeaders(await headers())
+  if (tenant && products.length) {
+    const companyMargin = companyId ? await getCompanyMarginPercent(companyId) : null
+    const micrositePrices = await sellPricesForSurface(products.map((product) => product.id), 'microsite', companyMargin)
+    if (micrositePrices) {
+      products = products.map((product) => ({
+        ...product,
+        price: micrositePrices.has(product.id) ? micrositePrices.get(product.id) : product.price,
+      }))
+    }
+  }
 
   const total = count || 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -343,7 +359,7 @@ export default async function PortalCataloguePage({
                   </div>
                   <div className="space-y-3 border-t border-gray-100 pt-3">
                     <div>
-                      <p className="text-base font-semibold text-gray-900">{formatCurrency(product.price)}</p>
+                      <p className="text-base font-semibold text-gray-900">{product.price == null ? 'Request quotation' : formatCurrency(product.price)}</p>
                       <p className="text-[10px] text-gray-400">MOQ: {product.moq || 1} units</p>
                     </div>
                     <CatalogueShortlistButton

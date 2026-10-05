@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { getMarginSettings, resolveProductSellPrice } from '@/lib/pricing/server'
+import { getCompanyMarginPercent, getPricingSettings, loadSupplierOffers, resolveProductSellPrice, supplierCostForProduct } from '@/lib/pricing/server'
+import { offersByProduct } from '@/lib/pricing/offers'
 import { pickBudgetPackKits, type BudgetPackCandidate } from '@/lib/catalogue/budget-packs'
 
 type ProductRow = {
@@ -53,16 +54,33 @@ export async function buildBudgetPackCandidates(
   budgetPerPerson: number
 ): Promise<{ candidates: BudgetPackCandidate[]; priced: Map<string, ProductRow & { sellPrice: number }> }> {
   const products = await loadCompanyCatalogueProducts(companyId)
-  const settings = await getMarginSettings()
+  const [settings, companyMargin] = await Promise.all([
+    getPricingSettings(),
+    getCompanyMarginPercent(companyId),
+  ])
+  const offerGroups = settings.surfaces.portal.useBestCost
+    ? offersByProduct(await loadSupplierOffers(await db(), products.map((product) => product.id)))
+    : new Map()
   const priced = new Map<string, ProductRow & { sellPrice: number }>()
   const candidates: BudgetPackCandidate[] = []
 
   for (const product of products) {
-    const resolved = await resolveProductSellPrice(product, {
-      channel: 'b2b',
-      companyId,
-      settings,
-    })
+    const resolved = await resolveProductSellPrice(
+      {
+        ...product,
+        supplier_cost: supplierCostForProduct(product, offerGroups.get(product.id) || [], {
+          useBestCost: settings.surfaces.portal.useBestCost,
+          requireInStock: settings.requireInStock,
+          quantity: product.moq,
+        }),
+      },
+      {
+        channel: 'b2b',
+        companyId,
+        companyMarginPercent: companyMargin,
+        settings,
+      },
+    )
     if (resolved.sellPrice <= 0) continue
     // Individual line items may exceed budget alone; kit total must not.
     priced.set(product.id, { ...product, sellPrice: resolved.sellPrice })

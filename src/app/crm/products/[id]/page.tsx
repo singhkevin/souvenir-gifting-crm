@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, isUuid } from '@/lib/utils'
+import { formatCurrency, isUuid, oneRelation } from '@/lib/utils'
 import { notFound, redirect } from 'next/navigation'
 import { sortProductCategories } from '@/lib/products/categories'
 import { BackButton } from '@/components/ui/back-button'
@@ -11,8 +11,10 @@ import { ProductImageEditor } from '@/components/products/product-image-editor'
 import { CatalogueVisibilityEditor } from '@/components/products/catalogue-visibility-editor'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
-import { getMarginSettings } from '@/lib/pricing/server'
+import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
+import { pickBestOffer } from '@/lib/pricing/offers'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
+import { SupplierOffersEditor } from './SupplierOffersEditor'
 
 export default async function ProductDetailPage({
   params,
@@ -23,6 +25,7 @@ export default async function ProductDetailPage({
 }) {
   const profile = await requireStaff(['admin', 'sales', 'management', 'operations'])
   const showCost = canSeeCosts(profile.role)
+  const canPrice = ['admin', 'sales', 'management', 'accounts'].includes(profile.role)
   const { id } = await params
   const { removed, image, error } = await searchParams
   if (!isUuid(id)) notFound()
@@ -35,7 +38,7 @@ export default async function ProductDetailPage({
     { data: suppliers },
     { data: allCompanies },
     { data: accessRecords },
-    marginSettings,
+    pricing,
   ] = await Promise.all([
     supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
     supabase.from('categories').select('id, name'),
@@ -43,19 +46,36 @@ export default async function ProductDetailPage({
     supabase.from('suppliers').select('id, name').order('name'),
     supabase.from('companies').select('id, name, logo_path').eq('status', 'active').order('name'),
     supabase.from('company_product_access').select('*, company:companies(id, name, city)').eq('product_id', id),
-    getMarginSettings(),
+    getPricingSettings(),
   ])
+  const offers = canPrice ? await loadSupplierOffers(supabase, [id]) : []
+  const best = pickBestOffer(offers, { requireInStock: pricing.requireInStock })
 
   if (!product) notFound()
 
   const priceBase = {
-    supplierCost: product.supplier_cost,
     listPrice: product.price,
     productMarginPercent: product.internal_margin,
-    settings: marginSettings,
+    settings: pricing,
   }
-  const b2cPrice = resolveSellPrice({ ...priceBase, channel: 'b2c' })
-  const b2bPrice = resolveSellPrice({ ...priceBase, channel: 'b2b' })
+  const b2cPrice = resolveSellPrice({
+    ...priceBase,
+    supplierCost: supplierCostForProduct(product, offers, {
+      useBestCost: pricing.surfaces.store.useBestCost,
+      requireInStock: pricing.requireInStock,
+      quantity: product.moq,
+    }),
+    channel: 'b2c',
+  })
+  const b2bPrice = resolveSellPrice({
+    ...priceBase,
+    supplierCost: supplierCostForProduct(product, offers, {
+      useBestCost: pricing.surfaces.portal.useBestCost,
+      requireInStock: pricing.requireInStock,
+      quantity: product.moq,
+    }),
+    channel: 'b2b',
+  })
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
 
@@ -122,9 +142,9 @@ export default async function ProductDetailPage({
 
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{product.name}</h1>
           <p className="text-xs text-gray-500 mt-1">
-            Category: <span className="font-semibold text-gray-700">{(product.category as any)?.name || 'General'}</span>
-            {product.brand && <> ? Brand: <span className="font-semibold text-gray-700">{(product.brand as any)?.name}</span></>}
-            {product.supplier && <> ? Supplier: <span className="font-semibold text-gray-700">{(product.supplier as any)?.name}</span></>}
+            Category: <span className="font-semibold text-gray-700">{oneRelation(product.category)?.name || 'General'}</span>
+            {product.brand && <> ? Brand: <span className="font-semibold text-gray-700">{oneRelation(product.brand)?.name}</span></>}
+            {product.supplier && <> ? Supplier: <span className="font-semibold text-gray-700">{oneRelation(product.supplier)?.name}</span></>}
           </p>
           {profile.role === 'admin' && (
             <div className="mt-3">
@@ -342,6 +362,15 @@ export default async function ProductDetailPage({
         </div>
         )}
       </div>
+
+      {canPrice && (
+        <SupplierOffersEditor
+          productId={product.id}
+          suppliers={(suppliers || []).map((supplier) => ({ id: supplier.id, name: supplier.name }))}
+          offers={offers}
+          bestOfferId={best?.id || null}
+        />
+      )}
     </div>
   )
 }

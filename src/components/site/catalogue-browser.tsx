@@ -93,7 +93,7 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
                 <p className="mt-1 font-mono text-[10px] text-[#5C6570]">{product.sku}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-[#806A50]">{formatCurrency(product.price)}</p>
+                <p className="text-sm font-semibold text-[#806A50]">{product.price == null ? 'Request quotation' : formatCurrency(product.price)}</p>
                 <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">View</p>
               </div>
             </Link>

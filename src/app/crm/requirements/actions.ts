@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { writeAudit } from '@/lib/audit'
+import { offersByProduct } from '@/lib/pricing/offers'
+import { resolveSellPrice } from '@/lib/pricing/resolve'
+import { getCompanyMarginPercent, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 
 export async function createRequirement(formData: FormData) {
   const supabase = await createClient()
@@ -85,7 +88,7 @@ export async function createQuotationFromRequirement(formData: FormData) {
 
   const { data: reqProducts } = await supabase
     .from('requirement_products')
-    .select('product_id, quantity, product:products(id, name, price)')
+    .select('product_id, quantity, product:products(id, name, price, internal_margin)')
     .eq('requirement_id', req.id)
 
   if (!reqProducts?.length) {
@@ -103,6 +106,12 @@ export async function createQuotationFromRequirement(formData: FormData) {
       if (row.selling_price != null) sellByProduct.set(row.product_id, Number(row.selling_price))
     }
   }
+
+  const pricing = await getPricingSettings()
+  const companyMargin = req.company_id ? await getCompanyMarginPercent(req.company_id) : null
+  const quoteOffers = pricing.surfaces.crm.useBestCost
+    ? offersByProduct(await loadSupplierOffers(supabase, reqProducts.map((row) => row.product_id)))
+    : new Map()
 
   const { data: quoteNumber, error: numError } = await supabase.rpc('next_quotation_number')
   if (numError || !quoteNumber) return { error: numError?.message || 'Could not allocate quote number' }
@@ -130,7 +139,27 @@ export async function createQuotationFromRequirement(formData: FormData) {
   const items = reqProducts.map((row) => {
     const product = Array.isArray(row.product) ? row.product[0] : row.product
     const qty = row.quantity || req.quantity || 1
-    const unit = sellByProduct.get(row.product_id) ?? Number(product?.price || 0)
+    const listOrCatalog = sellByProduct.get(row.product_id) ?? Number(product?.price || 0)
+    const bestCost = supplierCostForProduct(
+      { id: row.product_id, supplier_cost: null, moq: qty },
+      quoteOffers.get(row.product_id) || [],
+      {
+        useBestCost: pricing.surfaces.crm.useBestCost,
+        requireInStock: pricing.requireInStock,
+        quantity: qty,
+      },
+    )
+    const derived = pricing.surfaces.crm.useBestCost && pricing.surfaces.crm.showSellPrice && bestCost != null
+      ? resolveSellPrice({
+          supplierCost: bestCost,
+          listPrice: product?.price,
+          productMarginPercent: product?.internal_margin,
+          companyMarginPercent: companyMargin,
+          channel: 'b2b',
+          settings: pricing,
+        }).sellPrice
+      : null
+    const unit = derived ?? listOrCatalog
     return {
       quotation_id: quote.id,
       product_id: row.product_id,
