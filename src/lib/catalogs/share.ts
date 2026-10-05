@@ -1,4 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { isShareToken, shareLinkGrantsAccess, sharePath } from '@/lib/catalogs/share-link'
+
+export { isShareToken, sharePath }
 
 export type SharedCatalogProduct = {
   id: string
@@ -24,14 +27,6 @@ export type SharedCatalog = {
   products: SharedCatalogProduct[]
 }
 
-export function isShareToken(value: string) {
-  return /^[A-Za-z0-9_-]{16,128}$/.test(value)
-}
-
-export function sharePath(token: string) {
-  return `/share/catalogs/${token}`
-}
-
 /** Public catalog payload. Null when the token is missing, revoked, or expired. */
 export async function loadSharedCatalog(token: string): Promise<SharedCatalog | null> {
   if (!isShareToken(token)) return null
@@ -51,6 +46,7 @@ export async function loadSharedCatalog(token: string): Promise<SharedCatalog | 
 
   const row = payload as Partial<SharedCatalog>
   if (typeof row.name !== 'string' || !Array.isArray(row.products)) return null
+  if (!shareLinkGrantsAccess({ expires_at: row.expires_at ?? null })) return null
   return {
     name: row.name,
     occasion: row.occasion ?? null,

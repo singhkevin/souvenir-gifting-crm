@@ -12,8 +12,7 @@ import { offersByProduct } from '@/lib/pricing/offers'
 import { buildBudgetPackCandidates, planBudgetPacks } from '@/lib/catalogue/budget-packs-server'
 import { formatKitItemNames, PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
 import { sharePath } from '@/lib/catalogs/share'
-
-const SHARE_DAYS = 30
+import { extendShareExpiry, shareExpiryIso, shareLinkGrantsAccess, shareLinkIsExpired } from '@/lib/catalogs/share-link'
 
 function schemaHint(message: string) {
   if (/catalog_assignments|catalog_share_links|cloned_from|get_shared_catalog/i.test(message)) {
@@ -602,11 +601,18 @@ export async function publishBudgetPackOptions(formData: FormData) {
   return { success: true, count: ids.length }
 }
 
-function shareExpiry(from: Date, days = SHARE_DAYS) {
-  return new Date(from.getTime() + days * 24 * 60 * 60 * 1000).toISOString()
+type OpenShareLink = {
+  id: string
+  token: string
+  expires_at: string | null
+  revoked_at: string | null
 }
 
-async function activeShareLink(
+function revalidateShareToken(token?: string | null) {
+  if (token) revalidatePath(`/share/catalogs/${token}`)
+}
+
+async function openShareLinks(
   supabase: Awaited<ReturnType<typeof createClient>>,
   campaignId: string,
 ) {
@@ -616,10 +622,27 @@ async function activeShareLink(
     .eq('campaign_id', campaignId)
     .is('revoked_at', null)
     .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  if (error) return { error: schemaHint(error.message), link: null }
-  return { link: data, error: undefined }
+  if (error) return { error: schemaHint(error.message), links: [] as OpenShareLink[] }
+  return { links: (data || []) as OpenShareLink[], error: undefined }
+}
+
+async function revokeShareLinkIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ids: string[],
+  revokedAt: string,
+) {
+  if (!ids.length) return { error: undefined }
+  const { data, error } = await supabase
+    .from('catalog_share_links')
+    .update({ revoked_at: revokedAt })
+    .in('id', ids)
+    .is('revoked_at', null)
+    .select('id')
+  if (error) return { error: schemaHint(error.message) }
+  if ((data?.length || 0) !== ids.length) {
+    return { error: 'Could not revoke the share link. Refresh and try again.' }
+  }
+  return { error: undefined }
 }
 
 export async function generateCatalogShareLink(formData: FormData) {
@@ -632,24 +655,36 @@ export async function generateCatalogShareLink(formData: FormData) {
   const noExpiry = formData.get('no_expiry') === '1'
   if (!campaignId) return { error: 'Catalog is required' }
 
-  const { error: revokeError } = await supabase
-    .from('catalog_share_links')
-    .update({ revoked_at: new Date().toISOString() })
-    .eq('campaign_id', campaignId)
-    .is('revoked_at', null)
-  if (revokeError) return { error: schemaHint(revokeError.message) }
+  const existing = await openShareLinks(supabase, campaignId)
+  if (existing.error) return { error: existing.error }
 
+  const now = new Date()
   const token = randomBytes(24).toString('base64url')
-  const { error } = await supabase.from('catalog_share_links').insert({
+  const expiresAt = noExpiry ? null : shareExpiryIso(now)
+  const { data: created, error } = await supabase.from('catalog_share_links').insert({
     campaign_id: campaignId,
     token,
-    expires_at: noExpiry ? null : shareExpiry(new Date()),
+    expires_at: expiresAt,
     created_by: user.id,
-  })
-  if (error) return { error: schemaHint(error.message) }
+  }).select('id, token, expires_at').single()
+  if (error || !created) return { error: schemaHint(error?.message || 'Could not create a share link.') }
+
+  const previousIds = existing.links.map((link) => link.id)
+  const revoked = await revokeShareLinkIds(supabase, previousIds, now.toISOString())
+  if (revoked.error) {
+    await supabase.from('catalog_share_links').delete().eq('id', created.id)
+    return { error: revoked.error }
+  }
 
   revalidateCatalog(campaignId)
-  return { success: true, url: `${await requestOrigin()}${sharePath(token)}` }
+  for (const link of existing.links) revalidateShareToken(link.token)
+  revalidateShareToken(created.token)
+  return {
+    success: true,
+    url: `${await requestOrigin()}${sharePath(created.token)}`,
+    expiresAt: created.expires_at,
+    expired: shareLinkIsExpired(created.expires_at),
+  }
 }
 
 export async function extendCatalogShareLink(formData: FormData) {
@@ -660,19 +695,29 @@ export async function extendCatalogShareLink(formData: FormData) {
 
   const campaignId = String(formData.get('campaign_id') || '')
   if (!campaignId) return { error: 'Catalog is required' }
-  const current = await activeShareLink(supabase, campaignId)
+  const current = await openShareLinks(supabase, campaignId)
   if (current.error) return { error: current.error }
-  if (!current.link) return { error: 'Generate a share link first.' }
+  const link = current.links[0]
+  if (!link) return { error: 'Generate a share link first.' }
 
-  const base = current.link.expires_at ? new Date(current.link.expires_at) : new Date()
-  const from = base.getTime() > Date.now() ? base : new Date()
-  const { error } = await supabase
+  const expiresAt = extendShareExpiry(link.expires_at, new Date())
+  const { data, error } = await supabase
     .from('catalog_share_links')
-    .update({ expires_at: shareExpiry(from) })
-    .eq('id', current.link.id)
-  if (error) return { error: error.message }
+    .update({ expires_at: expiresAt })
+    .eq('id', link.id)
+    .is('revoked_at', null)
+    .select('token, expires_at')
+    .maybeSingle()
+  if (error) return { error: schemaHint(error.message) }
+  if (!data?.token) return { error: 'Could not update this share link. Refresh and try again.' }
   revalidateCatalog(campaignId)
-  return { success: true }
+  revalidateShareToken(data.token)
+  return {
+    success: true,
+    url: `${await requestOrigin()}${sharePath(data.token)}`,
+    expiresAt: data.expires_at,
+    expired: shareLinkIsExpired(data.expires_at),
+  }
 }
 
 export async function revokeCatalogShareLink(formData: FormData) {
@@ -683,14 +728,18 @@ export async function revokeCatalogShareLink(formData: FormData) {
 
   const campaignId = String(formData.get('campaign_id') || '')
   if (!campaignId) return { error: 'Catalog is required' }
-  const { error } = await supabase
-    .from('catalog_share_links')
-    .update({ revoked_at: new Date().toISOString() })
-    .eq('campaign_id', campaignId)
-    .is('revoked_at', null)
-  if (error) return { error: schemaHint(error.message) }
+  const current = await openShareLinks(supabase, campaignId)
+  if (current.error) return { error: current.error }
+
+  const revoked = await revokeShareLinkIds(
+    supabase,
+    current.links.map((link) => link.id),
+    new Date().toISOString(),
+  )
+  if (revoked.error) return { error: revoked.error }
   revalidateCatalog(campaignId)
-  return { success: true }
+  for (const link of current.links) revalidateShareToken(link.token)
+  return { success: true, url: null, expiresAt: null, expired: false }
 }
 
 function escapeHtml(value: string) {
@@ -713,14 +762,13 @@ export async function emailCatalogLink(formData: FormData) {
   const { data: catalog } = await supabase.from('campaigns').select('name').eq('id', campaignId).maybeSingle()
   if (!catalog) return { error: 'Catalog not found' }
 
-  const current = await activeShareLink(supabase, campaignId)
+  const current = await openShareLinks(supabase, campaignId)
   if (current.error) return { error: current.error }
-  if (!current.link) return { error: 'Generate a share link first.', shareUrl: null }
-  if (current.link.expires_at && new Date(current.link.expires_at).getTime() <= Date.now()) {
-    return { error: 'This share link has expired. Generate a new one.' }
-  }
+  const link = current.links[0]
+  if (!link) return { error: 'Generate a share link first.', shareUrl: null }
+  if (!shareLinkGrantsAccess(link)) return { error: 'This share link has expired. Generate a new one.', shareUrl: null }
 
-  const shareUrl = `${await requestOrigin()}${sharePath(current.link.token)}`
+  const shareUrl = `${await requestOrigin()}${sharePath(link.token)}`
   const subject = `Catalog: ${catalog.name}`
   const sent = await sendEmail({
     to,
