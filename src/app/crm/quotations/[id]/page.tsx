@@ -182,13 +182,18 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+            {items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
               const product = oneRelation(item.product)
               return (
               <tr key={item.id} className="hover:bg-gray-50/50">
                 <td className="p-3.5">
                   <div className="font-bold text-gray-900">{product?.name || 'Item'}</div>
                   <div className="text-gray-400 font-mono text-[10px]">{product?.sku}</div>
+                  {item.client_response && (
+                    <div className={`text-[10px] font-semibold uppercase ${item.client_response === 'accepted' ? 'text-emerald-700' : 'text-gray-500'}`}>
+                      {item.client_response === 'accepted' ? 'Client accepted' : 'Client declined'}
+                    </div>
+                  )}
                 </td>
                 <td className="p-3.5 text-right font-medium">{item.quantity}</td>
                 <td className="p-3.5 text-right">{formatCurrency(item.unit_price)}</td>

@@ -59,12 +59,29 @@ export async function createQuotationFromRequirement(formData: FormData) {
   const requirementId = String(formData.get('requirement_id') || '')
   if (!requirementId) return { error: 'Requirement is required' }
 
-  const { data: req } = await supabase
+  const extended = await supabase
     .from('requirements')
-    .select('id, company_id, contact_id, owner_id, quantity')
+    .select('id, company_id, contact_id, owner_id, quantity, campaign_id')
     .eq('id', requirementId)
     .single()
-  if (!req) return { error: 'Requirement not found' }
+
+  let req = extended.data as {
+    id: string
+    company_id: string
+    contact_id: string | null
+    owner_id: string | null
+    quantity: number | null
+    campaign_id?: string | null
+  } | null
+  if (extended.error && /campaign_id/i.test(extended.error.message)) {
+    const fallback = await supabase
+      .from('requirements')
+      .select('id, company_id, contact_id, owner_id, quantity')
+      .eq('id', requirementId)
+      .single()
+    req = fallback.data
+  }
+  if (!req) return { error: extended.error && !/campaign_id/i.test(extended.error.message) ? extended.error.message : 'Requirement not found' }
 
   const { data: reqProducts } = await supabase
     .from('requirement_products')
@@ -73,6 +90,18 @@ export async function createQuotationFromRequirement(formData: FormData) {
 
   if (!reqProducts?.length) {
     return { error: 'Add at least one product before creating a quotation' }
+  }
+
+  const sellByProduct = new Map<string, number>()
+  if (req.campaign_id) {
+    const { data: catalogPrices } = await supabase
+      .from('campaign_products')
+      .select('product_id, selling_price')
+      .eq('campaign_id', req.campaign_id)
+      .in('product_id', reqProducts.map((row) => row.product_id))
+    for (const row of catalogPrices || []) {
+      if (row.selling_price != null) sellByProduct.set(row.product_id, Number(row.selling_price))
+    }
   }
 
   const { data: quoteNumber, error: numError } = await supabase.rpc('next_quotation_number')
@@ -89,6 +118,7 @@ export async function createQuotationFromRequirement(formData: FormData) {
       company_id: req.company_id,
       contact_id: req.contact_id,
       owner_id: req.owner_id || user.id,
+      ...(req.campaign_id ? { campaign_id: req.campaign_id } : {}),
       status: 'draft',
       valid_until: validUntil.toISOString().slice(0, 10),
       notes: String(formData.get('notes') || '') || null,
@@ -100,7 +130,7 @@ export async function createQuotationFromRequirement(formData: FormData) {
   const items = reqProducts.map((row) => {
     const product = Array.isArray(row.product) ? row.product[0] : row.product
     const qty = row.quantity || req.quantity || 1
-    const unit = Number(product?.price || 0)
+    const unit = sellByProduct.get(row.product_id) ?? Number(product?.price || 0)
     return {
       quotation_id: quote.id,
       product_id: row.product_id,

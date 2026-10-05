@@ -27,8 +27,14 @@ export default async function PortalCatalogsPage() {
             <p className="mt-1 text-xs">Delivery {formatDate(catalog.required_delivery_date)}</p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Link
-                href={`/portal/catalogue?catalog=${catalog.id}`}
+                href={`/portal/catalogue?catalog=${catalog.id}#request-quotation`}
                 className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
+              >
+                Request Quotation
+              </Link>
+              <Link
+                href={`/portal/catalogue?catalog=${catalog.id}`}
+                className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
               >
                 Compare budget options
               </Link>

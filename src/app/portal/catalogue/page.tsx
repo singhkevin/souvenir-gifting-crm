@@ -8,6 +8,7 @@ import { sortProductCategories } from '@/lib/products/categories'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 import { CatalogueShortlistButton } from '@/components/portal/catalogue-shortlist-button'
 import { PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
+import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
 
 const PAGE_SIZE = 24
 
@@ -135,8 +136,8 @@ export default async function PortalCataloguePage({
           <h1 className="text-2xl font-bold text-gray-900">{campaignMeta?.name || 'Your catalog selection'}</h1>
           <p className="mt-1 text-sm text-gray-500">
             {packPrimaries.length > 0
-              ? 'Each option is a multi-item kit (e.g. mug + notebook + bag) within your per-person budget. Shortlist your favourite.'
-              : 'Shortlist the gifts you like and we will build your quotation around them.'}
+              ? 'Each option is a multi-item kit (e.g. mug + notebook + bag) within your per-person budget. Select quantities below to request a quotation.'
+              : 'Select the gifts and quantities you need, then request a quotation.'}
           </p>
           {budget != null && budget > 0 && (
             <p className="mt-1 text-xs text-gray-500">Budget: {formatCurrency(budget)} per person</p>
@@ -172,6 +173,22 @@ export default async function PortalCataloguePage({
               </section>
             )}
           </div>
+        )}
+        {isUuid(campaignFilter) && (
+          <CatalogRfqPanel
+            mode="portal"
+            catalogId={campaignFilter}
+            offerings={[...packPrimaries, ...otherRows].map((row) => ({
+              id: row.id,
+              name: row.display_name || 'Gift',
+              price: row.pack_kit_total != null
+                ? Number(row.pack_kit_total)
+                : row.selling_price == null
+                  ? null
+                  : Number(row.selling_price),
+              moq: row.moq && row.moq > 0 ? row.moq : 1,
+            }))}
+          />
         )}
       </div>
     )

@@ -46,8 +46,32 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
     query = query.eq('status', statusFilter)
   }
 
-  const { data: requirements, error } = await query
+  const { data: requirements } = await query
   const requirementRows = asRows<RequirementRow>(requirements)
+  const requirementIds = requirementRows.map((row) => row.id)
+  const lineResult = requirementIds.length
+    ? await supabase
+      .from('requirement_products')
+      .select('requirement_id, quantity, product:products(name, sku)')
+      .in('requirement_id', requirementIds)
+    : { data: [], error: null }
+  const linesByRequirement = new Map<string, { label: string; quantity: number }[]>()
+  if (!lineResult.error) {
+    for (const row of asRows<{
+      requirement_id: string
+      quantity: number | null
+      product?: { name?: string | null; sku?: string | null } | { name?: string | null; sku?: string | null }[] | null
+    }>(lineResult.data)) {
+      const product = oneRelation(row.product)
+      const list = linesByRequirement.get(row.requirement_id) || []
+      const name = product?.name ? ` ${product.name}` : ''
+      list.push({
+        label: product?.sku ? `${product.sku}${name}` : (product?.name || 'Item'),
+        quantity: row.quantity && row.quantity > 0 ? row.quantity : 1,
+      })
+      linesByRequirement.set(row.requirement_id, list)
+    }
+  }
 
   const statuses = ['all', 'active', 'quoted', 'won', 'lost', 'closed', 'draft']
 
@@ -116,6 +140,16 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
                   <Link href={`/crm/requirements/${req.id}`} className="text-blue-600 hover:underline font-medium">
                     {req.title || req.name}
                   </Link>
+                  {(linesByRequirement.get(req.id) || []).slice(0, 3).map((line, index) => (
+                    <p key={`${req.id}-${index}`} className="mt-0.5 text-[11px] text-gray-500">
+                      {line.label} × {line.quantity}
+                    </p>
+                  ))}
+                  {(linesByRequirement.get(req.id) || []).length > 3 && (
+                    <p className="text-[11px] text-gray-400">
+                      +{(linesByRequirement.get(req.id) || []).length - 3} more
+                    </p>
+                  )}
                 </td>
                 <td className="p-4">{company?.name || '-'}</td>
                 <td className="p-4">{owner?.full_name || '-'}</td>

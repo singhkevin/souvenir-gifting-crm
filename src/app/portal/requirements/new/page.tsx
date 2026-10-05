@@ -42,12 +42,8 @@ export default function NewRequirementPage() {
     quantity: '',
     deadline: '',
     delivery_city: '',
-    products: [] as string[] // array of SKUs
   })
-
-  useEffect(() => {
-    setFormData(prev => ({ ...prev, products: shortlistedProducts.map(p => p.sku) }))
-  }, [shortlistedProducts])
+  const [lineQty, setLineQty] = useState<Record<string, string>>({})
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -72,13 +68,20 @@ export default function NewRequirementPage() {
     setLoading(true)
     setError(null)
     try {
-      const result = await createPortalRequirement(formData)
+      const result = await createPortalRequirement({
+        ...formData,
+        products: shortlistedProducts.map((product) => product.sku),
+        lines: shortlistedProducts.map((product) => ({
+          sku: product.sku,
+          quantity: Number.parseInt(lineQty[product.sku] || formData.quantity || '1', 10) || 1,
+        })),
+      })
       if (result?.error) {
         setError(result.error)
       } else {
         router.push('/portal/requirements')
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -161,8 +164,8 @@ export default function NewRequirementPage() {
 
           {step === 3 && (
             <div className="space-y-6">
-              <h2 className="border-b pb-2 text-xl font-bold text-gray-900">Step 3: Included Products</h2>
-              <p className="text-sm text-gray-600">The products currently in your shortlist will be attached to this requirement for reference.</p>
+              <h2 className="border-b pb-2 text-xl font-bold text-gray-900">Step 3: Products and quantities</h2>
+              <p className="text-sm text-gray-600">Enter a quantity for each shortlisted product. This is sent as a request for quotation.</p>
               
               {shortlistedProducts.length === 0 ? (
                 <div className="rounded-lg bg-gray-50 p-4 text-center text-sm text-gray-500">
@@ -171,9 +174,22 @@ export default function NewRequirementPage() {
               ) : (
                 <ul className="divide-y rounded-lg border">
                   {shortlistedProducts.map(p => (
-                    <li key={p.sku || p.id} className="flex items-center justify-between bg-gray-50 p-3">
-                      <div className="text-sm font-medium">{p.name}</div>
-                      <div className="text-xs text-gray-500">{p.sku}</div>
+                    <li key={p.sku || p.id} className="flex flex-col gap-2 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <div className="text-sm font-medium">{p.name}</div>
+                        <div className="text-xs text-gray-500">{p.sku}</div>
+                      </div>
+                      <label className="flex items-center gap-2 text-xs text-gray-600">
+                        Qty
+                        <input
+                          type="number"
+                          min={1}
+                          step={1}
+                          value={lineQty[p.sku] ?? (formData.quantity || '1')}
+                          onChange={(event) => setLineQty((current) => ({ ...current, [p.sku]: event.target.value }))}
+                          className="min-h-10 w-24 rounded-lg border border-[#E8E4DE] bg-white px-2"
+                        />
+                      </label>
                     </li>
                   ))}
                 </ul>
@@ -191,7 +207,7 @@ export default function NewRequirementPage() {
             )}
             
             <button type="submit" disabled={loading} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-6 text-sm font-semibold text-[#FFFFFF] transition-colors hover:bg-[#9C8567] disabled:opacity-50">
-              {step < 3 ? 'Next Step' : loading ? 'Submitting...' : 'Submit Requirement'}
+              {step < 3 ? 'Next Step' : loading ? 'Sending...' : 'Request Quotation'}
             </button>
           </div>
         </form>

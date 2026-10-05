@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 
 export type SharedCatalogProduct = {
   id: string
+  product_id?: string | null
+  sku?: string | null
   display_name: string | null
   client_description: string | null
   client_image_url: string | null

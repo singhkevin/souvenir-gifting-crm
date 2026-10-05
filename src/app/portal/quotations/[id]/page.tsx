@@ -15,16 +15,31 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
 
   const { data: companyId } = await supabase.rpc('client_company_id')
 
-  const { data: quote } = await supabase
+  const withResponse = await supabase
     .from('quotations')
     .select(`
       *,
       items:quotation_items(
-        id, quantity, unit_price, line_total, product:products(name, sku, image_url)
+        id, quantity, unit_price, line_total, client_response, product:products(name, sku, image_url)
       )
     `)
     .eq('id', id)
     .maybeSingle()
+
+  let quote = withResponse.data
+  if (withResponse.error && /client_response/i.test(withResponse.error.message)) {
+    const fallback = await supabase
+      .from('quotations')
+      .select(`
+        *,
+        items:quotation_items(
+          id, quantity, unit_price, line_total, product:products(name, sku, image_url)
+        )
+      `)
+      .eq('id', id)
+      .maybeSingle()
+    quote = fallback.data
+  }
 
   if (!quote || quote.company_id !== companyId) {
     notFound()
@@ -79,12 +94,17 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
             <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-700">Itemized Quotation</h3>
 
             <div className="space-y-3 md:hidden">
-              {quote.items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+              {quote.items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
                 const product = oneRelation(item.product)
                 return (
                   <article key={item.id} className="rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-4">
                     <p className="text-sm font-semibold text-gray-900">{product?.name}</p>
                     <p className="mt-0.5 font-mono text-[10px] text-gray-400">{product?.sku}</p>
+                    {item.client_response && (
+                      <p className={`mt-1 text-[10px] font-semibold uppercase ${item.client_response === 'accepted' ? 'text-emerald-700' : 'text-gray-500'}`}>
+                        {item.client_response}
+                      </p>
+                    )}
                     <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                       <div>
                         <p className="text-[10px] uppercase text-gray-400">Qty</p>
@@ -115,13 +135,18 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {quote.items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+                  {quote.items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
                     const product = oneRelation(item.product)
                     return (
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div className="font-bold text-gray-900">{product?.name}</div>
                         <div className="font-mono text-[10px] text-gray-400">{product?.sku}</div>
+                        {item.client_response && (
+                          <div className={`text-[10px] font-semibold uppercase ${item.client_response === 'accepted' ? 'text-emerald-700' : 'text-gray-500'}`}>
+                            {item.client_response}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center font-semibold text-gray-800">{item.quantity} units</td>
                       <td className="px-4 py-3 text-right text-gray-600">{formatCurrency(item.unit_price)}</td>
@@ -176,7 +201,8 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
           {quote.status === 'accepted' && (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
               You accepted this quotation
-              {quote.responded_at ? ` on ${formatDate(quote.responded_at)}` : ''}. Your account team will confirm next steps.
+              {quote.responded_at ? ` on ${formatDate(quote.responded_at)}` : ''}.
+              {' '}The order includes only the lines you accepted.
             </div>
           )}
           {quote.status === 'rejected' && (
@@ -188,7 +214,22 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
           )}
           {canRespond && (
             <div className="pt-4 border-t border-gray-100">
-              <QuotationActions quotationId={quote.id} />
+              <QuotationActions
+                quotationId={quote.id}
+                discountPercent={Number(quote.discount_percent) || 0}
+                taxPercent={Number(quote.tax_percent) || 0}
+                items={(quote.items || []).map((item: { id: string; quantity: number; unit_price: number; line_total: number; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+                  const product = oneRelation(item.product)
+                  return {
+                    id: item.id,
+                    name: product?.name || 'Item',
+                    sku: product?.sku || null,
+                    quantity: Number(item.quantity) || 0,
+                    unitPrice: Number(item.unit_price) || 0,
+                    lineTotal: Number(item.line_total) || 0,
+                  }
+                })}
+              />
             </div>
           )}
         </div>

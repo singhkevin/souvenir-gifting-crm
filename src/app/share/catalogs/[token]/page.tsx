@@ -2,7 +2,11 @@ import type { Metadata } from 'next'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
 import { PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
-import { loadSharedCatalog, type SharedCatalogProduct } from '@/lib/catalogs/share'
+import { loadSharedCatalog, sharePath, type SharedCatalogProduct } from '@/lib/catalogs/share'
+import { getProfile } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
+import { companyCanUseCatalog, resolveShareCampaignId } from '@/lib/catalogs/rfq'
+import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,7 +61,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
         <h1 className="mt-2 font-serif text-4xl">{catalog.name}</h1>
         <p className="mt-2 text-sm text-[#5A5248]">
           {catalog.occasion ? `${catalog.occasion} · ` : ''}
-          Read-only. Prices are client sell prices.
+          Prices are client sell prices.
           {budget != null && budget > 0 ? ` Budget ${formatCurrency(budget)} per person.` : ''}
         </p>
         {catalog.expires_at && (
@@ -109,7 +113,49 @@ export default async function SharedCatalogPage({ params }: PageProps) {
             })}
           </div>
         )}
+
+        <div className="mt-10">
+          <ShareRfq token={token} offerings={primaries.map((product) => ({
+            id: product.id,
+            name: product.display_name || 'Gift',
+            sku: product.sku || null,
+            price: money(product.pack_kit_total) ?? money(product.selling_price),
+            moq: product.moq && product.moq > 0 ? product.moq : 1,
+          }))} />
+        </div>
       </div>
     </main>
+  )
+}
+
+async function ShareRfq({
+  token,
+  offerings,
+}: {
+  token: string
+  offerings: { id: string; name: string; sku: string | null; price: number | null; moq: number }[]
+}) {
+  const profile = await getProfile()
+  const isClient = profile?.role === 'client_admin' || profile?.role === 'client_user'
+  let mode: 'guest' | 'client-share' | 'staff' | 'unassigned' = 'guest'
+  if (profile && !isClient) {
+    mode = 'staff'
+  } else if (isClient) {
+    const supabase = await createClient()
+    const [{ data: companyId }, campaignId] = await Promise.all([
+      supabase.rpc('client_company_id'),
+      resolveShareCampaignId(token),
+    ])
+    const allowed = Boolean(companyId && campaignId && await companyCanUseCatalog(supabase, campaignId, companyId))
+    mode = allowed ? 'client-share' : 'unassigned'
+  }
+
+  return (
+    <CatalogRfqPanel
+      mode={mode}
+      shareToken={token}
+      offerings={offerings}
+      loginHref={`/login?next=${encodeURIComponent(sharePath(token))}`}
+    />
   )
 }
