@@ -18,7 +18,6 @@ import { catalogStatusLabel } from '@/lib/catalogs/status'
 import { listCatalogPickerProducts } from '@/lib/catalogs/picker-products'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { sharePath } from '@/lib/catalogs/share'
-import { resendIsConfigured } from '@/lib/email/resend-config'
 import { shareLinkIsExpired } from '@/lib/catalogs/share-link'
 
 export default async function CatalogDetailPage({
@@ -164,7 +163,6 @@ export default async function CatalogDetailPage({
         shareUrl={shareUrl}
         expiresAt={activeLink?.expires_at || null}
         linkExpired={shareLinkIsExpired(activeLink?.expires_at)}
-        emailConfigured={resendIsConfigured()}
         suggestions={suggestions}
       />
 

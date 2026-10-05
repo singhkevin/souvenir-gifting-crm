@@ -32,11 +32,6 @@ export function resendConfig(): ResendConfig | { error: string } {
   return resendConfigFrom(env)
 }
 
-export function resendIsConfigured(): boolean {
-  const env = process.env
-  return readServerEnv(env, 'RESEND_API_KEY').length > 0
-}
-
 export function resendHttpError(status: number): string {
   if (status === 401 || status === 403) {
     return 'Resend rejected RESEND_API_KEY. Check the key in the server environment.'

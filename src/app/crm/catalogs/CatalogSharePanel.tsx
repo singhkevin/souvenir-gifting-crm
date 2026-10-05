@@ -16,7 +16,6 @@ export function CatalogSharePanel({
   shareUrl,
   expiresAt,
   linkExpired,
-  emailConfigured,
   suggestions,
 }: {
   catalogId: string
@@ -24,7 +23,6 @@ export function CatalogSharePanel({
   shareUrl: string | null
   expiresAt: string | null
   linkExpired: boolean
-  emailConfigured: boolean
   suggestions: { email: string; label: string }[]
 }) {
   const [pending, startTransition] = useTransition()
@@ -176,9 +174,7 @@ export function CatalogSharePanel({
         )}
       </form>
       <p className="text-[#7A7267]">
-        {emailConfigured
-          ? 'Email uses the existing Resend sender. RESEND_FROM_EMAIL is the from address when it is set; otherwise mail uses the Resend onboarding address, which only delivers to the Resend account email.'
-          : 'Email delivery is not configured. Set RESEND_API_KEY in the server environment (see .env.example). Set RESEND_FROM_EMAIL to a sender on a domain verified in Resend so mail can reach clients. Until then, copy the link or use Open mail app.'}
+        Email uses the existing Resend sender when RESEND_API_KEY is set. Otherwise copy the link or use Open mail app.
       </p>
     </div>
   )
