@@ -16,6 +16,7 @@ import {
   type ParkedDomain,
   type SubdomainEntry,
 } from '@/lib/hostinger/client'
+import { portalDnsMode } from '@/lib/portal-hosts/mode'
 import { notifyPortalAlert, notifyPortalLive } from '@/lib/portal-hosts/notify'
 import {
   backoffMs,
@@ -579,6 +580,152 @@ async function processJob(
   return 'ok'
 }
 
+async function processVercelJob(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>,
+  host: PortalHost,
+) {
+  const invalid = assertValidHostname(host)
+  if (invalid) {
+    await updateHost(admin, host, {
+      status: 'failed',
+      last_error: invalid,
+      last_error_code: 'invalid_hostname',
+      next_attempt_at: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
+    }, 'invalid_hostname')
+    return 'invalid'
+  }
+
+  if (host.desired === 'unparked') {
+    const { data: otherWanted } = await admin
+      .from('portal_hosts')
+      .select('id')
+      .eq('hostname', host.hostname.toLowerCase())
+      .eq('desired', 'parked')
+      .neq('status', 'removed')
+      .neq('id', host.id)
+      .limit(1)
+    if (otherWanted?.length) {
+      await updateHost(admin, host, {
+        status: 'removed',
+        last_error: 'Hostname kept by another portal host row',
+        last_error_code: 'kept_by_other',
+      }, 'skip_unpark_kept')
+      return 'kept'
+    }
+    await updateHost(admin, host, {
+      status: 'removed',
+      last_error: null,
+      last_error_code: null,
+      live_at: null,
+    }, 'removed')
+    return 'removed'
+  }
+
+  if (host.status === 'live') {
+    await updateHost(admin, host, {
+      last_error: null,
+      last_error_code: null,
+    }, 'noop')
+    return 'already_live'
+  }
+
+  await updateHost(admin, host, {
+    status: 'live',
+    live_at: host.live_at || new Date().toISOString(),
+    last_error: null,
+    last_error_code: null,
+    attempts: 0,
+    next_attempt_at: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
+  }, 'live')
+  if (host.role === 'primary') {
+    const name = await companyName(admin, host.company_id)
+    await notifyPortalLive(host, name)
+  }
+  return 'live'
+}
+
+/** Mark queued portal rows live or removed. Does not call Hostinger. */
+async function reconcileVercelPortalHosts(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>,
+  options?: { companyId?: string | null; limit?: number },
+): Promise<WorkerResult> {
+  const { data: run, error: runError } = await admin
+    .from('portal_host_runs')
+    .insert({ kind: 'worker', details: { mode: 'vercel', companyId: options?.companyId || null } })
+    .select('id')
+    .single()
+  if (runError || !run) {
+    return {
+      ok: false,
+      processed: 0,
+      errors: 1,
+      fatal: true,
+      skipped: 'run_insert_failed',
+      details: { mode: 'vercel', error: runError?.message },
+    }
+  }
+
+  let processed = 0
+  let errors = 0
+  const details: Record<string, unknown> = { mode: 'vercel', jobs: [] as unknown[] }
+
+  try {
+    const { data: jobs, error: claimError } = await admin.rpc('claim_portal_host_jobs', {
+      p_limit: options?.limit || MAX_JOBS,
+      p_lock_seconds: 120,
+      p_company_id: options?.companyId || null,
+    })
+    if (claimError) throw new Error(claimError.message)
+
+    const claimed = (jobs || []) as PortalHost[]
+    if (claimed.length === 0) {
+      await admin
+        .from('portal_host_runs')
+        .update({
+          finished_at: new Date().toISOString(),
+          processed: 0,
+          errors: 0,
+          details: { mode: 'vercel', skipped: 'no_jobs' },
+        })
+        .eq('id', run.id)
+      return { ok: true, processed: 0, errors: 0, skipped: 'no_jobs', details: { mode: 'vercel', runId: run.id } }
+    }
+
+    for (const raw of claimed) {
+      try {
+        const result = await processVercelJob(admin, raw)
+        processed += 1
+        ;(details.jobs as unknown[]).push({ id: raw.id, hostname: raw.hostname, result })
+      } catch (err) {
+        errors += 1
+        const message = err instanceof Error ? err.message : 'Worker error'
+        ;(details.jobs as unknown[]).push({ id: raw.id, error: message })
+      }
+    }
+  } catch (err) {
+    errors += 1
+    details.fatal = err instanceof Error ? err.message : 'fatal'
+  }
+
+  await admin
+    .from('portal_host_runs')
+    .update({
+      finished_at: new Date().toISOString(),
+      processed,
+      errors,
+      details,
+    })
+    .eq('id', run.id)
+
+  return {
+    ok: errors === 0,
+    processed,
+    errors,
+    fatal: errors > 0 && processed === 0,
+    details: { ...details, runId: run.id },
+  }
+}
+
 export async function runPortalHostsWorker(options?: {
   companyId?: string | null
   limit?: number
@@ -586,6 +733,10 @@ export async function runPortalHostsWorker(options?: {
   const admin = createAdminClient()
   if (!admin) {
     return { ok: false, processed: 0, errors: 1, fatal: true, skipped: 'missing_service_role', details: {} }
+  }
+
+  if (portalDnsMode() === 'vercel') {
+    return reconcileVercelPortalHosts(admin, options)
   }
 
   const started = Date.now()
@@ -769,5 +920,8 @@ export function schedulePortalHostsWorker(companyId?: string | null) {
 }
 
 export async function deleteConflictingSubdomain(slug: string) {
+  if (portalDnsMode() === 'vercel') {
+    throw new Error('Hostinger subdomain delete is disabled. Portal DNS is the Vercel wildcard.')
+  }
   await deleteSubdomain(slug)
 }

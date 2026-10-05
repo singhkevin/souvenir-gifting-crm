@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { portalDnsMode } from '@/lib/portal-hosts/mode'
 
 /** Request headers set by proxy after tenant resolution. Never trust inbound copies. */
 export const TENANT_ID_HEADER = 'x-tenant-id'
@@ -181,6 +182,15 @@ export function portalUrlForSlug(slug: string | null | undefined): string | null
   if (!root || !slug) return null
   const proto = root === 'localhost' ? 'http' : 'https'
   return `${proto}://${slug}.${root}`
+}
+
+/** Help text for the company portal-address field. */
+export function portalAddressHelp(exampleSlug = 'your-slug'): string {
+  const url = portalUrlForSlug(exampleSlug) || `https://${exampleSlug}.giftingstore.online`
+  if (portalDnsMode() === 'hostinger') {
+    return `Becomes ${url} — usually live in a few minutes (SSL can take up to 2 hours). Leave empty for the main site only.`
+  }
+  return `Becomes ${url}. The Vercel wildcard serves this host; nothing is parked per company. Leave empty for the main site only.`
 }
 
 type HostParts = { hostname: string; port: string }
@@ -405,8 +415,12 @@ export async function resolvePortalRedirect(
     .neq('status', 'removed')
     .maybeSingle()
   if (!primary?.slug || primary.slug === key) return { kind: 'pending' }
-  if (primary.status !== 'live') return { kind: 'pending' }
-  return { kind: 'live', targetSlug: primary.slug }
+  // Wildcard DNS already answers the old and new hosts. Do not wait for a
+  // Hostinger "live" row before redirecting a grace-period slug.
+  if (portalDnsMode() === 'vercel' || primary.status === 'live') {
+    return { kind: 'live', targetSlug: primary.slug }
+  }
+  return { kind: 'pending' }
 }
 
 /**
@@ -421,6 +435,16 @@ export async function findPortalRedirectTarget(slug: string): Promise<string | n
 export async function isPrimaryPortalLive(companyId: string): Promise<boolean> {
   const admin = createAdminClient()
   if (!admin) return false
+
+  if (portalDnsMode() === 'vercel') {
+    const { data: company } = await admin
+      .from('companies')
+      .select('portal_slug')
+      .eq('id', companyId)
+      .maybeSingle()
+    return Boolean(company?.portal_slug)
+  }
+
   const { data: rows } = await admin
     .from('portal_hosts')
     .select('status, role, desired')

@@ -26,6 +26,7 @@ export function PortalHostCard({
   redirectUrls,
   canAdmin,
   canResync,
+  wildcardDns = false,
 }: {
   companyId: string
   primary: PortalHost | null
@@ -34,6 +35,8 @@ export function PortalHostCard({
   redirectUrls: Record<string, string | null>
   canAdmin: boolean
   canResync: boolean
+  /** True when DNS is the Vercel wildcard, not a per-company Hostinger alias. */
+  wildcardDns?: boolean
 }) {
   const [pending, start] = useTransition()
 
@@ -41,12 +44,20 @@ export function PortalHostCard({
     return (
       <div className="bg-white p-6 rounded-xl border border-gray-200 text-xs space-y-2">
         <h2 className="font-bold text-sm text-gray-900 pb-2 border-b">Portal address</h2>
-        <p className="text-gray-500">No portal address set. Save a slug above to park a Hostinger alias.</p>
+        <p className="text-gray-500">
+          {wildcardDns
+            ? 'No portal address yet. Save a slug on the company. The Vercel wildcard serves it; nothing is parked per company.'
+            : 'No portal address set. Save a slug above to park a Hostinger alias.'}
+        </p>
       </div>
     )
   }
 
-  const label = primary ? PORTAL_STATUS_LABELS[primary.status] || primary.status : 'Removed'
+  const label = wildcardDns && primary
+    ? 'Live'
+    : primary
+      ? PORTAL_STATUS_LABELS[primary.status] || primary.status
+      : 'Removed'
 
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 text-xs space-y-4">
@@ -60,7 +71,13 @@ export function PortalHostCard({
         {primary ? <StatusBadge status={label} /> : null}
       </div>
 
-      {primary ? (
+      {primary && wildcardDns ? (
+        <p className="text-gray-600">
+          Served by the Vercel wildcard for this project. Existing slugs keep working after DNS is attached; Re-sync only updates CRM bookkeeping.
+        </p>
+      ) : null}
+
+      {primary && !wildcardDns ? (
         <div className="grid gap-2 text-gray-600">
           <div><span className="font-semibold text-gray-500 w-28 inline-block">Last checked</span>{formatWhen(primary.last_checked_at)}</div>
           <div><span className="font-semibold text-gray-500 w-28 inline-block">Next retry</span>{formatWhen(primary.next_attempt_at)}</div>
@@ -75,7 +92,7 @@ export function PortalHostCard({
       ) : null}
 
       <div className="flex flex-wrap gap-2">
-        {primary?.status === 'live' && primaryUrl ? (
+        {(wildcardDns || primary?.status === 'live') && primaryUrl ? (
           <a
             href={primaryUrl}
             target="_blank"
@@ -105,7 +122,9 @@ export function PortalHostCard({
             disabled={pending}
             className="px-3 py-2 rounded-lg border border-red-200 text-red-700 font-semibold disabled:opacity-50"
             onClick={() => start(async () => {
-              if (!confirm('Remove this portal address? The host will stay parked for 7 days, then be unparked.')) return
+              if (!confirm(wildcardDns
+                ? 'Remove this portal address? It will stop being this company\'s host. A previous address can keep redirecting until its grace period ends.'
+                : 'Remove this portal address? The host will stay parked for 7 days, then be unparked.')) return
               const result = await removePortalAddress(companyId)
               if (result.error) toast.error(result.error)
               else toast.success('Portal address cleared')
@@ -114,7 +133,7 @@ export function PortalHostCard({
             Remove portal address
           </button>
         ) : null}
-        {canAdmin && primary?.status === 'blocked' && primary.last_error_code === 'subdomain_conflict' ? (
+        {!wildcardDns && canAdmin && primary?.status === 'blocked' && primary.last_error_code === 'subdomain_conflict' ? (
           <button
             type="button"
             disabled={pending}

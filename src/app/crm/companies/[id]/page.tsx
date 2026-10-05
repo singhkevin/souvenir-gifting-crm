@@ -8,7 +8,8 @@ import { uploadCompanyLogo, removeCompanyLogo, updateCompany, removeCompany } fr
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { formatCurrency, formatDate, isUuid } from '@/lib/utils'
 import { formatAllowedEmailDomains } from '@/lib/pricing/domains'
-import { portalUrlForSlug } from '@/lib/portal-host'
+import { portalAddressHelp, portalUrlForSlug } from '@/lib/portal-host'
+import { portalDnsMode } from '@/lib/portal-hosts/mode'
 import { requireStaff } from '@/lib/auth'
 import { createContact } from '@/app/crm/contacts/actions'
 import { asFormAction } from '@/lib/form-action'
@@ -77,6 +78,7 @@ export default async function CompanyDetailPage({
 
   if (!company) notFound()
 
+  const wildcardDns = portalDnsMode() === 'vercel'
   const hostRows = (portalHosts || []) as PortalHost[]
   const primaryHost = hostRows.find((h) => h.role === 'primary' && h.desired === 'parked') || null
   const redirectHosts = hostRows.filter((h) => h.role === 'redirect' || (h.desired === 'unparked' && h.role !== 'primary'))
@@ -311,7 +313,7 @@ export default async function CompanyDetailPage({
                 className="mt-1 w-full border rounded-lg px-3 py-2"
               />
               <span className="mt-1 block text-[11px] text-gray-500">
-                Becomes {portalUrlForSlug(company.portal_slug || 'your-slug') || 'https://{slug}.giftingstore.online'} — usually live in a few minutes (SSL can take up to 2 hours). Leave empty for the main site only.
+                {portalAddressHelp(company.portal_slug || 'your-slug')}
               </span>
             </label>
             <label className="flex items-start gap-2 md:col-span-2 text-[11px] text-gray-600">
@@ -396,6 +398,7 @@ export default async function CompanyDetailPage({
             redirectUrls={redirectUrls}
             canAdmin={profile.role === 'admin'}
             canResync={profile.role === 'admin'}
+            wildcardDns={wildcardDns}
           />
           </div>
         ) : (
@@ -428,6 +431,7 @@ export default async function CompanyDetailPage({
             redirectUrls={redirectUrls}
             canAdmin={profile.role === 'admin'}
             canResync={profile.role === 'admin'}
+            wildcardDns={wildcardDns}
           />
 
           <div className="bg-white p-6 rounded-xl border border-gray-200 text-xs space-y-3 md:col-span-2">

@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { portalDnsMode } from '@/lib/portal-hosts/mode'
+
 const BASE = 'https://developers.hostinger.com'
 
 export class HostingerRateLimited extends Error {
@@ -235,6 +237,12 @@ async function hostingerRequest<T>(
   path: string,
   body?: unknown,
 ): Promise<RequestResult<T>> {
+  if (portalDnsMode() === 'vercel') {
+    throw new HostingerAuthError(
+      'Hostinger parked-domain API is disabled. Company portals use the Vercel wildcard for ROOT_DOMAIN.',
+    )
+  }
+
   if (isMockMode()) return mockRequest<T>(method, path, body)
 
   if (

@@ -1,14 +1,13 @@
 ---
-description: Production is Hostinger; DB changes are delivered as migration + rollback files only
+description: Production is Vercel; portal hosts use a wildcard domain; DB changes are migration files only
 alwaysApply: true
 ---
 
 # Hosting and database
 
-- Production is Hostinger at https://giftingstore.online. Do not treat Vercel as the deploy target.
-- Company portals are `https://{portal_slug}.giftingstore.online`. Each portal host is a **Hostinger parked domain (alias)** on `giftingstore.online`. Regular Hostinger "subdomains" do **not** reach the Node app — never create those via API.
-- `ROOT_DOMAIN=giftingstore.online` belongs in the Hostinger env. Parked hosts get their own DNS/SSL; wildcards alone are not enough for HTTPS.
-- Provisioning uses `HOSTINGER_API_TOKEN`, `HOSTINGER_ACCOUNT_USERNAME`, `HOSTINGER_WEBSITE_DOMAIN`, and `CRON_SECRET` (server-only). Never commit tokens.
+- Production is Vercel at https://www.giftingstore.online (apex too). `*.vercel.app` stays the main CRM site.
+- Company portals are `https://{portal_slug}.giftingstore.online` on the **same** Vercel project via the `*.giftingstore.online` wildcard. Set `ROOT_DOMAIN=giftingstore.online`. Do not provision a Hostinger parked domain per slug.
+- Hostinger parked-domain API vars (`HOSTINGER_API_TOKEN`, `HOSTINGER_ACCOUNT_USERNAME`, `HOSTINGER_WEBSITE_DOMAIN`, `PORTAL_PARKED_*`) are deprecated for production. `PORTAL_DNS=hostinger` is ignored on Vercel and when `NODE_ENV=production`.
 - This app's Supabase project is `ajysowosgjaipczrwpfv` (`corporate-gifting-crm`, ap-south-1) in org `smoddqkpbnbvcqjujvmu`. Ignore `robust-gifting-crm` and `vilms-saas-local-dev` on the same account.
 - Never apply SQL to Supabase (no apply_migration/execute_sql) and never ask to; deliver migration + rollback files under `supabase/migrations` and `supabase/rollbacks`.
-- Never call the live Hostinger API; use `HOSTINGER_MOCK=1` locally.
+- Never call the live Hostinger API. Local experiments use `PORTAL_DNS=hostinger` and `HOSTINGER_MOCK=1` only.

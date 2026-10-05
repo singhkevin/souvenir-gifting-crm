@@ -53,7 +53,7 @@ export interface Company {
   portal_status?: 'trial' | 'active' | 'suspended' | 'cancelled' | null
   /** When portal_status=trial, portal access ends after this timestamp. */
   trial_ends_at?: string | null
-  /** Hostinger subdomain provisioning state. */
+  /** Portal hostname bookkeeping. On Vercel this is not a DNS provision step. */
   subdomain_status?: 'none' | 'pending' | 'provisioning' | 'ssl_pending' | 'live' | 'failed' | null
   subdomain_attempts?: number | null
   subdomain_last_error?: string | null

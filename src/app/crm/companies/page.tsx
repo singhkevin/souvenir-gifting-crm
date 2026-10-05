@@ -5,6 +5,7 @@ import { CompanyAvatar } from '@/components/ui/avatar';
 import { Search } from 'lucide-react';
 
 import { requireStaff, applyCompanyScope } from '@/lib/auth'
+import { portalDnsMode } from '@/lib/portal-hosts/mode'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
 type CompanyOwner = { full_name: string | null }
@@ -51,6 +52,7 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
   if (q) query = query.ilike('name', `%${q}%`);
   if (status) query = query.eq('status', status);
 
+  const wildcardDns = portalDnsMode() === 'vercel'
   const { data: companies } = await query;
   const companyRows = asRows<CompanyRow>(companies)
   const ids = companyRows.map((c) => c.id)
@@ -145,8 +147,10 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
                         {c.name}
                         {c.portal_slug ? (
                           <span
-                            title={`Portal ${hostStatusByCompany.get(c.id) || 'pending'}: ${c.portal_slug}`}
-                            className={`inline-block h-2 w-2 rounded-full ${portalDotClass(hostStatusByCompany.get(c.id))}`}
+                            title={wildcardDns
+                              ? `Portal live on wildcard DNS: ${c.portal_slug}`
+                              : `Portal ${hostStatusByCompany.get(c.id) || 'pending'}: ${c.portal_slug}`}
+                            className={`inline-block h-2 w-2 rounded-full ${wildcardDns ? 'bg-green-500' : portalDotClass(hostStatusByCompany.get(c.id))}`}
                           />
                         ) : null}
                       </span>

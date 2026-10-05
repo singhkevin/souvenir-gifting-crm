@@ -7,8 +7,8 @@ carried an "Oaklane" product name in the UI; the displayed brand is now Souvenir
 The `*@oaklane.demo` login addresses are real Supabase credentials and must not be
 renamed.
 
-- GitHub: https://github.com/VIAayush/corporate-gifting-crm.git
-- Production: https://giffter.vercel.app/
+- Production: https://www.giftingstore.online/ on the existing Vercel project. `*.vercel.app` stays the main CRM and does not route company subdomains.
+- Company portals: `https://{portal_slug}.giftingstore.online` via the Vercel wildcard and `ROOT_DOMAIN`. No per-slug Hostinger parked domain.
 - Supabase project: `ajysowosgjaipczrwpfv` (ap-south-1)
 
 Do not create a second repository, Vercel project, or production URL. Do not reset the database.
