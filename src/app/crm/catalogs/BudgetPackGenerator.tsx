@@ -6,12 +6,12 @@ import { generateBudgetPackOptions, publishBudgetPackOptions } from './actions'
 import { formatCurrency } from '@/lib/utils'
 
 export function BudgetPackGenerator({
-  campaignId,
+  catalogId,
   budgetPerEmployee,
   draftPackCount,
   publishedPackCount,
 }: {
-  campaignId: string
+  catalogId: string
   budgetPerEmployee: number | null
   draftPackCount: number
   publishedPackCount: number
@@ -20,7 +20,7 @@ export function BudgetPackGenerator({
 
   const runGenerate = (replace: boolean) => {
     const formData = new FormData()
-    formData.set('campaign_id', campaignId)
+    formData.set('campaign_id', catalogId)
     if (replace) formData.set('replace', '1')
     startTransition(async () => {
       const result = await generateBudgetPackOptions(formData)
@@ -28,16 +28,14 @@ export function BudgetPackGenerator({
         toast.error(result.error)
         return
       }
-      toast.success(
-        `Generated ${result.count} budget kit option${result.count === 1 ? '' : 's'} (draft).`
-      )
+      toast.success(`Generated ${result.count} budget kit option${result.count === 1 ? '' : 's'} (draft).`)
       window.location.reload()
     })
   }
 
   const runPublish = () => {
     const formData = new FormData()
-    formData.set('campaign_id', campaignId)
+    formData.set('campaign_id', catalogId)
     startTransition(async () => {
       const result = await publishBudgetPackOptions(formData)
       if (result?.error) {
@@ -52,13 +50,13 @@ export function BudgetPackGenerator({
   const budget = budgetPerEmployee || 0
 
   return (
-    <div className="rounded-2xl border border-[#E5DFD5] bg-[#FAF7F2] p-4 text-xs space-y-3">
+    <div className="space-y-3 rounded-2xl border border-[#E5DFD5] bg-[#FAF7F2] p-4 text-xs">
       <div>
         <h2 className="font-serif text-base text-[#1C1917]">Budget pack generator</h2>
         <p className="mt-1 text-[#7A7267]">
           Build Option A / B / C as multi-item kits (2–4 products per person, e.g. mug + notebook + bag) using
-          this company&apos;s catalogue and margin. Each kit&apos;s combined price stays at or under{' '}
-          {budget > 0 ? formatCurrency(budget) : 'the campaign budget'} per person. Generate always
+          the pricing company&apos;s catalogue and margin. Each kit&apos;s combined price stays at or under{' '}
+          {budget > 0 ? formatCurrency(budget) : 'the catalog budget'} per person. Generate always
           refreshes draft packs; use Replace all packs if published kits should be rebuilt too.
         </p>
       </div>
@@ -89,7 +87,7 @@ export function BudgetPackGenerator({
         </button>
       </div>
       {budget <= 0 && (
-        <p className="text-amber-800">Save a budget per person on this campaign before generating.</p>
+        <p className="text-amber-800">Save a budget per person on this catalog before generating.</p>
       )}
       {publishedPackCount > 0 && (
         <p className="text-[#5A5248]">{publishedPackCount} pack option(s) already published for client review.</p>

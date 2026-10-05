@@ -40,7 +40,7 @@ export async function toggleOfferingSelection(formData: FormData) {
 
   revalidatePath('/portal/catalogue')
   revalidatePath('/portal/shortlist')
-  revalidatePath(`/crm/campaigns/${campaignId}`)
+  revalidatePath(`/crm/catalogs/${campaignId}`)
   return { success: true }
 }
 

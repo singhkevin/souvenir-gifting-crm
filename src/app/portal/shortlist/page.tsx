@@ -25,7 +25,7 @@ export default async function PortalShortlistPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">My Shortlist</h1>
           <p className="mt-2 text-sm text-gray-600 sm:text-base">
-            Saved gifts from your catalogue and campaign selections.
+            Saved gifts from your catalogue and catalog selections.
           </p>
         </div>
         <Link
@@ -40,13 +40,13 @@ export default async function PortalShortlistPage() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Campaign selections</h2>
-          <p className="mt-1 text-sm text-gray-500">Products shortlisted or selected from published campaigns.</p>
+          <h2 className="text-lg font-semibold text-gray-900">Catalog selections</h2>
+          <p className="mt-1 text-sm text-gray-500">Products shortlisted or selected from published catalogs.</p>
         </div>
 
         {campaignRows.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-            <p className="text-sm text-gray-500">No campaign products shortlisted yet.</p>
+            <p className="text-sm text-gray-500">No catalog products shortlisted yet.</p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <Link
                 href="/portal/catalogue"
@@ -55,10 +55,10 @@ export default async function PortalShortlistPage() {
                 Browse catalogue
               </Link>
               <Link
-                href="/portal/campaigns"
+                href="/portal/catalogs"
                 className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-4 text-sm font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
               >
-                View campaigns
+                View catalogs
               </Link>
             </div>
           </div>

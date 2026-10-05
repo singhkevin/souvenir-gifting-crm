@@ -19,9 +19,10 @@ function sanitiseSearch(value: string) {
 export default async function PortalCataloguePage({
   searchParams,
 }: {
-  searchParams: Promise<{ campaign?: string; q?: string; category?: string; sort?: string; page?: string }>
+  searchParams: Promise<{ campaign?: string; catalog?: string; q?: string; category?: string; sort?: string; page?: string }>
 }) {
-  const { campaign: campaignFilter, q = '', category = '', sort = 'name', page = '1' } = await searchParams
+  const { campaign, catalog, q = '', category = '', sort = 'name', page = '1' } = await searchParams
+  const campaignFilter = catalog || campaign
   const supabase = await createClient()
   const { data: companyId } = await supabase.rpc('client_company_id')
 
@@ -131,7 +132,7 @@ export default async function PortalCataloguePage({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{campaignMeta?.name || 'Your campaign selection'}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{campaignMeta?.name || 'Your catalog selection'}</h1>
           <p className="mt-1 text-sm text-gray-500">
             {packPrimaries.length > 0
               ? 'Each option is a multi-item kit (e.g. mug + notebook + bag) within your per-person budget. Shortlist your favourite.'
@@ -145,7 +146,7 @@ export default async function PortalCataloguePage({
         {!offerings?.length ? (
           <EmptyState
             title="Nothing to review just yet"
-            body="Your account manager will share gifting options for this campaign shortly."
+            body="Your account manager will share gifting options for this catalog shortly."
           />
         ) : (
           <div className="space-y-8">
@@ -164,7 +165,7 @@ export default async function PortalCataloguePage({
             )}
             {otherRows.length > 0 && (
               <section>
-                {packPrimaries.length > 0 && <h2 className="text-sm font-semibold text-gray-900">Other campaign products</h2>}
+                {packPrimaries.length > 0 && <h2 className="text-sm font-semibold text-gray-900">Other catalog products</h2>}
                 <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 ${packPrimaries.length > 0 ? 'mt-4' : ''}`}>
                   {otherRows.map((row) => renderOfferingCard(row))}
                 </div>

@@ -23,6 +23,8 @@ Do **not** run these against production from the agent unless explicitly request
 17. `20260930_tenant_status_and_slug.sql` ← Phase 1 (rollback: `supabase/rollbacks/20260930_tenant_status_and_slug_rollback.sql`)
 18. **`20261001_portal_hosts.sql`** ← Phase 2 (rollback: `supabase/rollbacks/20261001_portal_hosts_rollback.sql`)
 19. **`20261002_company_product_exclusions.sql`** ← company catalogue hide/show (rollback: `supabase/rollbacks/20261002_company_product_exclusions_rollback.sql`)
+20. `20261003_quotation_response.sql` (rollback: `supabase/rollbacks/20261003_quotation_response_rollback.sql`)
+21. **`20261005_catalogs_assignments_share.sql`** ← catalogs: assignments + share links (rollback: `supabase/rollbacks/20261005_catalogs_assignments_share_rollback.sql`)
 
 ## Phase 2 verification SQL (after applying `20261001_portal_hosts.sql`)
 

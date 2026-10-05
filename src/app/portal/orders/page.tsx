@@ -17,7 +17,7 @@ export default async function PortalOrdersPage() {
     <div>
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">My Orders</h1>
-        <p className="mt-2 text-sm text-gray-600 sm:text-base">Track only your organisation&apos;s campaigns and deliveries.</p>
+        <p className="mt-2 text-sm text-gray-600 sm:text-base">Track only your organisation&apos;s catalogs and deliveries.</p>
       </div>
 
       <div className="grid gap-4">

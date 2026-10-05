@@ -281,7 +281,7 @@ async function hideDiscontinuedProductFromClients(
   ])
   revalidatePath('/portal/catalogue')
   revalidatePath('/portal/shortlist')
-  revalidatePath('/crm/campaigns')
+  revalidatePath('/crm/catalogs')
 }
 
 function isStoredProductImage(url: string | null | undefined): url is string {
