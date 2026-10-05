@@ -15,21 +15,27 @@ export function CatalogSharePanel({
   catalogName,
   shareUrl,
   expiresAt,
+  linkExpired,
+  emailConfigured,
   suggestions,
 }: {
   catalogId: string
   catalogName: string
   shareUrl: string | null
   expiresAt: string | null
+  linkExpired: boolean
+  emailConfigured: boolean
   suggestions: { email: string; label: string }[]
 }) {
   const [pending, startTransition] = useTransition()
   const [url, setUrl] = useState(shareUrl)
+  const [shownExpiry, setShownExpiry] = useState(expiresAt)
+  const [expired, setExpired] = useState(linkExpired)
   const [noExpiry, setNoExpiry] = useState(false)
   const [email, setEmail] = useState(suggestions[0]?.email || '')
 
   const run = (
-    action: (formData: FormData) => Promise<{ error?: string; url?: string; shareUrl?: string | null } | undefined>,
+    action: (formData: FormData) => Promise<{ error?: string; url?: string | null; expiresAt?: string | null; expired?: boolean } | undefined>,
     extra?: (formData: FormData) => void,
   ) => {
     const formData = new FormData()
@@ -41,11 +47,18 @@ export function CatalogSharePanel({
         toast.error(result.error)
         return
       }
-      if (result?.url) setUrl(result.url)
+      if (result && 'url' in result) setUrl(result.url ?? null)
+      if (result && 'expiresAt' in result) setShownExpiry(result.expiresAt ?? null)
+      if (result && 'expired' in result) setExpired(Boolean(result.expired))
       toast.success('Updated')
-      window.location.reload()
     })
   }
+
+  const expiryLabel = !shownExpiry
+    ? 'No expiry'
+    : expired
+      ? `Expired ${formatDate(shownExpiry)}`
+      : `Expires ${formatDate(shownExpiry)}`
 
   const mailto = url && email
     ? `mailto:${email}?subject=${encodeURIComponent(`Catalog: ${catalogName}`)}&body=${encodeURIComponent(`Here is the catalog:\n${url}`)}`
@@ -64,9 +77,7 @@ export function CatalogSharePanel({
       {url ? (
         <div className="space-y-2">
           <p className="break-all rounded-lg bg-[#FAF7F2] px-3 py-2 font-mono text-[11px]">{url}</p>
-          <p className="text-[#7A7267]">
-            {expiresAt ? `Expires ${formatDate(expiresAt)}` : 'No expiry'}
-          </p>
+          <p className="text-[#7A7267]">{expiryLabel}</p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -165,7 +176,9 @@ export function CatalogSharePanel({
         )}
       </form>
       <p className="text-[#7A7267]">
-        Email uses the existing Resend sender when RESEND_API_KEY is set. Otherwise copy the link or use Open mail app.
+        {emailConfigured
+          ? 'Email uses the existing Resend sender. RESEND_FROM_EMAIL is the from address when it is set; otherwise mail uses the Resend onboarding address, which only delivers to the Resend account email.'
+          : 'Email delivery is not configured. Set RESEND_API_KEY in the server environment (see .env.example). Set RESEND_FROM_EMAIL to a sender on a domain verified in Resend so mail can reach clients. Until then, copy the link or use Open mail app.'}
       </p>
     </div>
   )

@@ -18,6 +18,8 @@ import { catalogStatusLabel } from '@/lib/catalogs/status'
 import { listCatalogPickerProducts } from '@/lib/catalogs/picker-products'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { sharePath } from '@/lib/catalogs/share'
+import { resendIsConfigured } from '@/lib/email/resend-config'
+import { shareLinkIsExpired } from '@/lib/catalogs/share-link'
 
 export default async function CatalogDetailPage({
   params,
@@ -49,8 +51,7 @@ export default async function CatalogDetailPage({
       .eq('campaign_id', id)
       .is('revoked_at', null)
       .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .limit(1),
     listCatalogPickerProducts(catalog.company_id),
     requestOrigin(),
   ])
@@ -95,7 +96,7 @@ export default async function CatalogDetailPage({
     .filter((contact) => contact.email)
     .map((contact) => ({ email: contact.email as string, label: contact.full_name || contact.email as string }))
 
-  const activeLink = shareResult.error ? null : shareResult.data
+  const activeLink = shareResult.error ? null : shareResult.data?.[0] || null
   const shareUrl = activeLink?.token ? `${origin}${sharePath(activeLink.token)}` : null
 
   return (
@@ -157,10 +158,13 @@ export default async function CatalogDetailPage({
         pricingCompanyName={company?.name || null}
       />
       <CatalogSharePanel
+        key={catalog.id}
         catalogId={catalog.id}
         catalogName={catalog.name}
         shareUrl={shareUrl}
         expiresAt={activeLink?.expires_at || null}
+        linkExpired={shareLinkIsExpired(activeLink?.expires_at)}
+        emailConfigured={resendIsConfigured()}
         suggestions={suggestions}
       />
 

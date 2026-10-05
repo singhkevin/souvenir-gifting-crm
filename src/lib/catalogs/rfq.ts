@@ -2,7 +2,7 @@ import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isUuid } from '@/lib/utils'
-import { isShareToken } from '@/lib/catalogs/share'
+import { isShareToken, shareLinkGrantsAccess } from '@/lib/catalogs/share-link'
 
 export type CatalogRfqLine = {
   id: string
@@ -138,8 +138,7 @@ export async function resolveShareCampaignId(token: string) {
     .select('campaign_id, expires_at, revoked_at')
     .eq('token', token)
     .maybeSingle()
-  if (!data?.campaign_id || data.revoked_at) return null
-  if (data.expires_at && new Date(data.expires_at).getTime() <= Date.now()) return null
+  if (!data?.campaign_id || !shareLinkGrantsAccess(data)) return null
   return data.campaign_id as string
 }
 

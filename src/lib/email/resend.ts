@@ -1,3 +1,7 @@
+import 'server-only'
+
+import { resendConfig, resendHttpError } from '@/lib/email/resend-config'
+
 const RESEND_API_URL = 'https://api.resend.com/emails'
 
 /**
@@ -6,8 +10,6 @@ const RESEND_API_URL = 'https://api.resend.com/emails'
  * own verified address — verify a real sending domain in the Resend
  * dashboard and set RESEND_FROM_EMAIL to send to arbitrary recipients.
  */
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Souvenir Gifting Solutions <onboarding@resend.dev>'
-
 export async function sendEmail({
   to,
   subject,
@@ -17,20 +19,21 @@ export async function sendEmail({
   subject: string
   html: string
 }): Promise<{ error?: string }> {
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
-    return { error: 'Email delivery is not configured.' }
+  const config = resendConfig()
+  if ('error' in config) {
+    console.error('[resend] RESEND_API_KEY is not set')
+    return { error: config.error }
   }
 
   try {
     const res = await fetch(RESEND_API_URL, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${config.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: FROM_EMAIL,
+        from: config.from,
         to: [to],
         subject,
         html,
@@ -39,7 +42,7 @@ export async function sendEmail({
     if (!res.ok) {
       const body = await res.text().catch(() => '')
       console.error('[resend] send failed:', res.status, body)
-      return { error: 'Unable to send email right now.' }
+      return { error: resendHttpError(res.status) }
     }
     return {}
   } catch (err) {
