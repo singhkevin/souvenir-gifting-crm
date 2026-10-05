@@ -124,7 +124,13 @@ export async function proxy(request: NextRequest) {
       return rewriteToTenantPage(request, '/tenant/suspended', 403, tabId, tenant)
     }
 
-    if (pathname.startsWith('/crm') || pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    if (
+      pathname.startsWith('/crm') ||
+      pathname === '/dashboard' ||
+      pathname.startsWith('/dashboard/') ||
+      pathname === '/share' ||
+      pathname.startsWith('/share/')
+    ) {
       return NextResponse.redirect(new URL(`${pathname}${search}`, mainOrigin(host)))
     }
   }

@@ -135,11 +135,11 @@ export default async function SearchPage({
         {(!companies || companies.length === 0) && <p className="text-sm text-gray-500">No companies.</p>}
       </Section>
       {canSales && (
-        <Section title="Campaigns">
+        <Section title="Catalogs">
           {(campaigns || []).map((c: SearchCampaign) => (
-            <Link key={c.id} href={`/crm/campaigns/${c.id}`} className="block text-sm hover:underline">{c.name}</Link>
+            <Link key={c.id} href={`/crm/catalogs/${c.id}`} className="block text-sm hover:underline">{c.name}</Link>
           ))}
-          {(!campaigns || campaigns.length === 0) && <p className="text-sm text-gray-500">No campaigns.</p>}
+          {(!campaigns || campaigns.length === 0) && <p className="text-sm text-gray-500">No catalogs.</p>}
         </Section>
       )}
       {canSales && (

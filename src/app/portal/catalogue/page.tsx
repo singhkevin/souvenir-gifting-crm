@@ -8,6 +8,10 @@ import { sortProductCategories } from '@/lib/products/categories'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 import { CatalogueShortlistButton } from '@/components/portal/catalogue-shortlist-button'
 import { PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
+import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
+import { headers } from 'next/headers'
+import { readTenantFromHeaders } from '@/lib/portal-host'
+import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 
 const PAGE_SIZE = 24
 
@@ -19,9 +23,10 @@ function sanitiseSearch(value: string) {
 export default async function PortalCataloguePage({
   searchParams,
 }: {
-  searchParams: Promise<{ campaign?: string; q?: string; category?: string; sort?: string; page?: string }>
+  searchParams: Promise<{ campaign?: string; catalog?: string; q?: string; category?: string; sort?: string; page?: string }>
 }) {
-  const { campaign: campaignFilter, q = '', category = '', sort = 'name', page = '1' } = await searchParams
+  const { campaign, catalog, q = '', category = '', sort = 'name', page = '1' } = await searchParams
+  const campaignFilter = catalog || campaign
   const supabase = await createClient()
   const { data: companyId } = await supabase.rpc('client_company_id')
 
@@ -131,11 +136,11 @@ export default async function PortalCataloguePage({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{campaignMeta?.name || 'Your campaign selection'}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{campaignMeta?.name || 'Your catalog selection'}</h1>
           <p className="mt-1 text-sm text-gray-500">
             {packPrimaries.length > 0
-              ? 'Each option is a multi-item kit (e.g. mug + notebook + bag) within your per-person budget. Shortlist your favourite.'
-              : 'Shortlist the gifts you like and we will build your quotation around them.'}
+              ? 'Each option is a multi-item kit (e.g. mug + notebook + bag) within your per-person budget. Select quantities below to request a quotation.'
+              : 'Select the gifts and quantities you need, then request a quotation.'}
           </p>
           {budget != null && budget > 0 && (
             <p className="mt-1 text-xs text-gray-500">Budget: {formatCurrency(budget)} per person</p>
@@ -145,7 +150,7 @@ export default async function PortalCataloguePage({
         {!offerings?.length ? (
           <EmptyState
             title="Nothing to review just yet"
-            body="Your account manager will share gifting options for this campaign shortly."
+            body="Your account manager will share gifting options for this catalog shortly."
           />
         ) : (
           <div className="space-y-8">
@@ -164,13 +169,29 @@ export default async function PortalCataloguePage({
             )}
             {otherRows.length > 0 && (
               <section>
-                {packPrimaries.length > 0 && <h2 className="text-sm font-semibold text-gray-900">Other campaign products</h2>}
+                {packPrimaries.length > 0 && <h2 className="text-sm font-semibold text-gray-900">Other catalog products</h2>}
                 <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 ${packPrimaries.length > 0 ? 'mt-4' : ''}`}>
                   {otherRows.map((row) => renderOfferingCard(row))}
                 </div>
               </section>
             )}
           </div>
+        )}
+        {isUuid(campaignFilter) && (
+          <CatalogRfqPanel
+            mode="portal"
+            catalogId={campaignFilter}
+            offerings={[...packPrimaries, ...otherRows].map((row) => ({
+              id: row.id,
+              name: row.display_name || 'Gift',
+              price: row.pack_kit_total != null
+                ? Number(row.pack_kit_total)
+                : row.selling_price == null
+                  ? null
+                  : Number(row.selling_price),
+              moq: row.moq && row.moq > 0 ? row.moq : 1,
+            }))}
+          />
         )}
       </div>
     )
@@ -200,7 +221,7 @@ export default async function PortalCataloguePage({
   else if (sort === 'price_high') query = query.order('price', { ascending: false })
   else query = query.order('name', { ascending: true })
 
-  const [{ data: products, count }, { data: categoryRows }] = await Promise.all([
+  const [{ data: productRows, count }, { data: categoryRows }] = await Promise.all([
     query.range(from, from + PAGE_SIZE - 1),
     supabase.from('client_products').select('category_id, category_name').not('category_id', 'is', null),
   ])
@@ -214,6 +235,19 @@ export default async function PortalCataloguePage({
       ).entries()
     ).map(([id, name]) => ({ id, name }))
   )
+
+  let products = productRows || []
+  const tenant = readTenantFromHeaders(await headers())
+  if (tenant && products.length) {
+    const companyMargin = companyId ? await getCompanyMarginPercent(companyId) : null
+    const micrositePrices = await sellPricesForSurface(products.map((product) => product.id), 'microsite', companyMargin)
+    if (micrositePrices) {
+      products = products.map((product) => ({
+        ...product,
+        price: micrositePrices.has(product.id) ? micrositePrices.get(product.id) : product.price,
+      }))
+    }
+  }
 
   const total = count || 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -325,7 +359,7 @@ export default async function PortalCataloguePage({
                   </div>
                   <div className="space-y-3 border-t border-gray-100 pt-3">
                     <div>
-                      <p className="text-base font-semibold text-gray-900">{formatCurrency(product.price)}</p>
+                      <p className="text-base font-semibold text-gray-900">{product.price == null ? 'Request quotation' : formatCurrency(product.price)}</p>
                       <p className="text-[10px] text-gray-400">MOQ: {product.moq || 1} units</p>
                     </div>
                     <CatalogueShortlistButton

@@ -63,7 +63,7 @@ export function Topbar({
           <Search className="h-4 w-4 shrink-0 text-[#7A7267]" />
           <input
             name="q"
-            placeholder="Search orders, clients, campaigns…"
+            placeholder="Search orders, clients, catalogs…"
             className="w-full border-b border-[#E5DFD5] bg-transparent py-1 text-xs outline-none"
           />
         </form>
@@ -107,7 +107,7 @@ export function Topbar({
             <input
               autoFocus
               name="q"
-              placeholder="Search orders, clients, campaigns…"
+              placeholder="Search orders, clients, catalogs…"
               className="w-full bg-transparent py-2 text-base outline-none placeholder:text-[#8A929C]"
             />
           </div>

@@ -326,7 +326,7 @@ export default async function DashboardPage({
               {canSeeFinance(profile.role) && <Card label="Payables" value={formatCurrency(payableTotal)} href="/crm/payables" />}
               {canSeeFinance(profile.role) && <Card label="Gross margin" value={formatCurrency(margin)} />}
               <Card label="Clients" value={companies.count || 0} href="/crm/companies" />
-              <Card label="Campaigns" value={campaigns.count || 0} href="/crm/campaigns" />
+              <Card label="Catalogs" value={campaigns.count || 0} href="/crm/catalogs" />
               <Card label="Delayed" value={delayed.length} href="/crm/order-management?health=delayed" warn={delayed.length > 0} />
               <Card label="Samples out" value={samplesOut} href="/crm/samples" />
               <Card label="Client samples" value={samplesClient} href="/crm/samples" />

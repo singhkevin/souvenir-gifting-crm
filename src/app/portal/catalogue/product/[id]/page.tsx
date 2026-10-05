@@ -5,6 +5,9 @@ import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
 import { CatalogueShortlistButton } from '@/components/portal/catalogue-shortlist-button'
+import { headers } from 'next/headers'
+import { readTenantFromHeaders } from '@/lib/portal-host'
+import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 
 export default async function PortalProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -27,6 +30,14 @@ export default async function PortalProductDetailPage({ params }: { params: Prom
     .maybeSingle()
 
   if (!product) notFound()
+
+  const tenant = readTenantFromHeaders(await headers())
+  if (tenant) {
+    const { data: companyId } = await supabase.rpc('client_company_id')
+    const companyMargin = companyId ? await getCompanyMarginPercent(companyId) : null
+    const micrositePrices = await sellPricesForSurface([product.id], 'microsite', companyMargin)
+    if (micrositePrices?.has(product.id)) product.price = micrositePrices.get(product.id) ?? null
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -51,7 +62,7 @@ export default async function PortalProductDetailPage({ params }: { params: Prom
             </p>
 
             <div className="border-t border-gray-100 pt-4">
-              <p className="text-xl font-semibold text-gray-900">{formatCurrency(product.price)}</p>
+              <p className="text-xl font-semibold text-gray-900">{product.price == null ? 'Request quotation' : formatCurrency(product.price)}</p>
               <p className="mt-0.5 text-xs text-gray-400">Minimum order {product.moq || 1} units</p>
             </div>
 

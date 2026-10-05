@@ -21,6 +21,14 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      { source: '/crm/campaigns', destination: '/crm/catalogs', permanent: false },
+      { source: '/crm/campaigns/:path*', destination: '/crm/catalogs/:path*', permanent: false },
+      { source: '/portal/campaigns', destination: '/portal/catalogs', permanent: false },
+      { source: '/portal/campaigns/:path*', destination: '/portal/catalogs/:path*', permanent: false },
+    ]
+  },
   async rewrites() {
     return [
       { source: '/dashboard', destination: '/crm/dashboard' },
@@ -29,7 +37,8 @@ const nextConfig: NextConfig = {
       { source: '/contacts', destination: '/crm/contacts' },
       { source: '/leads', destination: '/crm/leads' },
       { source: '/leads/:path*', destination: '/crm/leads/:path*' },
-      { source: '/campaigns', destination: '/crm/campaigns' },
+      { source: '/campaigns', destination: '/crm/catalogs' },
+      { source: '/campaigns/:path*', destination: '/crm/catalogs/:path*' },
       { source: '/requirements', destination: '/crm/requirements' },
       { source: '/requirements/:path*', destination: '/crm/requirements/:path*' },
       { source: '/products', destination: '/crm/products' },

@@ -2,24 +2,25 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
 import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
+import { listCompanyCatalogs } from '@/lib/catalogs/company-catalogs'
 
 export default async function PortalHomePage() {
   const supabase = await createClient()
   const { data: companyId } = await supabase.rpc('client_company_id')
-  const [{ data: orders }, { data: quotes }, { data: campaigns }] = await Promise.all([
+  const [{ data: orders }, { data: quotes }, catalogs] = await Promise.all([
     supabase.from('orders').select('id, order_number, status, order_value, campaign:campaign_id(name)').eq('company_id', companyId).order('created_at', { ascending: false }).limit(6),
     supabase.from('quotations').select('id, quotation_number, status, total').eq('company_id', companyId).order('created_at', { ascending: false }).limit(5),
-    supabase.from('campaigns').select('id, name, total_budget, employee_quantity').eq('company_id', companyId).limit(5),
+    listCompanyCatalogs(supabase, companyId),
   ])
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold sm:text-3xl">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Your campaigns, quotations, and live order status.</p>
+        <p className="mt-1 text-sm text-gray-500">Your catalogs, quotations, and live order status.</p>
       </div>
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <div className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Campaigns</p><p className="text-xl font-semibold sm:text-2xl">{campaigns?.length || 0}</p></div>
+        <div className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Catalogs</p><p className="text-xl font-semibold sm:text-2xl">{catalogs.length}</p></div>
         <div className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Open quotations</p><p className="text-xl font-semibold sm:text-2xl">{quotes?.length || 0}</p></div>
         <div className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Orders</p><p className="text-xl font-semibold sm:text-2xl">{orders?.length || 0}</p></div>
       </div>

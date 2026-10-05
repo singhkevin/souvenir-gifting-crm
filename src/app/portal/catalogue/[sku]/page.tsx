@@ -45,7 +45,7 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <BackButton href={`/portal/catalogue?campaign=${offering.campaign_id}`} label="Back to campaign products" />
+      <BackButton href={`/portal/catalogue?catalog=${offering.campaign_id}`} label="Back to catalog" />
 
       <div className="grid grid-cols-1 gap-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8 md:grid-cols-2 md:gap-8">
         <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="hero" className="min-h-[240px] rounded-xl border border-gray-100 sm:min-h-[300px]" />

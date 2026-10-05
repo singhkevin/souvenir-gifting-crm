@@ -2,7 +2,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
-import { getMarginSettings, resolveProductSellPrice } from '@/lib/pricing/server'
+import { offersByProduct } from '@/lib/pricing/offers'
+import { resolveSellPrice } from '@/lib/pricing/resolve'
+import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const PUBLIC_PRODUCT_SELECT =
@@ -82,13 +84,27 @@ export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
       .eq('catalogue_access', 'all')
       .order('name')
     if (error || !data) return []
-    const settings = await getMarginSettings()
-    return Promise.all(
-      data.map(async (row) => {
-        const resolved = await resolveProductSellPrice(row, { channel: 'b2c', settings })
-        return toPublicProduct(row, resolved.sellPrice)
+    const settings = await getPricingSettings()
+    if (!settings.surfaces.store.showSellPrice) {
+      return data.map((row) => toPublicProduct(row, null))
+    }
+    const offers = settings.surfaces.store.useBestCost
+      ? offersByProduct(await loadSupplierOffers(client, data.map((row) => row.id)))
+      : new Map()
+    return data.map((row) => {
+      const resolved = resolveSellPrice({
+        supplierCost: supplierCostForProduct(row, offers.get(row.id) || [], {
+          useBestCost: settings.surfaces.store.useBestCost,
+          requireInStock: settings.requireInStock,
+          quantity: row.moq,
+        }),
+        listPrice: row.price,
+        productMarginPercent: row.internal_margin,
+        channel: 'b2c',
+        settings,
       })
-    )
+      return toPublicProduct(row, resolved.sellPrice)
+    })
   } catch {
     return []
   }
@@ -106,8 +122,22 @@ export async function getPublicProduct(id: string): Promise<PublicProduct | null
       .eq('catalogue_access', 'all')
       .maybeSingle()
     if (error || !data) return null
-    const settings = await getMarginSettings()
-    const resolved = await resolveProductSellPrice(data, { channel: 'b2c', settings })
+    const settings = await getPricingSettings()
+    if (!settings.surfaces.store.showSellPrice) return toPublicProduct(data, null)
+    const offers = settings.surfaces.store.useBestCost
+      ? await loadSupplierOffers(client, [data.id])
+      : []
+    const resolved = resolveSellPrice({
+      supplierCost: supplierCostForProduct(data, offers, {
+        useBestCost: settings.surfaces.store.useBestCost,
+        requireInStock: settings.requireInStock,
+        quantity: data.moq,
+      }),
+      listPrice: data.price,
+      productMarginPercent: data.internal_margin,
+      channel: 'b2c',
+      settings,
+    })
     return toPublicProduct(data, resolved.sellPrice)
   } catch {
     return null

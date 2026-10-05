@@ -599,6 +599,7 @@ export async function removeCompany(formData: FormData) {
     { count: requirementCount },
     { count: leadCount },
     { count: campaignCount },
+    { count: catalogAssignmentCount },
     { count: clientCount },
     { count: contactCount },
     { count: reviewCount },
@@ -609,13 +610,14 @@ export async function removeCompany(formData: FormData) {
     supabase.from('requirements').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
     supabase.from('leads').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
     supabase.from('campaigns').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
+    supabase.from('catalog_assignments').select('campaign_id', { count: 'exact', head: true }).eq('company_id', companyId),
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('company_id', companyId).in('role', ['client_admin', 'client_user']),
     supabase.from('contacts').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
     supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('company_id', companyId),
   ])
 
   const hasHistory = Boolean(
-    orderCount || invoiceCount || quotationCount || requirementCount || leadCount || campaignCount || clientCount || contactCount || reviewCount,
+    orderCount || invoiceCount || quotationCount || requirementCount || leadCount || campaignCount || catalogAssignmentCount || clientCount || contactCount || reviewCount,
   )
 
   if (hasHistory) {

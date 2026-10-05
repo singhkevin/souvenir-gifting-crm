@@ -85,6 +85,41 @@ export default async function SettingsPage() {
           </div>
         </div>
 
+        <div className="border-t pt-4 space-y-3">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">Best supplier cost</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              When a surface uses best cost, its sell price starts from the lowest eligible supplier offer
+              (in stock when required, MOQ within the quantity, unless a preferred offer is pinned).
+              Clients only see the sell price, or a request for quotation when the price is hidden.
+            </p>
+          </div>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="best_cost_require_in_stock" defaultChecked={settings?.best_cost_require_in_stock !== false} />
+            Require the offer to be in stock
+          </label>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {[
+              ['crm', 'CRM quotations'],
+              ['portal', 'B2B portal'],
+              ['microsite', 'Company microsite'],
+              ['store', 'Public store'],
+            ].map(([key, label]) => (
+              <div key={key} className="rounded-lg border border-gray-200 p-3 space-y-2">
+                <p className="text-xs font-semibold text-gray-900">{label}</p>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" name={`${key}_use_best_cost`} defaultChecked={Boolean(settings?.[`${key}_use_best_cost`])} />
+                  Use best cost for margin
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" name={`${key}_show_sell_price`} defaultChecked={settings?.[`${key}_show_sell_price`] !== false} />
+                  Show derived sell price
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <button className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm">Save settings</button>
       </form>
     </div>

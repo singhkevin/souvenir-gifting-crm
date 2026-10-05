@@ -299,7 +299,7 @@ export default async function OrderControlCenterPage({
               <tr>
                 <th className="px-3 py-3 font-semibold">Order</th>
                 <th className="px-3 py-3 font-semibold">Client</th>
-                <th className="px-3 py-3 font-semibold">Campaign</th>
+                <th className="px-3 py-3 font-semibold">Catalog</th>
                 <th className="px-3 py-3 font-semibold">Value</th>
                 <th className="px-3 py-3 font-semibold">Stage</th>
                 <th className="px-3 py-3 font-semibold">Department</th>

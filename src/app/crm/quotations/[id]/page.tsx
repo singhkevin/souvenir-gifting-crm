@@ -5,12 +5,16 @@ import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { requireStaff } from '@/lib/auth'
 import { updateQuotationStatus, convertToOrder, duplicateQuotation } from '../actions'
+import { QuotationCosting } from './QuotationCosting'
+import { offersByProduct, pickBestOffer } from '@/lib/pricing/offers'
+import { getPricingSettings, loadSupplierOffers } from '@/lib/pricing/server'
 import { FileText, CheckCircle2, XCircle, Copy, ArrowRight } from 'lucide-react'
 
 export default async function QuotationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  await requireStaff()
+  const profile = await requireStaff()
+  const canPrice = ['admin', 'sales', 'management', 'accounts'].includes(profile.role)
   const supabase = await createClient()
 
   const { data: quote } = await supabase
@@ -34,6 +38,35 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     supabase.from('quotation_items').select('*, product:products(id, name, sku, image_url)').eq('quotation_id', quote.id),
     supabase.from('orders').select('id, order_number').eq('quotation_id', quote.id).maybeSingle(),
   ])
+
+  const quoteItems = (items || []) as {
+    id: string
+    product_id?: string | null
+    quantity: number
+    unit_price: number
+    product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null
+  }[]
+  const productIds = [...new Set(quoteItems.map((item) => item.product_id).filter((id): id is string => Boolean(id)))]
+  const pricing = canPrice ? await getPricingSettings() : null
+  const supplierOffers = canPrice && productIds.length ? await loadSupplierOffers(supabase, productIds) : []
+  const groupedOffers = offersByProduct(supplierOffers)
+  const bestByItem: Record<string, string | null> = {}
+  for (const item of quoteItems) {
+    const best = item.product_id
+      ? pickBestOffer(groupedOffers.get(item.product_id) || [], {
+          quantity: Number(item.quantity) || null,
+          requireInStock: pricing?.requireInStock ?? true,
+        })
+      : null
+    bestByItem[item.id] = best?.id || null
+  }
+  const costResult = canPrice && quoteItems.length
+    ? await supabase
+        .from('quotation_item_costs')
+        .select('quotation_item_id, supplier_offer_id, supplier_cost, margin_percent')
+        .in('quotation_item_id', quoteItems.map((item) => item.id))
+    : { data: [], error: null }
+  const savedCosts = costResult.error ? [] : (costResult.data || [])
 
   const isExpired =
     quote.valid_until &&
@@ -182,13 +215,18 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+            {items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
               const product = oneRelation(item.product)
               return (
               <tr key={item.id} className="hover:bg-gray-50/50">
                 <td className="p-3.5">
                   <div className="font-bold text-gray-900">{product?.name || 'Item'}</div>
                   <div className="text-gray-400 font-mono text-[10px]">{product?.sku}</div>
+                  {item.client_response && (
+                    <div className={`text-[10px] font-semibold uppercase ${item.client_response === 'accepted' ? 'text-emerald-700' : 'text-gray-500'}`}>
+                      {item.client_response === 'accepted' ? 'Client accepted' : 'Client declined'}
+                    </div>
+                  )}
                 </td>
                 <td className="p-3.5 text-right font-medium">{item.quantity}</td>
                 <td className="p-3.5 text-right">{formatCurrency(item.unit_price)}</td>
@@ -225,6 +263,33 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
           </div>
         </div>
       </div>
+
+      {canPrice && quoteItems.length > 0 && (
+        <QuotationCosting
+          quotationId={quote.id}
+          editable={quote.status === 'draft'}
+          lines={quoteItems.map((item) => {
+            const product = oneRelation(item.product)
+            return {
+              id: item.id,
+              productId: item.product_id || null,
+              name: product?.name || 'Item',
+              sku: product?.sku || null,
+              quantity: Number(item.quantity) || 1,
+              unitPrice: Number(item.unit_price) || 0,
+            }
+          })}
+          offers={supplierOffers}
+          saved={savedCosts.map((row) => ({
+            quotation_item_id: row.quotation_item_id,
+            supplier_offer_id: row.supplier_offer_id,
+            supplier_cost: row.supplier_cost == null ? null : Number(row.supplier_cost),
+            margin_percent: row.margin_percent == null ? null : Number(row.margin_percent),
+          }))}
+          bestByItem={bestByItem}
+          defaultMargin={Number(pricing?.b2b_margin_percent ?? pricing?.default_margin_percent ?? 35)}
+        />
+      )}
     </div>
   )
 }
