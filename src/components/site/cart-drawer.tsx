@@ -8,18 +8,28 @@ import {
   removeFromCart,
   clearCart,
   getCartCount,
+  STORE_CART_KEY,
   type CartItem,
 } from '@/lib/catalogue/cart'
 import { ProductImage } from '@/components/ui/product-image'
 import { formatCurrency } from '@/lib/utils'
-import { QuoteModal } from '@/components/site/quote-modal'
+import { CartCheckout } from '@/components/site/cart-checkout'
 
-export function CartDrawer({ iconClassName = 'text-[#241C12]' }: { iconClassName?: string }) {
+export function CartDrawer({
+  iconClassName = 'text-[#241C12]',
+  cartKey = STORE_CART_KEY,
+  kind = 'store',
+}: {
+  iconClassName?: string
+  cartKey?: string
+  kind?: 'store' | 'portal'
+}) {
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<CartItem[]>([])
+  const [placed, setPlaced] = useState(false)
 
   useEffect(() => {
-    const sync = () => setItems(readCart())
+    const sync = () => setItems(readCart(cartKey))
     sync()
     window.addEventListener('storage', sync)
     window.addEventListener('giffter-cart-change', sync)
@@ -27,14 +37,19 @@ export function CartDrawer({ iconClassName = 'text-[#241C12]' }: { iconClassName
       window.removeEventListener('storage', sync)
       window.removeEventListener('giffter-cart-change', sync)
     }
-  }, [])
+  }, [cartKey])
+
+  const closeDrawer = () => {
+    setOpen(false)
+    setPlaced(false)
+  }
 
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
+      if (event.key === 'Escape') closeDrawer()
     }
     window.addEventListener('keydown', onKey)
     return () => {
@@ -68,7 +83,7 @@ export function CartDrawer({ iconClassName = 'text-[#241C12]' }: { iconClassName
             type="button"
             aria-label="Close cart"
             className="absolute inset-0 bg-black/45"
-            onClick={() => setOpen(false)}
+            onClick={closeDrawer}
           />
           <div className="relative z-10 flex h-full w-full max-w-md flex-col bg-white shadow-[0_0_60px_rgba(0,0,0,0.25)]">
             <div className="flex items-center justify-between gap-3 border-b border-[#E8E4DE] px-5 py-4">
@@ -76,7 +91,7 @@ export function CartDrawer({ iconClassName = 'text-[#241C12]' }: { iconClassName
               <button
                 type="button"
                 aria-label="Close"
-                onClick={() => setOpen(false)}
+                onClick={closeDrawer}
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F6F4F1] text-[#5C6570] hover:bg-[#EFE9E0]"
               >
                 <X size={16} />
@@ -85,13 +100,17 @@ export function CartDrawer({ iconClassName = 'text-[#241C12]' }: { iconClassName
 
             <div className="flex-1 overflow-y-auto px-5 py-4">
               {items.length === 0 ? (
+                placed ? null : (
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <ShoppingBag size={28} className="text-[#C4B8A8]" />
                   <p className="mt-3 text-sm text-[#5C6570]">Your cart is empty.</p>
                   <p className="mt-1 text-xs text-[#8A929C]">
-                    Add products from the catalogue to request a quote for several items at once.
+                    {kind === 'store'
+                      ? 'Add gifts that are ready to buy. Quote-only gifts use Request a quote.'
+                      : 'Add gifts that are ready to buy. Quote-only gifts use Request quote.'}
                   </p>
                 </div>
+                )
               ) : (
                 <ul className="space-y-4">
                   {items.map((item) => (
@@ -114,7 +133,7 @@ export function CartDrawer({ iconClassName = 'text-[#241C12]' }: { iconClassName
                           <button
                             type="button"
                             aria-label="Decrease quantity"
-                            onClick={() => setItems(updateCartQuantity(item.id, item.quantity - 1))}
+                            onClick={() => setItems(updateCartQuantity(item.id, item.quantity - 1, cartKey))}
                             className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
                           >
                             <Minus size={12} />
@@ -123,7 +142,7 @@ export function CartDrawer({ iconClassName = 'text-[#241C12]' }: { iconClassName
                           <button
                             type="button"
                             aria-label="Increase quantity"
-                            onClick={() => setItems(updateCartQuantity(item.id, item.quantity + 1))}
+                            onClick={() => setItems(updateCartQuantity(item.id, item.quantity + 1, cartKey))}
                             className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
                           >
                             <Plus size={12} />
@@ -131,7 +150,7 @@ export function CartDrawer({ iconClassName = 'text-[#241C12]' }: { iconClassName
                           <button
                             type="button"
                             aria-label="Remove from cart"
-                            onClick={() => setItems(removeFromCart(item.id))}
+                            onClick={() => setItems(removeFromCart(item.id, cartKey))}
                             className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-[#8A929C] hover:bg-red-50 hover:text-red-700"
                           >
                             <Trash2 size={14} />
@@ -144,27 +163,23 @@ export function CartDrawer({ iconClassName = 'text-[#241C12]' }: { iconClassName
               )}
             </div>
 
-            {items.length > 0 ? (
+            {items.length > 0 || placed ? (
               <div className="space-y-3 border-t border-[#E8E4DE] px-5 py-4">
-                {subtotal > 0 ? (
+                {items.length > 0 && subtotal > 0 ? (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-[#5C6570]">Estimated subtotal</span>
                     <span className="font-semibold text-[#1B2430]">{formatCurrency(subtotal)}</span>
                   </div>
                 ) : null}
-                <QuoteModal
-                  items={items.map((item) => ({ id: item.id, name: item.name, sku: item.sku, quantity: item.quantity }))}
-                  triggerClassName="flex w-full items-center justify-center bg-[#806A50] px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#9C8567]"
-                  onClose={(submitted) => {
-                    if (submitted) {
-                      clearCart()
-                      setItems([])
-                      setOpen(false)
-                    }
+                <CartCheckout
+                  items={items}
+                  kind={kind}
+                  onDone={() => {
+                    clearCart(cartKey)
+                    setItems([])
+                    setPlaced(true)
                   }}
-                >
-                  Request a quote for {count} item{count === 1 ? '' : 's'}
-                </QuoteModal>
+                />
               </div>
             ) : null}
           </div>

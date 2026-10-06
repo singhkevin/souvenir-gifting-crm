@@ -15,6 +15,7 @@ import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '
 import { pickBestOffer } from '@/lib/pricing/offers'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
 import { SupplierOffersEditor } from './SupplierOffersEditor'
+import { purchaseCaption, purchaseOffer } from '@/lib/catalogue/purchase-path'
 
 export default async function ProductDetailPage({
   params,
@@ -190,6 +191,19 @@ export default async function ProductDetailPage({
               <p className="text-[10px] text-gray-400 uppercase font-semibold">Min Order Qty</p>
               <p className="text-lg font-semibold text-gray-900">{product.moq || 1} units</p>
             </div>
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase font-semibold">Shopper action</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {purchaseCaption(purchaseOffer({
+                  fulfillmentMode: product.fulfillment_mode,
+                  stockQty: product.stock_qty,
+                  hasSellPrice: true,
+                }))}
+              </p>
+              <p className="text-[10px] text-gray-400">
+                Stock {product.stock_qty ?? 0} · {product.fulfillment_mode || 'auto'}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -286,7 +300,34 @@ export default async function ProductDetailPage({
                   className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
                 />
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Stock on hand</label>
+                <input
+                  type="number"
+                  name="stock_qty"
+                  min="0"
+                  step="1"
+                  defaultValue={product.stock_qty ?? 0}
+                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
+                />
+              </div>
             </div>
+
+            <MobileSheetSelect
+              name="fulfillment_mode"
+              label="Purchase path"
+              showDesktopLabel
+              defaultValue={product.fulfillment_mode || 'auto'}
+              options={[
+                { value: 'auto', label: 'Auto — stock decides' },
+                { value: 'buy', label: 'Buy — immediate purchase' },
+                { value: 'rfq', label: 'Request quote' },
+              ]}
+            />
+            <p className="text-[11px] text-gray-500">
+              Auto with stock shows Add to cart up to that quantity, and Request quote for a larger run. Auto with zero stock shows Request quote.
+              Buy with zero stock shows Add to cart for any quantity. Request quote hides Add to cart. Catalog kits stay on Request quote.
+            </p>
 
             <div className="grid grid-cols-2 gap-3">
               <MobileSheetSelect

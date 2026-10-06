@@ -7,6 +7,8 @@ import { getProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { companyCanUseCatalog, resolveShareCampaignId } from '@/lib/catalogs/rfq'
 import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
+import { CatalogBuyPanel } from '@/components/catalogs/CatalogBuyPanel'
+import { purchaseOfferFromProduct } from '@/lib/catalogue/purchase-path'
 
 export const dynamic = 'force-dynamic'
 
@@ -105,7 +107,15 @@ export default async function SharedCatalogPage({ params }: PageProps) {
                     )}
                     <p className="mt-auto text-lg font-semibold">{formatCurrency(kitTotal)}</p>
                     <p className="text-[10px] text-[#7A7267]">
-                      {kit.length > 1 ? 'Combined kit per person' : `Per person · MOQ ${product.moq || 1}`}
+                      {purchaseOfferFromProduct({
+                        fulfillment_mode: product.fulfillment_mode,
+                        stock_qty: product.stock_qty,
+                        price: kitTotal,
+                        catalogKit: Boolean(product.pack_kit_id),
+                      }).buy
+                        ? 'Buy below'
+                        : 'Request quote below'}
+                      {kit.length > 1 ? ' · combined kit' : ` · MOQ ${product.moq || 1}`}
                     </p>
                   </div>
                 </article>
@@ -114,26 +124,20 @@ export default async function SharedCatalogPage({ params }: PageProps) {
           </div>
         )}
 
-        <div className="mt-10">
-          <ShareRfq token={token} offerings={primaries.map((product) => ({
-            id: product.id,
-            name: product.display_name || 'Gift',
-            sku: product.sku || null,
-            price: money(product.pack_kit_total) ?? money(product.selling_price),
-            moq: product.moq && product.moq > 0 ? product.moq : 1,
-          }))} />
+        <div className="mt-10 space-y-6">
+          <SharePurchase token={token} products={primaries} />
         </div>
       </div>
     </main>
   )
 }
 
-async function ShareRfq({
+async function SharePurchase({
   token,
-  offerings,
+  products,
 }: {
   token: string
-  offerings: { id: string; name: string; sku: string | null; price: number | null; moq: number }[]
+  products: SharedCatalogProduct[]
 }) {
   const profile = await getProfile()
   const isClient = profile?.role === 'client_admin' || profile?.role === 'client_user'
@@ -150,12 +154,43 @@ async function ShareRfq({
     mode = allowed ? 'client-share' : 'unassigned'
   }
 
+  const rows = products.map((product) => {
+    const price = money(product.pack_kit_total) ?? money(product.selling_price)
+    const offer = purchaseOfferFromProduct({
+      fulfillment_mode: product.fulfillment_mode,
+      stock_qty: product.stock_qty,
+      price,
+      catalogKit: Boolean(product.pack_kit_id),
+    })
+    return { product, price, offer }
+  })
+  const loginHref = `/login?next=${encodeURIComponent(sharePath(token))}`
+
   return (
-    <CatalogRfqPanel
-      mode={mode}
-      shareToken={token}
-      offerings={offerings}
-      loginHref={`/login?next=${encodeURIComponent(sharePath(token))}`}
-    />
+    <>
+      <CatalogBuyPanel
+        mode={mode}
+        shareToken={token}
+        loginHref={loginHref}
+        offerings={rows.filter((row) => row.offer.buy && row.product.product_id).map((row) => ({
+          productId: row.product.product_id as string,
+          name: row.product.display_name || 'Gift',
+          price: row.price,
+          maxBuyQty: row.offer.maxBuyQty,
+        }))}
+      />
+      <CatalogRfqPanel
+        mode={mode}
+        shareToken={token}
+        loginHref={loginHref}
+        offerings={rows.filter((row) => row.offer.rfq).map((row) => ({
+          id: row.product.id,
+          name: row.product.display_name || 'Gift',
+          sku: row.product.sku || null,
+          price: row.price,
+          moq: row.product.moq && row.product.moq > 0 ? row.product.moq : 1,
+        }))}
+      />
+    </>
   )
 }

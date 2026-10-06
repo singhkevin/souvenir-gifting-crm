@@ -7,6 +7,10 @@ import { Package, Search } from 'lucide-react'
 import { sortProductCategories } from '@/lib/products/categories'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 import { CatalogueShortlistButton } from '@/components/portal/catalogue-shortlist-button'
+import { RequestQuoteButton } from '@/components/portal/request-quote-button'
+import { AddToCartButton } from '@/components/site/add-to-cart-button'
+import { PORTAL_CART_KEY } from '@/lib/catalogue/cart'
+import { purchaseCaption, purchaseOfferFromProduct } from '@/lib/catalogue/purchase-path'
 import { PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
 import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
 import { headers } from 'next/headers'
@@ -33,14 +37,26 @@ export default async function PortalCataloguePage({
   // Campaign mode keeps the existing curated-offering experience (with shortlisting),
   // which is scoped to a single campaign.
   if (campaignFilter) {
-    const [{ data: offerings }, { data: selections }, { data: campaignMeta }] = await Promise.all([
+    const offeringQuery = () =>
       supabase
         .from('campaign_products')
-        .select('id, display_name, client_description, client_image_url, selling_price, pack_kit_total, moq, display_order, pack_option, pack_kit_id, pack_kit_role, campaign_id, campaign:campaigns(id, name, company_id, budget_per_employee), product:products!inner(status)')
+        .select('id, product_id, display_name, client_description, client_image_url, selling_price, pack_kit_total, moq, display_order, pack_option, pack_kit_id, pack_kit_role, campaign_id, campaign:campaigns(id, name, company_id, budget_per_employee), product:products!inner(status, sku, stock_qty, fulfillment_mode)')
         .eq('visibility', 'published')
         .eq('campaign_id', campaignFilter)
         .eq('product.status', 'active')
-        .order('display_order'),
+        .order('display_order')
+    const offeringsResult = await offeringQuery()
+    const offerings = offeringsResult.error && /stock_qty|fulfillment_mode/i.test(offeringsResult.error.message)
+      ? ((await supabase
+          .from('campaign_products')
+          .select('id, product_id, display_name, client_description, client_image_url, selling_price, pack_kit_total, moq, display_order, pack_option, pack_kit_id, pack_kit_role, campaign_id, campaign:campaigns(id, name, company_id, budget_per_employee), product:products!inner(status, sku)')
+          .eq('visibility', 'published')
+          .eq('campaign_id', campaignFilter)
+          .eq('product.status', 'active')
+          .order('display_order')).data || []) as NonNullable<Awaited<ReturnType<typeof offeringQuery>>['data']>
+      : offeringsResult.data || []
+
+    const [{ data: selections }, { data: campaignMeta }] = await Promise.all([
       supabase.from('client_product_selections').select('campaign_product_id, kind').eq('company_id', companyId),
       supabase.from('campaigns').select('name, budget_per_employee').eq('id', campaignFilter).maybeSingle(),
     ])
@@ -49,9 +65,9 @@ export default async function PortalCataloguePage({
       asRows<{ campaign_product_id: string; kind: string }>(selections).map((s: { campaign_product_id: string; kind: string }) => [s.campaign_product_id, s.kind])
     )
 
-    type CampaignOffering = NonNullable<typeof offerings>[number]
+    type CampaignOffering = (typeof offerings)[number]
 
-    const all = offerings || []
+    const all = offerings
     const packPrimaries = all.filter(
       (o) =>
         (o.pack_option === 'A' || o.pack_option === 'B' || o.pack_option === 'C') &&
@@ -68,6 +84,26 @@ export default async function PortalCataloguePage({
       kitLinesById.set(row.pack_kit_id, list)
     }
 
+    const embeddedProduct = (offering: CampaignOffering) => {
+      const product = offering.product
+      return Array.isArray(product) ? product[0] : product
+    }
+
+    const offeringPurchase = (offering: CampaignOffering) => {
+      const product = embeddedProduct(offering)
+      const price = offering.pack_kit_total != null
+        ? Number(offering.pack_kit_total)
+        : offering.selling_price == null
+          ? null
+          : Number(offering.selling_price)
+      return purchaseOfferFromProduct({
+        fulfillment_mode: product?.fulfillment_mode,
+        stock_qty: product?.stock_qty,
+        price,
+        catalogKit: Boolean(offering.pack_kit_id),
+      })
+    }
+
     const renderOfferingCard = (offering: CampaignOffering, kitMembers: CampaignOffering[] = []) => {
       const kitTotal =
         offering.pack_kit_total != null ? Number(offering.pack_kit_total) : offering.selling_price
@@ -77,6 +113,8 @@ export default async function PortalCataloguePage({
       const kitItemRows = [offering, ...kitLines]
       const campaign = Array.isArray(offering.campaign) ? offering.campaign[0] : offering.campaign
       const packKey = offering.pack_option as 'A' | 'B' | 'C' | null
+      const purchase = offeringPurchase(offering)
+      const product = embeddedProduct(offering)
       return (
         <div key={offering.id} className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
           <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="md" />
@@ -127,6 +165,35 @@ export default async function PortalCataloguePage({
                 campaignProductId={offering.id}
                 currentKind={selectionByOffering.get(offering.id) || null}
               />
+              <p className="text-[10px] text-gray-500">{purchaseCaption(purchase)}</p>
+              {purchase.buy && offering.product_id ? (
+                <AddToCartButton
+                  cartKey={PORTAL_CART_KEY}
+                  surface="catalog"
+                  catalogId={offering.campaign_id}
+                  maxQuantity={purchase.maxBuyQty}
+                  product={{
+                    id: offering.product_id,
+                    sku: product?.sku || offering.product_id,
+                    name: offering.display_name || 'Gift',
+                    price: offering.pack_kit_total != null
+                      ? Number(offering.pack_kit_total)
+                      : offering.selling_price == null
+                        ? null
+                        : Number(offering.selling_price),
+                    image_url: offering.client_image_url,
+                  }}
+                  className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-white hover:bg-[#9C8567]"
+                />
+              ) : null}
+              {purchase.rfq ? (
+                <a
+                  href="#request-quotation"
+                  className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
+                >
+                  Request quote
+                </a>
+              ) : null}
             </div>
           </div>
         </div>
@@ -181,7 +248,7 @@ export default async function PortalCataloguePage({
           <CatalogRfqPanel
             mode="portal"
             catalogId={campaignFilter}
-            offerings={[...packPrimaries, ...otherRows].map((row) => ({
+            offerings={[...packPrimaries, ...otherRows].filter((row) => offeringPurchase(row).rfq).map((row) => ({
               id: row.id,
               name: row.display_name || 'Gift',
               price: row.pack_kit_total != null
@@ -335,7 +402,17 @@ export default async function PortalCataloguePage({
           </p>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
+            {products.map((product) => {
+              const purchase = purchaseOfferFromProduct(product)
+              const shortlistProduct = {
+                id: product.id,
+                sku: product.sku,
+                name: product.name,
+                price: product.price,
+                image_url: product.image_url,
+                category_name: product.category_name,
+              }
+              return (
               <article
                 key={product.id}
                 className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:border-[var(--color-primary)] hover:shadow-sm"
@@ -360,22 +437,38 @@ export default async function PortalCataloguePage({
                   <div className="space-y-3 border-t border-gray-100 pt-3">
                     <div>
                       <p className="text-base font-semibold text-gray-900">{product.price == null ? 'Request quotation' : formatCurrency(product.price)}</p>
-                      <p className="text-[10px] text-gray-400">MOQ: {product.moq || 1} units</p>
+                      <p className="text-[10px] text-gray-400">
+                        {purchaseCaption(purchase)}
+                        {purchase.rfq ? ` · MOQ ${product.moq || 1}` : ''}
+                      </p>
                     </div>
-                    <CatalogueShortlistButton
-                      product={{
-                        id: product.id,
-                        sku: product.sku,
-                        name: product.name,
-                        price: product.price,
-                        image_url: product.image_url,
-                        category_name: product.category_name,
-                      }}
-                    />
+                    {purchase.buy ? (
+                      <AddToCartButton
+                        cartKey={PORTAL_CART_KEY}
+                        surface={tenant ? 'microsite' : 'portal'}
+                        maxQuantity={purchase.maxBuyQty}
+                        product={{
+                          id: product.id,
+                          sku: product.sku,
+                          name: product.name,
+                          price: product.price,
+                          image_url: product.image_url,
+                        }}
+                        className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-white hover:bg-[#9C8567]"
+                      />
+                    ) : null}
+                    {purchase.rfq ? (
+                      <RequestQuoteButton
+                        product={shortlistProduct}
+                        className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
+                      />
+                    ) : null}
+                    <CatalogueShortlistButton product={shortlistProduct} />
                   </div>
                 </div>
               </article>
-            ))}
+              )
+            })}
           </div>
 
           {totalPages > 1 && (

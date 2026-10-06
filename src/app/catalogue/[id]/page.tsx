@@ -7,6 +7,7 @@ import { QuoteModal } from '@/components/site/quote-modal'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { getPublicProduct } from '@/lib/catalogue/products'
+import { purchaseCaption } from '@/lib/catalogue/purchase-path'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -52,8 +53,13 @@ export default async function PublicProductPage({ params }: Props) {
           ) : null}
           <h1 className="mt-3 font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">{product.name}</h1>
           {product.brand_name ? <p className="mt-3 text-sm text-[#5C6570]">{product.brand_name}</p> : null}
-          <p className="mt-6 text-2xl font-semibold text-[#806A50]">{formatCurrency(product.price)}</p>
-          <p className="mt-2 text-xs text-[#5C6570]">Minimum order {product.moq || 1} units</p>
+          <p className="mt-6 text-2xl font-semibold text-[#806A50]">
+            {product.price == null ? 'Request a quote' : formatCurrency(product.price)}
+          </p>
+          <p className="mt-2 text-xs text-[#5C6570]">{purchaseCaption(product.purchase)}</p>
+          {product.purchase.rfq ? (
+            <p className="mt-1 text-xs text-[#5C6570]">Quote minimum {product.moq || 1} units</p>
+          ) : null}
 
           <p className="mt-8 max-w-md text-sm leading-relaxed text-[#5C6570]">
             {product.description ||
@@ -67,28 +73,37 @@ export default async function PublicProductPage({ params }: Props) {
             </div>
             <div className="flex justify-between border-b border-[#E8E4DE] py-2">
               <dt className="text-[#5C6570]">Availability</dt>
-              <dd className="capitalize">{product.status === 'active' ? 'Available to quote' : product.status}</dd>
+              <dd>{product.purchase.buy ? 'Available to buy' : 'Available to quote'}</dd>
             </div>
           </dl>
 
           <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4">
-            <QuoteModal
-              productId={product.id}
-              productName={product.name}
-              triggerClassName="inline-flex justify-center bg-[#806A50] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#9C8567] sm:py-3"
-            >
-              Request a Quote
-            </QuoteModal>
-            <AddToCartButton
-              product={{
-                id: product.id,
-                sku: product.sku,
-                name: product.name,
-                price: product.price,
-                image_url: product.image_url,
-              }}
-              className="inline-flex justify-center border border-[#E5DFD5] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#806A50] hover:bg-[#FAF7F2] sm:py-3"
-            />
+            {product.purchase.buy ? (
+              <AddToCartButton
+                maxQuantity={product.purchase.maxBuyQty}
+                product={{
+                  id: product.id,
+                  sku: product.sku,
+                  name: product.name,
+                  price: product.price,
+                  image_url: product.image_url,
+                }}
+                className="inline-flex justify-center bg-[#806A50] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#9C8567] sm:py-3"
+              />
+            ) : null}
+            {product.purchase.rfq ? (
+              <QuoteModal
+                productId={product.id}
+                productName={product.name}
+                triggerClassName={`inline-flex justify-center px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] sm:py-3 ${
+                  product.purchase.buy
+                    ? 'border border-[#E5DFD5] text-[#806A50] hover:bg-[#FAF7F2]'
+                    : 'bg-[#806A50] text-white hover:bg-[#9C8567]'
+                }`}
+              >
+                Request a Quote
+              </QuoteModal>
+            ) : null}
             <Link
               href="/catalogue"
               className="inline-flex justify-center py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#806A50]"

@@ -72,6 +72,8 @@ export const CSV_FIELD_ALIASES: Record<string, string[]> = {
   price: ['price', 'selling_price', 'unit_price', 'mrp'],
   supplier_cost: ['supplier_cost', 'cost', 'landed_cost'],
   moq: ['moq', 'min_qty', 'minimum_order_qty', 'quantity'],
+  stock_qty: ['stock_qty', 'stock', 'on_hand', 'quantity_on_hand'],
+  fulfillment_mode: ['fulfillment_mode', 'purchase_path', 'buy_or_rfq'],
   hsn_code: ['hsn_code', 'hsn'],
   image_url: ['image_url', 'image', 'photo_url', 'picture_url'],
   image_filename: ['image_filename', 'image_file', 'filename', 'photo_filename'],

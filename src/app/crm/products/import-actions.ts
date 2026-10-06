@@ -5,6 +5,7 @@ import { getProfile } from '@/lib/auth'
 import { parseCsv, splitCompanyNames } from '@/lib/csv'
 import { revalidatePath } from 'next/cache'
 import { PRODUCT_CATEGORY_ALIASES } from '@/lib/products/categories'
+import { directOrderSchemaHint } from '@/lib/catalogue/purchase-path'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const IMAGE_BUCKET = 'product-images'
@@ -123,6 +124,8 @@ export async function importCatalogueCsv(formData: FormData): Promise<ImportSumm
     variant_sku: string | null
     extra_price: number
     status: string
+    stock_qty: number
+    fulfillment_mode: 'auto' | 'buy' | 'rfq'
   }
 
   const prepared: Prepared[] = []
@@ -194,6 +197,21 @@ export async function importCatalogueCsv(formData: FormData): Promise<ImportSumm
       return
     }
 
+    const modeRaw = cell(row, 'fulfillment_mode').toLowerCase()
+    const fulfillment_mode = modeRaw === 'buy' || modeRaw === 'rfq' || modeRaw === 'auto' || modeRaw === ''
+      ? (modeRaw || 'auto') as 'auto' | 'buy' | 'rfq'
+      : null
+    if (!fulfillment_mode) {
+      failures.push({ row: rowNumber, sku, reason: 'Purchase path must be auto, buy, or rfq' })
+      return
+    }
+    const stockRaw = cell(row, 'stock_qty')
+    const stock_qty = stockRaw ? Number(stockRaw) : 0
+    if (!Number.isInteger(stock_qty) || stock_qty < 0 || stock_qty > 1000000) {
+      failures.push({ row: rowNumber, sku, reason: 'Stock must be a whole number from 0 to 1000000' })
+      return
+    }
+
     const statusRaw = cell(row, 'status').toLowerCase() || 'active'
     const status = ['active', 'inactive', 'discontinued'].includes(statusRaw) ? statusRaw : 'active'
     const supplierCostRaw = cell(row, 'supplier_cost')
@@ -226,6 +244,8 @@ export async function importCatalogueCsv(formData: FormData): Promise<ImportSumm
       variant_sku: cell(row, 'variant_sku').toUpperCase() || null,
       extra_price: Number(cell(row, 'extra_price') || '0') || 0,
       status,
+      stock_qty,
+      fulfillment_mode,
     })
   })
 
@@ -253,6 +273,8 @@ export async function importCatalogueCsv(formData: FormData): Promise<ImportSumm
         price: item.price,
         supplier_cost: Number.isFinite(item.supplier_cost as number) ? item.supplier_cost : null,
         moq: item.moq,
+        stock_qty: item.stock_qty,
+        fulfillment_mode: item.fulfillment_mode,
         hsn_code: item.hsn_code,
         image_url: item.image_url,
         status: item.status,
@@ -266,7 +288,7 @@ export async function importCatalogueCsv(formData: FormData): Promise<ImportSumm
       failures.push({
         row: item.rowNumber,
         sku: item.sku,
-        reason: error?.code === '23505' ? 'SKU already exists' : error?.message || 'Could not save product',
+        reason: error?.code === '23505' ? 'SKU already exists' : directOrderSchemaHint(error?.message || 'Could not save product'),
       })
       continue
     }

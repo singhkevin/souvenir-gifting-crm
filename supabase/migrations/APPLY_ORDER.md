@@ -28,6 +28,8 @@ Do **not** run these against production from the agent unless explicitly request
 22. **`20261005_catalog_rfq.sql`** ← catalog RFQ: `requirements.campaign_id`, `requirement_products.quantity`, share payload sku (rollback: `supabase/rollbacks/20261005_catalog_rfq_rollback.sql`)
 23. **`20261005_quotation_line_accept.sql`** ← per-line portal accept creates an order (rollback: `supabase/rollbacks/20261005_quotation_line_accept_rollback.sql`)
 24. **`20261005_supplier_offers.sql`** ← supplier offers, best cost, surface price toggles (rollback: `supabase/rollbacks/20261005_supplier_offers_rollback.sql`)
+25. **`20261006_fulfillment_stages_client_approval.sql`** ← fulfillment stages and client approval gate (rollback: `supabase/rollbacks/20261006_fulfillment_stages_client_approval_rollback.sql`)
+26. **`20261006_buy_vs_rfq.sql`** ← stock quantity, purchase flag, direct order (rollback: `supabase/rollbacks/20261006_buy_vs_rfq_rollback.sql`). Apply before using Buy. Existing products stay on Request quote until stock or the Buy flag is set.
 
 ## Phase 2 verification SQL (after applying `20261001_portal_hosts.sql`)
 

@@ -5,10 +5,13 @@ import { sortProductCategories } from '@/lib/products/categories'
 import { offersByProduct } from '@/lib/pricing/offers'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
 import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
+import { purchaseOffer, type PurchaseOffer } from '@/lib/catalogue/purchase-path'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const PUBLIC_PRODUCT_SELECT =
-  'id, name, sku, description, image_url, price, moq, supplier_cost, internal_margin, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)'
+  'id, name, sku, description, image_url, price, moq, supplier_cost, internal_margin, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)' as const
+const PUBLIC_PRODUCT_SELECT_WITH_PURCHASE =
+  'id, name, sku, description, image_url, price, moq, supplier_cost, internal_margin, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, category:categories(id, name), brand:brands(id, name)' as const
 
 export type PublicProduct = {
   id: string
@@ -24,6 +27,7 @@ export type PublicProduct = {
   brand_name: string | null
   status: string
   created_at: string | null
+  purchase: PurchaseOffer
 }
 
 type Named = { id: string; name: string }
@@ -41,6 +45,8 @@ function toPublicProduct(
     brand_id?: string | null
     status: string
     created_at?: string | null
+    stock_qty?: number | null
+    fulfillment_mode?: string | null
     category?: Named | Named[] | null
     brand?: Named | Named[] | null
   },
@@ -60,7 +66,62 @@ function toPublicProduct(
     brand_name: oneRelation(row.brand)?.name || null,
     status: row.status,
     created_at: row.created_at || null,
+    purchase: purchaseOffer({
+      fulfillmentMode: row.fulfillment_mode,
+      stockQty: row.stock_qty,
+      hasSellPrice: sellPrice != null && Number.isFinite(Number(sellPrice)),
+    }),
   }
+}
+
+function missingPurchaseColumn(message: string | undefined) {
+  return Boolean(message && /stock_qty|fulfillment_mode/i.test(message))
+}
+
+type PublicRow = Parameters<typeof toPublicProduct>[0] & {
+  supplier_cost?: number | null
+  internal_margin?: number | null
+}
+
+async function loadPublicRows(client: SupabaseClient, id?: string): Promise<PublicRow[]> {
+  if (id) {
+    const single = await client
+      .from('products')
+      .select(PUBLIC_PRODUCT_SELECT_WITH_PURCHASE)
+      .eq('status', 'active')
+      .eq('catalogue_access', 'all')
+      .eq('id', id)
+      .maybeSingle()
+    if (single.error && missingPurchaseColumn(single.error.message)) {
+      const fallback = await client
+        .from('products')
+        .select(PUBLIC_PRODUCT_SELECT)
+        .eq('status', 'active')
+        .eq('catalogue_access', 'all')
+        .eq('id', id)
+        .maybeSingle()
+      return fallback.data ? [fallback.data as unknown as PublicRow] : []
+    }
+    return single.data ? [single.data as unknown as PublicRow] : []
+  }
+
+  const first = await client
+    .from('products')
+    .select(PUBLIC_PRODUCT_SELECT_WITH_PURCHASE)
+    .eq('status', 'active')
+    .eq('catalogue_access', 'all')
+    .order('name')
+  if (first.error && missingPurchaseColumn(first.error.message)) {
+    const fallback = await client
+      .from('products')
+      .select(PUBLIC_PRODUCT_SELECT)
+      .eq('status', 'active')
+      .eq('catalogue_access', 'all')
+      .order('name')
+    return (fallback.data || []) as unknown as PublicRow[]
+  }
+  if (first.error || !first.data) return []
+  return first.data as unknown as PublicRow[]
 }
 
 async function publicDbClient(): Promise<SupabaseClient | null> {
@@ -77,13 +138,8 @@ export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
   try {
     const client = await publicDbClient()
     if (!client) return []
-    const { data, error } = await client
-      .from('products')
-      .select(PUBLIC_PRODUCT_SELECT)
-      .eq('status', 'active')
-      .eq('catalogue_access', 'all')
-      .order('name')
-    if (error || !data) return []
+    const data = await loadPublicRows(client)
+    if (!data.length) return []
     const settings = await getPricingSettings()
     if (!settings.surfaces.store.showSellPrice) {
       return data.map((row) => toPublicProduct(row, null))
@@ -114,14 +170,8 @@ export async function getPublicProduct(id: string): Promise<PublicProduct | null
   try {
     const client = await publicDbClient()
     if (!client) return null
-    const { data, error } = await client
-      .from('products')
-      .select(PUBLIC_PRODUCT_SELECT)
-      .eq('id', id)
-      .eq('status', 'active')
-      .eq('catalogue_access', 'all')
-      .maybeSingle()
-    if (error || !data) return null
+    const data = (await loadPublicRows(client, id))[0]
+    if (!data) return null
     const settings = await getPricingSettings()
     if (!settings.surfaces.store.showSellPrice) return toPublicProduct(data, null)
     const offers = settings.surfaces.store.useBestCost
