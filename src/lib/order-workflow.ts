@@ -1,49 +1,80 @@
 export const ORDER_LIFECYCLE = [
   "created",
-  "confirmed",
   "procurement",
-  "printing",
-  "quality_check",
-  "ready_to_dispatch",
+  "mockup",
+  "client_approval",
+  "production",
+  "packaging_qc",
   "dispatched",
   "delivered",
 ] as const
 
-export type LifecycleStatus = (typeof ORDER_LIFECYCLE)[number] | "cancelled" | "in_progress"
+export type LifecycleStatus = (typeof ORDER_LIFECYCLE)[number] | "cancelled"
+
+/**
+ * How rows written before the fulfillment-stage migration are stored afterwards.
+ * Historical tokens are also copied onto the history note by the migration.
+ * `in_progress` stays with procurement: the previous sequence placed it before
+ * procurement, and the control-center board already grouped those cards there.
+ * `printing` becomes production so in-flight branding is not sent back through
+ * the new client-approval gate.
+ */
+export const LEGACY_ORDER_STATUS_MAP: Record<string, string> = {
+  created: "created",
+  confirmed: "created",
+  in_progress: "procurement",
+  procurement: "procurement",
+  printing: "production",
+  quality_check: "packaging_qc",
+  ready_to_dispatch: "packaging_qc",
+  dispatched: "dispatched",
+  delivered: "delivered",
+  cancelled: "cancelled",
+}
+
+const KNOWN_STATUSES = new Set<string>([...ORDER_LIFECYCLE, "cancelled"])
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
-  created: "Order Received",
+  created: "Order received",
+  procurement: "Procurement",
+  mockup: "Mockup",
+  client_approval: "Client approval",
+  production: "Production",
+  packaging_qc: "Packaging / QC",
+  dispatched: "Dispatch",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
   confirmed: "Planning",
   in_progress: "In Progress",
-  procurement: "Procurement",
   printing: "Printing",
   quality_check: "Quality Check",
   ready_to_dispatch: "Packing",
-  dispatched: "In Transit",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
 }
 
 export const CLIENT_STATUS_LABELS: Record<string, string> = {
-  created: "Order Received",
+  created: "Order received",
+  procurement: "Procurement",
+  mockup: "Mockup",
+  client_approval: "Client approval",
+  production: "Production",
+  packaging_qc: "Packaging / QC",
+  dispatched: "Dispatch",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
   confirmed: "Order Confirmed",
   in_progress: "In Production",
-  procurement: "Procurement",
   printing: "Printing in Progress",
   quality_check: "Quality Check",
   ready_to_dispatch: "Ready to Dispatch",
-  dispatched: "Dispatched",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
 }
 
 export const STAGE_DEPARTMENT: Record<string, string> = {
   created: "sales",
-  confirmed: "sales",
   procurement: "procurement",
-  printing: "printing",
-  quality_check: "quality",
-  ready_to_dispatch: "logistics",
+  mockup: "printing",
+  client_approval: "sales",
+  production: "printing",
+  packaging_qc: "quality",
   dispatched: "logistics",
   delivered: "accounts",
 }
@@ -81,15 +112,56 @@ export const HEALTH_STYLES: Record<OrderHealth, string> = {
 
 export function nextLifecycleStatus(current: string): string | null {
   const i = ORDER_LIFECYCLE.indexOf(current as (typeof ORDER_LIFECYCLE)[number])
-  if (i < 0) {
-    if (current === "in_progress") return "printing"
-    return null
-  }
+  if (i < 0) return null
   return ORDER_LIFECYCLE[i + 1] ?? null
 }
 
 export function lifecycleIndex(status: string): number {
-  if (status === "in_progress") return 2
   const i = ORDER_LIFECYCLE.indexOf(status as (typeof ORDER_LIFECYCLE)[number])
   return i < 0 ? 0 : i
+}
+
+export function canAdvanceTo(
+  from: string,
+  to: string,
+  approval?: string | null
+): { ok: true } | { ok: false; reason: string } {
+  if (!KNOWN_STATUSES.has(to)) return { ok: false, reason: "Invalid stage" }
+  if (from === to) return { ok: true }
+  if (from === "delivered" || from === "cancelled") {
+    return { ok: false, reason: "This stage is terminal" }
+  }
+  if (to === "cancelled") return { ok: true }
+  if (from === "client_approval" && to === "mockup") return { ok: true }
+
+  const next = nextLifecycleStatus(from)
+  if (to !== next) {
+    return {
+      ok: false,
+      reason: next
+        ? `Move one stage at a time. Next stage is ${ORDER_STATUS_LABELS[next]}.`
+        : "This stage is terminal",
+    }
+  }
+  if (from === "client_approval" && to === "production" && approval !== "approved") {
+    return { ok: false, reason: "Client approval is required before production" }
+  }
+  return { ok: true }
+}
+
+export function handoffStageOptions(status: string, approval?: string | null) {
+  const options: { value: string; label: string }[] = [
+    { value: status, label: `${ORDER_STATUS_LABELS[status] || status} (keep)` },
+  ]
+  const next = nextLifecycleStatus(status)
+  if (next && canAdvanceTo(status, next, approval).ok) {
+    options.push({ value: next, label: ORDER_STATUS_LABELS[next] || next })
+  }
+  if (status === "client_approval") {
+    options.push({ value: "mockup", label: "Mockup (request changes)" })
+  }
+  if (status !== "cancelled" && status !== "delivered") {
+    options.push({ value: "cancelled", label: "Cancelled" })
+  }
+  return options
 }

@@ -83,7 +83,7 @@ export function OrderLifecycleBar({
           return (
             <li
               key={step}
-              className={`flex-1 min-w-[92px] rounded-xl border px-2.5 py-2 ${
+              className={`flex-1 min-w-[112px] rounded-xl border px-2.5 py-2 ${
                 isCurrent
                   ? 'border-[#624B32] bg-[#624B32]/5'
                   : done

@@ -32,6 +32,9 @@ export default async function KnowledgePage() {
               <span>{ORDER_STATUS_LABELS[st]}</span>
             </li>
           ))}
+          <p className="text-xs text-[#7A7267]">
+            Production cannot start until the client approves at Client approval. Requesting changes returns the order to Mockup.
+          </p>
         </ol>
         {(profile.role === 'admin' || profile.role === 'operations') && (
           <Link

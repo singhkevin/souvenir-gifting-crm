@@ -1,14 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatCurrency, formatDate, asRows, oneRelation } from '@/lib/utils'
+import { ORDER_LIFECYCLE, ORDER_STATUS_LABELS } from '@/lib/order-workflow'
 
 const STATUS_COLORS: Record<string, string> = {
   created: 'bg-blue-100 text-blue-800',
-  confirmed: 'bg-indigo-100 text-indigo-800',
   procurement: 'bg-orange-100 text-orange-800',
-  printing: 'bg-amber-100 text-amber-800',
-  quality_check: 'bg-yellow-100 text-yellow-800',
-  ready_to_dispatch: 'bg-teal-100 text-teal-800',
+  mockup: 'bg-amber-100 text-amber-800',
+  client_approval: 'bg-indigo-100 text-indigo-800',
+  production: 'bg-orange-100 text-orange-800',
+  packaging_qc: 'bg-yellow-100 text-yellow-800',
   dispatched: 'bg-purple-100 text-purple-800',
   delivered: 'bg-green-100 text-green-800',
   cancelled: 'bg-gray-100 text-gray-800',
@@ -51,7 +52,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
   if (error) console.error('Orders list query failed', error.message)
   const orderRows = asRows<OrderRow>(orders)
 
-  const statuses = ['all', 'created', 'confirmed', 'procurement', 'printing', 'quality_check', 'ready_to_dispatch', 'dispatched', 'delivered']
+  const statuses = ['all', ...ORDER_LIFECYCLE, 'cancelled']
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -77,7 +78,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
               emptyLabel: 'All',
               options: statuses.map((status) => ({
                 value: status,
-                label: status === 'all' ? 'All' : status.replace(/_/g, ' '),
+                label: status === 'all' ? 'All' : (ORDER_STATUS_LABELS[status] || status),
               })),
             },
           ]}
@@ -90,7 +91,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
             href={`/crm/orders?status=${status}`}
             className={`shrink-0 px-4 py-2.5 text-sm font-medium capitalize ${statusFilter === status ? 'border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            {status.replace('_', ' ')}
+            {status === 'all' ? 'All' : (ORDER_STATUS_LABELS[status] || status)}
           </Link>
         ))}
       </div>
@@ -126,7 +127,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
                   <td className="p-4">{formatCurrency(order.order_value || 0)}</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[order.status] || 'bg-gray-100 text-gray-800'}`}>
-                      {(order.status || 'unknown').replace('_', ' ')}
+                      {ORDER_STATUS_LABELS[order.status] || order.status || 'unknown'}
                     </span>
                     <div className="mt-2 max-w-[140px]">
                       <OrderLifecycleBar status={order.status} compact />

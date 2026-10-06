@@ -4,12 +4,11 @@ export type LeadSource = "referral" | "website" | "direct" | "social_media" | "e
 export type QuotationStatus = "draft" | "sent" | "viewed" | "accepted" | "rejected" | "expired"
 export type OrderStatus =
   | "created"
-  | "confirmed"
-  | "in_progress"
   | "procurement"
-  | "printing"
-  | "quality_check"
-  | "ready_to_dispatch"
+  | "mockup"
+  | "client_approval"
+  | "production"
+  | "packaging_qc"
   | "dispatched"
   | "delivered"
   | "cancelled"
@@ -292,6 +291,11 @@ export interface Order {
   dispatch_date: string | null
   tracking_number: string | null
   status: OrderStatus
+  /** Portal decision at client_approval: approved, changes_requested, or null while waiting. */
+  client_approval_status?: "approved" | "changes_requested" | null
+  client_approval_note?: string | null
+  client_approval_by?: string | null
+  client_approval_at?: string | null
   notes: string | null
   next_action: string | null
   stage_due_at: string | null

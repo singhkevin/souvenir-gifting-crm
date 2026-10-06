@@ -1,6 +1,6 @@
 # Project state — Souvenir - Gifting Solutions Corporate Gifting CRM
 
-Last updated: 2026-09-03
+Last updated: 2026-10-06
 
 This is the existing Souvenir - Gifting Solutions application (not a new project). Earlier revisions
 carried an "Oaklane" product name in the UI; the displayed brand is now Souvenir - Gifting Solutions.
@@ -72,9 +72,24 @@ Demo password is documented in `.env.example` only as a pointer; secrets live in
 
 ## Order lifecycle (live enum)
 
-`created` (Order Received) → `confirmed` → `in_progress` → `procurement` → `printing` → `quality_check` → `ready_to_dispatch` → `dispatched` → `delivered` / `cancelled`
+`created` (Order received) → `procurement` → `mockup` → `client_approval` → `production` → `packaging_qc` (Packaging / QC) → `dispatched` (Dispatch) → `delivered` / `cancelled`
 
-Stage changes go through `advance_order_stage` and append `order_status_history`.
+Stage changes go through `advance_order_stage` and append `order_status_history`. Staff can move one stage at a time, cancel an open order, or send `client_approval` back to `mockup`. Production is blocked until `orders.client_approval_status = 'approved'`. Portal users of that company call `client_decide_order_approval`: approve stays on Client approval and unlocks Production; request changes returns the order to Mockup. Re-entering Client approval clears the previous decision.
+
+Migration `20261006_fulfillment_stages_client_approval.sql` remaps existing rows (history notes keep the original token):
+
+| Previous status | Stored as |
+| --- | --- |
+| `created` | `created` |
+| `confirmed` | `created` |
+| `in_progress` | `procurement` |
+| `procurement` | `procurement` |
+| `printing` | `production` |
+| `quality_check`, `ready_to_dispatch` | `packaging_qc` |
+| `dispatched` | `dispatched` |
+| `delivered`, `cancelled` | unchanged |
+
+`in_progress` is not sent to Production: the previous sequence placed it before procurement. `printing` stays in Production so live branding work is not pulled back through the new gate.
 
 ## Client catalogue rule
 

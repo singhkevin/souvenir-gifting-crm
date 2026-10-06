@@ -14,8 +14,10 @@ import {
 } from '../actions'
 import { getProfile, canSeeCosts, canChangeOrderStage, applyOrderScope } from '@/lib/auth'
 import {
-  ORDER_LIFECYCLE,
   ORDER_STATUS_LABELS,
+  canAdvanceTo,
+  handoffStageOptions,
+  nextLifecycleStatus,
   orderHealth,
   HEALTH_LABELS,
   HEALTH_STYLES,
@@ -32,11 +34,11 @@ export default async function OrderDetailPage({
   searchParams
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ tab?: string }>
+  searchParams: Promise<{ tab?: string; stage_error?: string }>
 }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const { tab = 'details' } = await searchParams
+  const { tab = 'details', stage_error: stageError } = await searchParams
   const profile = await getProfile()
   if (!profile) return redirect('/login')
   if (profile.role === 'client_admin') return redirect('/portal/catalogue')
@@ -86,6 +88,9 @@ export default async function OrderDetailPage({
   if (!order) notFound()
 
   const isDelivered = order.status === 'delivered' || order.status === 'cancelled'
+  const approvalStatus = order.client_approval_status ?? null
+  const nextStage = nextLifecycleStatus(order.status)
+  const advanceGate = nextStage ? canAdvanceTo(order.status, nextStage, approvalStatus) : null
   const health = orderHealth(order.status, order.expected_delivery_date, order.stage_due_at)
   const showCosts = canSeeCosts(profile.role)
   const canStage = canChangeOrderStage(profile.role)
@@ -103,7 +108,7 @@ export default async function OrderDetailPage({
 
   const handleAdvance = async () => {
     'use server'
-    await advanceOrderStatus(id, 'Advanced from order detail')
+    await advanceOrderStatus(id)
   }
 
   const handleAssignSupplier = async (formData: FormData) => {
@@ -122,6 +127,9 @@ export default async function OrderDetailPage({
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-10">
       <BackButton href="/crm/order-management" label="Back to Order Control" />
+      {stageError && (
+        <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{stageError}</p>
+      )}
 
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -155,12 +163,17 @@ export default async function OrderDetailPage({
             <p className="text-[10px] uppercase font-bold text-gray-400">Order Value</p>
             <p className="text-xl font-bold text-[#806A50]">{formatCurrency(order.order_value)}</p>
           </div>
-          {canStage && !isDelivered && (
+          {canStage && !isDelivered && nextStage && advanceGate?.ok && (
             <form action={handleAdvance}>
               <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5">
-                Advance Stage <ChevronRight size={14} />
+                Advance to {ORDER_STATUS_LABELS[nextStage]} <ChevronRight size={14} />
               </button>
             </form>
+          )}
+          {canStage && !isDelivered && nextStage === 'production' && advanceGate && !advanceGate.ok && (
+            <p className="max-w-xs rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              Waiting for the client to approve before Production.
+            </p>
           )}
         </div>
       </div>
@@ -175,6 +188,19 @@ export default async function OrderDetailPage({
           </p>
         </div>
         <OrderLifecycleBar status={order.status} history={history} showActors />
+        {order.status === 'client_approval' && approvalStatus !== 'approved' && (
+          <p className="text-xs text-amber-900">Waiting for the client to approve the mockup. Staff cannot start Production until then.</p>
+        )}
+        {approvalStatus === 'approved' && (
+          <p className="text-xs text-emerald-800">
+            Client approved{order.client_approval_note ? `: ${order.client_approval_note}` : '.'}
+          </p>
+        )}
+        {approvalStatus === 'changes_requested' && (
+          <p className="text-xs text-amber-900">
+            Changes requested{order.client_approval_note ? `: ${order.client_approval_note}` : '.'}
+          </p>
+        )}
       </div>
 
       {canStage && !isDelivered && (
@@ -186,10 +212,7 @@ export default async function OrderDetailPage({
             label="New stage"
             showDesktopLabel
             defaultValue={order.status}
-            options={[
-              ...ORDER_LIFECYCLE.map((s) => ({ value: s, label: ORDER_STATUS_LABELS[s] })),
-              { value: 'cancelled', label: 'Cancelled' },
-            ]}
+            options={handoffStageOptions(order.status, approvalStatus)}
           />
           <MobileSheetSelect
             name="department_id"

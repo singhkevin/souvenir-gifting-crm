@@ -2,8 +2,14 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { getProfile, canChangeOrderStage, canSeeCosts, isOpsStaff } from '@/lib/auth'
-import { nextLifecycleStatus, STAGE_DEPARTMENT } from '@/lib/order-workflow'
+import { canAdvanceTo, nextLifecycleStatus, ORDER_STATUS_LABELS, STAGE_DEPARTMENT } from '@/lib/order-workflow'
+
+function redirectStageError(orderId: string, message: string): never {
+  const text = message.replace(/\s+/g, ' ').slice(0, 300)
+  redirect(`/crm/orders/${orderId}?stage_error=${encodeURIComponent(text)}`)
+}
 
 export async function advanceOrderStatus(orderId: string, comment?: string) {
   const profile = await getProfile()
@@ -11,10 +17,17 @@ export async function advanceOrderStatus(orderId: string, comment?: string) {
   if (!canChangeOrderStage(profile.role)) return { error: 'Not permitted to change order stages' }
 
   const supabase = await createClient()
-  const { data: order } = await supabase.from('orders').select('id, status').eq('id', orderId).single()
+  const { data: order, error: loadError } = await supabase
+    .from('orders')
+    .select('id, status, client_approval_status')
+    .eq('id', orderId)
+    .single()
+  if (loadError) return { error: loadError.message }
   if (!order) return { error: 'Order not found' }
   const next = nextLifecycleStatus(order.status)
   if (!next) return { error: 'Order is already at a terminal stage' }
+  const gate = canAdvanceTo(order.status, next, order.client_approval_status)
+  if (!gate.ok) redirectStageError(orderId, gate.reason)
 
   const { data: dept } = await supabase.from('departments').select('id, manager_id').eq('slug', STAGE_DEPARTMENT[next] || 'operations').maybeSingle()
 
@@ -23,14 +36,14 @@ export async function advanceOrderStatus(orderId: string, comment?: string) {
     p_status: next,
     p_assigned_to: dept?.manager_id || null,
     p_department_id: dept?.id || null,
-    p_comment: comment || `Advanced to ${next}`,
+    p_comment: comment || `Advanced to ${ORDER_STATUS_LABELS[next] || next}`,
   })
-  if (error) return { error: error.message }
+  if (error) redirectStageError(orderId, error.message)
   revalidatePath(`/crm/orders/${orderId}`)
   revalidatePath('/crm/order-management')
   revalidatePath('/crm/dashboard')
   revalidatePath('/crm/my-work')
-  return { success: true }
+  redirect(`/crm/orders/${orderId}`)
 }
 
 export async function handOffOrder(formData: FormData) {
@@ -49,6 +62,16 @@ export async function handOffOrder(formData: FormData) {
   if (!orderId || !status) return { error: 'Stage is required' }
 
   const supabase = await createClient()
+  const { data: order, error: loadError } = await supabase
+    .from('orders')
+    .select('id, status, client_approval_status')
+    .eq('id', orderId)
+    .single()
+  if (loadError) redirectStageError(orderId, loadError.message)
+  if (!order) redirectStageError(orderId, 'Order not found')
+  const gate = canAdvanceTo(order.status, status, order.client_approval_status)
+  if (!gate.ok) redirectStageError(orderId, gate.reason)
+
   const { error } = await supabase.rpc('advance_order_stage', {
     p_order_id: orderId,
     p_status: status,
@@ -58,12 +81,12 @@ export async function handOffOrder(formData: FormData) {
     p_stage_due: stageDue,
     p_next_action: nextAction,
   })
-  if (error) return { error: error.message }
+  if (error) redirectStageError(orderId, error.message)
   revalidatePath(`/crm/orders/${orderId}`)
   revalidatePath('/crm/order-management')
   revalidatePath('/crm/department')
   revalidatePath('/crm/my-work')
-  return { success: true }
+  redirect(`/crm/orders/${orderId}`)
 }
 
 export async function setOrderStage(orderId: string, status: string) {
@@ -71,10 +94,21 @@ export async function setOrderStage(orderId: string, status: string) {
   if (!profile) return { error: 'Not authenticated' }
   if (!canChangeOrderStage(profile.role)) return { error: 'Not permitted to change order stages' }
 
-  const allowed = new Set([...Object.keys(STAGE_DEPARTMENT), 'cancelled', 'in_progress'])
+  const allowed = new Set([...Object.keys(STAGE_DEPARTMENT), 'cancelled'])
   if (!allowed.has(status)) return { error: 'Invalid stage' }
 
   const supabase = await createClient()
+  const { data: order, error: loadError } = await supabase
+    .from('orders')
+    .select('id, status, client_approval_status')
+    .eq('id', orderId)
+    .single()
+  if (loadError) return { error: loadError.message }
+  if (!order) return { error: 'Order not found' }
+  if (order.status === status) return { success: true }
+  const gate = canAdvanceTo(order.status, status, order.client_approval_status)
+  if (!gate.ok) return { error: gate.reason }
+
   const { data: dept } = await supabase
     .from('departments')
     .select('id, manager_id')
@@ -86,7 +120,7 @@ export async function setOrderStage(orderId: string, status: string) {
     p_status: status,
     p_assigned_to: dept?.manager_id || null,
     p_department_id: dept?.id || null,
-    p_comment: `Moved to ${status} from Order Control Kanban`,
+    p_comment: `Moved to ${ORDER_STATUS_LABELS[status] || status} from Order Control Kanban`,
   })
   if (error) return { error: error.message }
   revalidatePath('/crm/order-management')

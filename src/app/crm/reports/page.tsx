@@ -27,17 +27,7 @@ export default async function ReportsPage({
     supabase.from('sample_stock').select('in_office, with_client, pending_supplier, with_team, unit_cost, products(name, sku)'),
   ])
 
-  const bookedStatuses = new Set([
-    'created',
-    'confirmed',
-    'in_progress',
-    'procurement',
-    'printing',
-    'quality_check',
-    'ready_to_dispatch',
-    'dispatched',
-    'delivered',
-  ])
+  const bookedStatuses = new Set<string>(ORDER_STATUSES)
 
   const totalRevenue =
     orders

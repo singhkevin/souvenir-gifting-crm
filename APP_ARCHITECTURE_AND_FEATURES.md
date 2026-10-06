@@ -175,45 +175,45 @@ flowchart TD
     I --> M["Requirement Marked 'Won'"]
 ```
 
-### 3.2. Nine-Stage Order Fulfillment Lifecycle
+### 3.2. Order Fulfillment Lifecycle
 
-Every order advances through a deterministic 9-stage operational lifecycle, managed via the database stored procedure `advance_order_stage`:
+Every order advances one stage at a time through `advance_order_stage`, which appends `order_status_history`. `client_approval` cannot move to `production` until a portal user for that company has approved. `client_decide_order_approval` records the decision: approve stays on Client approval and unlocks Production; request changes returns the order to Mockup and clears the way for a new mockup. Entering Client approval again clears the previous decision.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                     ORDER FULFILLMENT LIFECYCLE                         │
 └─────────────────────────────────────────────────────────────────────────┘
-  [1] created            ──▶ Order Received / Sales Confirmation
+  [1] created            ──▶ Order received
          │
-  [2] confirmed          ──▶ Order Confirmed / Ops Planning
+  [2] procurement        ──▶ Sourcing blanks and raw goods
          │
-  [3] procurement        ──▶ Sourcing blanks & raw goods from Supplier
+  [3] mockup             ──▶ Artwork shared with the client
          │
-  [4] printing           ──▶ Branding / Screen print / Engraving with Vendor
+  [4] client_approval    ──▶ Client approves, or requests changes back to mockup
          │
-  [5] quality_check      ──▶ QC Inspection against approved mockup
+  [5] production         ──▶ Making and branding (blocked until the client approves)
          │
-  [6] ready_to_dispatch  ──▶ Packaging, boxing & shipping label generation
+  [6] packaging_qc       ──▶ Packaging and quality check
          │
-  [7] dispatched         ──▶ Handed to Courier Partner (Tracking active)
+  [7] dispatched         ──▶ Dispatch / handed to the courier
          │
-  [8] delivered          ──▶ Received by Client / Confirmation logged
+  [8] delivered          ──▶ Received by the client
          │
-  [*] cancelled          ──▶ Terminal cancellation state (reversible by Admin)
+  [*] cancelled          ──▶ Terminal cancellation from any open stage
 ```
 
 #### Department Routing Matrix by Stage:
-| Stage | Internal Status Label | Client Portal Label | Responsible Department |
-| :--- | :--- | :--- | :--- |
-| `created` | Order Received | Order Received | Sales |
-| `confirmed` | Planning | Order Confirmed | Sales / Operations |
-| `procurement` | Procurement | Procurement | Procurement / Operations |
-| `printing` | Printing | Printing in Progress | Printing / Operations |
-| `quality_check` | Quality Check | Quality Check | Quality Assurance |
-| `ready_to_dispatch` | Packing | Ready to Dispatch | Logistics |
-| `dispatched` | In Transit | Dispatched | Logistics |
-| `delivered` | Delivered | Delivered | Accounts (Invoicing) |
-| `cancelled` | Cancelled | Cancelled | Operations / Management |
+| Stage | Label | Responsible department slug |
+| :--- | :--- | :--- |
+| `created` | Order received | `sales` |
+| `procurement` | Procurement | `procurement` |
+| `mockup` | Mockup | `printing` |
+| `client_approval` | Client approval | `sales` |
+| `production` | Production | `printing` |
+| `packaging_qc` | Packaging / QC | `quality` |
+| `dispatched` | Dispatch | `logistics` |
+| `delivered` | Delivered | `accounts` |
+| `cancelled` | Cancelled | Operations / management |
 
 ### 3.3. Financial Lifecycle
 
@@ -304,7 +304,7 @@ The system maintains 30+ relational tables with foreign keys and cascade protect
 | `company_product_exclusions` | Per-company catalogue hides | `company_id`, `product_id` (composite primary key) |
 | `quotations` | Quotation documents | `id`, `quotation_number`, `company_id`, `owner_id`, `subtotal`, `tax_amount`, `total`, `status` |
 | `quotation_items` | Products in quotation | `quotation_id`, `product_id`, `quantity`, `unit_price`, `line_total` |
-| `orders` | Confirmed fulfillment orders | `id`, `order_number`, `company_id`, `status`, `expected_delivery_date`, `order_value` |
+| `orders` | Confirmed fulfillment orders | `id`, `order_number`, `company_id`, `status`, `client_approval_status`, `expected_delivery_date`, `order_value` |
 | `order_items` | Products in order | `order_id`, `product_id`, `quantity`, `unit_price`, `line_total` |
 | `order_status_history` | Audit trail of stage changes | `order_id`, `from_status`, `to_status`, `changed_by`, `note`, `changed_at` |
 | `order_assignments` | Department/person handoffs | `order_id`, `department_id`, `assigned_to`, `assigned_by`, `note` |
