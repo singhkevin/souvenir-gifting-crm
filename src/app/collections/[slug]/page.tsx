@@ -4,6 +4,7 @@ import { SiteShell } from '@/components/site/site-shell'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
 import { collectionBySlug, productsInCollection } from '@/lib/catalogue/collections'
 import { getPublicCatalogueProducts } from '@/lib/catalogue/products'
+import { appName } from '@/lib/brand'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const collection = collectionBySlug(slug)
   return {
     title: collection?.title || 'Collection',
-    description: collection?.description || 'A Souvenir - Gifting Solutions catalogue collection.',
+    description: collection?.description || `A ${appName()} catalogue collection.`,
   }
 }
 

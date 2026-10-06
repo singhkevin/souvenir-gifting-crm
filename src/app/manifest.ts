@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next'
+import { appName, appShortName } from '@/lib/brand'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'Souvenir - Gifting Solutions',
-    short_name: 'Souvenir',
+    name: appName(),
+    short_name: appShortName(),
     description:
       'Corporate gifting CRM and catalogue - browse gifts, request quotes, and manage fulfilment.',
     start_url: '/?source=pwa',

@@ -12,6 +12,7 @@ import { offersByProduct } from '@/lib/pricing/offers'
 import { buildBudgetPackCandidates, planBudgetPacks } from '@/lib/catalogue/budget-packs-server'
 import { formatKitItemNames, PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
 import { sharePath } from '@/lib/catalogs/share'
+import { appName } from '@/lib/brand'
 import { extendShareExpiry, shareExpiryIso, shareLinkGrantsAccess, shareLinkIsExpired } from '@/lib/catalogs/share-link'
 
 function schemaHint(message: string) {
@@ -786,6 +787,7 @@ export async function emailCatalogLink(formData: FormData) {
           </a>
         </p>
         <p style="font-size: 12px; line-height: 1.6; color: #7A7267;">${escapeHtml(shareUrl)}</p>
+        <p style="font-size: 12px; line-height: 1.6; color: #7A7267;">Sent by ${escapeHtml(appName())}.</p>
       </div>
     `,
   })

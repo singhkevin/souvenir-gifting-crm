@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { portalDnsMode } from '../src/lib/portal-hosts/mode.ts'
-import { portalAddressHelp, resolveHost } from '../src/lib/portal-host.ts'
+import { parsePortalSlug, portalAddressHelp, resolveHost } from '../src/lib/portal-host.ts'
 
 function withEnv(patch: Record<string, string | undefined>, fn: () => void) {
   const prev: Record<string, string | undefined> = {}
@@ -79,5 +79,13 @@ test('resolveHost sends company slugs to the tenant and keeps apex, www, localho
   })
   withEnv({ ROOT_DOMAIN: undefined }, () => {
     assert.deepEqual(resolveHost('acme.giftingstore.online'), { kind: 'main' })
+    assert.match(portalAddressHelp('acme'), /acme\.giftingstore\.online/)
   })
+})
+
+test('brand labels cannot be used as a company portal slug', () => {
+  for (const slug of ['souvenir', 'souvenirgifting', 'souvenir-gifting', 'giffter', 'oaklane', 'giftingstore']) {
+    assert.equal(parsePortalSlug(slug).slug, null)
+    assert.match(parsePortalSlug(slug).error || '', /reserved/)
+  }
 })

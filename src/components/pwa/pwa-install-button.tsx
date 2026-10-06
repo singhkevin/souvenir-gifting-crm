@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Download, X, Share } from 'lucide-react'
+import { appShortName } from '@/lib/brand'
 import { cn } from '@/lib/utils'
 import { usePwaInstall } from '@/components/pwa/pwa-install-provider'
 
@@ -84,7 +85,7 @@ export function PwaInstallButton({
       {hintOpen ? (
         <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-md border border-[#E8E4DE] bg-white p-3 text-left text-xs leading-relaxed text-[#1B2430] shadow-lg">
           <div className="mb-2 flex items-start justify-between gap-2">
-            <p className="font-medium">Install Souvenir</p>
+            <p className="font-medium">Install {appShortName()}</p>
             <button type="button" aria-label="Close" onClick={() => setHintOpen(false)} className="text-[#5C6570]">
               <X size={14} />
             </button>
@@ -110,7 +111,7 @@ export function PwaInstallButton({
               <p>
                 Then look for the install icon in the address bar, or open the browser menu →{' '}
                 <span className="font-medium text-[#1B2430]">Install app</span> /{' '}
-                <span className="font-medium text-[#1B2430]">Install Souvenir</span>.
+                <span className="font-medium text-[#1B2430]">Install {appShortName()}</span>.
               </p>
             </div>
           )}

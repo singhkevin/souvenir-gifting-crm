@@ -1,3 +1,4 @@
+import { PRODUCTION_ROOT_DOMAIN } from '@/lib/brand'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { portalDnsMode } from '@/lib/portal-hosts/mode'
 
@@ -107,9 +108,12 @@ const RESERVED_SLUGS = new Set([
 const DENYLIST_SLUGS = new Set([
   'souvenir',
   'souvenirs',
+  'souvenirgifting',
+  'souvenir-gifting',
   'giftingstore',
   'gifting-store',
   'giffter',
+  'oaklane',
   'official',
   'brand',
   'superadmin',
@@ -186,7 +190,7 @@ export function portalUrlForSlug(slug: string | null | undefined): string | null
 
 /** Help text for the company portal-address field. */
 export function portalAddressHelp(exampleSlug = 'your-slug'): string {
-  const url = portalUrlForSlug(exampleSlug) || `https://${exampleSlug}.giftingstore.online`
+  const url = portalUrlForSlug(exampleSlug) || `https://${exampleSlug}.${PRODUCTION_ROOT_DOMAIN}`
   if (portalDnsMode() === 'hostinger') {
     return `Becomes ${url} — usually live in a few minutes (SSL can take up to 2 hours). Leave empty for the main site only.`
   }

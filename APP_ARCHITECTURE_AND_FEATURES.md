@@ -361,9 +361,15 @@ The system maintains 30+ relational tables with foreign keys and cascade protect
 NEXT_PUBLIC_SUPABASE_URL=https://ajysowosgjaipczrwpfv.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
 NEXT_PUBLIC_APP_NAME="Souvenir - Gifting Solutions"
+NEXT_PUBLIC_APP_SHORT_NAME="Souvenir"
+NEXT_PUBLIC_SITE_URL=https://www.giftingstore.online
+# Optional marketing origin. Not ROOT_DOMAIN and not an auth redirect host.
+# NEXT_PUBLIC_MARKETING_URL=https://souvenirgifting.com
 
 # Server-Only Variables (Required for Admin User Provisioning & Secure RPCs)
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...
+ROOT_DOMAIN=giftingstore.online
+# RESEND_FROM_EMAIL="Souvenir - Gifting Solutions <catalogs@giftingstore.online>"
 ```
 
 ### 7.3. Error Boundaries & Progressive Web App (PWA)

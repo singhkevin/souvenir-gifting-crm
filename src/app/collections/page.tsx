@@ -3,12 +3,13 @@ import Link from 'next/link'
 import { BrandName } from '@/components/brand/brand-name'
 import { SiteShell } from '@/components/site/site-shell'
 import { CATALOGUE_COLLECTIONS, CATALOGUE_OCCASIONS } from '@/lib/catalogue/collections'
+import { appName } from '@/lib/brand'
 
 const ARROW = '\u2192'
 
 export const metadata: Metadata = {
   title: 'Collections',
-  description: 'Editorial Souvenir - Gifting Solutions collections and corporate occasions, grouped from the existing catalogue.',
+  description: `Editorial ${appName()} collections and corporate occasions, grouped from the existing catalogue.`,
 }
 
 export default function CollectionsPage() {

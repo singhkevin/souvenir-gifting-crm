@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { PRODUCTION_ROOT_DOMAIN } from '@/lib/brand'
 import { portalDnsMode } from '@/lib/portal-hosts/mode'
 
 const BASE = 'https://developers.hostinger.com'
@@ -358,6 +359,6 @@ export function websiteDomainFromEnv(): string {
 }
 
 export function hostnameForSlug(slug: string): string {
-  const root = websiteDomainFromEnv() || 'giftingstore.online'
+  const root = websiteDomainFromEnv() || PRODUCTION_ROOT_DOMAIN
   return `${slug.toLowerCase()}.${root}`
 }

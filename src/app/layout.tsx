@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { appName, appShortName, publicSiteUrl } from '@/lib/brand'
 import { Toaster } from 'sonner'
 import { NavHistoryTracker } from '@/components/ui/nav-history'
 import { TabSessionProvider } from '@/components/auth/tab-session-provider'
@@ -15,16 +16,27 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
 }
+
+const siteName = appName()
+
 export const metadata: Metadata = {
-  title: 'Souvenir - Gifting Solutions — Corporate Gifting',
+  metadataBase: new URL(publicSiteUrl()),
+  title: {
+    default: `${siteName} — Corporate Gifting`,
+    template: `%s · ${siteName}`,
+  },
   description:
     'Curated corporate gifts for teams, clients and brands — catalogue, quotation and fulfilment in one place.',
-  applicationName: 'Souvenir - Gifting Solutions',
+  applicationName: siteName,
   manifest: '/manifest.webmanifest',
+  openGraph: {
+    type: 'website',
+    siteName,
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Souvenir',
+    title: appShortName(),
   },
   formatDetection: {
     telephone: false,
