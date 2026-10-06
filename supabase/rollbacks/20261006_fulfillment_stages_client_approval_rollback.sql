@@ -8,6 +8,11 @@
 -- The previous advance_order_stage body was not in the repo. This fallback
 -- accepts the previous status set and writes order_status_history. A history
 -- trigger dropped by the forward migration is not recreated.
+--
+-- The forward migration drops views that read the status enums (public.portal_orders
+-- and anything built on those views) and recreates them on the text columns.
+-- This rollback remaps stored values only. It does not convert status back to
+-- the enum and it does not drop those views; they keep selecting the text columns.
 -- Apply together with reverting the app, as one transaction.
 
 begin;

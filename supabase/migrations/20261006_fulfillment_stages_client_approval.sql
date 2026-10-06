@@ -100,32 +100,232 @@ end $$;
 -- New enum labels cannot be written in the same transaction that adds them.
 -- When status is still a Postgres enum, convert the fulfillment columns to text
 -- and constrain them below. Leave the old enum type in place so existing casts
--- keep compiling. Views are not dropped: if one depends on the column, stop
--- with its name instead of recreating security-invoker views by hand.
+-- keep compiling.
+--
+-- A view that reads those columns (public.portal_orders, plus any view built on
+-- it) has to be dropped for the type change and then recreated from the catalog.
+-- Recreation keeps the saved select list, column names, comments, owner,
+-- reloptions, triggers, and grants. security_invoker is copied only when the
+-- view has it today; a view without that option stays security definer.
+-- Materialized views, extension-owned views, and views with extra rules are
+-- not dropped. Casts to the converted enum type are removed from the saved
+-- select so later labels (mockup, production, ...) still read.
 do $enum$
 declare
   r record;
-  v_views text;
+  v_sql text;
+  v_cols text;
+  v_with text;
+  v_blocked text;
+  v_search_path text;
+  v_enum text;
+  v_enum_types text[] := '{}';
 begin
-  select string_agg(format('%I.%I', n.nspname, c.relname), ', ' order by n.nspname, c.relname)
-    into v_views
-  from pg_depend d
-  join pg_rewrite rw on rw.oid = d.objid
-  join pg_class c on c.oid = rw.ev_class
-  join pg_namespace n on n.oid = c.relnamespace
-  join pg_attribute a on a.attrelid = d.refobjid and a.attnum = d.refobjsubid
-  join pg_type t on t.oid = a.atttypid
-  where t.typtype = 'e'
-    and c.relkind in ('v', 'm')
-    and n.nspname = 'public'
-    and d.refobjid in ('public.orders'::regclass, 'public.order_status_history'::regclass)
-    and a.attname in ('status', 'from_status', 'to_status');
+  select coalesce(array_agg(distinct typname), '{}')
+    into v_enum_types
+  from (
+    select format('%s.%s', quote_ident(tn.nspname), quote_ident(t.typname)) as typname
+    from pg_attribute a
+    join pg_class c on c.oid = a.attrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    join pg_type t on t.oid = a.atttypid
+    join pg_namespace tn on tn.oid = t.typnamespace
+    where n.nspname = 'public'
+      and c.relname in ('orders', 'order_status_history')
+      and a.attname in ('status', 'from_status', 'to_status')
+      and t.typtype = 'e'
+      and not a.attisdropped
+  ) types;
 
-  if v_views is not null then
-    raise exception
-      'Order status columns are enums used by views (%). This migration will not drop those views.',
-      v_views;
+  if v_enum_types = '{}' then
+    return;
   end if;
+
+  create temp table _fulfillment_status_deps (
+    obj_oid oid primary key,
+    depth int not null
+  ) on commit drop;
+
+  insert into _fulfillment_status_deps (obj_oid, depth)
+  with recursive tree as (
+    select distinct c.oid as obj_oid, 0 as depth, array[c.oid] as path
+    from pg_depend d
+    join pg_rewrite rw on rw.oid = d.objid
+    join pg_class c on c.oid = rw.ev_class
+    join pg_attribute a on a.attrelid = d.refobjid and a.attnum = d.refobjsubid
+    join pg_type t on t.oid = a.atttypid
+    where d.classid = 'pg_rewrite'::regclass
+      and t.typtype = 'e'
+      and d.refobjid in ('public.orders'::regclass, 'public.order_status_history'::regclass)
+      and a.attname in ('status', 'from_status', 'to_status')
+      and not a.attisdropped
+      and c.oid <> d.refobjid
+    union all
+    select c.oid, tree.depth + 1, tree.path || c.oid
+    from tree
+    join pg_depend d on d.refobjid = tree.obj_oid and d.classid = 'pg_rewrite'::regclass
+    join pg_rewrite rw on rw.oid = d.objid
+    join pg_class c on c.oid = rw.ev_class
+    where tree.depth < 64
+      and c.oid <> all (tree.path)
+  )
+  select obj_oid, max(depth)
+  from tree
+  group by obj_oid;
+
+  if exists (select 1 from _fulfillment_status_deps where depth >= 64) then
+    raise exception 'Order status view dependency chain is too deep to recreate safely';
+  end if;
+
+  select string_agg(label, ', ' order by label)
+    into v_blocked
+  from (
+    select format('%I.%I', n.nspname, c.relname) ||
+      case
+        when e.extname is not null then format(' (extension %I)', e.extname)
+        when c.relkind = 'm' then ' (materialized view)'
+        when exists (
+          select 1
+          from pg_rewrite rw
+          where rw.ev_class = c.oid
+            and rw.rulename <> '_RETURN'
+        ) then ' (extra rules)'
+        else format(' (relkind %s)', c.relkind)
+      end as label
+    from _fulfillment_status_deps d
+    join pg_class c on c.oid = d.obj_oid
+    join pg_namespace n on n.oid = c.relnamespace
+    left join pg_depend ed
+      on ed.classid = 'pg_class'::regclass
+     and ed.objid = c.oid
+     and ed.deptype = 'e'
+    left join pg_extension e on e.oid = ed.refobjid
+    where c.relkind <> 'v'
+       or e.oid is not null
+       or exists (
+         select 1
+         from pg_rewrite rw
+         where rw.ev_class = c.oid
+           and rw.rulename <> '_RETURN'
+       )
+  ) blocked;
+
+  if v_blocked is not null then
+    raise exception
+      'Order status columns are enums used by relations this migration will not recreate (%).',
+      v_blocked;
+  end if;
+
+  create temp table _fulfillment_status_views (
+    view_oid oid primary key,
+    nspname name not null,
+    relname name not null,
+    depth int not null,
+    definition text not null,
+    col_names text[] not null,
+    col_comments text[] not null,
+    reloptions text[],
+    owner_name name not null,
+    view_comment text,
+    acl_explicit boolean not null,
+    grants text[] not null,
+    triggers text[] not null
+  ) on commit drop;
+
+  v_search_path := current_setting('search_path');
+  perform set_config('search_path', '', true);
+  begin
+    insert into _fulfillment_status_views
+    select
+      c.oid,
+      n.nspname,
+      c.relname,
+      d.depth,
+      pg_get_viewdef(c.oid, true),
+      cols.names,
+      cols.comments,
+      c.reloptions,
+      pg_get_userbyid(c.relowner),
+      obj_description(c.oid, 'pg_class'),
+      c.relacl is not null,
+      coalesce(table_grants.sql, '{}'::text[]) || coalesce(column_grants.sql, '{}'::text[]),
+      coalesce(trigger_defs.sql, '{}'::text[])
+    from _fulfillment_status_deps d
+    join pg_class c on c.oid = d.obj_oid
+    join pg_namespace n on n.oid = c.relnamespace
+    join lateral (
+      select
+        coalesce(array_agg(a.attname::text order by a.attnum), '{}') as names,
+        coalesce(array_agg(col_description(a.attrelid, a.attnum) order by a.attnum), '{}') as comments
+      from pg_attribute a
+      where a.attrelid = c.oid
+        and a.attnum > 0
+        and not a.attisdropped
+    ) cols on true
+    left join lateral (
+      select array_agg(
+        format(
+          'grant %s on table %I.%I to %s%s',
+          x.privilege_type,
+          n.nspname,
+          c.relname,
+          case when x.grantee = 0 then 'public' else quote_ident(pg_get_userbyid(x.grantee)) end,
+          case when x.is_grantable then ' with grant option' else '' end
+        )
+        order by x.grantee, x.privilege_type
+      ) as sql
+      from aclexplode(c.relacl) as x
+    ) table_grants on true
+    left join lateral (
+      select array_agg(
+        format(
+          'grant %s (%I) on table %I.%I to %s%s',
+          x.privilege_type,
+          a.attname,
+          n.nspname,
+          c.relname,
+          case when x.grantee = 0 then 'public' else quote_ident(pg_get_userbyid(x.grantee)) end,
+          case when x.is_grantable then ' with grant option' else '' end
+        )
+        order by a.attnum, x.grantee, x.privilege_type
+      ) as sql
+      from pg_attribute a
+      cross join lateral aclexplode(a.attacl) as x
+      where a.attrelid = c.oid
+        and a.attacl is not null
+    ) column_grants on true
+    left join lateral (
+      select array_agg(pg_get_triggerdef(t.oid, true) order by t.tgname) as sql
+      from pg_trigger t
+      where t.tgrelid = c.oid
+        and not t.tgisinternal
+    ) trigger_defs on true
+    where c.relkind = 'v';
+
+    perform set_config('search_path', v_search_path, true);
+  exception
+    when others then
+      perform set_config('search_path', v_search_path, true);
+      raise;
+  end;
+
+  foreach v_enum in array v_enum_types loop
+    update _fulfillment_status_views
+    set definition = regexp_replace(
+      definition,
+      '::' || replace(v_enum, '.', '\.') || '\M',
+      '',
+      'g'
+    );
+  end loop;
+
+  for r in
+    select nspname, relname
+    from _fulfillment_status_views
+    order by depth desc, nspname, relname
+  loop
+    execute format('drop view %I.%I', r.nspname, r.relname);
+  end loop;
 
   for r in
     select n.nspname, c.relname, a.attname,
@@ -154,6 +354,62 @@ begin
     if r.relname = 'orders' and r.attname = 'status' and r.defexpr is not null then
       execute 'alter table public.orders alter column status set default ''created''';
     end if;
+  end loop;
+
+  for r in
+    select *
+    from _fulfillment_status_views
+    order by depth asc, nspname, relname
+  loop
+    select string_agg(quote_ident(col), ', ' order by ord)
+      into v_cols
+    from unnest(r.col_names) with ordinality as u(col, ord);
+
+    if v_cols is null or v_cols = '' then
+      raise exception 'View %.% has no columns to recreate', r.nspname, r.relname;
+    end if;
+
+    v_with := '';
+    if r.reloptions is not null then
+      v_with := ' with (' || array_to_string(r.reloptions, ', ') || ')';
+    end if;
+
+    -- Concatenate the select list. format() would treat "%" in the view body as a placeholder.
+    execute format('create view %I.%I (%s)%s as ', r.nspname, r.relname, v_cols, v_with)
+      || r.definition;
+
+    if r.view_comment is not null then
+      execute format('comment on view %I.%I is %L', r.nspname, r.relname, r.view_comment);
+    end if;
+
+    for v_sql in
+      select format('comment on column %I.%I.%I is %L', r.nspname, r.relname, u.col, u.comment)
+      from unnest(r.col_names, r.col_comments) as u(col, comment)
+      where u.comment is not null
+    loop
+      execute v_sql;
+    end loop;
+
+    if r.triggers is not null then
+      foreach v_sql in array r.triggers loop
+        execute v_sql;
+      end loop;
+    end if;
+
+    execute format('alter view %I.%I owner to %I', r.nspname, r.relname, r.owner_name);
+
+    if r.acl_explicit then
+      execute format('revoke all on table %I.%I from public', r.nspname, r.relname);
+      execute format('revoke all on table %I.%I from %I', r.nspname, r.relname, r.owner_name);
+    end if;
+
+    if r.grants is not null then
+      foreach v_sql in array r.grants loop
+        execute v_sql;
+      end loop;
+    end if;
+
+    raise notice 'Recreated %.% after converting order status columns to text', r.nspname, r.relname;
   end loop;
 end
 $enum$;

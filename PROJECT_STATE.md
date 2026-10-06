@@ -76,7 +76,7 @@ Demo password is documented in `.env.example` only as a pointer; secrets live in
 
 Stage changes go through `advance_order_stage` and append `order_status_history`. Staff can move one stage at a time, cancel an open order, or send `client_approval` back to `mockup`. Production is blocked until `orders.client_approval_status = 'approved'`. Portal users of that company call `client_decide_order_approval`: approve stays on Client approval and unlocks Production; request changes returns the order to Mockup. Re-entering Client approval clears the previous decision.
 
-Migration `20261006_fulfillment_stages_client_approval.sql` remaps existing rows (history notes keep the original token):
+Migration `20261006_fulfillment_stages_client_approval.sql` converts enum status columns to text, recreates dependent views such as `public.portal_orders` from the catalog (same owner, options, and grants), and remaps existing rows (history notes keep the original token):
 
 | Previous status | Stored as |
 | --- | --- |
