@@ -7,6 +7,7 @@ import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/utils'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
+import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const VISIBILITY_ROLES = ['admin'] as const
@@ -44,6 +45,12 @@ export async function createProduct(formData: FormData) {
   const supplier_cost = formData.get('supplier_cost') ? parseFloat(formData.get('supplier_cost') as string) : null
   const internal_margin = formData.get('internal_margin') ? parseFloat(formData.get('internal_margin') as string) : null
   const moq = parseInt(formData.get('moq') as string, 10) || 1
+  const fulfillment_mode = parseFulfillmentMode(formData.get('fulfillment_mode'))
+  const stockRaw = String(formData.get('stock_qty') ?? '').trim()
+  const stock_qty = stockRaw ? Number(stockRaw) : 0
+  if (!Number.isInteger(stock_qty) || stock_qty < 0 || stock_qty > 1000000) {
+    return { error: 'Stock must be a whole number from 0 to 1000000' }
+  }
   const image_url = ((formData.get('image_url') as string) || '').trim() || null
   const hsn_code = ((formData.get('hsn_code') as string) || '').trim() || null
   const status = (formData.get('status') as string) || 'active'
@@ -97,6 +104,8 @@ export async function createProduct(formData: FormData) {
       supplier_cost,
       internal_margin,
       moq,
+      stock_qty,
+      fulfillment_mode,
       image_url,
       hsn_code,
       status,
@@ -108,7 +117,7 @@ export async function createProduct(formData: FormData) {
 
   if (error) {
     if (error.code === '23505') return { error: 'SKU already exists.' }
-    return { error: error.message }
+    return { error: directOrderSchemaHint(error.message) }
   }
 
   if (catalogue_access === 'selected') {
@@ -218,6 +227,17 @@ export async function updateProduct(productId: string, formData: FormData) {
   number('supplier_cost')
   number('internal_margin')
   number('moq', 'moq', 1)
+  if (formData.has('stock_qty')) {
+    const raw = String(formData.get('stock_qty') ?? '').trim()
+    const stock = raw ? Number(raw) : 0
+    if (!Number.isInteger(stock) || stock < 0 || stock > 1000000) {
+      return { error: 'Stock must be a whole number from 0 to 1000000' }
+    }
+    update.stock_qty = stock
+  }
+  if (formData.has('fulfillment_mode')) {
+    update.fulfillment_mode = parseFulfillmentMode(formData.get('fulfillment_mode'))
+  }
 
   if (formData.has('status')) {
     update.status = (formData.get('status') as string) || 'active'
@@ -255,7 +275,7 @@ export async function updateProduct(productId: string, formData: FormData) {
   const { error } = await supabase.from('products').update(update).eq('id', productId)
   if (error) {
     if (error.code === '23505') return { error: 'SKU already exists.' }
-    return { error: error.message }
+    return { error: directOrderSchemaHint(error.message) }
   }
 
   if (update.status && update.status !== 'active') {

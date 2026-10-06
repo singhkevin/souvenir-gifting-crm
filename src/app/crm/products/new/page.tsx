@@ -129,6 +129,30 @@ export default async function NewProductPage({
             </div>
 
             <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Stock on hand</label>
+              <input
+                type="number"
+                name="stock_qty"
+                defaultValue="0"
+                min="0"
+                step="1"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+              />
+            </div>
+
+            <MobileSheetSelect
+              name="fulfillment_mode"
+              label="Purchase path"
+              showDesktopLabel
+              defaultValue="auto"
+              options={[
+                { value: 'auto', label: 'Auto — stock decides' },
+                { value: 'buy', label: 'Buy — immediate purchase' },
+                { value: 'rfq', label: 'Request quote' },
+              ]}
+            />
+
+            <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">Supplier Cost (?)</label>
               <input
                 type="number"
@@ -174,6 +198,12 @@ export default async function NewProductPage({
               />
             </div>
           </div>
+
+          <p className="text-[11px] text-gray-500">
+            Auto with stock shows Add to cart up to that quantity, and Request quote for a larger run. Auto with zero stock shows Request quote.
+            Buy with zero stock shows Add to cart for any quantity. Buy with stock caps Add to cart and still offers Request quote for more.
+            Request quote hides Add to cart. A surface with prices hidden, and every catalog kit, stays on Request quote.
+          </p>
 
           <ProductImageField />
 

@@ -17,6 +17,8 @@ export type SharedCatalogProduct = {
   pack_kit_role: string | null
   pack_kit_total: number | null
   display_order: number | null
+  stock_qty?: number | null
+  fulfillment_mode?: string | null
 }
 
 export type SharedCatalog = {

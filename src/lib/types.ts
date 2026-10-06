@@ -208,6 +208,10 @@ export interface Product {
   description: string | null
   price: number
   moq: number | null
+  /** Units available for immediate purchase. Missing until 20261006_buy_vs_rfq.sql is applied. */
+  stock_qty?: number | null
+  /** auto | buy | rfq. Missing until 20261006_buy_vs_rfq.sql is applied. */
+  fulfillment_mode?: string | null
   image_url: string | null
   status: ProductStatus
   supplier_cost: number | null

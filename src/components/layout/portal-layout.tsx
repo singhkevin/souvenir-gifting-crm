@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, PackageSearch, Heart, FileText, ShoppingBag, LayoutDashboard, FolderGit2, Files, ClipboardList } from 'lucide-react';
 import { BrandName } from '@/components/brand/brand-name';
+import { CartDrawer } from '@/components/site/cart-drawer';
+import { PORTAL_CART_KEY } from '@/lib/catalogue/cart';
 import { signOut } from '@/app/login/actions';
 import { CompanyAvatar } from '../ui/avatar';
 
@@ -117,6 +119,7 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
             </div>
             
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <CartDrawer cartKey={PORTAL_CART_KEY} kind="portal" iconClassName="text-gray-700" />
               {user && (
                 <div className="hidden min-w-0 max-w-[10rem] items-center gap-2 border-l border-gray-200 pl-3 lg:flex lg:max-w-[14rem]">
                   <div className="min-w-0 text-right">

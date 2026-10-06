@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
+import { placeShareDirectOrder } from '@/lib/catalogue/direct-order'
+import type { CheckoutLineInput } from '@/lib/catalogue/purchase-path'
 import {
   cleanRfqDeadline,
   cleanRfqNotes,
@@ -202,4 +204,8 @@ async function createGuestCatalogRequirement(
   })
 
   return { id: requirement.id }
+}
+
+export async function checkoutShareCatalog(input: { token: string; lines: CheckoutLineInput[] }) {
+  return placeShareDirectOrder(input)
 }

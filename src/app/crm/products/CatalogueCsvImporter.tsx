@@ -14,6 +14,8 @@ const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'category', label: 'Category' },
   { key: 'supplier', label: 'Supplier' },
   { key: 'moq', label: 'MOQ' },
+  { key: 'stock_qty', label: 'Stock on hand' },
+  { key: 'fulfillment_mode', label: 'Purchase path (auto / buy / rfq)' },
   { key: 'supplier_cost', label: 'Supplier cost' },
   { key: 'hsn_code', label: 'HSN' },
   { key: 'image_url', label: 'Image URL' },

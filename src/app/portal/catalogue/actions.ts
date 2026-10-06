@@ -2,6 +2,12 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { placeClientDirectOrder } from '@/lib/catalogue/direct-order'
+import type { CheckoutLineInput } from '@/lib/catalogue/purchase-path'
+
+export async function checkoutPortalCart(input: { lines: CheckoutLineInput[] }) {
+  return placeClientDirectOrder({ lines: input.lines })
+}
 
 export async function toggleOfferingSelection(formData: FormData) {
   const supabase = await createClient()

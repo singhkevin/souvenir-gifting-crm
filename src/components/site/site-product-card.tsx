@@ -38,17 +38,20 @@ export function SiteProductCard({
           className="absolute inset-0 h-full w-full bg-transparent"
           imgClassName="catalogue-product-img scale-[1.03]"
         />
-        <AddToCartButton
-          compact
-          product={{
-            id: product.id,
-            sku: product.sku,
-            name: product.name,
-            price: product.price,
-            image_url: product.image_url,
-          }}
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#806A50] opacity-100 shadow-sm transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-        />
+        {product.purchase.buy ? (
+          <AddToCartButton
+            compact
+            maxQuantity={product.purchase.maxBuyQty}
+            product={{
+              id: product.id,
+              sku: product.sku,
+              name: product.name,
+              price: product.price,
+              image_url: product.image_url,
+            }}
+            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#806A50] opacity-100 shadow-sm transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+          />
+        ) : null}
       </div>
 
       <div className="mt-3 space-y-1 px-0.5 text-center">
@@ -61,6 +64,9 @@ export function SiteProductCard({
           {product.name}
         </h3>
         <p className="text-[15px] font-semibold text-[#806A50]">{product.price == null ? 'Request quotation' : formatCurrency(product.price)}</p>
+        <p className="text-[10px] uppercase tracking-[0.12em] text-[#5C6570]">
+          {product.purchase.buy ? 'Add to cart' : 'Request quote'}
+        </p>
       </div>
     </Link>
   )

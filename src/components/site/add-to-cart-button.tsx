@@ -3,7 +3,12 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ShoppingBag, Check, Minus, Plus, X } from 'lucide-react'
-import { addToCart, type CartItem } from '@/lib/catalogue/cart'
+import {
+  addToCart,
+  STORE_CART_KEY,
+  type CartDraft,
+  type CartSurface,
+} from '@/lib/catalogue/cart'
 import { ProductImage } from '@/components/ui/product-image'
 import { formatCurrency } from '@/lib/utils'
 
@@ -11,19 +16,30 @@ export function AddToCartButton({
   product,
   className,
   compact = false,
+  cartKey = STORE_CART_KEY,
+  maxQuantity = null,
+  surface = 'store',
+  catalogId = null,
 }: {
-  product: Omit<CartItem, 'quantity'>
+  product: CartDraft
   className: string
   /** Icon-only, for overlaying on a product card. */
   compact?: boolean
+  cartKey?: string
+  maxQuantity?: number | null
+  surface?: CartSurface
+  catalogId?: string | null
 }) {
   const [open, setOpen] = useState(false)
   const [qty, setQty] = useState(1)
   const [qtyDraft, setQtyDraft] = useState('1')
   const [added, setAdded] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const cap = maxQuantity ?? product.maxQuantity ?? null
 
   const setQtyValue = (value: number) => {
-    const clamped = Math.max(1, Math.round(value) || 1)
+    const rounded = Math.max(1, Math.round(value) || 1)
+    const clamped = cap != null ? Math.min(rounded, cap) : rounded
     setQty(clamped)
     setQtyDraft(String(clamped))
   }
@@ -43,7 +59,21 @@ export function AddToCartButton({
   }, [open])
 
   const confirmAdd = () => {
-    addToCart(product, qty)
+    const result = addToCart(
+      {
+        ...product,
+        maxQuantity: cap,
+        surface: product.surface || surface,
+        catalogId: product.catalogId || catalogId,
+      },
+      qty,
+      cartKey,
+    )
+    if (result.error) {
+      setError(result.error)
+      return
+    }
+    setError(null)
     setOpen(false)
     setQtyValue(1)
     setAdded(true)
@@ -58,6 +88,7 @@ export function AddToCartButton({
         onClick={(event) => {
           event.preventDefault()
           event.stopPropagation()
+          setError(null)
           setQtyValue(1)
           setOpen(true)
         }}
@@ -176,8 +207,9 @@ export function AddToCartButton({
                   </button>
                 </div>
                 <p className="mt-2 text-center text-[11px] text-[#8A929C]">
-                  Placing a bulk order? Type the quantity directly.
+                  {cap != null ? `Up to ${cap} available to buy now.` : 'Type the quantity you need.'}
                 </p>
+                {error ? <p className="mt-2 text-center text-[11px] text-red-700">{error}</p> : null}
 
                 <button
                   type="button"
