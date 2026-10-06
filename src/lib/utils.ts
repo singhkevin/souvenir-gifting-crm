@@ -78,18 +78,7 @@ export function slugify(str: string) {
   return str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
 }
 
-export const ORDER_STATUSES = [
-  "created",
-  "confirmed",
-  "procurement",
-  "printing",
-  "quality_check",
-  "ready_to_dispatch",
-  "dispatched",
-  "delivered",
-] as const
-
-export { ORDER_STATUS_LABELS } from "@/lib/order-workflow"
+export { ORDER_LIFECYCLE as ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/lib/order-workflow"
 
 export const LEAD_STAGE_LABELS: Record<string, string> = {
   cold: "New",

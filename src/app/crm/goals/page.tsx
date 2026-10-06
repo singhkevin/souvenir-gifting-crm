@@ -42,10 +42,8 @@ export default async function GoalsPage() {
     goalsQuery = goalsQuery.or(`owner_id.eq.${profile.id},owner_id.is.null`)
   }
 
-  let orderQuery = applyOrderScope(
-    supabase.from('orders').select('order_value, created_at, owner_id, status').in('status', [
-      'created', 'confirmed', 'in_progress', 'procurement', 'printing', 'quality_check', 'ready_to_dispatch', 'dispatched', 'delivered',
-    ]),
+  const orderQuery = applyOrderScope(
+    supabase.from('orders').select('order_value, created_at, owner_id, status').neq('status', 'cancelled'),
     profile
   )
 

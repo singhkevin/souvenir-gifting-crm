@@ -44,7 +44,7 @@ export function OrderKanban({
       <div className="overflow-x-auto pb-2">
         <div className="flex gap-3 min-w-max">
           {ORDER_LIFECYCLE.map((column) => {
-            const cards = orders.filter((o) => o.status === column || (column === 'procurement' && o.status === 'in_progress'))
+            const cards = orders.filter((o) => o.status === column)
             return (
               <div
                 key={column}
@@ -89,7 +89,7 @@ export function OrderKanban({
         </div>
       </div>
       {canDrag ? (
-        <p className="text-[11px] text-[#7A7267]">Drag a card to move stage. The server records history and assignment.</p>
+        <p className="text-[11px] text-[#7A7267]">Drag a card one stage at a time. Production stays locked until the client approves. Requesting changes is done from the order, and it returns the order to Mockup.</p>
       ) : (
         <p className="text-[11px] text-[#7A7267]">View only. Operations and admin can move stages.</p>
       )}

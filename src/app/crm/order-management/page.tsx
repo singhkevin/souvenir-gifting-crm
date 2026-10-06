@@ -108,6 +108,9 @@ export default async function OrderControlCenterPage({
           <p className="mt-2 text-[10px] leading-relaxed text-[#7A7267]">
             Lifecycle: {ORDER_LIFECYCLE.map((s) => ORDER_STATUS_LABELS[s]).join(' → ')}
           </p>
+          <p className="mt-1 text-[10px] leading-relaxed text-[#7A7267]">
+            Production stays locked until the client approves. Requesting changes returns the order to Mockup.
+          </p>
         </div>
         <div className="flex gap-2 text-xs">
           <Link href={tableHref} className={`min-h-10 flex-1 rounded-lg border px-3 py-2 text-center sm:flex-none ${view === 'table' ? 'border-[#806A50] bg-[#806A50] text-[#FFFFFF]' : 'bg-white'}`}>Table</Link>

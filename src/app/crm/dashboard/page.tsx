@@ -465,10 +465,11 @@ export default async function DashboardPage({
             <Card label="Department work" value={inProgress.filter((o) => o.current_department_id === profile.department_id).length} href="/crm/department" />
             <Card label="Delayed" value={delayed.length} href="/crm/order-management?health=delayed" warn={delayed.length > 0} />
             <Card label="Procurement" value={orderRows.filter((o) => o.status === 'procurement').length} href="/crm/order-management?stage=procurement" />
-            <Card label="Printing" value={orderRows.filter((o) => o.status === 'printing').length} href="/crm/order-management?stage=printing" />
-            <Card label="QC" value={orderRows.filter((o) => o.status === 'quality_check').length} href="/crm/order-management?stage=quality_check" />
-            <Card label="Packing" value={orderRows.filter((o) => o.status === 'ready_to_dispatch').length} href="/crm/order-management?stage=ready_to_dispatch" />
-            <Card label="In transit" value={orderRows.filter((o) => o.status === 'dispatched').length} href="/crm/order-management?stage=dispatched" />
+            <Card label="Mockup" value={orderRows.filter((o) => o.status === 'mockup').length} href="/crm/order-management?stage=mockup" />
+            <Card label="Client approval" value={orderRows.filter((o) => o.status === 'client_approval').length} href="/crm/order-management?stage=client_approval" />
+            <Card label="Production" value={orderRows.filter((o) => o.status === 'production').length} href="/crm/order-management?stage=production" />
+            <Card label="Packaging / QC" value={orderRows.filter((o) => o.status === 'packaging_qc').length} href="/crm/order-management?stage=packaging_qc" />
+            <Card label="Dispatch" value={orderRows.filter((o) => o.status === 'dispatched').length} href="/crm/order-management?stage=dispatched" />
             <Card label="Delivered" value={delivered.length} href="/crm/orders?status=delivered" />
             <Card label="Kanban" value="Board" href="/crm/order-management?view=kanban" />
           </div>

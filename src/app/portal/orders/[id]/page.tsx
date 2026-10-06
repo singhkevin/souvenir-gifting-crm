@@ -7,9 +7,24 @@ import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
 import { Truck } from 'lucide-react'
 import { ProductImage } from '@/components/ui/product-image'
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
+import { decideOrderApproval } from '../actions'
+import { asFormAction } from '@/lib/form-action'
 
-export default async function PortalOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function fileHref(path: string | null) {
+  if (!path) return null
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('/')) return path
+  return path
+}
+
+export default async function PortalOrderDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ approval_error?: string }>
+}) {
   const { id } = await params
+  const { approval_error: approvalError } = await searchParams
   if (!isUuid(id)) notFound()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -20,7 +35,8 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
   const { data: order } = await supabase
     .from('orders')
     .select(`
-      id, order_number, status, order_value, expected_delivery_date, created_at, tracking_number, company_id, campaign_id, quotation_id,
+      id, order_number, status, order_value, expected_delivery_date, created_at, tracking_number, company_id, campaign_id, quotation_id, requirement_id,
+      client_approval_status, client_approval_note, client_approval_at,
       campaign:campaign_id(name, employee_quantity),
       courier_partner:courier_partners(name),
       quotation:quotations(quotation_number, total),
@@ -32,6 +48,19 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
   if (!order || order.company_id !== companyId) {
     notFound()
   }
+
+  const requirementId = isUuid(order.requirement_id) ? order.requirement_id : null
+  let mockupQuery = supabase
+    .from('mockups')
+    .select('id, file_name, storage_path, mime_type, created_at')
+    .eq('status', 'shared')
+    .order('created_at', { ascending: false })
+    .limit(20)
+  mockupQuery = requirementId
+    ? mockupQuery.or(`order_id.eq.${id},requirement_id.eq.${requirementId}`)
+    : mockupQuery.eq('order_id', id)
+  const { data: mockups } = await mockupQuery
+  const showMockups = (mockups || []).length > 0 || order.status === 'mockup' || order.status === 'client_approval'
 
   const campaign = oneRelation(order.campaign)
   const courier = oneRelation(order.courier_partner)
@@ -48,6 +77,9 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <BackButton href="/portal/orders" label="Back to Orders" />
+      {approvalError && (
+        <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">{approvalError}</p>
+      )}
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between gap-4">
@@ -80,6 +112,75 @@ export default async function PortalOrderDetailPage({ params }: { params: Promis
           <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Timeline</h3>
           <OrderLifecycleBar status={order.status} variant="client" showActors={false} />
         </div>
+
+        {showMockups && (
+          <div className="space-y-3 border-b p-6">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">Shared mockups</h3>
+            {(mockups || []).length === 0 ? (
+              <p className="text-sm text-gray-500">No mockups shared yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {(mockups || []).map((mockup) => {
+                  const href = fileHref(mockup.storage_path)
+                  return (
+                    <li key={mockup.id} className="flex flex-col gap-2 rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{mockup.file_name || 'Mockup'}</p>
+                        <p className="text-xs text-gray-500">{mockup.mime_type} · {formatDate(mockup.created_at)}</p>
+                      </div>
+                      {href ? (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50]"
+                        >
+                          Open
+                        </a>
+                      ) : null}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {order.status === 'client_approval' && (
+          <div className="space-y-3 border-b p-6">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">Client approval</h3>
+            {order.client_approval_status === 'approved' ? (
+              <p className="text-sm text-emerald-800">
+                You approved this order{order.client_approval_note ? `: ${order.client_approval_note}` : '.'} Production can start once the team advances it.
+              </p>
+            ) : (
+              <p className="text-sm text-gray-600">Review the shared mockup, then approve it or ask for changes.</p>
+            )}
+            <form action={asFormAction(decideOrderApproval)} className="space-y-3">
+              <input type="hidden" name="order_id" value={order.id} />
+              <label className="block space-y-1 text-xs text-gray-500">
+                Note (optional)
+                <textarea name="note" rows={3} maxLength={2000} className="w-full rounded-lg border px-3 py-2 text-sm text-gray-900" placeholder="Anything the team should know" />
+              </label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button name="decision" value="approved" className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-4 text-xs font-semibold text-white">
+                  Approve
+                </button>
+                <button name="decision" value="changes_requested" className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-4 text-xs font-semibold text-[#806A50]">
+                  Request changes
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {order.status === 'mockup' && order.client_approval_status === 'changes_requested' && (
+          <div className="border-b px-6 py-4">
+            <p className="text-sm text-amber-900">
+              You asked for changes{order.client_approval_note ? `: ${order.client_approval_note}` : '.'} The team will share an updated mockup.
+            </p>
+          </div>
+        )}
 
         {order.tracking_number && (
           <div className="px-6 pb-4">
