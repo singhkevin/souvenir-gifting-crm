@@ -136,4 +136,5 @@ in-app history exists for the tab. Do not reintroduce a bare `router.back()`.
 ## Environment
 
 Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_APP_NAME`.  
+Production brand and domains (see `.env.example` and README): `NEXT_PUBLIC_APP_NAME=Souvenir - Gifting Solutions`, `NEXT_PUBLIC_APP_SHORT_NAME=Souvenir`, `NEXT_PUBLIC_SITE_URL=https://www.giftingstore.online`, `ROOT_DOMAIN=giftingstore.online`. Optional `NEXT_PUBLIC_MARKETING_URL` (for example `https://souvenirgifting.com`) is not the portal root.  
 Never commit `.env`, `deploy_full.py`, or `deploy-all-ready.json`.

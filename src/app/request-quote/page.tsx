@@ -4,10 +4,11 @@ import { QuoteForm } from '@/components/site/quote-form'
 import { getProfile } from '@/lib/auth'
 import { getPublicProduct } from '@/lib/catalogue/products'
 import { isUuid } from '@/lib/utils'
+import { appName } from '@/lib/brand'
 
 export const metadata: Metadata = {
   title: 'Request a Quote',
-  description: 'Request a corporate gifting quotation from Souvenir - Gifting Solutions.',
+  description: `Request a corporate gifting quotation from ${appName()}.`,
 }
 
 export default async function RequestQuotePage({

@@ -12,10 +12,11 @@ import {
   sanitiseCatalogueSearch,
 } from '@/lib/catalogue/products'
 import { formatCurrency, isUuid } from '@/lib/utils'
+import { appName } from '@/lib/brand'
 
 export const metadata: Metadata = {
   title: 'Catalogue',
-  description: 'Browse the Souvenir - Gifting Solutions corporate gifting catalogue.',
+  description: `Browse the ${appName()} corporate gifting catalogue.`,
 }
 
 export default async function CataloguePage({

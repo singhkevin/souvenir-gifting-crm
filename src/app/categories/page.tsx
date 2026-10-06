@@ -5,10 +5,11 @@ import { ProductImage } from '@/components/ui/product-image'
 import { getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
 import { slugify } from '@/lib/utils'
 import { PRODUCT_CATEGORY_ORDER, sortProductCategories } from '@/lib/products/categories'
+import { appName } from '@/lib/brand'
 
 export const metadata: Metadata = {
   title: 'Categories',
-  description: 'Browse Souvenir - Gifting Solutions gifts by category.',
+  description: `Browse ${appName()} gifts by category.`,
 }
 
 export default async function CategoriesPage() {

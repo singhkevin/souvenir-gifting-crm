@@ -61,6 +61,27 @@ Password for all demo users: `Oaklane-Demo-2026!`
 - `priya@wipro.example` — Client Admin (Wipro)
 - `rahul@nexora.example` — Client Admin (Nexora)
 
+## Brand and domains
+
+Public copy reads the variables in `.env.example`. When a variable is unset, the app uses the production default.
+
+| Variable | Production value | Role |
+| --- | --- | --- |
+| `NEXT_PUBLIC_APP_NAME` | `Souvenir - Gifting Solutions` | Titles, logo alt text, emails, copyright, organisation-name default |
+| `NEXT_PUBLIC_APP_SHORT_NAME` | `Souvenir` | PWA name, install hint, compact labels |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.giftingstore.online` | Canonical origin (`metadataBase`, Open Graph) |
+| `ROOT_DOMAIN` | `giftingstore.online` | Company portals at `https://{slug}.giftingstore.online` |
+| `NEXT_PUBLIC_MARKETING_URL` | unset | Optional. Example: `https://souvenirgifting.com`. Footer link only when set. |
+| `RESEND_FROM_EMAIL` | `Souvenir - Gifting Solutions <catalogs@giftingstore.online>` | Transactional From, after that domain is verified in Resend |
+
+`www.giftingstore.online` and `giftingstore.online` are the same CRM. `*.vercel.app` stays the main site and does not serve company subdomains. `souvenirgifting.com` is not the portal root and is not an auth host. Leave `NEXT_PUBLIC_MARKETING_URL` unset until that hostname should show in the footer.
+
+Placeholder names (`Gifting Solutions`, `Giffter`, `Oaklane`, `souvenir-gifting-crm`) and the host `souvenir-gifting-crm.vercel.app` are ignored so an old example value cannot replace the product name.
+
+This repository does not change Hostinger DNS, Vercel domain attachment, or the Supabase Auth redirect list. Those stay as documented in the password-recovery section and the company-portal checklist below.
+
+Demo logins `*@oaklane.demo` and the demo password are Supabase credentials. They are not the product name.
+
 ## Deploy
 
 Production (Vercel, same project for the CRM and company portals):

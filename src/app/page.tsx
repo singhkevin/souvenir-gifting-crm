@@ -5,6 +5,7 @@ import { TabSessionRevive } from "@/components/auth/tab-session-revive"
 import { confirmSearchFromParams, hasRecoveryQuery } from "@/lib/auth/recovery"
 import { SiteShell } from "@/components/site/site-shell"
 import { PublicHome } from "@/components/site/public-home"
+import { appName } from "@/lib/brand"
 import type { Metadata } from "next"
 
 function firstParam(value: string | string[] | undefined) {
@@ -12,7 +13,7 @@ function firstParam(value: string | string[] | undefined) {
 }
 
 export const metadata: Metadata = {
-  title: "Souvenir - Gifting Solutions — Corporate Gifting, Refined",
+  title: `${appName()} — Corporate Gifting, Refined`,
   description: "A premium corporate gifting catalogue for teams, clients and brands.",
 }
 

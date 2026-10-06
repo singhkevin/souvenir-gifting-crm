@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writeAudit } from '@/lib/audit'
+import { PRODUCTION_ROOT_DOMAIN } from '@/lib/brand'
 import { rootDomain } from '@/lib/portal-host'
 import {
   deleteSubdomain,
@@ -65,7 +66,7 @@ function subdomainConflictMessage(message: string) {
 }
 
 function expectedHostname(slug: string) {
-  const root = rootDomain() || 'giftingstore.online'
+  const root = rootDomain() || PRODUCTION_ROOT_DOMAIN
   return `${slug.toLowerCase()}.${root}`
 }
 

@@ -1,9 +1,14 @@
+import { appName } from '@/lib/brand'
+
 /**
  * Resend settings are server-only and read at request time.
  * A dynamic `process.env` lookup stays on the Node process so a key set in
  * the host panel (Hostinger) is visible even when it was absent at build time.
  */
-export const DEFAULT_RESEND_FROM = 'Souvenir Gifting Solutions <onboarding@resend.dev>'
+export function defaultResendFrom() {
+  const name = appName().replace(/["\\]/g, '')
+  return `"${name}" <onboarding@resend.dev>`
+}
 
 export const RESEND_NOT_CONFIGURED_ERROR =
   'Email delivery is not configured. Set RESEND_API_KEY in the server environment (see .env.example). To deliver to client addresses, set RESEND_FROM_EMAIL to a sender on a domain verified in Resend. Until then, copy the link or use Open mail app.'
@@ -23,7 +28,7 @@ export type ResendConfig = {
 export function resendConfigFrom(env: EnvSource): ResendConfig | { error: string } {
   const apiKey = readServerEnv(env, 'RESEND_API_KEY')
   if (!apiKey) return { error: RESEND_NOT_CONFIGURED_ERROR }
-  const from = readServerEnv(env, 'RESEND_FROM_EMAIL') || DEFAULT_RESEND_FROM
+  const from = readServerEnv(env, 'RESEND_FROM_EMAIL') || defaultResendFrom()
   return { apiKey, from }
 }
 

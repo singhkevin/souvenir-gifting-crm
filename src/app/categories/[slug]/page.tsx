@@ -5,6 +5,7 @@ import { CatalogueBrowser } from '@/components/site/catalogue-browser'
 import { getPublicCatalogueProducts } from '@/lib/catalogue/products'
 import { PRODUCT_CATEGORY_ORDER } from '@/lib/products/categories'
 import { slugify } from '@/lib/utils'
+import { appName } from '@/lib/brand'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const name =
     [...PRODUCT_CATEGORY_ORDER, ...products.map((p) => p.category_name || '')].find((item) => slugify(item) === slug) ||
     'Category'
-  return { title: name, description: `${name} gifts from the Souvenir - Gifting Solutions catalogue.` }
+  return { title: name, description: `${name} gifts from the ${appName()} catalogue.` }
 }
 
 export default async function CategoryDetailPage({ params }: Props) {

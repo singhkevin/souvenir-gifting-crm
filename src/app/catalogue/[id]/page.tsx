@@ -8,6 +8,7 @@ import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { getPublicProduct } from '@/lib/catalogue/products'
 import { purchaseCaption } from '@/lib/catalogue/purchase-path'
+import { appName } from '@/lib/brand'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -18,10 +19,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return { title: 'Product' }
   return {
     title: product.name,
-    description: product.description || `${product.name} — Souvenir - Gifting Solutions corporate gifting catalogue.`,
+    description: product.description || `${product.name} — ${appName()} corporate gifting catalogue.`,
     openGraph: {
-      title: `${product.name} · Souvenir - Gifting Solutions`,
-      description: product.description || 'Corporate gifting from Souvenir - Gifting Solutions.',
+      title: `${product.name} · ${appName()}`,
+      description: product.description || `Corporate gifting from ${appName()}.`,
+      siteName: appName(),
       images: product.image_url ? [{ url: product.image_url }] : undefined,
     },
   }

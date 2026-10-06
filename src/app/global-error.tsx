@@ -1,5 +1,7 @@
 'use client'
 
+import { brandWordmark } from '@/lib/brand'
+
 export default function GlobalError({
   error,
   reset,
@@ -7,6 +9,7 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const { lead, rest } = brandWordmark()
   return (
     <html lang="en">
       <body style={{ fontFamily: 'Georgia, serif', background: '#F4EFE6', margin: 0 }}>
@@ -23,20 +26,25 @@ export default function GlobalError({
             }}
           >
             <h1 style={{ fontSize: 18, fontWeight: 400, color: '#1C1917', margin: 0 }}>
-              Souvenir
-              <span
-                aria-hidden="true"
-                style={{
-                  display: 'inline-block',
-                  width: '0.38em',
-                  height: 1,
-                  margin: '0 0.28em 0.2em',
-                  background: 'currentColor',
-                  opacity: 0.7,
-                  verticalAlign: 'middle',
-                }}
-              />
-              Gifting Solutions could not load
+              {lead}{rest ? (
+                <>
+                  {' '}
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      display: 'inline-block',
+                      width: '0.38em',
+                      height: 1,
+                      margin: '0 0.28em 0.2em',
+                      background: 'currentColor',
+                      opacity: 0.7,
+                      verticalAlign: 'middle',
+                    }}
+                  />
+                  {' '}
+                  {rest} could not load
+                </>
+              ) : ' could not load'}
             </h1>
             <p style={{ fontSize: 14, fontFamily: 'system-ui, sans-serif', color: '#6B6358', marginTop: 8 }}>
               An unexpected error occurred while starting the application.

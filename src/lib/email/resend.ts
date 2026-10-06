@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { appName } from '@/lib/brand'
 import { resendConfig, resendHttpError } from '@/lib/email/resend-config'
 
 const RESEND_API_URL = 'https://api.resend.com/emails'
@@ -56,7 +57,7 @@ export function passwordResetEmailHtml({ actionLink }: { actionLink: string }) {
     <div style="font-family: -apple-system, Segoe UI, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1B2430;">
       <h1 style="font-size: 20px; margin-bottom: 8px;">Reset your password</h1>
       <p style="font-size: 14px; line-height: 1.6; color: #5C6570;">
-        We received a request to reset the password for your Souvenir Gifting Solutions account.
+        We received a request to reset the password for your ${appName()} account.
         Click the button below to choose a new password. This link expires in 1 hour.
       </p>
       <p style="margin: 28px 0;">

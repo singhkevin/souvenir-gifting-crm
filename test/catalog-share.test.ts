@@ -9,7 +9,7 @@ import {
   sharePath,
 } from '../src/lib/catalogs/share-link.ts'
 import {
-  DEFAULT_RESEND_FROM,
+  defaultResendFrom,
   RESEND_NOT_CONFIGURED_ERROR,
   resendConfigFrom,
   resendHttpError,
@@ -58,15 +58,15 @@ test('catalog email uses the same Resend key and from address as the rest of the
   assert.match(RESEND_NOT_CONFIGURED_ERROR, /RESEND_FROM_EMAIL/)
 
   const keyOnly = resendConfigFrom({ RESEND_API_KEY: ' re_test_key ' })
-  assert.deepEqual(keyOnly, { apiKey: 're_test_key', from: DEFAULT_RESEND_FROM })
+  assert.deepEqual(keyOnly, { apiKey: 're_test_key', from: defaultResendFrom() })
 
   const customFrom = resendConfigFrom({
     RESEND_API_KEY: 're_test_key',
-    RESEND_FROM_EMAIL: 'Souvenir Gifting Solutions <catalogs@giftingstore.online>',
+    RESEND_FROM_EMAIL: 'Souvenir - Gifting Solutions <catalogs@giftingstore.online>',
   })
   assert.deepEqual(customFrom, {
     apiKey: 're_test_key',
-    from: 'Souvenir Gifting Solutions <catalogs@giftingstore.online>',
+    from: 'Souvenir - Gifting Solutions <catalogs@giftingstore.online>',
   })
 
   assert.match(resendHttpError(401), /RESEND_API_KEY/)
