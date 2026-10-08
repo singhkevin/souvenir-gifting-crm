@@ -10,12 +10,13 @@ export function CatalogAssignPanel({
   catalogId,
   assigned,
   companies,
-  pricingCompanyName,
+  defaultCompanyName,
 }: {
   catalogId: string
   assigned: { companyId: string; name: string }[]
   companies: { id: string; name: string }[]
-  pricingCompanyName: string | null
+  /** Company whose margin prices newly added lines and the default preview (campaigns.company_id). */
+  defaultCompanyName: string | null
 }) {
   const { pending, run } = useAction()
   const [removingId, setRemovingId] = useState<string | null>(null)
@@ -45,8 +46,9 @@ export function CatalogAssignPanel({
       <div>
         <h2 className="font-serif text-base text-[#1C1917]">Assigned companies</h2>
         <p className="mt-1 text-[#7A7267]">
-          One catalog can be shared with several companies. The portal list uses these assignments.
-          {pricingCompanyName ? ` Sell-price defaults use ${pricingCompanyName}.` : ' Assign a company before generating budget packs.'}
+          One catalog can be shared with several companies. The portal list uses these assignments, and each
+          company sees prices worked out from its own margin (unless a line has a manual price).
+          {defaultCompanyName ? ` Default preview and new lines use ${defaultCompanyName}.` : ' Assign a company to preview prices and generate budget packs.'}
         </p>
       </div>
       <ul className="space-y-2">

@@ -13,14 +13,22 @@ export function BudgetPackGenerator({
   budgetPerEmployee,
   draftPackCount,
   publishedPackCount,
+  companies,
+  defaultCompanyId,
 }: {
   catalogId: string
   budgetPerEmployee: number | null
   draftPackCount: number
   publishedPackCount: number
+  /** Assigned companies; packs are priced against the chosen one. */
+  companies: { id: string; name: string }[]
+  defaultCompanyId: string | null
 }) {
   const { pending, run } = useAction()
   const [active, setActive] = useState<Which | null>(null)
+  const [pricingCompanyId, setPricingCompanyId] = useState(
+    companies.some((company) => company.id === defaultCompanyId) ? defaultCompanyId || '' : companies[0]?.id || '',
+  )
   const generateKey = useIdempotencyKey()
   const replaceKey = useIdempotencyKey()
   const publishKey = useIdempotencyKey()
@@ -30,6 +38,7 @@ export function BudgetPackGenerator({
     const formData = new FormData()
     formData.set('campaign_id', catalogId)
     if (replace) formData.set('replace', '1')
+    formData.set('pricing_company_id', pricingCompanyId)
     formData.set(IDEMPOTENCY_FIELD, idem.key)
     setActive(replace ? 'replace' : 'generate')
     run(
@@ -84,10 +93,25 @@ export function BudgetPackGenerator({
           refreshes draft packs; use Replace all packs if published kits should be rebuilt too.
         </p>
       </div>
+      <label className="flex flex-wrap items-center gap-2 text-[#5A5248]">
+        Price packs for
+        <select
+          value={pricingCompanyId}
+          onChange={(event) => setPricingCompanyId(event.target.value)}
+          disabled={pending || companies.length === 0}
+          className="min-h-10 rounded-lg border bg-white px-2 py-2"
+        >
+          {companies.length === 0 && <option value="">Assign a company first</option>}
+          {companies.map((company) => (
+            <option key={company.id} value={company.id}>{company.name}</option>
+          ))}
+        </select>
+        <span className="text-[#7A7267]">Pack prices are fixed at the chosen company&apos;s margin.</span>
+      </label>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={pending || budget <= 0}
+          disabled={pending || budget <= 0 || !pricingCompanyId}
           aria-busy={pending && active === 'generate' ? true : undefined}
           onClick={() => runGenerate(false)}
           className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50"
@@ -96,7 +120,7 @@ export function BudgetPackGenerator({
         </button>
         <button
           type="button"
-          disabled={pending || budget <= 0}
+          disabled={pending || budget <= 0 || !pricingCompanyId}
           aria-busy={pending && active === 'replace' ? true : undefined}
           onClick={() => runGenerate(true)}
           className="min-h-10 rounded-lg border border-[#E5DFD5] bg-white px-3 font-semibold text-[#806A50] disabled:opacity-50"

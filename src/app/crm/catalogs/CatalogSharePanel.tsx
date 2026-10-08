@@ -22,6 +22,8 @@ export function CatalogSharePanel({
   expiresAt,
   linkExpired,
   suggestions,
+  companies,
+  linkCompanyName,
 }: {
   catalogId: string
   catalogName: string
@@ -29,6 +31,9 @@ export function CatalogSharePanel({
   expiresAt: string | null
   linkExpired: boolean
   suggestions: { email: string; label: string }[]
+  /** Assigned companies. With more than one, the link can be priced for a specific company. */
+  companies: { id: string; name: string }[]
+  linkCompanyName: string | null
 }) {
   const { pending, run: runAction } = useAction()
   const [active, setActive] = useState<'extend' | 'revoke' | null>(null)
@@ -100,6 +105,9 @@ export function CatalogSharePanel({
         <div className="space-y-2">
           <p className="break-all rounded-lg bg-[#FAF7F2] px-3 py-2 font-mono text-[11px]">{url}</p>
           <p className="text-[#7A7267]">{expiryLabel}</p>
+          <p className="text-[#7A7267]">
+            Prices on this link: {linkCompanyName ? `${linkCompanyName}'s margin` : companies.length > 1 ? 'the signed-in client\'s company, otherwise the catalog default' : 'the assigned company\'s margin'}.
+          </p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -146,6 +154,17 @@ export function CatalogSharePanel({
         onSuccess={applyResult}
       >
         <input type="hidden" name="campaign_id" value={catalogId} />
+        {companies.length > 1 && (
+          <label className="flex items-center gap-2 text-[#5A5248]">
+            Price for
+            <select name="company_id" defaultValue="" className="min-h-10 rounded-lg border bg-white px-2 py-2">
+              <option value="">Each viewer&apos;s company</option>
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>{company.name}</option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="flex items-center gap-2 text-[#5A5248]">
           <input type="checkbox" name="no_expiry" value="1" checked={noExpiry} onChange={(event) => setNoExpiry(event.target.checked)} />
           No expiry

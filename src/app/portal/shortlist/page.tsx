@@ -4,6 +4,7 @@ import { formatCurrency } from '@/lib/utils'
 import { OfferingActions } from '../catalogue/OfferingActions'
 import { ProductImage } from '@/components/ui/product-image'
 import { CatalogueShortlistSection } from '@/components/portal/catalogue-shortlist-section'
+import { offeringPricesForCompany } from '@/lib/catalogs/pricing'
 
 export default async function PortalShortlistPage() {
   const supabase = await createClient()
@@ -18,6 +19,13 @@ export default async function PortalShortlistPage() {
     .order('updated_at', { ascending: false })
 
   const campaignRows = rows || []
+  const prices = await offeringPricesForCompany(
+    campaignRows.flatMap((row) => {
+      const offering = Array.isArray(row.offering) ? row.offering[0] : row.offering
+      return offering?.id ? [offering.id as string] : []
+    }),
+    companyId,
+  )
 
   return (
     <div className="space-y-8">
@@ -77,7 +85,7 @@ export default async function PortalShortlistPage() {
                       <h3 className="text-md font-bold text-gray-900 hover:text-[#806A50]">{offering.display_name}</h3>
                     </Link>
                     <p className="text-sm text-gray-600">
-                      {formatCurrency(offering.selling_price)} · qty {row.quantity || 1} · {row.kind}
+                      {formatCurrency(prices.get(offering.id) ?? offering.selling_price)} · qty {row.quantity || 1} · {row.kind}
                     </p>
                     <OfferingActions
                       campaignId={row.campaign_id}

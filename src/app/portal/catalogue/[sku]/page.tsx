@@ -5,6 +5,7 @@ import { BackButton } from '@/components/ui/back-button'
 import { OfferingActions } from '../OfferingActions'
 import { formatCurrency } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
+import { offeringPricesForCompany } from '@/lib/catalogs/pricing'
 
 export default async function CampaignOfferingDetailPage({ params }: { params: Promise<{ sku: string }> }) {
   const { sku } = await params
@@ -32,8 +33,11 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
       .order('display_order')
     kitMembers = lines || []
   }
+  const { data: companyId } = await supabase.rpc('client_company_id')
+  const prices = await offeringPricesForCompany([offering.id, ...kitMembers.map((member) => member.id)], companyId)
+  kitMembers = kitMembers.map((member) => ({ ...member, selling_price: prices.get(member.id) ?? member.selling_price }))
   const kitTotal =
-    offering.pack_kit_total != null ? Number(offering.pack_kit_total) : offering.selling_price
+    offering.pack_kit_total != null ? Number(offering.pack_kit_total) : (prices.get(offering.id) ?? offering.selling_price)
 
   const campaign = Array.isArray(offering.campaign) ? offering.campaign[0] : offering.campaign
   const { data: selection } = await supabase

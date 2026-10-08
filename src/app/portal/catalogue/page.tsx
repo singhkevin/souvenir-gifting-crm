@@ -15,6 +15,7 @@ import { PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
 import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
 import { headers } from 'next/headers'
 import { readTenantFromHeaders } from '@/lib/portal-host'
+import { withCompanyPrices } from '@/lib/catalogs/pricing'
 import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 
 const PAGE_SIZE = 24
@@ -46,7 +47,7 @@ export default async function PortalCataloguePage({
         .eq('product.status', 'active')
         .order('display_order')
     const offeringsResult = await offeringQuery()
-    const offerings = offeringsResult.error && /stock_qty|fulfillment_mode/i.test(offeringsResult.error.message)
+    const storedOfferings = offeringsResult.error && /stock_qty|fulfillment_mode/i.test(offeringsResult.error.message)
       ? ((await supabase
           .from('campaign_products')
           .select('id, product_id, display_name, client_description, client_image_url, selling_price, pack_kit_total, moq, display_order, pack_option, pack_kit_id, pack_kit_role, campaign_id, campaign:campaigns(id, name, company_id, budget_per_employee), product:products!inner(status, sku)')
@@ -55,6 +56,8 @@ export default async function PortalCataloguePage({
           .eq('product.status', 'active')
           .order('display_order')).data || []) as NonNullable<Awaited<ReturnType<typeof offeringQuery>>['data']>
       : offeringsResult.data || []
+    // One catalog serves many companies: price each line with the viewing company's margin.
+    const offerings = await withCompanyPrices(storedOfferings, companyId)
 
     const [{ data: selections }, { data: campaignMeta }] = await Promise.all([
       supabase.from('client_product_selections').select('campaign_product_id, kind').eq('company_id', companyId),
