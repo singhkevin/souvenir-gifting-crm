@@ -488,6 +488,10 @@ export async function createPortalClient(formData: FormData) {
       role,
       company_id: companyId,
     },
+    app_metadata: {
+      role,
+      company_id: companyId,
+    },
   })
   if (error || !created.user) {
     const message = error?.message || 'Could not create the client login'

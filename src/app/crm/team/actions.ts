@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
+const STAFF_ROLES = ['admin', 'sales', 'operations', 'accounts', 'management']
+
 export async function updateTeamMember(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -15,9 +17,11 @@ export async function updateTeamMember(formData: FormData) {
   const isActive = String(formData.get('is_active') || '') === 'true'
   const departmentId = String(formData.get('department_id') || '') || null
   if (!id) return { error: 'Member required' }
+  if (!STAFF_ROLES.includes(role)) return { error: 'Invalid staff role' }
 
   const { error } = await supabase.from('profiles').update({
     role,
+    company_id: null,
     is_active: isActive,
     department_id: departmentId,
   }).eq('id', id)

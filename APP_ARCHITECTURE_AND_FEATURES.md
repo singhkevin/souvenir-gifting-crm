@@ -149,7 +149,7 @@ Divided into logical functional clusters with granular role-based access:
 * **Executive Tracking (`/crm/tracking`)**: Real-time management surveillance of open orders, overdue departmental tasks, and operational assignment history.
 * **Client Reviews (`/crm/reviews`)**: Client satisfaction scoring, post-delivery feedback logs, and testimonials.
 * **Audit Trail (`/crm/audit-log`)**: Immutable security audit log tracking entity modifications (who changed what, previous values, new values, timestamps, and user IP/context).
-* **Team Management (`/crm/team`)**: Employee management, role assignment (`admin`, `sales`, `operations`, `accounts`, `management`), department assignments, and active account toggles.
+* **Team Management (`/crm/team`)**: Employee management, role assignment (`admin`, `sales`, `operations`, `accounts`, `management`), department assignments, and active account toggles. Public sign-up cannot choose a role: `handle_new_user` reads `role` and `company_id` only from `app_metadata` (service role). A self sign-up or a user created in the Supabase dashboard becomes `client_user` with `company_id` null and shows under **Pending accounts** until an admin assigns a staff role. Portal logins created by an admin still receive their company role through `app_metadata` and the profile upsert.
 * **Organization Settings (`/crm/settings`)**: Company profile, default tax rates, currency formatting, system-wide defaults.
 * **Knowledge Center (`/crm/knowledge`) & Announcements (`/crm/announcements`)**: Internal SOPs, order workflow guidelines, and team-wide bulletin broadcasting.
 

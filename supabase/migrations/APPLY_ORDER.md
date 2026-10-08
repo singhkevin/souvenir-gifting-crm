@@ -18,18 +18,18 @@ Do **not** run these against production from the agent unless explicitly request
 12. `20260923_campaign_budget_pack_options.sql`
 13. `20260924_campaign_pack_kits.sql`
 14. `20260924_channel_sell_price.sql`
-15. `20260924_client_requirement_insert.sql`
-16. `20260924_company_portal_slug.sql`
-17. `20260930_tenant_status_and_slug.sql` ← Phase 1 (rollback: `supabase/rollbacks/20260930_tenant_status_and_slug_rollback.sql`)
-18. **`20261001_portal_hosts.sql`** ← Phase 2 (rollback: `supabase/rollbacks/20261001_portal_hosts_rollback.sql`)
-19. **`20261002_company_product_exclusions.sql`** ← company catalogue hide/show (rollback: `supabase/rollbacks/20261002_company_product_exclusions_rollback.sql`)
-20. `20261003_quotation_response.sql` (rollback: `supabase/rollbacks/20261003_quotation_response_rollback.sql`)
-21. **`20261005_catalogs_assignments_share.sql`** ← catalogs: assignments + share links (rollback: `supabase/rollbacks/20261005_catalogs_assignments_share_rollback.sql`)
-22. **`20261005_catalog_rfq.sql`** ← catalog RFQ: `requirements.campaign_id`, `requirement_products.quantity`, share payload sku (rollback: `supabase/rollbacks/20261005_catalog_rfq_rollback.sql`)
-23. **`20261005_quotation_line_accept.sql`** ← per-line portal accept creates an order (rollback: `supabase/rollbacks/20261005_quotation_line_accept_rollback.sql`)
-24. **`20261005_supplier_offers.sql`** ← supplier offers, best cost, surface price toggles (rollback: `supabase/rollbacks/20261005_supplier_offers_rollback.sql`)
-25. **`20261006_fulfillment_stages_client_approval.sql`** ← fulfillment stages and client approval gate (rollback: `supabase/rollbacks/20261006_fulfillment_stages_client_approval_rollback.sql`)
-26. **`20261006_buy_vs_rfq.sql`** ← stock quantity, purchase flag, direct order (rollback: `supabase/rollbacks/20261006_buy_vs_rfq_rollback.sql`). Apply before using Buy. Existing products stay on Request quote until stock or the Buy flag is set.
+15. `20260924_company_portal_slug.sql`
+16. `20260930_tenant_status_and_slug.sql` ← Phase 1 (rollback: `supabase/rollbacks/20260930_tenant_status_and_slug_rollback.sql`)
+17. **`20261001_portal_hosts.sql`** ← Phase 2 (rollback: `supabase/rollbacks/20261001_portal_hosts_rollback.sql`)
+18. **`20261002_company_product_exclusions.sql`** ← company catalogue hide/show (rollback: `supabase/rollbacks/20261002_company_product_exclusions_rollback.sql`)
+19. `20261003_quotation_response.sql` (rollback: `supabase/rollbacks/20261003_quotation_response_rollback.sql`)
+20. **`20261005_catalogs_assignments_share.sql`** ← catalogs: assignments + share links (rollback: `supabase/rollbacks/20261005_catalogs_assignments_share_rollback.sql`)
+21. **`20261005_catalog_rfq.sql`** ← catalog RFQ: `requirements.campaign_id`, `requirement_products.quantity`, share payload sku (rollback: `supabase/rollbacks/20261005_catalog_rfq_rollback.sql`)
+22. **`20261005_quotation_line_accept.sql`** ← per-line portal accept creates an order (rollback: `supabase/rollbacks/20261005_quotation_line_accept_rollback.sql`)
+23. **`20261005_supplier_offers.sql`** ← supplier offers, best cost, surface price toggles (rollback: `supabase/rollbacks/20261005_supplier_offers_rollback.sql`)
+24. **`20261006_fulfillment_stages_client_approval.sql`** ← fulfillment stages and client approval gate (rollback: `supabase/rollbacks/20261006_fulfillment_stages_client_approval_rollback.sql`)
+25. **`20261006_buy_vs_rfq.sql`** ← stock quantity, purchase flag, direct order (rollback: `supabase/rollbacks/20261006_buy_vs_rfq_rollback.sql`). Apply before using Buy. Existing products stay on Request quote until stock or the Buy flag is set.
+26. **`20261008_harden_handle_new_user_role.sql`** ← sign-up trigger takes role/company_id only from app_metadata; self sign-ups become client_user (rollback: `supabase/rollbacks/20261008_harden_handle_new_user_role_rollback.sql`). Already applied to production on 2026-10-08.
 
 ## Phase 2 verification SQL (after applying `20261001_portal_hosts.sql`)
 
