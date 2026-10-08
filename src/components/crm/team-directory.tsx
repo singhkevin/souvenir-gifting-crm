@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { formatDate } from '@/lib/utils'
 import { updateTeamMember } from '@/app/crm/team/actions'
 import { asFormAction } from '@/lib/form-action'
@@ -68,6 +69,8 @@ function MemberForm({
   variant: 'card' | 'table'
 }) {
   const compact = variant === 'table'
+  const [role, setRole] = useState(pending ? '' : profile.role)
+  const saveBlocked = pending && role === ''
   return (
     <form
       action={asFormAction(updateTeamMember)}
@@ -81,7 +84,8 @@ function MemberForm({
       <MobileSheetSelect
         name="role"
         label="Role"
-        defaultValue={pending ? '' : profile.role}
+        value={role}
+        onChange={setRole}
         options={ROLE_OPTIONS}
         emptyLabel={pending ? 'Select role' : 'Select'}
         required={pending}
@@ -101,7 +105,8 @@ function MemberForm({
       />
       <button
         type="submit"
-        className={`inline-flex items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF] ${
+        disabled={saveBlocked}
+        className={`inline-flex items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF] disabled:cursor-not-allowed disabled:opacity-50 ${
           compact ? 'min-h-9' : 'min-h-10'
         }`}
       >
