@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { respondToQuotation } from '../../actions'
+import { useAction, useIdempotencyKey } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import { formatCurrency } from '@/lib/utils'
 
 export type QuotationDecisionLine = {
@@ -26,8 +27,9 @@ export function QuotationActions({
   discountPercent: number
   taxPercent: number
 }) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const { pending, run } = useAction()
+  const { key, rotate } = useIdempotencyKey()
+  const [responding, setResponding] = useState<'accepted' | 'rejected' | null>(null)
   const [rejecting, setRejecting] = useState(false)
   const [comment, setComment] = useState('')
   const [checked, setChecked] = useState<Record<string, boolean>>(() =>
@@ -40,7 +42,7 @@ export function QuotationActions({
   const tax = (subtotal - discount) * (Number(taxPercent) || 0) / 100
   const estimate = { subtotal, discount, tax, total: subtotal - discount + tax }
 
-  const handleRespond = async (status: 'accepted' | 'rejected') => {
+  const handleRespond = (status: 'accepted' | 'rejected') => {
     if (status === 'rejected' && !rejecting) {
       setRejecting(true)
       return
@@ -50,24 +52,32 @@ export function QuotationActions({
       return
     }
 
-    setLoading(true)
-    const result = await respondToQuotation(
-      quotationId,
-      status,
-      comment,
-      status === 'accepted' ? accepted.map((item) => item.id) : undefined,
+    setResponding(status)
+    run(
+      () =>
+        respondToQuotation(
+          quotationId,
+          status,
+          comment,
+          status === 'accepted' ? accepted.map((item) => item.id) : undefined,
+          key,
+        ),
+      {
+        successMessage: status === 'accepted' ? 'Order created for the accepted lines' : 'Response recorded',
+        onSuccess: () => {
+          rotate()
+          setRejecting(false)
+        },
+      },
     )
-    setLoading(false)
-
-    if (result && typeof result === 'object' && 'error' in result && result.error) {
-      toast.error(String(result.error))
-      return
-    }
-
-    toast.success(status === 'accepted' ? 'Order created for the accepted lines' : 'Response recorded')
-    setRejecting(false)
-    router.refresh()
   }
+
+  const busyLabel = (label: string) => (
+    <span className="inline-flex items-center justify-center gap-2">
+      <Spinner />
+      {label}
+    </span>
+  )
 
   return (
     <div className="mt-8 border-t border-gray-200 pt-8">
@@ -84,6 +94,7 @@ export function QuotationActions({
               className="mt-1"
               checked={Boolean(checked[item.id])}
               onChange={() => setChecked((current) => ({ ...current, [item.id]: !current[item.id] }))}
+              disabled={pending}
               aria-label={`Accept ${item.name}`}
             />
             <div className="min-w-0 flex-1">
@@ -129,6 +140,7 @@ export function QuotationActions({
           onChange={(event) => setComment(event.target.value)}
           className="mt-1 w-full rounded-md border p-2 outline-none focus:ring-[#806A50]"
           rows={3}
+          disabled={pending}
         />
       </label>
 
@@ -137,15 +149,16 @@ export function QuotationActions({
           <button
             type="button"
             onClick={() => handleRespond('rejected')}
-            disabled={loading}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            disabled={pending}
+            aria-busy={pending || undefined}
+            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Submitting...' : 'Confirm rejection'}
+            {pending && responding === 'rejected' ? busyLabel('Rejecting…') : 'Confirm rejection'}
           </button>
           <button
             type="button"
             onClick={() => setRejecting(false)}
-            disabled={loading}
+            disabled={pending}
             className="inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-600 hover:bg-gray-50"
           >
             Cancel
@@ -156,16 +169,17 @@ export function QuotationActions({
           <button
             type="button"
             onClick={() => handleRespond('accepted')}
-            disabled={loading || accepted.length === 0}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-green-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-green-700 disabled:opacity-50"
+            disabled={pending || accepted.length === 0}
+            aria-busy={pending || undefined}
+            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-green-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Processing...' : 'Confirm and create order'}
+            {pending && responding === 'accepted' ? busyLabel('Accepting…') : 'Confirm and create order'}
           </button>
           <button
             type="button"
             onClick={() => handleRespond('rejected')}
-            disabled={loading}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-6 py-2 font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+            disabled={pending}
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-6 py-2 font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Reject quotation
           </button>

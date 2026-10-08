@@ -1,7 +1,8 @@
 'use client'
 
-import { useTransition } from 'react'
-import { toast } from 'sonner'
+import { useState, type ReactNode } from 'react'
+import { useAction } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { PORTAL_STATUS_LABELS, type PortalHost } from '@/lib/portal-hosts/types'
 import {
@@ -38,7 +39,18 @@ export function PortalHostCard({
   /** True when DNS is the Vercel wildcard, not a per-company Hostinger alias. */
   wildcardDns?: boolean
 }) {
-  const [pending, start] = useTransition()
+  const { pending, run } = useAction()
+  const [which, setWhich] = useState<string | null>(null)
+  const go = (id: string, fn: () => Promise<{ error?: string } | void>, successMessage: string) => {
+    setWhich(id)
+    run(fn, { successMessage })
+  }
+  const label_ = (id: string, text: ReactNode, pendingText: string) =>
+    pending && which === id ? (
+      <span className="inline-flex items-center gap-2"><Spinner />{pendingText}</span>
+    ) : (
+      text
+    )
 
   if (!primary && redirects.length === 0) {
     return (
@@ -107,13 +119,9 @@ export function PortalHostCard({
             type="button"
             disabled={pending}
             className="px-3 py-2 rounded-lg border font-semibold disabled:opacity-50"
-            onClick={() => start(async () => {
-              const result = await resyncPortalHost(companyId)
-              if (result.error) toast.error(result.error)
-              else toast.success('Re-sync queued')
-            })}
+            onClick={() => go('resync', () => resyncPortalHost(companyId), 'Re-sync queued')}
           >
-            Re-sync now
+            {label_('resync', 'Re-sync now', 'Queuing…')}
           </button>
         ) : null}
         {canAdmin && primary ? (
@@ -121,16 +129,14 @@ export function PortalHostCard({
             type="button"
             disabled={pending}
             className="px-3 py-2 rounded-lg border border-red-200 text-red-700 font-semibold disabled:opacity-50"
-            onClick={() => start(async () => {
+            onClick={() => {
               if (!confirm(wildcardDns
                 ? 'Remove this portal address? It will stop being this company\'s host. A previous address can keep redirecting until its grace period ends.'
                 : 'Remove this portal address? The host will stay parked for 7 days, then be unparked.')) return
-              const result = await removePortalAddress(companyId)
-              if (result.error) toast.error(result.error)
-              else toast.success('Portal address cleared')
-            })}
+              go('remove', () => removePortalAddress(companyId), 'Portal address cleared')
+            }}
           >
-            Remove portal address
+            {label_('remove', 'Remove portal address', 'Removing…')}
           </button>
         ) : null}
         {!wildcardDns && canAdmin && primary?.status === 'blocked' && primary.last_error_code === 'subdomain_conflict' ? (
@@ -138,14 +144,12 @@ export function PortalHostCard({
             type="button"
             disabled={pending}
             className="px-3 py-2 rounded-lg border font-semibold disabled:opacity-50"
-            onClick={() => start(async () => {
+            onClick={() => {
               if (!confirm(`Delete the regular Hostinger subdomain "${primary.slug}"? This cannot be undone from here.`)) return
-              const result = await deleteBlockedSubdomain(companyId, primary.slug)
-              if (result.error) toast.error(result.error)
-              else toast.success('Subdomain delete requested — re-sync will continue')
-            })}
+              go('delete', () => deleteBlockedSubdomain(companyId, primary.slug), 'Subdomain delete requested — re-sync will continue')
+            }}
           >
-            Delete conflicting regular subdomain
+            {label_('delete', 'Delete conflicting regular subdomain', 'Deleting…')}
           </button>
         ) : null}
       </div>
@@ -168,13 +172,9 @@ export function PortalHostCard({
                   type="button"
                   disabled={pending}
                   className="px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold disabled:opacity-50"
-                  onClick={() => start(async () => {
-                    const result = await stopPortalRedirect(row.id, companyId)
-                    if (result.error) toast.error(result.error)
-                    else toast.success('Redirect will stop and the host will be unparked')
-                  })}
+                  onClick={() => go(`stop-${row.id}`, () => stopPortalRedirect(row.id, companyId), 'Redirect will stop and the host will be unparked')}
                 >
-                  Stop redirect now
+                  {label_(`stop-${row.id}`, 'Stop redirect now', 'Stopping…')}
                 </button>
               ) : null}
             </div>

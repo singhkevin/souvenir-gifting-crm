@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 import { deleteSupplierOffer, saveSupplierOffer } from '../actions'
 import { formatCurrency } from '@/lib/utils'
+import { IDEMPOTENCY_FIELD, useAction, useIdempotencyKey } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import type { SupplierOffer } from '@/lib/pricing/offers'
 
 type SupplierOption = { id: string; name: string }
@@ -20,7 +20,9 @@ export function SupplierOffersEditor({
   offers: SupplierOffer[]
   bestOfferId: string | null
 }) {
-  const router = useRouter()
+  const { pending: saving, run } = useAction()
+  const { key, rotate } = useIdempotencyKey()
+  const [activeId, setActiveId] = useState<string | null>(null)
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id || '')
   const [sku, setSku] = useState('')
   const [cost, setCost] = useState('')
@@ -28,26 +30,35 @@ export function SupplierOffersEditor({
   const [lead, setLead] = useState('')
   const [inStock, setInStock] = useState(true)
   const [preferred, setPreferred] = useState(false)
-  const [saving, setSaving] = useState(false)
 
-  const save = async (fields: Record<string, string>) => {
+  const save = (fields: Record<string, string>, rowId: string | null = null) => {
     const formData = new FormData()
     formData.set('product_id', productId)
-    for (const [key, value] of Object.entries(fields)) formData.set(key, value)
-    setSaving(true)
-    const result = await saveSupplierOffer(formData)
-    setSaving(false)
-    if (result && 'error' in result && result.error) {
-      toast.error(result.error)
-      return
-    }
-    toast.success('Supplier offer saved')
-    setSku('')
-    setCost('')
-    setMoq('1')
-    setLead('')
-    setPreferred(false)
-    router.refresh()
+    for (const [field, value] of Object.entries(fields)) formData.set(field, value)
+    // Only creating an offer needs a key; updates set explicit values and are safe to repeat.
+    if (!fields.offer_id) formData.set(IDEMPOTENCY_FIELD, key)
+    setActiveId(rowId)
+    run(() => saveSupplierOffer(formData), {
+      successMessage: 'Supplier offer saved',
+      onSuccess: () => {
+        if (!fields.offer_id) {
+          rotate()
+          setSku('')
+          setCost('')
+          setMoq('1')
+          setLead('')
+          setPreferred(false)
+        }
+      },
+    })
+  }
+
+  const remove = (offerId: string) => {
+    const formData = new FormData()
+    formData.set('offer_id', offerId)
+    formData.set('product_id', productId)
+    setActiveId(`remove:${offerId}`)
+    run(() => deleteSupplierOffer(formData), { successMessage: 'Supplier offer removed' })
   }
 
   return (
@@ -105,24 +116,21 @@ export function SupplierOffersEditor({
                         in_stock: offer.in_stock ? 'on' : 'off',
                         is_active: offer.is_active ? 'on' : 'off',
                         is_preferred: offer.is_preferred ? 'off' : 'on',
-                      })}
+                      }, offer.id)}
                     >
-                      {offer.is_preferred ? 'Unpin' : 'Pin'}
+                      {saving && activeId === offer.id ? (
+                        <span className="inline-flex items-center gap-1"><Spinner />{offer.is_preferred ? 'Unpinning…' : 'Pinning…'}</span>
+                      ) : offer.is_preferred ? 'Unpin' : 'Pin'}
                     </button>
                     <button
                       type="button"
                       className="text-red-600"
                       disabled={saving}
-                      onClick={async () => {
-                        const formData = new FormData()
-                        formData.set('offer_id', offer.id)
-                        formData.set('product_id', productId)
-                        const result = await deleteSupplierOffer(formData)
-                        if (result && 'error' in result && result.error) toast.error(result.error)
-                        else router.refresh()
-                      }}
+                      onClick={() => remove(offer.id)}
                     >
-                      Remove
+                      {saving && activeId === `remove:${offer.id}` ? (
+                        <span className="inline-flex items-center gap-1"><Spinner />Removing…</span>
+                      ) : 'Remove'}
                     </button>
                   </td>
                 </tr>
@@ -181,7 +189,9 @@ export function SupplierOffersEditor({
         })}
         className="rounded-lg bg-[#806A50] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
       >
-        {saving ? 'Saving...' : 'Add supplier offer'}
+        {saving && activeId === null ? (
+          <span className="inline-flex items-center gap-2"><Spinner />Saving…</span>
+        ) : 'Add supplier offer'}
       </button>
     </div>
   )

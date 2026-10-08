@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { receiveSample, moveSample } from './actions'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
-import { asFormAction } from '@/lib/form-action'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function SamplesPage({
   searchParams,
@@ -71,7 +71,7 @@ export default async function SamplesPage({
         ))}
       </div>
 
-      <form action={asFormAction(receiveSample)} className="grid items-end gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-4">
+      <ActionForm action={receiveSample} className="grid items-end gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-4" resetOnSuccess>
         <MobileSheetSelect
           name="product_id"
           label="Product"
@@ -96,13 +96,12 @@ export default async function SamplesPage({
         ) : (
           <input type="hidden" name="unit_cost" value="0" />
         )}
-        <button
-          type="submit"
+        <SubmitButton
           className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 py-2.5 font-semibold text-white md:col-span-4"
-        >
+         pendingLabel="Receiving…">
           Receive into office
-        </button>
-      </form>
+        </SubmitButton>
+      </ActionForm>
 
       <div className="bg-white rounded-2xl border overflow-hidden">
         <table className="w-full text-left text-sm">
@@ -133,8 +132,7 @@ export default async function SamplesPage({
                   {showCost && <td className="p-3">{formatCurrency(sample.unit_cost)}</td>}
                   <td className="p-3">
                     <div className="min-w-[220px] space-y-2">
-                      <form
-                        action={asFormAction(moveSample)}
+                      <ActionForm action={moveSample}
                         className="space-y-1.5 rounded-lg border border-[#806A50]/25 bg-[#F4EFE6] p-2 text-[11px]"
                       >
                         <input type="hidden" name="stock_id" value={sample.id} />
@@ -170,14 +168,14 @@ export default async function SamplesPage({
                             required
                             className="rounded border px-1 py-1"
                           />
-                          <button className="rounded bg-[#806A50] py-1 font-semibold text-white">Send</button>
+                          <SubmitButton className="rounded bg-[#806A50] py-1 font-semibold text-white" pendingLabel="Sending…">Send</SubmitButton>
                         </div>
                         <input name="note" placeholder="Note (optional)" className="w-full rounded border px-1 py-1" />
-                      </form>
+                      </ActionForm>
 
                       <details className="text-[11px]">
                         <summary className="cursor-pointer text-[#7A7267]">Other movement</summary>
-                        <form action={asFormAction(moveSample)} className="mt-1.5 grid grid-cols-2 gap-1">
+                        <ActionForm action={moveSample} className="mt-1.5 grid grid-cols-2 gap-1">
                           <input type="hidden" name="stock_id" value={sample.id} />
                           <MobileSheetSelect
                             name="from_holder"
@@ -211,8 +209,8 @@ export default async function SamplesPage({
                             ]}
                           />
                           <input name="note" placeholder="Note / holder name" className="col-span-2 border rounded px-1 py-1" />
-                          <button className="col-span-2 border rounded py-1 font-semibold">Record movement</button>
-                        </form>
+                          <SubmitButton className="col-span-2 border rounded py-1 font-semibold" pendingLabel="Recording…">Record movement</SubmitButton>
+                        </ActionForm>
                       </details>
                     </div>
                   </td>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import {
   emailCatalogLink,
@@ -9,6 +9,11 @@ import {
   revokeCatalogShareLink,
 } from './actions'
 import { formatDate } from '@/lib/utils'
+import { ActionForm } from '@/components/ui/action-form'
+import { Spinner, SubmitButton } from '@/components/ui/submit-button'
+import { IDEMPOTENCY_FIELD, useAction, useIdempotencyKey } from '@/lib/use-action'
+
+type ShareResult = { error?: string; url?: string | null; expiresAt?: string | null; expired?: boolean } | undefined
 
 export function CatalogSharePanel({
   catalogId,
@@ -25,32 +30,51 @@ export function CatalogSharePanel({
   linkExpired: boolean
   suggestions: { email: string; label: string }[]
 }) {
-  const [pending, startTransition] = useTransition()
+  const { pending, run: runAction } = useAction()
+  const [active, setActive] = useState<'extend' | 'revoke' | null>(null)
+  const extendKey = useIdempotencyKey()
+  const revokeKey = useIdempotencyKey()
   const [url, setUrl] = useState(shareUrl)
   const [shownExpiry, setShownExpiry] = useState(expiresAt)
   const [expired, setExpired] = useState(linkExpired)
   const [noExpiry, setNoExpiry] = useState(false)
   const [email, setEmail] = useState(suggestions[0]?.email || '')
 
-  const run = (
-    action: (formData: FormData) => Promise<{ error?: string; url?: string | null; expiresAt?: string | null; expired?: boolean } | undefined>,
-    extra?: (formData: FormData) => void,
+  const applyResult = (raw: unknown) => {
+    const result = raw as ShareResult
+    if (result && 'url' in result) setUrl(result.url ?? null)
+    if (result && 'expiresAt' in result) setShownExpiry(result.expiresAt ?? null)
+    if (result && 'expired' in result) setExpired(Boolean(result.expired))
+  }
+
+  const runLink = (
+    which: 'extend' | 'revoke',
+    action: (formData: FormData) => Promise<ShareResult>,
+    idem: { key: string; rotate: () => void },
+    successMessage: string,
   ) => {
     const formData = new FormData()
     formData.set('campaign_id', catalogId)
-    extra?.(formData)
-    startTransition(async () => {
-      const result = await action(formData)
-      if (result?.error) {
-        toast.error(result.error)
-        return
-      }
-      if (result && 'url' in result) setUrl(result.url ?? null)
-      if (result && 'expiresAt' in result) setShownExpiry(result.expiresAt ?? null)
-      if (result && 'expired' in result) setExpired(Boolean(result.expired))
-      toast.success('Updated')
+    formData.set(IDEMPOTENCY_FIELD, idem.key)
+    setActive(which)
+    runAction(() => action(formData), {
+      successMessage,
+      onSuccess: (result) => {
+        idem.rotate()
+        applyResult(result)
+      },
     })
   }
+
+  const busyLabel = (which: 'extend' | 'revoke', text: string, pendingText: string) =>
+    pending && active === which ? (
+      <span className="inline-flex items-center justify-center gap-2">
+        <Spinner />
+        {pendingText}
+      </span>
+    ) : (
+      text
+    )
 
   const expiryLabel = !shownExpiry
     ? 'No expiry'
@@ -94,18 +118,20 @@ export function CatalogSharePanel({
             <button
               type="button"
               disabled={pending}
-              onClick={() => run(extendCatalogShareLink)}
+              aria-busy={pending && active === 'extend' ? true : undefined}
+              onClick={() => runLink('extend', extendCatalogShareLink, extendKey, 'Link extended')}
               className="min-h-10 rounded-lg border px-3 font-semibold disabled:opacity-50"
             >
-              Extend 30 days
+              {busyLabel('extend', 'Extend 30 days', 'Extending…')}
             </button>
             <button
               type="button"
               disabled={pending}
-              onClick={() => run(revokeCatalogShareLink)}
+              aria-busy={pending && active === 'revoke' ? true : undefined}
+              onClick={() => runLink('revoke', revokeCatalogShareLink, revokeKey, 'Link revoked')}
               className="min-h-10 rounded-lg border border-red-200 px-3 font-semibold text-red-700 disabled:opacity-50"
             >
-              Revoke link
+              {busyLabel('revoke', 'Revoke link', 'Revoking…')}
             </button>
           </div>
         </div>
@@ -113,40 +139,28 @@ export function CatalogSharePanel({
         <p className="text-[#7A7267]">No active link. Publish products before sharing so the page is not empty.</p>
       )}
 
-      <form
+      <ActionForm
+        action={generateCatalogShareLink}
         className="flex flex-col gap-2 sm:flex-row sm:items-center"
-        onSubmit={(event) => {
-          event.preventDefault()
-          run(generateCatalogShareLink, (formData) => {
-            if (noExpiry) formData.set('no_expiry', '1')
-          })
-        }}
+        successMessage="Share link updated"
+        onSuccess={applyResult}
       >
+        <input type="hidden" name="campaign_id" value={catalogId} />
         <label className="flex items-center gap-2 text-[#5A5248]">
-          <input type="checkbox" checked={noExpiry} onChange={(event) => setNoExpiry(event.target.checked)} />
+          <input type="checkbox" name="no_expiry" value="1" checked={noExpiry} onChange={(event) => setNoExpiry(event.target.checked)} />
           No expiry
         </label>
-        <button type="submit" disabled={pending} className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
-          {pending ? 'Working…' : url ? 'Regenerate link' : 'Generate 30-day link'}
-        </button>
-      </form>
+        <SubmitButton pendingLabel="Generating…" className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
+          {url ? 'Regenerate link' : 'Generate 30-day link'}
+        </SubmitButton>
+      </ActionForm>
 
-      <form
+      <ActionForm
+        action={emailCatalogLink}
         className="grid gap-2 md:grid-cols-[1fr_auto_auto]"
-        onSubmit={(event) => {
-          event.preventDefault()
-          const formData = new FormData(event.currentTarget)
-          formData.set('campaign_id', catalogId)
-          startTransition(async () => {
-            const result = await emailCatalogLink(formData)
-            if (result?.error) {
-              toast.error(result.error)
-              return
-            }
-            toast.success('Email sent')
-          })
-        }}
+        successMessage="Email sent"
       >
+        <input type="hidden" name="campaign_id" value={catalogId} />
         <input
           name="email"
           type="email"
@@ -162,9 +176,9 @@ export function CatalogSharePanel({
             <option key={row.email} value={row.email}>{row.label}</option>
           ))}
         </datalist>
-        <button type="submit" disabled={pending || !url} className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
+        <SubmitButton disabled={!url} pendingLabel="Sending…" className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
           Email link
-        </button>
+        </SubmitButton>
         {mailto ? (
           <a href={mailto} className="inline-flex min-h-10 items-center justify-center rounded-lg border px-3 font-semibold text-[#806A50]">
             Open mail app
@@ -172,7 +186,7 @@ export function CatalogSharePanel({
         ) : (
           <span />
         )}
-      </form>
+      </ActionForm>
       <p className="text-[#7A7267]">
         Email uses the existing Resend sender when RESEND_API_KEY is set. Otherwise copy the link or use Open mail app.
       </p>

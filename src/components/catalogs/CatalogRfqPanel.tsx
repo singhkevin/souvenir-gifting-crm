@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useAction, useIdempotencyKey } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import { requestCatalogQuotation } from '@/app/portal/actions'
 import { submitShareCatalogRfq } from '@/app/share/catalogs/actions'
 import { formatCurrency } from '@/lib/utils'
@@ -37,7 +39,8 @@ export function CatalogRfqPanel({
   const [notes, setNotes] = useState('')
   const [contact, setContact] = useState({ full_name: '', email: '', company_name: '', phone: '' })
   const [fax, setFax] = useState('')
-  const [loading, setLoading] = useState(false)
+  const { pending, run } = useAction()
+  const { key, rotate } = useIdempotencyKey()
   const [done, setDone] = useState(false)
 
   if (!offerings.length) return null
@@ -71,7 +74,7 @@ export function CatalogRfqPanel({
     setQty((current) => (current[id] ? current : { ...current, [id]: String(moq) }))
   }
 
-  const submit = async () => {
+  const submit = () => {
     const lines = offerings
       .filter((offering) => selected[offering.id])
       .map((offering) => ({
@@ -83,34 +86,34 @@ export function CatalogRfqPanel({
       return
     }
 
-    setLoading(true)
-    const result = mode === 'portal'
-      ? await requestCatalogQuotation({ catalogId: catalogId || '', deadline, notes, lines })
-      : await submitShareCatalogRfq({
-          token: shareToken || '',
-          deadline,
-          notes,
-          lines,
-          full_name: contact.full_name,
-          email: contact.email,
-          company_name: contact.company_name,
-          phone: contact.phone,
-          fax,
-        })
-    setLoading(false)
-
-    if (result && 'error' in result && result.error) {
-      toast.error(result.error)
-      return
-    }
-
-    toast.success('Request for quotation sent')
-    if (mode === 'guest') {
-      setDone(true)
-      return
-    }
-    router.push('/portal/requirements')
-    router.refresh()
+    run(
+      () =>
+        mode === 'portal'
+          ? requestCatalogQuotation({ catalogId: catalogId || '', deadline, notes, lines, idempotencyKey: key })
+          : submitShareCatalogRfq({
+              token: shareToken || '',
+              deadline,
+              notes,
+              lines,
+              full_name: contact.full_name,
+              email: contact.email,
+              company_name: contact.company_name,
+              phone: contact.phone,
+              fax,
+              idempotencyKey: key,
+            }),
+      {
+        successMessage: 'Request for quotation sent',
+        onSuccess: () => {
+          rotate()
+          if (mode === 'guest') {
+            setDone(true)
+            return
+          }
+          router.push('/portal/requirements')
+        },
+      },
+    )
   }
 
   return (
@@ -129,6 +132,7 @@ export function CatalogRfqPanel({
         </p>
       )}
 
+      <fieldset disabled={pending} className="contents">
       <ul className="mt-4 divide-y divide-[#E8E4DE] rounded-xl border border-[#E8E4DE]">
         {offerings.map((offering) => (
           <li key={offering.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -236,11 +240,20 @@ export function CatalogRfqPanel({
       <button
         type="button"
         onClick={submit}
-        disabled={loading}
-        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-5 text-sm font-semibold text-white hover:bg-[#9C8567] disabled:opacity-50"
+        disabled={pending}
+        aria-busy={pending || undefined}
+        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-5 text-sm font-semibold text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {loading ? 'Sending...' : 'Request Quotation'}
+        {pending ? (
+          <span className="inline-flex items-center justify-center gap-2">
+            <Spinner />
+            Submitting…
+          </span>
+        ) : (
+          'Request Quotation'
+        )}
       </button>
+      </fieldset>
     </section>
   )
 }

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/auth'
 import { isUuid } from '@/lib/utils'
+import { withIdempotency } from '@/lib/idempotency'
 
 const LEAD_STAGES = ['cold', 'warm', 'hot', 'client', 'regular_client'] as const
 
@@ -21,7 +22,15 @@ export async function updateLeadStage(leadId: string, newStage: string) {
   return { success: true }
 }
 
+export async function updateLeadStageForm(leadId: string, formData: FormData) {
+  return updateLeadStage(leadId, String(formData.get('stage') || ''))
+}
+
 export async function createLead(formData: FormData) {
+  return withIdempotency('crm.createLead', formData, () => createLeadOnce(formData))
+}
+
+async function createLeadOnce(formData: FormData) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!['admin', 'sales', 'management'].includes(profile.role)) {

@@ -7,6 +7,7 @@ import { writeAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/utils'
 import { roundMoney } from '@/lib/pricing/resolve'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
+import { withIdempotency } from '@/lib/idempotency'
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   draft: ['sent'],
   sent: ['accepted', 'rejected', 'expired'],
@@ -17,6 +18,12 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
 }
 
 const RESPONSE_STATUSES = new Set(['accepted', 'rejected'])
+
+function staleQuotationMessage(message: string) {
+  return /cannot be responded to|already/i.test(message)
+    ? 'This quotation was already updated. Refresh to see its current status.'
+    : message
+}
 
 export async function updateQuotationStatus(quotationId: string, newStatus: string) {
   const profile = await getProfile()
@@ -45,10 +52,19 @@ export async function updateQuotationStatus(quotationId: string, newStatus: stri
       p_status: newStatus,
       p_comment: null,
     })
-    if (error) return { error: error.message }
+    if (error) return { error: staleQuotationMessage(error.message) }
   } else {
-    const { error } = await supabase.from('quotations').update({ status: newStatus }).eq('id', quotationId)
+    // Only apply while the quotation is still in the status we validated: a second click finds 0 rows.
+    const { data: updated, error } = await supabase
+      .from('quotations')
+      .update({ status: newStatus })
+      .eq('id', quotationId)
+      .eq('status', current)
+      .select('id')
     if (error) return { error: error.message }
+    if (!updated?.length) {
+      return { error: 'This quotation was already updated. Refresh to see its current status.' }
+    }
   }
 
   await writeAudit(supabase, {
@@ -75,7 +91,14 @@ export async function convertToOrder(quotationId: string) {
   }
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('convert_quotation_to_order', { p_quotation_id: quotationId })
-  if (error) return { error: error.message }
+  if (error) {
+    // The one-order-per-quotation index fired: another request created it first. Go to that order.
+    if (error.code === '23505' || /orders_quotation_id_unique/.test(error.message)) {
+      const { data: existing } = await supabase.from('orders').select('id').eq('quotation_id', quotationId).maybeSingle()
+      if (existing?.id) redirect(`/crm/orders/${existing.id}`)
+    }
+    return { error: error.message }
+  }
   await writeAudit(supabase, {
     action: 'create',
     entity: 'orders',
@@ -140,9 +163,11 @@ export async function applyQuotationItemPrice(formData: FormData) {
   return { success: true }
 }
 
-export async function duplicateQuotation(quotationId: string) {
-  const supabase = await createClient()
-  const { data, error } = await supabase.rpc('duplicate_quotation', { p_quotation_id: quotationId })
-  if (error) return { error: error.message }
-  redirect(`/crm/quotations/${data}`)
+export async function duplicateQuotation(quotationId: string, idempotencyKey?: string) {
+  return withIdempotency('crm.duplicateQuotation', idempotencyKey, async () => {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('duplicate_quotation', { p_quotation_id: quotationId })
+    if (error) return { error: error.message }
+    redirect(`/crm/quotations/${data}`)
+  })
 }

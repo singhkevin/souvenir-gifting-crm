@@ -4,8 +4,9 @@ import { formatCurrency, formatDate, oneRelation } from '@/lib/utils'
 import { ORDER_STATUS_LABELS, orderHealth, HEALTH_LABELS, HEALTH_STYLES } from '@/lib/order-workflow'
 import Link from 'next/link'
 import { completeTask, reassignTask, updateTaskStatus } from '@/app/crm/tasks/actions'
-import { asFormAction } from '@/lib/form-action'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 const TASK_STATUS_OPTIONS = [
   { value: 'open', label: 'Pending' },
@@ -150,7 +151,7 @@ export default async function AdminTrackingPage() {
                   </td>
                   <td className="px-4 py-2">
                     {canMutateTasks ? (
-                    <form action={asFormAction(reassignTask)} className="flex min-w-[140px] flex-col gap-1">
+                    <ActionForm action={reassignTask} className="flex min-w-[140px] flex-col gap-1">
                       <input type="hidden" name="id" value={task.id} />
                       <MobileSheetSelect
                         name="assigned_to"
@@ -161,8 +162,8 @@ export default async function AdminTrackingPage() {
                           label: member.full_name || 'Unnamed',
                         }))}
                       />
-                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save</button>
-                    </form>
+                      <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
+                    </ActionForm>
                     ) : (
                       assignee?.full_name || 'Unassigned'
                     )}
@@ -171,7 +172,7 @@ export default async function AdminTrackingPage() {
                   <td className="px-4 py-2">
                     {canMutateTasks ? (
                     <>
-                    <form action={asFormAction(updateTaskStatus)} className="flex min-w-[140px] flex-col gap-1">
+                    <ActionForm action={updateTaskStatus} className="flex min-w-[140px] flex-col gap-1">
                       <input type="hidden" name="id" value={task.id} />
                       <MobileSheetSelect
                         name="status"
@@ -179,13 +180,13 @@ export default async function AdminTrackingPage() {
                         defaultValue={task.status || 'open'}
                         options={TASK_STATUS_OPTIONS}
                       />
-                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Update</button>
-                    </form>
+                      <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Updating…">Update</SubmitButton>
+                    </ActionForm>
                     {task.status !== 'done' && (
-                      <form action={asFormAction(completeTask)}>
+                      <ActionForm action={completeTask}>
                         <input type="hidden" name="id" value={task.id} />
-                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Complete</button>
-                      </form>
+                        <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]" pendingLabel="Completing…">Complete</SubmitButton>
+                      </ActionForm>
                     )}
                     </>
                     ) : (

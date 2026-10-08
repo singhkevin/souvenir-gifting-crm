@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { setOrderStage } from '@/app/crm/orders/actions'
+import { useAction } from '@/lib/use-action'
 import { ORDER_LIFECYCLE, ORDER_STATUS_LABELS, HEALTH_LABELS, HEALTH_STYLES, type OrderHealth } from '@/lib/order-workflow'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
@@ -25,22 +26,26 @@ export function OrderKanban({
   orders: KanbanCard[]
   canDrag: boolean
 }) {
-  const [pending, start] = useTransition()
-  const [error, setError] = useState<string | null>(null)
+  const { pending, error, run } = useAction()
+  const [movingId, setMovingId] = useState<string | null>(null)
 
   const onDrop = (status: string, orderId: string) => {
-    if (!canDrag) return
-    setError(null)
-    start(async () => {
-      const result = await setOrderStage(orderId, status)
-      if (result?.error) setError(result.error)
+    if (!canDrag || pending) return
+    const card = orders.find((o) => o.id === orderId)
+    if (!card || card.status === status) return
+    setMovingId(orderId)
+    // The card's current stage is the expected one: if it already moved, the server refuses the move.
+    run(() => setOrderStage(orderId, status, card.status), {
+      successMessage: `Moved ${card.order_number} to ${ORDER_STATUS_LABELS[status] || status}`,
+      onSuccess: () => setMovingId(null),
+      onError: () => setMovingId(null),
     })
   }
 
   return (
     <div className="space-y-3">
-      {error && <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
-      {pending && <p className="text-[11px] text-[#7A7267]">Updating stage…</p>}
+      {error && <p role="alert" className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
+      {pending && <p role="status" className="text-[11px] text-[#7A7267]">Updating stage…</p>}
       <div className="overflow-x-auto pb-2">
         <div className="flex gap-3 min-w-max">
           {ORDER_LIFECYCLE.map((column) => {
@@ -66,9 +71,10 @@ export function OrderKanban({
                   {cards.map((card) => (
                     <article
                       key={card.id}
-                      draggable={canDrag}
+                      draggable={canDrag && !pending}
                       onDragStart={(e) => e.dataTransfer.setData('text/order-id', card.id)}
-                      className={`bg-white rounded-xl border border-[#EFE9E0] p-3 ${canDrag ? 'cursor-grab' : ''}`}
+                      aria-busy={pending && movingId === card.id ? true : undefined}
+                      className={`bg-white rounded-xl border border-[#EFE9E0] p-3 ${canDrag && !pending ? 'cursor-grab' : ''} ${pending && movingId === card.id ? 'opacity-60 animate-pulse' : ''}`}
                     >
                       <Link href={`/crm/orders/${card.id}`} className="font-mono text-xs font-semibold text-[#806A50] hover:underline">
                         {card.order_number}

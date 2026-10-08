@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
+import { withIdempotency } from '@/lib/idempotency'
 import { placeShareDirectOrder } from '@/lib/catalogue/direct-order'
 import type { CheckoutLineInput } from '@/lib/catalogue/purchase-path'
 import {
@@ -19,6 +20,7 @@ import {
 } from '@/lib/catalogs/rfq'
 
 type ShareRfqInput = {
+  idempotencyKey?: string
   token: string
   deadline: string
   notes: string
@@ -36,6 +38,10 @@ function clean(value: string | undefined) {
 
 export async function submitShareCatalogRfq(input: ShareRfqInput): Promise<{ error?: string; success?: boolean }> {
   if (clean(input.fax)) return { success: true }
+  return withIdempotency('share.submitCatalogRfq', input.idempotencyKey, () => submitShareCatalogRfqOnce(input))
+}
+
+async function submitShareCatalogRfqOnce(input: ShareRfqInput): Promise<{ error?: string; success?: boolean }> {
 
   const selected = parseRfqSelection(input.lines)
   if (!selected) return { error: 'Select at least one product and a whole-number quantity' }
@@ -206,6 +212,8 @@ async function createGuestCatalogRequirement(
   return { id: requirement.id }
 }
 
-export async function checkoutShareCatalog(input: { token: string; lines: CheckoutLineInput[] }) {
-  return placeShareDirectOrder(input)
+export async function checkoutShareCatalog(input: { token: string; lines: CheckoutLineInput[]; idempotencyKey?: string }) {
+  return withIdempotency('share.checkout', input.idempotencyKey, () =>
+    placeShareDirectOrder({ token: input.token, lines: input.lines }),
+  )
 }

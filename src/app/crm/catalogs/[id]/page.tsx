@@ -10,7 +10,6 @@ import { CatalogSharePanel } from '../CatalogSharePanel'
 import { CatalogPublishButton } from '../CatalogPublishButton'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { BackButton } from '@/components/ui/back-button'
-import { asFormAction } from '@/lib/form-action'
 import { CatalogForm } from '../CatalogForm'
 import { requireStaff } from '@/lib/auth'
 import { SheetDateField } from '@/components/ui/mobile-filter-sheet'
@@ -19,6 +18,8 @@ import { listCatalogPickerProducts } from '@/lib/catalogs/picker-products'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { sharePath } from '@/lib/catalogs/share'
 import { shareLinkIsExpired } from '@/lib/catalogs/share-link'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function CatalogDetailPage({
   params,
@@ -130,7 +131,7 @@ export default async function CatalogDetailPage({
         <ConfirmAction
           title="Remove catalog?"
           confirmLabel="Delete"
-          action={asFormAction(removeCatalog)}
+          action={removeCatalog}
           hiddenFields={{ id: catalog.id }}
           description={<p>Catalog: <span className="font-semibold">{catalog.name}</span>. If it has orders it will be closed instead of deleted.</p>}
         >
@@ -234,26 +235,26 @@ export default async function CatalogDetailPage({
                         discontinued ? (
                           <span className="text-[#7A7267]">Cannot publish</span>
                         ) : (
-                          <form action={asFormAction(setCatalogProductVisibility)} className="inline">
+                          <ActionForm action={setCatalogProductVisibility} className="inline">
                             <input type="hidden" name="campaign_id" value={catalog.id} />
                             <input type="hidden" name="id" value={row.id} />
                             <input type="hidden" name="visibility" value="published" />
-                            <button className="underline text-[#806A50]">Publish to client</button>
-                          </form>
+                            <SubmitButton className="underline text-[#806A50]" pendingLabel="Publishing…">Publish to client</SubmitButton>
+                          </ActionForm>
                         )
                       ) : (
-                        <form action={asFormAction(setCatalogProductVisibility)} className="inline">
+                        <ActionForm action={setCatalogProductVisibility} className="inline">
                           <input type="hidden" name="campaign_id" value={catalog.id} />
                           <input type="hidden" name="id" value={row.id} />
                           <input type="hidden" name="visibility" value="unpublished" />
-                          <button className="underline">Unpublish</button>
-                        </form>
+                          <SubmitButton className="underline" pendingLabel="Saving…">Unpublish</SubmitButton>
+                        </ActionForm>
                       )}
-                      <form action={asFormAction(removeCatalogProduct)} className="inline">
+                      <ActionForm action={removeCatalogProduct} className="inline">
                         <input type="hidden" name="campaign_id" value={catalog.id} />
                         <input type="hidden" name="id" value={row.id} />
-                        <button className="underline text-red-700">Remove</button>
-                      </form>
+                        <SubmitButton className="underline text-red-700" pendingLabel="Removing…">Remove</SubmitButton>
+                      </ActionForm>
                     </td>
                   </tr>
                 )

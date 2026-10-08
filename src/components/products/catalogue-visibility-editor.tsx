@@ -1,7 +1,8 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
-import { toast } from 'sonner'
+import { useMemo, useState } from 'react'
+import { useAction } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import { saveCatalogueVisibility } from '@/app/crm/products/actions'
 import { CompanyAvatar } from '@/components/ui/avatar'
 
@@ -21,7 +22,7 @@ export function CatalogueVisibilityEditor({
   const [mode, setMode] = useState(initialMode === 'none' ? 'none' : initialMode === 'selected' ? 'selected' : 'all')
   const [selected, setSelected] = useState<string[]>(grantedIds)
   const [query, setQuery] = useState('')
-  const [pending, startTransition] = useTransition()
+  const { pending, run } = useAction()
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -34,18 +35,17 @@ export function CatalogueVisibilityEditor({
   }
 
   const save = () => {
-    startTransition(async () => {
-      const result = await saveCatalogueVisibility(productId, mode, mode === 'selected' ? selected : [])
-      if (result?.error) {
-        toast.error('Unable to update catalogue visibility. Please try again.')
-        return
-      }
-      toast.success('Catalogue visibility updated')
-    })
+    run(
+      async () => {
+        const result = await saveCatalogueVisibility(productId, mode, mode === 'selected' ? selected : [])
+        return result?.error ? { error: 'Unable to update catalogue visibility. Please try again.' } : result
+      },
+      { successMessage: 'Catalogue visibility updated' },
+    )
   }
 
   return (
-    <div className="space-y-4">
+    <fieldset disabled={pending} aria-busy={pending || undefined} className="space-y-4 min-w-0 border-0 p-0 m-0">
       <div>
         <h2 className="text-base font-bold text-gray-900">Catalogue visibility</h2>
         <p className="text-xs text-gray-500 mt-0.5">Show this product to:</p>
@@ -115,8 +115,12 @@ export function CatalogueVisibilityEditor({
         disabled={pending}
         className="px-4 py-2 text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] hover:text-[#FFFFFF] rounded-lg disabled:opacity-50"
       >
-        {pending ? 'Saving…' : 'Save visibility'}
+        {pending ? (
+          <span className="inline-flex items-center gap-2"><Spinner />Saving…</span>
+        ) : (
+          'Save visibility'
+        )}
       </button>
-    </div>
+    </fieldset>
   )
 }

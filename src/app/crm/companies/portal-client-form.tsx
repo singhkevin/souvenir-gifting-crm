@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { createPortalClient } from './actions'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 function CredentialsOnce({
   email,
@@ -47,39 +49,33 @@ function CredentialsOnce({
 }
 
 export function PortalClientForm({ companyId }: { companyId: string }) {
-  const [pending, startTransition] = useTransition()
   const [formKey, setFormKey] = useState(0)
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null)
 
-  const onSubmit = (formData: FormData) => {
-    startTransition(async () => {
-      setError(null)
-      const result = await createPortalClient(formData)
-      if (result?.error) {
-        setError(result.error)
-        toast.error(result.error)
-        return
-      }
-      if (result?.success && result.email && result.temporaryPassword) {
-        setCreated({ email: result.email, password: result.temporaryPassword })
-        setPassword('')
-        setFormKey((key) => key + 1)
-        return
-      }
-      setError('Client login was not created.')
-      toast.error('Client login was not created.')
-    })
+  // ActionForm adds `idempotency_key` to the FormData; the server reads it.
+  const create = async (formData: FormData) => {
+    const result = await createPortalClient(formData)
+    if (result?.error) return { error: result.error }
+    if (result?.success && result.email && result.temporaryPassword) {
+      return { email: result.email, temporaryPassword: result.temporaryPassword }
+    }
+    return { error: 'Client login was not created.' }
   }
 
   return (
-    <form key={formKey} action={onSubmit} className="grid md:grid-cols-2 gap-3 text-xs">
-      {error && (
-        <div className="md:col-span-2 p-3 rounded-xl border border-red-200 bg-red-50 text-red-800">
-          {error}
-        </div>
-      )}
+    <ActionForm
+      key={formKey}
+      action={create}
+      successMessage="Client login created"
+      onSuccess={(result) => {
+        const r = result as { email?: string; temporaryPassword?: string } | undefined
+        if (r?.email && r.temporaryPassword) setCreated({ email: r.email, password: r.temporaryPassword })
+        setPassword('')
+        setFormKey((key) => key + 1)
+      }}
+      className="grid md:grid-cols-2 gap-3 text-xs"
+    >
       <input type="hidden" name="company_id" value={companyId} />
       <input name="full_name" required placeholder="Client name" className="border rounded-lg px-3 py-2" />
       <input name="email" type="email" required placeholder="Client ID / Login email" className="border rounded-lg px-3 py-2" />
@@ -103,15 +99,14 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
           onChange={(e) => setPassword(e.target.value)}
           className="border rounded-lg px-3 py-2 flex-1"
         />
-        <button
-          type="submit"
+        <SubmitButton
           name="generate_password"
           value="1"
-          disabled={pending}
-          className="px-3 py-2 border rounded-lg whitespace-nowrap disabled:opacity-50"
+          pendingLabel="Generating…"
+          className="px-3 py-2 border rounded-lg whitespace-nowrap"
         >
           Generate password
-        </button>
+        </SubmitButton>
       </div>
       <p className="md:col-span-2 text-[11px] text-gray-500">
         The password is sent to Supabase Auth only. It is never stored in application tables.
@@ -123,13 +118,12 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
           onDone={() => setCreated(null)}
         />
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="md:col-span-2 px-3 py-2 text-xs font-semibold text-white bg-[#806A50] rounded-lg disabled:opacity-50"
+      <SubmitButton
+        pendingLabel="Creating login…"
+        className="md:col-span-2 px-3 py-2 text-xs font-semibold text-white bg-[#806A50] rounded-lg"
       >
-        {pending ? 'Creating login…' : 'Create client login'}
-      </button>
-    </form>
+        Create client login
+      </SubmitButton>
+    </ActionForm>
   )
 }

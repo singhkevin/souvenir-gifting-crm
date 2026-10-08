@@ -3,10 +3,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { placeClientDirectOrder } from '@/lib/catalogue/direct-order'
+import { withIdempotency } from '@/lib/idempotency'
 import type { CheckoutLineInput } from '@/lib/catalogue/purchase-path'
 
-export async function checkoutPortalCart(input: { lines: CheckoutLineInput[] }) {
-  return placeClientDirectOrder({ lines: input.lines })
+export async function checkoutPortalCart(input: { lines: CheckoutLineInput[]; idempotencyKey?: string }) {
+  return withIdempotency('portal.checkout', input.idempotencyKey, () => placeClientDirectOrder({ lines: input.lines }))
 }
 
 export async function toggleOfferingSelection(formData: FormData) {
@@ -50,6 +51,6 @@ export async function toggleOfferingSelection(formData: FormData) {
   return { success: true }
 }
 
-export async function toggleOfferingSelectionForm(formData: FormData): Promise<void> {
-  await toggleOfferingSelection(formData)
+export async function toggleOfferingSelectionForm(formData: FormData) {
+  return toggleOfferingSelection(formData)
 }

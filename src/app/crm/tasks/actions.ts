@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
+import { withIdempotency } from '@/lib/idempotency'
 
 const TASK_STATUSES = ['open', 'in_progress', 'blocked', 'done', 'cancelled'] as const
 
@@ -20,6 +21,10 @@ function canManageAllTasks(role: string) {
 }
 
 export async function createTask(formData: FormData) {
+  return withIdempotency('crm.createTask', formData, () => createTaskOnce(formData))
+}
+
+async function createTaskOnce(formData: FormData) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
 

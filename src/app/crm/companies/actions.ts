@@ -11,6 +11,7 @@ import { findReusableLogo } from '@/lib/companies/identity'
 import { parseAllowedEmailDomains, isEmailAllowedForDomains } from '@/lib/pricing/domains'
 import { parsePortalSlug, isSlugReservedInHistory, clearTenantCache } from '@/lib/portal-host'
 import { schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
+import { withIdempotency } from '@/lib/idempotency'
 
 const LOGO_BUCKET = 'company-logos'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
@@ -145,6 +146,10 @@ async function requireCompanyEditor() {
   return { profile }
 }
 export async function createCompany(formData: FormData) {
+  return withIdempotency('crm.createCompany', formData, () => createCompanyOnce(formData))
+}
+
+async function createCompanyOnce(formData: FormData) {
   const access = await requireCompanyEditor()
   if ('error' in access) return { error: access.error }
 
@@ -426,6 +431,10 @@ export async function backfillMissingCompanyLogos() {
 }
 
 export async function createPortalClient(formData: FormData) {
+  return withIdempotency('crm.createPortalClient', formData, () => createPortalClientOnce(formData))
+}
+
+async function createPortalClientOnce(formData: FormData) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (profile.role !== 'admin') return { error: 'Only an admin can create client logins' }
@@ -530,6 +539,10 @@ export async function createPortalClient(formData: FormData) {
 }
 
 export async function resetPortalClientPassword(formData: FormData) {
+  return withIdempotency('crm.resetPortalClientPassword', formData, () => resetPortalClientPasswordOnce(formData))
+}
+
+async function resetPortalClientPasswordOnce(formData: FormData) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (profile.role !== 'admin') return { error: 'Only an admin can reset client passwords' }

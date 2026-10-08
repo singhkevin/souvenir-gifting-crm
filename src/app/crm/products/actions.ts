@@ -8,6 +8,7 @@ import { writeAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/utils'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
+import { withIdempotency } from '@/lib/idempotency'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const VISIBILITY_ROLES = ['admin'] as const
@@ -28,6 +29,10 @@ function publicImageUrl(objectPath: string) {
 }
 
 export async function createProduct(formData: FormData) {
+  return withIdempotency('crm.createProduct', formData, () => createProductOnce(formData))
+}
+
+async function createProductOnce(formData: FormData) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!CATALOGUE_ROLES.includes(profile.role as CatalogueRole)) {
@@ -774,6 +779,12 @@ async function clearOtherPreferred(productId: string, keepId?: string) {
 }
 
 export async function saveSupplierOffer(formData: FormData) {
+  // Creating an offer is deduped by key (and by the product + supplier unique index); updating one is idempotent already.
+  if (isUuid(String(formData.get('offer_id') || ''))) return saveSupplierOfferOnce(formData)
+  return withIdempotency('crm.saveSupplierOffer', formData, () => saveSupplierOfferOnce(formData))
+}
+
+async function saveSupplierOfferOnce(formData: FormData) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!PRICING_ROLES.includes(profile.role)) return pricingDenied()

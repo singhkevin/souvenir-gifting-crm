@@ -8,7 +8,8 @@ import { Truck } from 'lucide-react'
 import { ProductImage } from '@/components/ui/product-image'
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
 import { decideOrderApproval } from '../actions'
-import { asFormAction } from '@/lib/form-action'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 function fileHref(path: string | null) {
   if (!path) return null
@@ -156,21 +157,21 @@ export default async function PortalOrderDetailPage({
             ) : (
               <p className="text-sm text-gray-600">Review the shared mockup, then approve it or ask for changes.</p>
             )}
-            <form action={asFormAction(decideOrderApproval)} className="space-y-3">
+            <ActionForm action={decideOrderApproval} className="space-y-3">
               <input type="hidden" name="order_id" value={order.id} />
               <label className="block space-y-1 text-xs text-gray-500">
                 Note (optional)
                 <textarea name="note" rows={3} maxLength={2000} className="w-full rounded-lg border px-3 py-2 text-sm text-gray-900" placeholder="Anything the team should know" />
               </label>
               <div className="flex flex-col gap-2 sm:flex-row">
-                <button name="decision" value="approved" className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-4 text-xs font-semibold text-white">
+                <SubmitButton name="decision" value="approved" className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-4 text-xs font-semibold text-white" pendingLabel="Approving…">
                   Approve
-                </button>
-                <button name="decision" value="changes_requested" className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-4 text-xs font-semibold text-[#806A50]">
+                </SubmitButton>
+                <SubmitButton name="decision" value="changes_requested" className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-4 text-xs font-semibold text-[#806A50]" pendingLabel="Saving…">
                   Request changes
-                </button>
+                </SubmitButton>
               </div>
-            </form>
+            </ActionForm>
           </div>
         )}
 

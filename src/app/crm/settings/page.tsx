@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { appName } from '@/lib/brand'
 import { updateOrgSettings } from './actions'
-import { asFormAction } from '@/lib/form-action'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -26,7 +27,7 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Organization Settings</h1>
-      <form action={asFormAction(updateOrgSettings)} className="bg-white p-6 rounded-lg border space-y-4 text-sm">
+      <ActionForm action={updateOrgSettings} className="bg-white p-6 rounded-lg border space-y-4 text-sm">
         <label className="block">
           <span className="text-gray-500 text-xs">Organisation name</span>
           <input name="organisation_name" defaultValue={settings?.organisation_name || appName()} className="w-full border rounded-lg px-3 py-2 mt-1" />
@@ -121,8 +122,8 @@ export default async function SettingsPage() {
           </div>
         </div>
 
-        <button className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm">Save settings</button>
-      </form>
+        <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm" pendingLabel="Saving…">Save settings</SubmitButton>
+      </ActionForm>
     </div>
   )
 }

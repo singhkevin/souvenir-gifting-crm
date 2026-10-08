@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { resetPortalClientPassword } from './actions'
+import { IDEMPOTENCY_FIELD, useAction, useIdempotencyKey } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 
 export function ManageClientLogin({
   companyId,
@@ -13,7 +15,9 @@ export function ManageClientLogin({
 }) {
   const [open, setOpen] = useState(false)
   const [password, setPassword] = useState('')
-  const [pending, startTransition] = useTransition()
+  const { pending, run } = useAction()
+  const { key, rotate } = useIdempotencyKey()
+  const [mode, setMode] = useState<'set' | 'generate' | null>(null)
   const [issued, setIssued] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
 
@@ -23,16 +27,17 @@ export function ManageClientLogin({
     formData.set('company_id', companyId)
     if (generate) formData.set('generate_password', '1')
     else formData.set('password', password)
-    startTransition(async () => {
-      const result = await resetPortalClientPassword(formData)
-      if (result?.error) {
-        toast.error(result.error)
-        return
-      }
-      setIssued(result.temporaryPassword || null)
-      setPassword('')
-      setRevealed(false)
-      toast.success('Temporary password set')
+    formData.set(IDEMPOTENCY_FIELD, key)
+    setMode(generate ? 'generate' : 'set')
+    run(() => resetPortalClientPassword(formData), {
+      successMessage: 'Temporary password set',
+      refresh: false,
+      onSuccess: (result) => {
+        rotate()
+        setIssued((result as { temporaryPassword?: string } | undefined)?.temporaryPassword || null)
+        setPassword('')
+        setRevealed(false)
+      },
     })
   }
 
@@ -43,7 +48,7 @@ export function ManageClientLogin({
       </button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button type="button" className="absolute inset-0 bg-black/40" aria-label="Close" onClick={() => setOpen(false)} />
+          <button type="button" className="absolute inset-0 bg-black/40" aria-label="Close" onClick={() => { if (!pending) setOpen(false) }} />
           <div className="relative bg-white rounded-2xl border border-[#E5DFD5] shadow-lg w-full max-w-md p-5 space-y-3 text-xs">
             <h3 className="text-sm font-bold text-[#1C1917]">Manage Login</h3>
             <p><span className="text-[#7A7267]">Name:</span> {client.full_name || '—'}</p>
@@ -69,19 +74,20 @@ export function ManageClientLogin({
                   placeholder="Temporary password (min 8)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={pending}
                   className="w-full border rounded-lg px-3 py-2"
                 />
                 <div className="flex gap-2">
-                  <button type="button" disabled={pending || password.length < 8} onClick={() => submit(false)} className="px-3 py-2 font-semibold text-white bg-[#624B32] rounded-lg disabled:opacity-50">
-                    {pending ? 'Saving…' : 'Set temporary password'}
+                  <button type="button" disabled={pending || password.length < 8} aria-busy={pending && mode === 'set' || undefined} onClick={() => submit(false)} className="px-3 py-2 font-semibold text-white bg-[#624B32] rounded-lg disabled:opacity-50">
+                    {pending && mode === 'set' ? <span className="inline-flex items-center gap-2"><Spinner />Saving…</span> : 'Set temporary password'}
                   </button>
-                  <button type="button" disabled={pending} onClick={() => submit(true)} className="px-3 py-2 border rounded-lg disabled:opacity-50">
-                    Generate password
+                  <button type="button" disabled={pending} aria-busy={pending && mode === 'generate' || undefined} onClick={() => submit(true)} className="px-3 py-2 border rounded-lg disabled:opacity-50">
+                    {pending && mode === 'generate' ? <span className="inline-flex items-center gap-2"><Spinner />Generating…</span> : 'Generate password'}
                   </button>
                 </div>
               </div>
             )}
-            <button type="button" onClick={() => setOpen(false)} className="w-full py-2 border rounded-lg">Close</button>
+            <button type="button" disabled={pending} onClick={() => setOpen(false)} className="w-full py-2 border rounded-lg disabled:opacity-50">Close</button>
           </div>
         </div>
       )}

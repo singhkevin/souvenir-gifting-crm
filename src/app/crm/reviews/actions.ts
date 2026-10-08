@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getProfile } from '@/lib/auth'
+import { withIdempotency } from '@/lib/idempotency'
 
 async function requireReviewEditor() {
   const profile = await getProfile()
@@ -12,6 +13,10 @@ async function requireReviewEditor() {
 }
 
 export async function createReview(formData: FormData) {
+  return withIdempotency('crm.createReview', formData, () => createReviewOnce(formData))
+}
+
+async function createReviewOnce(formData: FormData) {
   const access = await requireReviewEditor()
   if ('error' in access) return { error: access.error }
 

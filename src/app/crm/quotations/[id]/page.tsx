@@ -5,6 +5,7 @@ import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { requireStaff } from '@/lib/auth'
 import { updateQuotationStatus, convertToOrder, duplicateQuotation } from '../actions'
+import { ActionButton } from '@/components/ui/action-button'
 import { QuotationCosting } from './QuotationCosting'
 import { offersByProduct, pickBestOffer } from '@/lib/pricing/offers'
 import { getPricingSettings, loadSupplierOffers } from '@/lib/pricing/server'
@@ -73,31 +74,6 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     new Date(quote.valid_until) < new Date() &&
     ['sent', 'viewed'].includes(quote.status || '')
 
-  const markSentAction = async () => {
-    'use server'
-    await updateQuotationStatus(quote.id, 'sent')
-  }
-
-  const markAcceptedAction = async () => {
-    'use server'
-    await updateQuotationStatus(quote.id, 'accepted')
-  }
-
-  const markRejectedAction = async () => {
-    'use server'
-    await updateQuotationStatus(quote.id, 'rejected')
-  }
-
-  const convertAction = async () => {
-    'use server'
-    await convertToOrder(quote.id)
-  }
-
-  const duplicateAction = async () => {
-    'use server'
-    await duplicateQuotation(quote.id)
-  }
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <BackButton href="/crm/quotations" label="Back to Quotations" />
@@ -129,37 +105,51 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
 
         <div className="flex flex-wrap items-center gap-2">
           {quote.status === 'draft' && (
-            <form action={markSentAction}>
-              <button type="submit" className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors">
-                Mark as Sent
-              </button>
-            </form>
+            <ActionButton
+              action={updateQuotationStatus.bind(null, quote.id, 'sent')}
+              pendingLabel="Marking…"
+              successMessage="Marked as sent"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+            >
+              Mark as Sent
+            </ActionButton>
           )}
           {['sent', 'viewed'].includes(quote.status || '') && !isExpired && (
             <>
-              <form action={markAcceptedAction}>
-                <button type="submit" className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors inline-flex items-center gap-1">
-                  <CheckCircle2 size={13} /> Accept
-                </button>
-              </form>
-              <form action={markRejectedAction}>
-                <button type="submit" className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1">
-                  <XCircle size={13} /> Reject
-                </button>
-              </form>
-              <form action={duplicateAction}>
-                <button type="submit" className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1">
-                  <Copy size={13} /> Duplicate
-                </button>
-              </form>
+              <ActionButton
+                action={updateQuotationStatus.bind(null, quote.id, 'accepted')}
+                pendingLabel="Accepting…"
+                successMessage="Quotation accepted"
+                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors inline-flex items-center gap-1"
+              >
+                <CheckCircle2 size={13} /> Accept
+              </ActionButton>
+              <ActionButton
+                action={updateQuotationStatus.bind(null, quote.id, 'rejected')}
+                pendingLabel="Rejecting…"
+                successMessage="Quotation rejected"
+                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1"
+              >
+                <XCircle size={13} /> Reject
+              </ActionButton>
+              <ActionButton
+                action={duplicateQuotation.bind(null, quote.id)}
+                pendingLabel="Duplicating…"
+                successMessage="Quotation duplicated"
+                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition-colors inline-flex items-center gap-1"
+              >
+                <Copy size={13} /> Duplicate
+              </ActionButton>
             </>
           )}
           {quote.status === 'accepted' && !linkedOrder && (
-            <form action={convertAction}>
-              <button type="submit" className="px-4 py-2 bg-[#624B32] hover:bg-[#704812] text-white rounded-lg text-xs font-semibold shadow-sm transition-colors inline-flex items-center gap-1.5">
-                <ArrowRight size={14} /> Convert to Order
-              </button>
-            </form>
+            <ActionButton
+              action={convertToOrder.bind(null, quote.id)}
+              pendingLabel="Converting…"
+              className="px-4 py-2 bg-[#624B32] hover:bg-[#704812] text-white rounded-lg text-xs font-semibold shadow-sm transition-colors inline-flex items-center gap-1.5"
+            >
+              <ArrowRight size={14} /> Convert to Order
+            </ActionButton>
           )}
           {linkedOrder && (
             <Link

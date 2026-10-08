@@ -1,10 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
 import { applyQuotationItemPrice } from '../actions'
 import { formatCurrency } from '@/lib/utils'
+import { useAction } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import { roundMoney } from '@/lib/pricing/resolve'
 import type { SupplierOffer } from '@/lib/pricing/offers'
 
@@ -40,7 +40,8 @@ export function QuotationCosting({
   bestByItem: Record<string, string | null>
   defaultMargin: number
 }) {
-  const router = useRouter()
+  // One lock for the whole quotation: saving a line recalculates quotation totals, so lines save one at a time.
+  const { pending, run } = useAction()
   const savedByItem = useMemo(() => new Map(saved.map((row) => [row.quotation_item_id, row])), [saved])
 
   return (
@@ -62,10 +63,8 @@ export function QuotationCosting({
           bestId={bestByItem[line.id] || null}
           defaultMargin={defaultMargin}
           editable={editable}
-          onSaved={() => {
-            toast.success('Sell price updated')
-            router.refresh()
-          }}
+          busy={pending}
+          run={run}
         />
       ))}
     </div>
@@ -80,7 +79,8 @@ function CostLine({
   bestId,
   defaultMargin,
   editable,
-  onSaved,
+  busy,
+  run,
 }: {
   quotationId: string
   line: Line & { productId: string | null }
@@ -89,7 +89,8 @@ function CostLine({
   bestId: string | null
   defaultMargin: number
   editable: boolean
-  onSaved: () => void
+  busy: boolean
+  run: ReturnType<typeof useAction>['run']
 }) {
   const initialOffer = saved?.supplier_offer_id || bestId || ''
   const initial = offers.find((offer) => offer.id === initialOffer)
@@ -168,9 +169,10 @@ function CostLine({
       {editable && (
         <button
           type="button"
-          disabled={saving}
+          disabled={busy}
+          aria-busy={saving || undefined}
           className="rounded-lg bg-[#624B32] px-3 py-1.5 font-semibold text-white disabled:opacity-50"
-          onClick={async () => {
+          onClick={() => {
             const formData = new FormData()
             formData.set('quotation_id', quotationId)
             formData.set('item_id', line.id)
@@ -179,16 +181,14 @@ function CostLine({
             formData.set('margin_percent', margin)
             formData.set('unit_price', unit)
             setSaving(true)
-            const result = await applyQuotationItemPrice(formData)
-            setSaving(false)
-            if (result && 'error' in result && result.error) {
-              toast.error(result.error)
-              return
-            }
-            onSaved()
+            run(() => applyQuotationItemPrice(formData), {
+              successMessage: 'Sell price updated',
+              onSuccess: () => setSaving(false),
+              onError: () => setSaving(false),
+            })
           }}
         >
-          {saving ? 'Saving...' : 'Apply sell price'}
+          {saving ? <span className="inline-flex items-center gap-2"><Spinner />Saving…</span> : 'Apply sell price'}
         </button>
       )}
     </div>

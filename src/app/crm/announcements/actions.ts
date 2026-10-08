@@ -4,8 +4,13 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
+import { withIdempotency } from '@/lib/idempotency'
 
 export async function createAnnouncement(formData: FormData) {
+  return withIdempotency('crm.createAnnouncement', formData, () => createAnnouncementOnce(formData))
+}
+
+async function createAnnouncementOnce(formData: FormData) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!['admin', 'management'].includes(profile.role)) {

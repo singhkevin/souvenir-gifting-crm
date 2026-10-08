@@ -2,8 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { withIdempotency } from '@/lib/idempotency'
 
 export async function logActivity(formData: FormData) {
+  return withIdempotency('crm.logActivity', formData, () => logActivityOnce(formData))
+}
+
+async function logActivityOnce(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }

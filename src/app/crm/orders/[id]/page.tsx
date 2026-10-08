@@ -5,8 +5,8 @@ import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, formatDateTime, isUuid, oneRelation } from '@/lib/utils'
 import {
   advanceOrderStatus,
-  assignSupplier,
-  assignCourier,
+  assignSupplierForm,
+  assignCourierForm,
   assignPrintingVendor,
   recordDelivery,
   saveOrderCosting,
@@ -26,8 +26,10 @@ import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
 import { ProductImage } from '@/components/ui/product-image'
 import { ClientTabs } from '@/components/ui/client-tabs'
 import { ShoppingBag, ChevronRight } from 'lucide-react'
-import { asFormAction } from '@/lib/form-action'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
+import { ActionButton } from '@/components/ui/action-button'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function OrderDetailPage({
   params,
@@ -106,24 +108,6 @@ export default async function OrderDetailPage({
     ? ['details', 'products', 'vendors', 'financials', 'history']
     : ['details', 'products', 'vendors', 'history']
 
-  const handleAdvance = async () => {
-    'use server'
-    await advanceOrderStatus(id)
-  }
-
-  const handleAssignSupplier = async (formData: FormData) => {
-    'use server'
-    const sId = formData.get('supplier_id') as string
-    await assignSupplier(id, sId)
-  }
-
-  const handleAssignCourier = async (formData: FormData) => {
-    'use server'
-    const cId = formData.get('courier_partner_id') as string
-    const tracking = formData.get('tracking_number') as string
-    await assignCourier(id, cId, tracking)
-  }
-
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-10">
       <BackButton href="/crm/order-management" label="Back to Order Control" />
@@ -164,11 +148,13 @@ export default async function OrderDetailPage({
             <p className="text-xl font-bold text-[#806A50]">{formatCurrency(order.order_value)}</p>
           </div>
           {canStage && !isDelivered && nextStage && advanceGate?.ok && (
-            <form action={handleAdvance}>
-              <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5">
-                Advance to {ORDER_STATUS_LABELS[nextStage]} <ChevronRight size={14} />
-              </button>
-            </form>
+            <ActionButton
+              action={advanceOrderStatus.bind(null, id, order.status)}
+              pendingLabel="Advancing…"
+              className="px-4 py-2 bg-[#806A50] text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5"
+            >
+              Advance to {ORDER_STATUS_LABELS[nextStage]} <ChevronRight size={14} />
+            </ActionButton>
           )}
           {canStage && !isDelivered && nextStage === 'production' && advanceGate && !advanceGate.ok && (
             <p className="max-w-xs rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
@@ -204,8 +190,9 @@ export default async function OrderDetailPage({
       </div>
 
       {canStage && !isDelivered && (
-        <form action={asFormAction(handOffOrder)} className="bg-white p-6 rounded-2xl border border-gray-200 grid md:grid-cols-2 gap-3 text-xs">
+        <ActionForm action={handOffOrder} className="bg-white p-6 rounded-2xl border border-gray-200 grid md:grid-cols-2 gap-3 text-xs">
           <input type="hidden" name="order_id" value={order.id} />
+          <input type="hidden" name="expected_status" value={order.status} />
           <h3 className="md:col-span-2 font-bold text-sm">Stage hand-off</h3>
           <MobileSheetSelect
             name="status"
@@ -250,8 +237,8 @@ export default async function OrderDetailPage({
             <span className="text-gray-500">Comment / reason</span>
             <textarea name="comment" rows={2} className="w-full border rounded-lg px-2 py-2" placeholder="Why is this moving?" />
           </label>
-          <button className="md:col-span-2 bg-[#806A50] text-white rounded-lg py-2 font-semibold">Record hand-off</button>
-        </form>
+          <SubmitButton className="md:col-span-2 bg-[#806A50] text-white rounded-lg py-2 font-semibold" pendingLabel="Recording…">Record hand-off</SubmitButton>
+        </ActionForm>
       )}
 
       <ClientTabs
@@ -345,7 +332,8 @@ export default async function OrderDetailPage({
           ),
           vendors: (
             <div className="grid md:grid-cols-2 gap-6">
-              <form action={handleAssignSupplier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+              <ActionForm action={assignSupplierForm} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+                <input type="hidden" name="order_id" value={order.id} />
                 <h3 className="font-bold">Supplier</h3>
                 <MobileSheetSelect
                   name="supplier_id"
@@ -358,10 +346,10 @@ export default async function OrderDetailPage({
                     ...(suppliers || []).map((s) => ({ value: s.id, label: s.name })),
                   ]}
                 />
-                {canStage && <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg">Save supplier</button>}
-              </form>
+                {canStage && <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg" pendingLabel="Saving…">Save supplier</SubmitButton>}
+              </ActionForm>
 
-              <form action={asFormAction(assignPrintingVendor)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+              <ActionForm action={assignPrintingVendor} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                 <input type="hidden" name="order_id" value={order.id} />
                 <h3 className="font-bold">Printing vendor</h3>
                 <MobileSheetSelect
@@ -375,10 +363,11 @@ export default async function OrderDetailPage({
                     ...(printingVendors || []).map((v) => ({ value: v.id, label: v.name })),
                   ]}
                 />
-                {canStage && <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg">Save printing vendor</button>}
-              </form>
+                {canStage && <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg" pendingLabel="Saving…">Save printing vendor</SubmitButton>}
+              </ActionForm>
 
-              <form action={handleAssignCourier} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+              <ActionForm action={assignCourierForm} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+                <input type="hidden" name="order_id" value={order.id} />
                 <h3 className="font-bold">Courier</h3>
                 <MobileSheetSelect
                   name="courier_partner_id"
@@ -392,10 +381,10 @@ export default async function OrderDetailPage({
                   ]}
                 />
                 <input name="tracking_number" defaultValue={order.tracking_number || ''} placeholder="AWB / tracking number" disabled={!canStage} className="w-full border rounded-lg px-2 py-2 disabled:bg-gray-50" />
-                {canStage && <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg">Save shipping</button>}
-              </form>
+                {canStage && <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg" pendingLabel="Saving…">Save shipping</SubmitButton>}
+              </ActionForm>
 
-              <form action={asFormAction(recordDelivery)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+              <ActionForm action={recordDelivery} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                 <input type="hidden" name="order_id" value={order.id} />
                 <h3 className="font-bold">Dispatch &amp; delivery</h3>
                 <SheetDateField
@@ -419,15 +408,15 @@ export default async function OrderDetailPage({
                   defaultValue={order.actual_delivery_date || ''}
                   disabled={!canStage}
                 />
-                {canStage && <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg">Save delivery dates</button>}
-              </form>
+                {canStage && <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg" pendingLabel="Saving…">Save delivery dates</SubmitButton>}
+              </ActionForm>
             </div>
           ),
           ...(showCosts
             ? {
                 financials: (
                   <div className="grid md:grid-cols-2 gap-6">
-                    <form action={asFormAction(saveOrderCosting)} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
+                    <ActionForm action={saveOrderCosting} className="bg-white p-6 rounded-2xl border space-y-3 text-xs">
                       <input type="hidden" name="order_id" value={order.id} />
                       <h3 className="font-bold text-sm">Order costing</h3>
                       {(
@@ -450,8 +439,8 @@ export default async function OrderDetailPage({
                           />
                         </label>
                       ))}
-                      <button type="submit" className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-semibold">Save costing</button>
-                    </form>
+                      <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-semibold" pendingLabel="Saving…">Save costing</SubmitButton>
+                    </ActionForm>
 
                     <div className="bg-white p-6 rounded-2xl border text-xs space-y-3">
                       <h3 className="font-bold text-sm">Internal profitability</h3>

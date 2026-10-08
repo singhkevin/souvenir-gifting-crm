@@ -1,10 +1,11 @@
 'use client'
 
-import { useDeferredValue, useMemo, useState, useTransition } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Plus, Search } from 'lucide-react'
-import { toast } from 'sonner'
+import { useAction } from '@/lib/use-action'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton, Spinner } from '@/components/ui/submit-button'
 import { ProductImage } from '@/components/ui/product-image'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 import { formatCurrency } from '@/lib/utils'
@@ -56,13 +57,13 @@ export function CompanyCatalogueBrowser({
   assignableProducts: CatalogueBrowserProduct[]
   canManageVisibility: boolean
 }) {
-  const router = useRouter()
   const [query, setQuery] = useState('')
   const deferredQuery = useDeferredValue(query)
   const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [pendingId, setPendingId] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [pendingAction, setPendingAction] = useState<'revoke' | 'toggle'>('toggle')
+  const { pending, run: runAction } = useAction()
 
   const visibleCount = rows.filter((r) => r.visible).length
   const hiddenCount = rows.filter((r) => !r.visible).length
@@ -82,25 +83,24 @@ export function CompanyCatalogueBrowser({
   const run = (
     productId: string,
     fn: () => Promise<{ error?: string } | void>,
-    successMessage: string
+    successMessage: string,
+    action: 'revoke' | 'toggle' = 'toggle'
   ) => {
     setPendingId(productId)
-    startTransition(async () => {
-      const result = await fn()
-      setPendingId(null)
-      if (result && 'error' in result && result.error) {
-        toast.error(friendlyError(result.error))
-        return
-      }
-      toast.success(successMessage)
-      router.refresh()
-    })
+    setPendingAction(action)
+    runAction(() => friendly(fn), { successMessage })
+  }
+
+  const friendly = async (fn: () => Promise<{ error?: string } | void>) => {
+    const result = await fn()
+    if (result && 'error' in result && result.error) return { error: friendlyError(result.error) }
+    return result
   }
 
   const assignProduct = async (formData: FormData) => {
     const productId = String(formData.get('product_id') || '')
-    if (!productId) return
-    run(productId, () => grantCompanyProductAccess(productId, companyId), 'Product assigned')
+    if (!productId) return { error: 'Choose a product to assign' }
+    return friendly(() => grantCompanyProductAccess(productId, companyId))
   }
 
   return (
@@ -121,8 +121,9 @@ export function CompanyCatalogueBrowser({
           </div>
 
           {canManageVisibility && assignableProducts.length > 0 && (
-            <form
+            <ActionForm
               action={assignProduct}
+              successMessage="Product assigned"
               className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-end"
             >
               <MobileSheetSelect
@@ -139,14 +140,14 @@ export function CompanyCatalogueBrowser({
                   })),
                 ]}
               />
-              <button
-                type="submit"
+              <SubmitButton
+                pendingLabel="Assigning…"
                 disabled={pending}
-                className="inline-flex w-full items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg transition-colors whitespace-nowrap sm:w-auto disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg transition-colors whitespace-nowrap sm:w-auto"
               >
                 <Plus size={14} className="mr-1" /> Assign
-              </button>
-            </form>
+              </SubmitButton>
+            </ActionForm>
           )}
         </div>
 
@@ -274,22 +275,23 @@ export function CompanyCatalogueBrowser({
                         {row.type === 'personalized' && row.granted && row.visible && (
                           <button
                             type="button"
-                            disabled={busy}
+                            disabled={pending}
                             onClick={() =>
                               run(
                                 row.id,
                                 () => revokeCompanyProductAccess(row.id, companyId),
-                                'Personalized access removed'
+                                'Personalized access removed',
+                                'revoke'
                               )
                             }
                             className="text-[11px] font-medium text-gray-400 hover:text-red-600 disabled:opacity-50"
                           >
-                            Remove
+                            {busy && pendingAction === 'revoke' ? 'Removing…' : 'Remove'}
                           </button>
                         )}
                         <button
                           type="button"
-                          disabled={busy}
+                          disabled={pending}
                           onClick={() =>
                             row.visible
                               ? run(
@@ -309,7 +311,11 @@ export function CompanyCatalogueBrowser({
                               : 'border-[#806A50]/35 text-[#806A50] hover:bg-[#806A50]/10'
                           }`}
                         >
-                          {row.visible ? (
+                          {busy && pendingAction !== 'revoke' ? (
+                            <>
+                              <Spinner /> {row.visible ? 'Hiding…' : 'Showing…'}
+                            </>
+                          ) : row.visible ? (
                             <>
                               <EyeOff size={12} /> Hide
                             </>

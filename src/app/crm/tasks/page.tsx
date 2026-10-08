@@ -2,9 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
 import { requireStaff } from '@/lib/auth'
 import { completeTask, createTask, reassignTask, updateTaskStatus } from './actions'
-import { asFormAction } from '@/lib/form-action'
 import Link from 'next/link'
 import { MobileFilterBar, MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 const PRIORITY_LABELS: Record<number, string> = { 1: 'high', 2: 'medium', 3: 'low' }
 const STATUS_OPTIONS = [
@@ -49,7 +50,7 @@ export default async function TasksPage({
         </p>
       </div>
 
-      <form action={asFormAction(createTask)} className="grid grid-cols-1 items-end gap-3 rounded-2xl border bg-white p-4 text-xs sm:grid-cols-2 lg:grid-cols-4">
+      <ActionForm action={createTask} className="grid grid-cols-1 items-end gap-3 rounded-2xl border bg-white p-4 text-xs sm:grid-cols-2 lg:grid-cols-4" resetOnSuccess>
         <label className="block space-y-1 sm:col-span-2">
           <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Task title</span>
           <input name="title" required placeholder="e.g. Follow up with client" className="min-h-11 w-full rounded-lg border px-3 py-2" />
@@ -101,10 +102,10 @@ export default async function TasksPage({
           <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Notes</span>
           <input name="description" placeholder="Optional details" className="min-h-11 w-full rounded-lg border px-3 py-2" />
         </label>
-        <button className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 py-2.5 font-semibold text-[#FFFFFF] sm:col-span-2 lg:col-span-4">
+        <SubmitButton className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 py-2.5 font-semibold text-[#FFFFFF] sm:col-span-2 lg:col-span-4" pendingLabel="Creating…">
           Create task
-        </button>
-      </form>
+        </SubmitButton>
+      </ActionForm>
 
       <div className="md:hidden">
         <MobileFilterBar
@@ -185,7 +186,7 @@ export default async function TasksPage({
                   <td className="p-3 capitalize">{priority}</td>
                   <td className="p-3">
                     {canSeeAll ? (
-                      <form action={asFormAction(reassignTask)} className="flex min-w-[140px] flex-col gap-1">
+                      <ActionForm action={reassignTask} className="flex min-w-[140px] flex-col gap-1">
                         <input type="hidden" name="id" value={task.id} />
                         <MobileSheetSelect
                           name="assigned_to"
@@ -196,15 +197,15 @@ export default async function TasksPage({
                             label: member.full_name || 'Unnamed',
                           }))}
                         />
-                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save</button>
-                      </form>
+                        <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
+                      </ActionForm>
                     ) : (
                       assignee?.full_name || 'Unassigned'
                     )}
                   </td>
                   <td className={`p-3 ${overdue ? 'text-red-600 font-semibold' : ''}`}>{formatDate(task.due_at)}</td>
                   <td className="p-3">
-                    <form action={asFormAction(updateTaskStatus)} className="flex min-w-[140px] flex-col gap-1">
+                    <ActionForm action={updateTaskStatus} className="flex min-w-[140px] flex-col gap-1">
                       <input type="hidden" name="id" value={task.id} />
                       <MobileSheetSelect
                         name="status"
@@ -215,13 +216,13 @@ export default async function TasksPage({
                           label: option.label,
                         }))}
                       />
-                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Update</button>
-                    </form>
+                      <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Updating…">Update</SubmitButton>
+                    </ActionForm>
                     {task.status !== 'done' && !task.completed_at && (
-                      <form action={asFormAction(completeTask)} className="mt-1">
+                      <ActionForm action={completeTask} className="mt-1">
                         <input type="hidden" name="id" value={task.id} />
-                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Complete</button>
-                      </form>
+                        <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]" pendingLabel="Completing…">Complete</SubmitButton>
+                      </ActionForm>
                     )}
                   </td>
                 </tr>

@@ -3,7 +3,8 @@ import { formatDateTime, asRows, oneRelation } from '@/lib/utils'
 import { requireStaff } from '@/lib/auth'
 import { createAnnouncement, updateAnnouncement, removeAnnouncement } from './actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
-import { asFormAction } from '@/lib/form-action'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 type AnnouncementRow = {
   id: string
@@ -31,13 +32,13 @@ export default async function AnnouncementsPage() {
       </div>
 
       {canPost && (
-        <form action={asFormAction(createAnnouncement)} className="bg-white rounded-lg border border-[var(--color-border)] p-4 mb-6 space-y-3">
+        <ActionForm action={createAnnouncement} className="bg-white rounded-lg border border-[var(--color-border)] p-4 mb-6 space-y-3" resetOnSuccess>
           <input name="title" required placeholder="Announcement title" className="w-full border rounded-lg px-3 py-2 text-sm" />
           <textarea name="body" required rows={3} placeholder="Message" className="w-full border rounded-lg px-3 py-2 text-sm" />
-          <button type="submit" className="px-4 py-2 bg-[var(--color-primary)] text-white hover:text-white rounded font-medium hover:opacity-90 text-sm">
+          <SubmitButton className="px-4 py-2 bg-[var(--color-primary)] text-white hover:text-white rounded font-medium hover:opacity-90 text-sm" pendingLabel="Saving…">
             Post announcement
-          </button>
-        </form>
+          </SubmitButton>
+        </ActionForm>
       )}
 
       <div className="flex flex-col gap-6">
@@ -54,16 +55,16 @@ export default async function AnnouncementsPage() {
             <p className="text-gray-700 whitespace-pre-wrap mb-4">{ann.body}</p>
             {canPost && (
               <div className="space-y-3 mb-4">
-                <form action={asFormAction(updateAnnouncement)} className="grid gap-2">
+                <ActionForm action={updateAnnouncement} className="grid gap-2">
                   <input type="hidden" name="id" value={ann.id} />
                   <input name="title" defaultValue={ann.title} required className="w-full border rounded-lg px-3 py-2 text-sm" />
                   <textarea name="body" defaultValue={ann.body} required rows={3} className="w-full border rounded-lg px-3 py-2 text-sm" />
-                  <button className="justify-self-start px-3 py-1.5 text-xs font-semibold rounded-lg border">Save</button>
-                </form>
+                  <SubmitButton className="justify-self-start px-3 py-1.5 text-xs font-semibold rounded-lg border" pendingLabel="Saving…">Save</SubmitButton>
+                </ActionForm>
                 <ConfirmAction
                   title="Delete announcement?"
                   confirmLabel="Delete"
-                  action={asFormAction(removeAnnouncement)}
+                  action={removeAnnouncement}
                   hiddenFields={{ id: ann.id }}
                   description={<p>Announcement: <span className="font-semibold">{ann.title}</span></p>}
                 >

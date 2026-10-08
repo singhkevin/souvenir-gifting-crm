@@ -1,7 +1,9 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { IDEMPOTENCY_FIELD, useAction, useIdempotencyKey } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import { autoMapHeaders, parseCsv } from '@/lib/csv'
 import { importCatalogueCsv, type ImportSummary } from './import-actions'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
@@ -36,7 +38,8 @@ export function CatalogueCsvImporter() {
   const [mapping, setMapping] = useState<Record<string, string>>({})
   const [images, setImages] = useState<File[]>([])
   const [summary, setSummary] = useState<ImportSummary | null>(null)
-  const [pending, startTransition] = useTransition()
+  const { pending, run } = useAction()
+  const { key, rotate } = useIdempotencyKey()
 
   const mappedRequired = useMemo(
     () => FIELD_LABELS.filter((f) => f.required).every((f) => mapping[f.key]),
@@ -71,20 +74,22 @@ export function CatalogueCsvImporter() {
     data.set('csv', csvFile)
     data.set('mapping', JSON.stringify(mapping))
     images.forEach((image) => data.append('images', image))
-    startTransition(async () => {
-      const result = await importCatalogueCsv(data)
-      if ('error' in result) {
-        toast.error(result.error)
-        return
-      }
-      setSummary(result)
-      if (result.imported > 0) toast.success(`${result.imported} products imported`)
-      if (result.failed > 0) toast.error(`${result.failed} rows failed`)
+    data.set(IDEMPOTENCY_FIELD, key)
+    run(() => importCatalogueCsv(data), {
+      successMessage: false,
+      onSuccess: (value) => {
+        rotate()
+        const result = value as ImportSummary
+        setSummary(result)
+        if (result.imported > 0) toast.success(`${result.imported} products imported`)
+        if (result.failed > 0) toast.error(`${result.failed} rows failed`)
+        if (result.imported === 0 && result.failed === 0) toast.success('Import finished — nothing new to add')
+      },
     })
   }
 
   return (
-    <div className="space-y-6">
+    <fieldset disabled={pending} aria-busy={pending || undefined} className="space-y-6 min-w-0 border-0 p-0 m-0">
       <div className="bg-white p-6 rounded-2xl border border-gray-200 space-y-4">
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1.5">CSV file</label>
@@ -168,7 +173,11 @@ export function CatalogueCsvImporter() {
             onClick={onImport}
             className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg disabled:opacity-50"
           >
-            {pending ? 'Importing…' : 'Import products'}
+            {pending ? (
+              <span className="inline-flex items-center gap-2"><Spinner />Importing…</span>
+            ) : (
+              'Import products'
+            )}
           </button>
         </div>
       )}
@@ -193,7 +202,7 @@ export function CatalogueCsvImporter() {
           )}
         </div>
       )}
-    </div>
+    </fieldset>
   )
 }
 
