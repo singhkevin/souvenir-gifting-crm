@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
-import { toast } from 'sonner'
+import { useMemo, useState } from 'react'
 import { addCatalogProducts } from './actions'
+import { ActionButton } from '@/components/ui/action-button'
+import { IDEMPOTENCY_FIELD } from '@/lib/use-action'
 import { formatCurrency } from '@/lib/utils'
 import type { CatalogPickerProduct } from '@/lib/catalogs/picker-products'
 
@@ -21,7 +22,6 @@ export function CatalogProductPicker({
   const [range, setRange] = useState(bounds)
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [pending, startTransition] = useTransition()
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -54,28 +54,21 @@ export function CatalogProductPicker({
     })
   }
 
-  const submit = () => {
-    const ids = [...selected]
-    if (!ids.length) {
-      toast.error('Select at least one product')
-      return
-    }
+  const submit = async (key: string) => {
     const formData = new FormData()
     formData.set('campaign_id', catalogId)
-    ids.forEach((id) => formData.append('product_id', id))
-    startTransition(async () => {
-      const result = await addCatalogProducts(formData)
-      if (result?.error) {
-        toast.error(result.error)
-        return
-      }
-      toast.success(
-        result.skipped
+    ;[...selected].forEach((id) => formData.append('product_id', id))
+    formData.set(IDEMPOTENCY_FIELD, key)
+    const result = await addCatalogProducts(formData)
+    if (result && !result.error) {
+      return {
+        ...result,
+        message: result.skipped
           ? `Added ${result.added}. Skipped ${result.skipped} already on the catalog or inactive.`
           : `Added ${result.added} product${result.added === 1 ? '' : 's'} as drafts.`,
-      )
-      window.location.reload()
-    })
+      }
+    }
+    return result
   }
 
   return (
@@ -165,14 +158,15 @@ export function CatalogProductPicker({
         ))}
       </div>
 
-      <button
-        type="button"
-        disabled={pending || selected.size === 0}
-        onClick={submit}
+      <ActionButton
+        action={submit}
+        pendingLabel="Adding…"
+        disabled={selected.size === 0}
+        onSuccess={() => setSelected(new Set())}
         className="min-h-11 rounded-lg bg-[#806A50] px-4 font-semibold text-white disabled:opacity-50"
       >
-        {pending ? 'Adding…' : `Add ${selected.size || ''} as draft offerings`.replace('  ', ' ')}
-      </button>
+        {`Add ${selected.size || ''} as draft offerings`.replace('  ', ' ')}
+      </ActionButton>
     </div>
   )
 }

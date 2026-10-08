@@ -14,6 +14,7 @@ import { formatKitItemNames, PACK_OPTION_LABELS } from '@/lib/catalogue/budget-p
 import { sharePath } from '@/lib/catalogs/share'
 import { appName } from '@/lib/brand'
 import { extendShareExpiry, shareExpiryIso, shareLinkGrantsAccess, shareLinkIsExpired } from '@/lib/catalogs/share-link'
+import { withIdempotency } from '@/lib/idempotency'
 
 function schemaHint(message: string) {
   if (/catalog_assignments|catalog_share_links|cloned_from|get_shared_catalog/i.test(message)) {
@@ -47,6 +48,10 @@ async function syncPrimaryCompany(
 }
 
 export async function createCatalog(formData: FormData) {
+  return withIdempotency('crm.createCatalog', formData, () => createCatalogOnce(formData))
+}
+
+async function createCatalogOnce(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -110,6 +115,10 @@ export async function updateCatalog(formData: FormData) {
 }
 
 export async function duplicateCatalog(formData: FormData) {
+  return withIdempotency('crm.duplicateCatalog', formData, () => duplicateCatalogOnce(formData))
+}
+
+async function duplicateCatalogOnce(formData: FormData) {
   await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -222,8 +231,8 @@ export async function assignCatalogCompany(formData: FormData) {
     assigned_by: user.id,
   })
   if (error) {
-    if (error.code === '23505') return { error: 'That company is already assigned to this catalog.' }
-    return { error: schemaHint(error.message) }
+    // Already assigned (a repeated request): nothing to do, the end state is what was asked for.
+    if (error.code !== '23505') return { error: schemaHint(error.message) }
   }
 
   const synced = await syncPrimaryCompany(supabase, campaignId)
@@ -338,7 +347,14 @@ export async function addCatalogProducts(formData: FormData) {
       visibility: 'draft',
       created_by: user.id,
     })
-    if (error) return { error: error.message }
+    if (error) {
+      // A concurrent request added it first (unique campaign_id + product_id): count it as skipped.
+      if (error.code === '23505') {
+        skipped += 1
+        continue
+      }
+      return { error: error.message }
+    }
     added += 1
   }
 
@@ -444,6 +460,10 @@ export async function removeCatalogProduct(formData: FormData) {
 }
 
 export async function generateBudgetPackOptions(formData: FormData) {
+  return withIdempotency('crm.generateBudgetPackOptions', formData, () => generateBudgetPackOptionsOnce(formData))
+}
+
+async function generateBudgetPackOptionsOnce(formData: FormData) {
   await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -554,6 +574,10 @@ export async function generateBudgetPackOptions(formData: FormData) {
 }
 
 export async function publishBudgetPackOptions(formData: FormData) {
+  return withIdempotency('crm.publishBudgetPackOptions', formData, () => publishBudgetPackOptionsOnce(formData))
+}
+
+async function publishBudgetPackOptionsOnce(formData: FormData) {
   await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -647,6 +671,10 @@ async function revokeShareLinkIds(
 }
 
 export async function generateCatalogShareLink(formData: FormData) {
+  return withIdempotency('crm.generateCatalogShareLink', formData, () => generateCatalogShareLinkOnce(formData))
+}
+
+async function generateCatalogShareLinkOnce(formData: FormData) {
   await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -750,6 +778,10 @@ function escapeHtml(value: string) {
 }
 
 export async function emailCatalogLink(formData: FormData) {
+  return withIdempotency('crm.emailCatalogLink', formData, () => emailCatalogLinkOnce(formData))
+}
+
+async function emailCatalogLinkOnce(formData: FormData) {
   await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

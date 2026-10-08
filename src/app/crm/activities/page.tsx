@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { logActivity, removeActivity } from './actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
-import { asFormAction } from '@/lib/form-action'
 import { MobileFilterBar, MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function ActivitiesPage({
   searchParams,
@@ -44,7 +45,7 @@ export default async function ActivitiesPage({
     <div className="mx-auto max-w-4xl space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Activity Feed</h1>
 
-      <form action={asFormAction(logActivity)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-2">
+      <ActionForm action={logActivity} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-2" resetOnSuccess>
         <input name="title" required placeholder="Activity title" className="rounded-lg border px-2 py-2 md:col-span-2" />
         <MobileSheetSelect
           name="type"
@@ -79,8 +80,8 @@ export default async function ActivitiesPage({
         />
         <input name="related_id" placeholder="Related record ID" className="rounded-lg border px-2 py-2" />
         <textarea name="notes" placeholder="Notes" className="min-h-[70px] rounded-lg border px-2 py-2 md:col-span-2" />
-        <button className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] md:col-span-2">Log activity</button>
-      </form>
+        <SubmitButton className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] md:col-span-2" pendingLabel="Logging…">Log activity</SubmitButton>
+      </ActionForm>
 
       <div className="md:hidden">
         <MobileFilterBar
@@ -152,7 +153,7 @@ export default async function ActivitiesPage({
                     <ConfirmAction
                       title="Delete activity?"
                       confirmLabel="Delete"
-                      action={asFormAction(removeActivity)}
+                      action={removeActivity}
                       hiddenFields={{ id: activity.id }}
                       description={<p>Activity: <span className="font-semibold">{activity.title}</span></p>}
                     >

@@ -1,9 +1,12 @@
 'use client'
 
-import { useTransition } from 'react'
-import { toast } from 'sonner'
+import { useState } from 'react'
 import { generateBudgetPackOptions, publishBudgetPackOptions } from './actions'
+import { Spinner } from '@/components/ui/submit-button'
 import { formatCurrency } from '@/lib/utils'
+import { IDEMPOTENCY_FIELD, useAction, useIdempotencyKey } from '@/lib/use-action'
+
+type Which = 'generate' | 'replace' | 'publish'
 
 export function BudgetPackGenerator({
   catalogId,
@@ -16,36 +19,57 @@ export function BudgetPackGenerator({
   draftPackCount: number
   publishedPackCount: number
 }) {
-  const [pending, startTransition] = useTransition()
+  const { pending, run } = useAction()
+  const [active, setActive] = useState<Which | null>(null)
+  const generateKey = useIdempotencyKey()
+  const replaceKey = useIdempotencyKey()
+  const publishKey = useIdempotencyKey()
 
   const runGenerate = (replace: boolean) => {
+    const idem = replace ? replaceKey : generateKey
     const formData = new FormData()
     formData.set('campaign_id', catalogId)
     if (replace) formData.set('replace', '1')
-    startTransition(async () => {
-      const result = await generateBudgetPackOptions(formData)
-      if (result?.error) {
-        toast.error(result.error)
-        return
-      }
-      toast.success(`Generated ${result.count} budget kit option${result.count === 1 ? '' : 's'} (draft).`)
-      window.location.reload()
-    })
+    formData.set(IDEMPOTENCY_FIELD, idem.key)
+    setActive(replace ? 'replace' : 'generate')
+    run(
+      async () => {
+        const result = await generateBudgetPackOptions(formData)
+        if (result && !result.error) {
+          return { ...result, message: `Generated ${result.count} budget kit option${result.count === 1 ? '' : 's'} (draft).` }
+        }
+        return result
+      },
+      { onSuccess: idem.rotate },
+    )
   }
 
   const runPublish = () => {
     const formData = new FormData()
     formData.set('campaign_id', catalogId)
-    startTransition(async () => {
-      const result = await publishBudgetPackOptions(formData)
-      if (result?.error) {
-        toast.error(result.error)
-        return
-      }
-      toast.success(`Published ${result.count} option${result.count === 1 ? '' : 's'} to the client portal.`)
-      window.location.reload()
-    })
+    formData.set(IDEMPOTENCY_FIELD, publishKey.key)
+    setActive('publish')
+    run(
+      async () => {
+        const result = await publishBudgetPackOptions(formData)
+        if (result && !result.error) {
+          return { ...result, message: `Published ${result.count} option${result.count === 1 ? '' : 's'} to the client portal.` }
+        }
+        return result
+      },
+      { onSuccess: publishKey.rotate },
+    )
   }
+
+  const label = (which: Which, text: string, pendingText: string) =>
+    pending && active === which ? (
+      <span className="inline-flex items-center justify-center gap-2">
+        <Spinner />
+        {pendingText}
+      </span>
+    ) : (
+      text
+    )
 
   const budget = budgetPerEmployee || 0
 
@@ -64,26 +88,29 @@ export function BudgetPackGenerator({
         <button
           type="button"
           disabled={pending || budget <= 0}
+          aria-busy={pending && active === 'generate' ? true : undefined}
           onClick={() => runGenerate(false)}
           className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50"
         >
-          {pending ? 'Working…' : 'Generate options'}
+          {label('generate', 'Generate options', 'Generating…')}
         </button>
         <button
           type="button"
           disabled={pending || budget <= 0}
+          aria-busy={pending && active === 'replace' ? true : undefined}
           onClick={() => runGenerate(true)}
           className="min-h-10 rounded-lg border border-[#E5DFD5] bg-white px-3 font-semibold text-[#806A50] disabled:opacity-50"
         >
-          Replace all packs
+          {label('replace', 'Replace all packs', 'Replacing…')}
         </button>
         <button
           type="button"
           disabled={pending || draftPackCount === 0}
+          aria-busy={pending && active === 'publish' ? true : undefined}
           onClick={runPublish}
           className="min-h-10 rounded-lg border border-[#806A50] px-3 font-semibold text-[#806A50] disabled:opacity-50"
         >
-          Publish all pack drafts ({draftPackCount})
+          {label('publish', `Publish all pack drafts (${draftPackCount})`, 'Publishing…')}
         </button>
       </div>
       {budget <= 0 && (

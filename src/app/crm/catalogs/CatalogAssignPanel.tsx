@@ -1,8 +1,10 @@
 'use client'
 
-import { useTransition } from 'react'
-import { toast } from 'sonner'
+import { useRef, useState } from 'react'
 import { assignCatalogCompany, unassignCatalogCompany } from './actions'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton, Spinner } from '@/components/ui/submit-button'
+import { IDEMPOTENCY_FIELD, newIdempotencyKey, useAction } from '@/lib/use-action'
 
 export function CatalogAssignPanel({
   catalogId,
@@ -15,24 +17,26 @@ export function CatalogAssignPanel({
   companies: { id: string; name: string }[]
   pricingCompanyName: string | null
 }) {
-  const [pending, startTransition] = useTransition()
+  const { pending, run } = useAction()
+  const [removingId, setRemovingId] = useState<string | null>(null)
+  const keys = useRef(new Map<string, string>())
   const assignedIds = new Set(assigned.map((row) => row.companyId))
   const available = companies.filter((company) => !assignedIds.has(company.id))
 
-  const run = (
-    action: (formData: FormData) => Promise<{ error?: string; success?: boolean } | undefined>,
-    companyId: string,
-  ) => {
+  const remove = (companyId: string) => {
+    let key = keys.current.get(companyId)
+    if (!key) {
+      key = newIdempotencyKey()
+      keys.current.set(companyId, key)
+    }
     const formData = new FormData()
     formData.set('campaign_id', catalogId)
     formData.set('company_id', companyId)
-    startTransition(async () => {
-      const result = await action(formData)
-      if (result?.error) {
-        toast.error(result.error)
-        return
-      }
-      window.location.reload()
+    formData.set(IDEMPOTENCY_FIELD, key)
+    setRemovingId(companyId)
+    run(() => unassignCatalogCompany(formData), {
+      successMessage: 'Company removed',
+      onSuccess: () => keys.current.delete(companyId),
     })
   }
 
@@ -53,34 +57,40 @@ export function CatalogAssignPanel({
             <button
               type="button"
               disabled={pending}
-              onClick={() => run(unassignCatalogCompany, row.companyId)}
+              aria-busy={pending && removingId === row.companyId ? true : undefined}
+              onClick={() => remove(row.companyId)}
               className="underline text-red-700 disabled:opacity-50"
             >
-              Remove
+              {pending && removingId === row.companyId ? (
+                <span className="inline-flex items-center gap-2 no-underline">
+                  <Spinner />
+                  Removing…
+                </span>
+              ) : (
+                'Remove'
+              )}
             </button>
           </li>
         ))}
       </ul>
       {available.length > 0 && (
-        <form
+        <ActionForm
+          action={assignCatalogCompany}
           className="flex flex-col gap-2 sm:flex-row"
-          onSubmit={(event) => {
-            event.preventDefault()
-            const companyId = String(new FormData(event.currentTarget).get('company_id') || '')
-            if (!companyId) return
-            run(assignCatalogCompany, companyId)
-          }}
+          successMessage="Company assigned"
+          resetOnSuccess
         >
+          <input type="hidden" name="campaign_id" value={catalogId} />
           <select name="company_id" required className="min-h-10 flex-1 rounded-lg border px-2 py-2" defaultValue="">
             <option value="" disabled>Add a company</option>
             {available.map((company) => (
               <option key={company.id} value={company.id}>{company.name}</option>
             ))}
           </select>
-          <button type="submit" disabled={pending} className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
-            {pending ? 'Saving…' : 'Assign'}
-          </button>
-        </form>
+          <SubmitButton pendingLabel="Assigning…" className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
+            Assign
+          </SubmitButton>
+        </ActionForm>
       )}
     </div>
   )

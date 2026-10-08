@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { submitPublicQuote } from '@/app/request-quote/actions'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { BrandName } from '@/components/brand/brand-name'
 
 export type QuoteFormItem = { id: string; name: string; sku?: string; quantity: number }
@@ -20,9 +22,7 @@ export function QuoteForm({
   portalHref?: string | null
   onSuccess?: () => void
 }) {
-  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [pending, setPending] = useState(false)
 
   if (success) {
     return (
@@ -40,19 +40,12 @@ export function QuoteForm({
   const label = 'text-[10px] font-medium uppercase tracking-[0.16em] text-[#5C6570]'
 
   return (
-    <form
+    <ActionForm
+      action={submitPublicQuote}
       className="space-y-5"
-      onSubmit={async (event) => {
-        event.preventDefault()
-        setError('')
-        setPending(true)
-        const form = new FormData(event.currentTarget)
-        const result = await submitPublicQuote(form)
-        setPending(false)
-        if (result?.error) {
-          setError(result.error)
-          return
-        }
+      successMessage="Enquiry sent"
+      refresh={false}
+      onSuccess={() => {
         setSuccess(true)
         onSuccess?.()
       }}
@@ -120,14 +113,12 @@ export function QuoteForm({
         <span className={label}>Tell us about the occasion</span>
         <textarea required name="message" rows={4} className={field} />
       </label>
-      {error ? <p className="text-sm text-red-800">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="mt-4 inline-flex min-w-[12rem] items-center justify-center bg-[#806A50] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#FFFFFF] disabled:opacity-60"
+      <SubmitButton
+        pendingLabel="Sending…"
+        className="mt-4 inline-flex min-w-[12rem] items-center justify-center bg-[#806A50] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#FFFFFF]"
       >
-        {pending ? 'Sending…' : 'Send enquiry'}
-      </button>
-    </form>
+        Send enquiry
+      </SubmitButton>
+    </ActionForm>
   )
 }

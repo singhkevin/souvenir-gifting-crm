@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useAction, useIdempotencyKey } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import { checkoutShareCatalog } from '@/app/share/catalogs/actions'
 import { formatCurrency } from '@/lib/utils'
 
@@ -26,8 +28,8 @@ export function CatalogBuyPanel({
   loginHref?: string
 }) {
   const [qty, setQty] = useState<Record<string, string>>({})
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { pending, error, run } = useAction()
+  const { key, rotate } = useIdempotencyKey()
   const [order, setOrder] = useState<{ id?: string; number?: string } | null>(null)
 
   if (!offerings.length) return null
@@ -70,22 +72,21 @@ export function CatalogBuyPanel({
     )
   }
 
-  const submit = async () => {
-    setPending(true)
-    setError(null)
+  const submit = () => {
     const lines = offerings.map((offering) => {
       const parsed = Number.parseInt(qty[offering.productId] || '1', 10)
       const whole = Number.isInteger(parsed) && parsed > 0 ? parsed : 1
       const quantity = offering.maxBuyQty != null ? Math.min(whole, offering.maxBuyQty) : whole
       return { productId: offering.productId, quantity, catalogId: null }
     })
-    const result = await checkoutShareCatalog({ token: shareToken, lines })
-    setPending(false)
-    if (result.error) {
-      setError(result.error)
-      return
-    }
-    if (result.success) setOrder({ id: result.orderId, number: result.orderNumber })
+    run(() => checkoutShareCatalog({ token: shareToken, lines, idempotencyKey: key }), {
+      successMessage: 'Order placed',
+      onSuccess: (result) => {
+        rotate()
+        const r = result as { orderId?: string; orderNumber?: string } | undefined
+        setOrder({ id: r?.orderId, number: r?.orderNumber })
+      },
+    })
   }
 
   return (
@@ -110,6 +111,7 @@ export function CatalogBuyPanel({
                 const digits = event.target.value.replace(/\D/g, '').slice(0, 6)
                 setQty((current) => ({ ...current, [offering.productId]: digits }))
               }}
+              disabled={pending}
               className="w-20 rounded-md border border-[#E5DFD5] px-2 py-2 text-center"
             />
           </li>
@@ -119,10 +121,18 @@ export function CatalogBuyPanel({
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending || undefined}
         onClick={submit}
-        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-white hover:bg-[#9C8567] disabled:opacity-60"
+        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {pending ? 'Placing order…' : 'Place order'}
+        {pending ? (
+          <span className="inline-flex items-center justify-center gap-2">
+            <Spinner />
+            Placing order…
+          </span>
+        ) : (
+          'Place order'
+        )}
       </button>
     </section>
   )

@@ -1,11 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, isUuid, oneRelation } from '@/lib/utils'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { sortProductCategories } from '@/lib/products/categories'
 import { BackButton } from '@/components/ui/back-button'
 import { updateProduct, removeProduct } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
-import { asFormAction } from '@/lib/form-action'
 import { Globe, Lock, EyeOff } from 'lucide-react'
 import { ProductImageEditor } from '@/components/products/product-image-editor'
 import { CatalogueVisibilityEditor } from '@/components/products/catalogue-visibility-editor'
@@ -16,6 +15,8 @@ import { pickBestOffer } from '@/lib/pricing/offers'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
 import { SupplierOffersEditor } from './SupplierOffersEditor'
 import { purchaseCaption, purchaseOffer } from '@/lib/catalogue/purchase-path'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function ProductDetailPage({
   params,
@@ -79,14 +80,6 @@ export default async function ProductDetailPage({
   })
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
-
-  const handleUpdate = async (formData: FormData) => {
-    'use server'
-    const result = await updateProduct(product.id, formData)
-    if (result && typeof result === 'object' && 'error' in result && result.error) {
-      redirect(`/crm/products/${product.id}?error=${encodeURIComponent(result.error)}`)
-    }
-  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -152,7 +145,7 @@ export default async function ProductDetailPage({
               <ConfirmAction
                 title="Delete product?"
                 confirmLabel="Delete"
-                action={asFormAction(removeProduct)}
+                action={removeProduct}
                 hiddenFields={{ product_id: product.id }}
                 description={
                   <>
@@ -214,7 +207,7 @@ export default async function ProductDetailPage({
             Edit Product Information
           </h2>
 
-          <form action={handleUpdate} className="space-y-4">
+          <ActionForm action={updateProduct.bind(null, product.id)} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">Product Name</label>
               <input
@@ -378,13 +371,12 @@ export default async function ProductDetailPage({
               />
             </div>
 
-            <button
-              type="submit"
+            <SubmitButton
               className="w-full py-2.5 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] hover:text-white rounded-lg shadow-sm transition-colors"
-            >
+             pendingLabel="Saving…">
               Save Product Details
-            </button>
-          </form>
+            </SubmitButton>
+          </ActionForm>
         </div>
 
         {profile.role === 'admin' ? (

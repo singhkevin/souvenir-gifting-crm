@@ -6,6 +6,7 @@ import { parseCsv, splitCompanyNames } from '@/lib/csv'
 import { revalidatePath } from 'next/cache'
 import { PRODUCT_CATEGORY_ALIASES } from '@/lib/products/categories'
 import { directOrderSchemaHint } from '@/lib/catalogue/purchase-path'
+import { withIdempotency } from '@/lib/idempotency'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const IMAGE_BUCKET = 'product-images'
@@ -49,6 +50,10 @@ function parseAccess(raw: string, companyNames: string[], isAdmin: boolean): 'al
 }
 
 export async function importCatalogueCsv(formData: FormData): Promise<ImportSummary | { error: string }> {
+  return withIdempotency('crm.importCatalogueCsv', formData, () => importCatalogueCsvOnce(formData))
+}
+
+async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary | { error: string }> {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!CATALOGUE_ROLES.includes(profile.role as (typeof CATALOGUE_ROLES)[number])) {

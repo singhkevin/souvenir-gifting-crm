@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createPortalRequirement } from '@/app/portal/actions'
+import { useAction, useIdempotencyKey } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { readCatalogueShortlist } from '@/lib/portal/catalogue-shortlist'
 
@@ -18,8 +20,10 @@ const PURPOSE_OPTIONS = [
 export default function NewRequirementPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { pending, error: actionError, run } = useAction()
+  const { key, rotate } = useIdempotencyKey()
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const error = validationError ?? actionError
   
   // Get shortlisted items
   const [shortlistedProducts, setShortlistedProducts] = useState<ReturnType<typeof readCatalogueShortlist>>([])
@@ -49,43 +53,42 @@ export default function NewRequirementPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (step === 1 && !formData.purpose) {
-      setError('Please select a purpose / occasion.')
+      setValidationError('Please select a purpose / occasion.')
       return
     }
     if (step === 2 && !formData.deadline) {
-      setError('Please choose a required-by date.')
+      setValidationError('Please choose a required-by date.')
       return
     }
     if (step < 3) {
-      setError(null)
+      setValidationError(null)
       setStep(step + 1)
       return
     }
 
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await createPortalRequirement({
-        ...formData,
-        products: shortlistedProducts.map((product) => product.sku),
-        lines: shortlistedProducts.map((product) => ({
-          sku: product.sku,
-          quantity: Number.parseInt(lineQty[product.sku] || formData.quantity || '1', 10) || 1,
-        })),
-      })
-      if (result?.error) {
-        setError(result.error)
-      } else {
-        router.push('/portal/requirements')
-      }
-    } catch {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
-    }
+    setValidationError(null)
+    run(
+      () =>
+        createPortalRequirement({
+          ...formData,
+          products: shortlistedProducts.map((product) => product.sku),
+          lines: shortlistedProducts.map((product) => ({
+            sku: product.sku,
+            quantity: Number.parseInt(lineQty[product.sku] || formData.quantity || '1', 10) || 1,
+          })),
+          idempotencyKey: key,
+        }),
+      {
+        successMessage: 'Quotation request sent',
+        onSuccess: () => {
+          rotate()
+          router.push('/portal/requirements')
+        },
+      },
+    )
   }
 
   return (
@@ -113,7 +116,8 @@ export default function NewRequirementPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-0">
+        <form onSubmit={handleSubmit} className="space-y-0" aria-busy={pending || undefined}>
+          <fieldset disabled={pending} className="contents">
           {step === 1 && (
             <div className="space-y-6">
               <h2 className="border-b pb-2 text-xl font-bold text-gray-900">Step 1: What do you need?</h2>
@@ -206,10 +210,20 @@ export default function NewRequirementPage() {
               <div className="hidden sm:block"></div>
             )}
             
-            <button type="submit" disabled={loading} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-6 text-sm font-semibold text-[#FFFFFF] transition-colors hover:bg-[#9C8567] disabled:opacity-50">
-              {step < 3 ? 'Next Step' : loading ? 'Sending...' : 'Request Quotation'}
+            <button type="submit" disabled={pending} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-6 text-sm font-semibold text-[#FFFFFF] transition-colors hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-50">
+              {step < 3 ? (
+                'Next Step'
+              ) : pending ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Spinner />
+                  Submitting…
+                </span>
+              ) : (
+                'Request Quotation'
+              )}
             </button>
           </div>
+          </fieldset>
         </form>
       </div>
     </div>

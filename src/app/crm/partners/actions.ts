@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
+import { withIdempotency } from '@/lib/idempotency'
 
 const PARTNER_ROLES = ['admin', 'operations', 'management'] as const
 const PARTNER_TABLES = ['suppliers', 'printing_vendors', 'courier_partners'] as const
@@ -61,6 +62,10 @@ function partnerPayload(formData: FormData, table: PartnerTable) {
 }
 
 export async function createPartner(formData: FormData) {
+  return withIdempotency('crm.createPartner', formData, () => createPartnerOnce(formData))
+}
+
+async function createPartnerOnce(formData: FormData) {
   const access = await requirePartnerEditor()
   if ('error' in access) return { error: access.error }
   const table = partnerTable(formData)

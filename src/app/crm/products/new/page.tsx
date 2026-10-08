@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { BackButton } from '@/components/ui/back-button'
 import { BrandName } from '@/components/brand/brand-name'
 import { createProduct } from '../actions'
@@ -9,6 +8,8 @@ import { Package, Globe, Lock, EyeOff } from 'lucide-react'
 import { sortProductCategories } from '@/lib/products/categories'
 import { ProductImageField } from '@/components/products/product-image-field'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function NewProductPage({
   searchParams,
@@ -25,14 +26,6 @@ export default async function NewProductPage({
     supabase.from('suppliers').select('id, name').order('name'),
     supabase.from('companies').select('id, name').eq('status', 'active').order('name'),
   ])
-
-  const handleCreate = async (formData: FormData) => {
-    'use server'
-    const result = await createProduct(formData)
-    if (result && typeof result === 'object' && 'error' in result && result.error) {
-      redirect(`/crm/products/new?error=${encodeURIComponent(result.error)}`)
-    }
-  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -57,7 +50,7 @@ export default async function NewProductPage({
           </div>
         )}
 
-        <form action={handleCreate} className="space-y-6">
+        <ActionForm action={createProduct} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">Product Name *</label>
@@ -341,14 +334,13 @@ export default async function NewProductPage({
             >
               Cancel
             </Link>
-            <button
-              type="submit"
+            <SubmitButton
               className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg transition-colors shadow-sm"
-            >
+             pendingLabel="Creating…">
               Create Product
-            </button>
+            </SubmitButton>
           </div>
-        </form>
+        </ActionForm>
       </div>
     </div>
   )

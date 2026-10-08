@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
 import { createLead } from '../actions'
 import { BackButton } from '@/components/ui/back-button'
-import { redirect } from 'next/navigation'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function NewLeadPage({
   searchParams,
@@ -20,14 +21,6 @@ export default async function NewLeadPage({
     supabase.from('profiles').select('id, full_name').in('role', ['admin', 'sales']).eq('is_active', true).order('full_name'),
   ])
 
-  const handleCreate = async (formData: FormData) => {
-    'use server'
-    const result = await createLead(formData)
-    if (result && typeof result === 'object' && 'error' in result && result.error) {
-      redirect(`/crm/leads/new?error=${encodeURIComponent(result.error)}`)
-    }
-  }
-
   return (
     <div className="mx-auto max-w-3xl">
       <BackButton href="/crm/leads" label="Back to leads" />
@@ -39,7 +32,7 @@ export default async function NewLeadPage({
         </div>
       )}
 
-      <form action={handleCreate} className="grid gap-4 rounded-lg border border-[var(--color-border)] bg-white p-5 text-sm shadow-sm sm:p-6">
+      <ActionForm action={createLead} className="grid gap-4 rounded-lg border border-[var(--color-border)] bg-white p-5 text-sm shadow-sm sm:p-6">
         <MobileSheetSelect
           name="company_id"
           label="Company"
@@ -92,10 +85,10 @@ export default async function NewLeadPage({
           <span className="text-xs font-semibold text-gray-700">Notes</span>
           <textarea name="notes" rows={3} className="mt-1 w-full rounded-lg border px-3 py-2" />
         </label>
-        <button type="submit" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-[#FFFFFF] hover:bg-[#9C8567]">
+        <SubmitButton className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-[#FFFFFF] hover:bg-[#9C8567]" pendingLabel="Creating…">
           Create Lead
-        </button>
-      </form>
+        </SubmitButton>
+      </ActionForm>
     </div>
   )
 }

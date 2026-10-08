@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getProfile } from '@/lib/auth'
 import { isUuid } from '@/lib/utils'
 import { appName } from '@/lib/brand'
+import { withIdempotency } from '@/lib/idempotency'
 
 function clean(value: FormDataEntryValue | null) {
   return String(value || '').trim()
@@ -13,6 +14,10 @@ export async function submitPublicQuote(formData: FormData): Promise<{ error?: s
   if (clean(formData.get('fax'))) {
     return { success: true }
   }
+  return withIdempotency('public.submitQuote', formData, () => submitPublicQuoteOnce(formData))
+}
+
+async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: string; success?: boolean }> {
 
   const fullName = clean(formData.get('full_name'))
   const email = clean(formData.get('email')).toLowerCase()

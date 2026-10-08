@@ -4,8 +4,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createReview, updateReview, removeReview } from './actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
-import { asFormAction } from '@/lib/form-action'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function ReviewsPage() {
   const supabase = await createClient()
@@ -27,7 +28,7 @@ export default async function ReviewsPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Client Reviews</h1>
 
-      <form action={asFormAction(createReview)} className="bg-white border rounded-2xl p-4 grid md:grid-cols-2 gap-3 text-xs">
+      <ActionForm action={createReview} className="bg-white border rounded-2xl p-4 grid md:grid-cols-2 gap-3 text-xs" resetOnSuccess>
         <MobileSheetSelect
           name="company_id"
           label="Company"
@@ -60,8 +61,8 @@ export default async function ReviewsPage() {
           }))}
         />
         <input name="feedback" placeholder="Feedback" className="border rounded-lg px-2 py-2" />
-        <button className="bg-[#806A50] text-[#FFFFFF] rounded-lg font-semibold md:col-span-2 py-2">Log review</button>
-      </form>
+        <SubmitButton className="bg-[#806A50] text-[#FFFFFF] rounded-lg font-semibold md:col-span-2 py-2" pendingLabel="Logging…">Log review</SubmitButton>
+      </ActionForm>
 
       <div className="bg-white rounded-lg border overflow-hidden">
         {reviews && reviews.length > 0 ? (
@@ -94,7 +95,7 @@ export default async function ReviewsPage() {
                     <td className="p-3 text-amber-500">{'★'.repeat(review.rating || 0)}{'☆'.repeat(5 - (review.rating || 0))}</td>
                     <td className="p-3">{review.feedback || '—'}</td>
                     <td className="p-3 text-xs space-y-2">
-                      <form action={asFormAction(updateReview)} className="flex flex-col gap-1">
+                      <ActionForm action={updateReview} className="flex flex-col gap-1">
                         <input type="hidden" name="id" value={review.id} />
                         <MobileSheetSelect
                           name="rating"
@@ -106,12 +107,12 @@ export default async function ReviewsPage() {
                           }))}
                         />
                         <input name="feedback" defaultValue={review.feedback || ''} className="border rounded px-2 py-1" />
-                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save</button>
-                      </form>
+                        <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
+                      </ActionForm>
                       <ConfirmAction
                         title="Delete review?"
                         confirmLabel="Delete"
-                        action={asFormAction(removeReview)}
+                        action={removeReview}
                         hiddenFields={{ id: review.id }}
                         description={<p>This removes the logged review for {company?.name || 'this company'}.</p>}
                       >

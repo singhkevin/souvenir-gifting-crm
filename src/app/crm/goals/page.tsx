@@ -4,8 +4,9 @@ import { createGoal, updateGoal, removeGoal } from './actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { requireStaff } from '@/lib/auth'
 import { applyOrderScope } from '@/lib/auth'
-import { asFormAction } from '@/lib/form-action'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 type TeamMember = { id: string; full_name: string | null | undefined }
 
@@ -82,7 +83,7 @@ export default async function GoalsPage() {
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Goal Tracker</h1>
 
       {(profile.role === 'admin' || profile.role === 'management') && (
-      <form action={asFormAction(createGoal)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3">
+      <ActionForm action={createGoal} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3" resetOnSuccess>
         <input name="title" required placeholder="Goal title" className="rounded-lg border px-2 py-2" />
         <MobileSheetSelect
           name="metric"
@@ -114,8 +115,8 @@ export default async function GoalsPage() {
             ...teamRows.map((p: TeamMember) => ({ value: p.id, label: p.full_name ?? '' })),
           ]}
         />
-        <button className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] hover:text-[#FFFFFF] md:col-span-3">Add goal</button>
-      </form>
+        <SubmitButton className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] hover:text-[#FFFFFF] md:col-span-3" pendingLabel="Adding…">Add goal</SubmitButton>
+      </ActionForm>
       )}
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -134,7 +135,7 @@ export default async function GoalsPage() {
               </div>
               {(profile.role === 'admin' || profile.role === 'management') && (
                 <div className="mb-4 space-y-2 text-xs">
-                  <form action={asFormAction(updateGoal)} className="grid md:grid-cols-2 gap-2">
+                  <ActionForm action={updateGoal} className="grid md:grid-cols-2 gap-2">
                     <input type="hidden" name="id" value={goal.id} />
                     <input name="title" defaultValue={goal.title} required className="border rounded-lg px-2 py-1" />
                     <input name="target" type="number" min="1" defaultValue={goal.target ?? ''} required className="border rounded-lg px-2 py-1" />
@@ -168,12 +169,12 @@ export default async function GoalsPage() {
                         ...teamRows.map((p: TeamMember) => ({ value: p.id, label: p.full_name ?? '' })),
                       ]}
                     />
-                    <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save goal</button>
-                  </form>
+                    <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save goal</SubmitButton>
+                  </ActionForm>
                   <ConfirmAction
                     title="Delete goal?"
                     confirmLabel="Delete"
-                    action={asFormAction(removeGoal)}
+                    action={removeGoal}
                     hiddenFields={{ id: goal.id }}
                     description={<p>Goal: <span className="font-semibold">{goal.title}</span></p>}
                   >

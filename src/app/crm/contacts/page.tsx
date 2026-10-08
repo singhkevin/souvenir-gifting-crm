@@ -4,9 +4,10 @@ import { createContact, updateContact, removeContact } from './actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { requireStaff } from '@/lib/auth'
 import { CompanyAvatar } from '@/components/ui/avatar'
-import { asFormAction } from '@/lib/form-action'
 import { oneRelation, asRows } from '@/lib/utils'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 type CompanyOption = { id: string; name: string; logo_path: string | null }
 type ContactRow = {
@@ -58,7 +59,7 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
         <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">{error}</div>
       )}
 
-      <form action={asFormAction(createContact)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3">
+      <ActionForm action={createContact} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3" resetOnSuccess>
         <input name="full_name" required placeholder="Full name" className="rounded-lg border px-2 py-2" />
         <MobileSheetSelect
           name="company_id"
@@ -84,8 +85,8 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
             { value: 'other', label: 'Other' },
           ]}
         />
-        <button className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] hover:text-[#FFFFFF] md:col-span-3">Add contact</button>
-      </form>
+        <SubmitButton className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] hover:text-[#FFFFFF] md:col-span-3" pendingLabel="Adding…">Add contact</SubmitButton>
+      </ActionForm>
 
       <form className="flex-1 max-w-md flex gap-2">
         <input type="text" name="search" defaultValue={search} placeholder="Search by name or email..." className="flex-1 px-3 py-2 border rounded-md text-sm" />
@@ -120,7 +121,7 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
                   <td className="p-3 align-top text-gray-600">{c.email || '—'}</td>
                   <td className="p-3 align-top text-gray-600">{c.phone || '—'}</td>
                   <td className="space-y-2 p-3 align-top text-xs">
-                    <form action={asFormAction(updateContact)} className="grid gap-1 max-w-xs">
+                    <ActionForm action={updateContact} className="grid gap-1 max-w-xs">
                       <input type="hidden" name="id" value={c.id} />
                       <input name="full_name" defaultValue={c.full_name} required className="border rounded px-2 py-1" />
                       <MobileSheetSelect
@@ -146,12 +147,12 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
                           { value: 'other', label: 'Other' },
                         ]}
                       />
-                      <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save</button>
-                    </form>
+                      <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
+                    </ActionForm>
                     <ConfirmAction
                       title="Delete contact?"
                       confirmLabel="Delete"
-                      action={asFormAction(removeContact)}
+                      action={removeContact}
                       hiddenFields={{ id: c.id }}
                       description={<p>Contact: <span className="font-semibold">{c.full_name}</span></p>}
                     >

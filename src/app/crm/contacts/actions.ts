@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/auth'
+import { withIdempotency } from '@/lib/idempotency'
 
 const CONTACT_ROLES = ['admin', 'sales', 'management'] as const
 
@@ -17,6 +18,10 @@ async function requireContactEditor() {
 }
 
 export async function createContact(formData: FormData) {
+  return withIdempotency('crm.createContact', formData, () => createContactOnce(formData))
+}
+
+async function createContactOnce(formData: FormData) {
   const access = await requireContactEditor()
   if ('error' in access) return { error: access.error }
 

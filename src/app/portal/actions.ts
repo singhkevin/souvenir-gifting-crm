@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { isUuid } from '@/lib/utils'
+import { withIdempotency } from '@/lib/idempotency'
 import {
   cleanRfqDeadline,
   cleanRfqNotes,
@@ -15,7 +16,7 @@ import {
   rfqSchemaHint,
 } from '@/lib/catalogs/rfq'
 
-export async function createPortalRequirement(formData: {
+async function createPortalRequirementOnce(formData: {
   name: string
   purpose: string
   description: string
@@ -122,7 +123,7 @@ export async function createPortalRequirement(formData: {
   return { success: true, id: requirement?.id }
 }
 
-export async function requestCatalogQuotation(input: {
+async function requestCatalogQuotationOnce(input: {
   catalogId: string
   deadline: string
   notes: string
@@ -173,7 +174,31 @@ export async function requestCatalogQuotation(input: {
   return { success: true, id: saved.id }
 }
 
+export async function createPortalRequirement(
+  input: Parameters<typeof createPortalRequirementOnce>[0] & { idempotencyKey?: string },
+) {
+  return withIdempotency('portal.createRequirement', input.idempotencyKey, () => createPortalRequirementOnce(input))
+}
+
+export async function requestCatalogQuotation(
+  input: Parameters<typeof requestCatalogQuotationOnce>[0] & { idempotencyKey?: string },
+) {
+  return withIdempotency('portal.requestCatalogQuotation', input.idempotencyKey, () => requestCatalogQuotationOnce(input))
+}
+
 export async function respondToQuotation(
+  quotationId: string,
+  status: 'accepted' | 'rejected',
+  comment?: string,
+  acceptedItemIds?: string[],
+  idempotencyKey?: string,
+) {
+  return withIdempotency('portal.respondToQuotation', idempotencyKey, () =>
+    respondToQuotationOnce(quotationId, status, comment, acceptedItemIds),
+  )
+}
+
+async function respondToQuotationOnce(
   quotationId: string,
   status: 'accepted' | 'rejected',
   comment?: string,
@@ -194,7 +219,10 @@ export async function respondToQuotation(
   if (!quotation || quotation.company_id !== companyId) {
     return { error: 'Quotation not found' }
   }
-  if (!['sent', 'viewed'].includes(quotation.status || '')) {
+  // A repeat of a response that already went through is passed on: client_respond_quotation
+  // returns the same outcome (the existing order for accepts) instead of an error or a second order.
+  const repeatOfResponse = quotation.status === status
+  if (!['sent', 'viewed'].includes(quotation.status || '') && !repeatOfResponse) {
     return { error: 'Quotation cannot be responded to in its current state' }
   }
   if (status === 'accepted') {

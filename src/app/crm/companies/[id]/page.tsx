@@ -12,7 +12,6 @@ import { portalAddressHelp, portalUrlForSlug } from '@/lib/portal-host'
 import { portalDnsMode } from '@/lib/portal-hosts/mode'
 import { requireStaff } from '@/lib/auth'
 import { createContact } from '@/app/crm/contacts/actions'
-import { asFormAction } from '@/lib/form-action'
 import { ActionForm } from '@/components/ui/action-form'
 import { PortalClientForm } from '../portal-client-form'
 import { ManageClientLogin } from '../manage-client-login'
@@ -25,6 +24,7 @@ import {
   type CatalogueBrowserProduct,
   type CatalogueBrowserRow,
 } from '@/components/companies/company-catalogue-browser'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function CompanyDetailPage({
   params,
@@ -120,12 +120,12 @@ export default async function CompanyDetailPage({
 
   const uploadLogoAction = async (formData: FormData) => {
     'use server'
-    await uploadCompanyLogo(formData)
+    return await uploadCompanyLogo(formData)
   }
 
   const removeLogoAction = async (formData: FormData) => {
     'use server'
-    await removeCompanyLogo(formData)
+    return await removeCompanyLogo(formData)
   }
 
   const tabs = [
@@ -172,7 +172,7 @@ export default async function CompanyDetailPage({
             </div>
 
             <div className="flex flex-col items-start gap-2 mt-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-              <form action={uploadLogoAction} className="flex w-full items-center gap-2 sm:w-auto">
+              <ActionForm action={uploadLogoAction} successMessage="Logo updated" className="flex w-full items-center gap-2 sm:w-auto">
                 <input type="hidden" name="company_id" value={company.id} />
                 <input
                   type="file"
@@ -181,17 +181,17 @@ export default async function CompanyDetailPage({
                   required
                   className="min-w-0 flex-1 text-[11px] file:mr-2 file:px-2 file:py-1 file:rounded-md file:border file:border-gray-200 file:bg-white file:text-[11px] file:font-medium sm:flex-none"
                 />
-                <button className="shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-md border border-gray-200 hover:bg-gray-50">
+                <SubmitButton pendingLabel="Uploading…" className="shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-md border border-gray-200 hover:bg-gray-50">
                   {company.logo_path ? 'Change logo' : 'Upload logo'}
-                </button>
-              </form>
+                </SubmitButton>
+              </ActionForm>
               {company.logo_path && (
-                <form action={removeLogoAction}>
+                <ActionForm action={removeLogoAction} successMessage="Logo removed">
                   <input type="hidden" name="company_id" value={company.id} />
-                  <button className="px-2.5 py-1 text-[11px] font-medium rounded-md border border-gray-200 text-red-600 hover:bg-red-50">
+                  <SubmitButton pendingLabel="Removing…" className="px-2.5 py-1 text-[11px] font-medium rounded-md border border-gray-200 text-red-600 hover:bg-red-50">
                     Remove
-                  </button>
-                </form>
+                  </SubmitButton>
+                </ActionForm>
               )}
               <span className="text-[10px] text-gray-400">PNG, JPG or WebP · max 2 MB</span>
             </div>
@@ -207,7 +207,7 @@ export default async function CompanyDetailPage({
             <ConfirmAction
               title="Remove company?"
               confirmLabel="Delete"
-              action={asFormAction(removeCompany)}
+              action={removeCompany}
               hiddenFields={{ company_id: company.id }}
               description={
                 <>
@@ -510,7 +510,7 @@ export default async function CompanyDetailPage({
 
       {tab === 'contacts' && (
         <div className="space-y-4">
-          <form action={asFormAction(createContact)} className="bg-white p-4 rounded-xl border border-gray-200 grid md:grid-cols-3 gap-3 text-xs">
+          <ActionForm action={createContact} className="bg-white p-4 rounded-xl border border-gray-200 grid md:grid-cols-3 gap-3 text-xs" resetOnSuccess>
             <input type="hidden" name="company_id" value={company.id} />
             <input name="full_name" required placeholder="Full name" className="border rounded-lg px-3 py-2" />
             <input name="designation" placeholder="Designation" className="border rounded-lg px-3 py-2" />
@@ -527,8 +527,8 @@ export default async function CompanyDetailPage({
                 { value: 'other', label: 'Other' },
               ]}
             />
-            <button className="bg-[#806A50] text-white rounded-lg font-semibold py-2">Add contact</button>
-          </form>
+            <SubmitButton className="bg-[#806A50] text-white rounded-lg font-semibold py-2" pendingLabel="Adding…">Add contact</SubmitButton>
+          </ActionForm>
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <table className="w-full text-xs">
             <thead className="bg-gray-50 border-b border-gray-200">

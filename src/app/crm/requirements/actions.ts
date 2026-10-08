@@ -7,8 +7,13 @@ import { writeAudit } from '@/lib/audit'
 import { offersByProduct } from '@/lib/pricing/offers'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
 import { getCompanyMarginPercent, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
+import { withIdempotency } from '@/lib/idempotency'
 
 export async function createRequirement(formData: FormData) {
+  return withIdempotency('crm.createRequirement', formData, () => createRequirementOnce(formData))
+}
+
+async function createRequirementOnce(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -55,6 +60,10 @@ export async function createRequirementFromLead(formData: FormData) {
 }
 
 export async function createQuotationFromRequirement(formData: FormData) {
+  return withIdempotency('crm.createQuotationFromRequirement', formData, () => createQuotationFromRequirementOnce(formData))
+}
+
+async function createQuotationFromRequirementOnce(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }

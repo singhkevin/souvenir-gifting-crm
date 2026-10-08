@@ -1,8 +1,8 @@
 'use client'
 
-import { useTransition } from 'react'
-import { toast } from 'sonner'
 import { duplicateCatalog } from './actions'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export function CatalogDuplicateForm({
   catalogId,
@@ -15,19 +15,11 @@ export function CatalogDuplicateForm({
   companies: { id: string; name: string }[]
   compact?: boolean
 }) {
-  const [pending, startTransition] = useTransition()
-
   return (
-    <form
+    <ActionForm
+      action={duplicateCatalog}
       className={compact ? 'flex flex-col gap-2 sm:flex-row' : 'grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3'}
-      onSubmit={(event) => {
-        event.preventDefault()
-        const formData = new FormData(event.currentTarget)
-        startTransition(async () => {
-          const result = await duplicateCatalog(formData)
-          if (result?.error) toast.error(result.error)
-        })
-      }}
+      successMessage="Catalog duplicated"
     >
       <input type="hidden" name="campaign_id" value={catalogId} />
       {!compact && (
@@ -47,13 +39,12 @@ export function CatalogDuplicateForm({
           ))}
         </select>
       </label>
-      <button
-        type="submit"
-        disabled={pending}
+      <SubmitButton
+        pendingLabel="Duplicating…"
         className="min-h-10 rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] disabled:opacity-50"
       >
-        {pending ? 'Duplicating…' : compact ? 'Duplicate' : 'Duplicate catalog'}
-      </button>
-    </form>
+        {compact ? 'Duplicate' : 'Duplicate catalog'}
+      </SubmitButton>
+    </ActionForm>
   )
 }

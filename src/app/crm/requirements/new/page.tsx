@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
 import { createRequirement } from '../actions'
 import { BackButton } from '@/components/ui/back-button'
-import { redirect } from 'next/navigation'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function NewRequirementPage({
   searchParams,
@@ -25,17 +26,6 @@ export default async function NewRequirementPage({
       .order('full_name'),
   ])
 
-  const handleCreate = async (formData: FormData) => {
-    'use server'
-    const result = await createRequirement(formData)
-    if (result && typeof result === 'object' && 'error' in result && result.error) {
-      const companyId = String(formData.get('company_id') || '')
-      const qs = new URLSearchParams({ error: result.error })
-      if (companyId) qs.set('company_id', companyId)
-      redirect(`/crm/requirements/new?${qs.toString()}`)
-    }
-  }
-
   return (
     <div className="mx-auto max-w-3xl">
       <BackButton href="/crm/requirements" label="Back to requirements" />
@@ -47,8 +37,7 @@ export default async function NewRequirementPage({
         </div>
       )}
 
-      <form
-        action={handleCreate}
+      <ActionForm action={createRequirement}
         className="grid gap-4 rounded-lg border border-[var(--color-border)] bg-white p-5 text-sm shadow-sm sm:p-6"
       >
         <label className="block">
@@ -153,13 +142,12 @@ export default async function NewRequirementPage({
           />
         </label>
 
-        <button
-          type="submit"
+        <SubmitButton
           className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
-        >
+         pendingLabel="Creating…">
           Create Requirement
-        </button>
-      </form>
+        </SubmitButton>
+      </ActionForm>
     </div>
   )
 }

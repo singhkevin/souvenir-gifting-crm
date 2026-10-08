@@ -1,14 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
-import { updateLeadStage, updateLead, removeLead } from '../actions'
+import { updateLeadStageForm, updateLead, removeLead } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
-import { asFormAction } from '@/lib/form-action'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { TrendingUp, Building2, User, Calendar, DollarSign } from 'lucide-react'
 import { requireStaff } from '@/lib/auth'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -32,12 +33,6 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   const owner = oneRelation(lead.owner)
   const stages = ['cold', 'warm', 'hot', 'client', 'regular_client']
   const currentIndex = stages.indexOf(lead.stage)
-
-  const handleUpdateStage = async (formData: FormData) => {
-    'use server'
-    const newStage = formData.get('stage') as string
-    await updateLeadStage(id, newStage)
-  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -69,7 +64,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               <ConfirmAction
                 title="Delete lead?"
                 confirmLabel="Delete"
-                action={asFormAction(removeLead)}
+                action={removeLead}
                 hiddenFields={{ id: lead.id }}
                 description={<p>Lead for <span className="font-semibold">{company?.name || 'this company'}</span> will be removed if it has no linked requirements.</p>}
               >
@@ -107,20 +102,19 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
         <div className="pt-4 border-t border-gray-100 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-xs text-gray-500 font-medium">Update Current Pipeline Stage:</span>
-          <form action={handleUpdateStage} className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <ActionForm action={updateLeadStageForm.bind(null, id)} className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <MobileSheetSelect
               name="stage"
               label="Stage"
               defaultValue={lead.stage}
               options={stages.map((s) => ({ value: s, label: s.replace('_', ' ').toUpperCase() }))}
             />
-            <button
-              type="submit"
+            <SubmitButton
               className="w-full px-4 py-1.5 bg-[#806A50] hover:bg-[#624b32] text-white text-xs font-semibold rounded-lg transition-colors shadow-sm sm:w-auto"
-            >
+             pendingLabel="Saving…">
               Save Stage
-            </button>
-          </form>
+            </SubmitButton>
+          </ActionForm>
         </div>
       </div>
 
@@ -154,7 +148,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
         <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-2">
           <h2 className="font-bold text-sm text-gray-900">Edit lead</h2>
-          <form action={asFormAction(updateLead)} className="grid md:grid-cols-2 gap-3 text-xs">
+          <ActionForm action={updateLead} className="grid md:grid-cols-2 gap-3 text-xs">
             <input type="hidden" name="id" value={lead.id} />
             <MobileSheetSelect
               name="contact_id"
@@ -188,8 +182,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               defaultValue={lead.next_follow_up_at ? String(lead.next_follow_up_at).slice(0, 10) : ''}
             />
             <textarea name="notes" rows={3} defaultValue={lead.notes || ''} className="md:col-span-2 border rounded-lg px-2 py-2" />
-            <button className="md:col-span-2 px-4 py-2 rounded-lg text-white bg-[#806A50] font-semibold">Save lead</button>
-          </form>
+            <SubmitButton className="md:col-span-2 px-4 py-2 rounded-lg text-white bg-[#806A50] font-semibold" pendingLabel="Saving…">Save lead</SubmitButton>
+          </ActionForm>
         </div>
       </div>
     </div>

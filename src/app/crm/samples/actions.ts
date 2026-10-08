@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/auth'
+import { withIdempotency } from '@/lib/idempotency'
 
 const SAMPLE_ROLES = ['admin', 'sales', 'operations'] as const
 
@@ -35,6 +36,10 @@ const HOLDERS = {
 type Holder = keyof typeof HOLDERS
 
 export async function receiveSample(formData: FormData) {
+  return withIdempotency('crm.receiveSample', formData, () => receiveSampleOnce(formData))
+}
+
+async function receiveSampleOnce(formData: FormData) {
   const access = await requireSampleAccess()
   if (!access.ok) fail(access.error)
 

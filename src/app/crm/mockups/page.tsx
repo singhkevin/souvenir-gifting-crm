@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { registerMockup, updateMockup, removeMockup } from './actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { requireStaff, applyOwnerScope, applyOrderScope } from '@/lib/auth'
-import { asFormAction } from '@/lib/form-action'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 type RequirementOption = { id: string; name: string }
 type OrderOption = { id: string; order_number: string | null }
@@ -49,7 +50,7 @@ export default async function MockupsPage() {
         <p className="text-xs text-[#7A7267] mt-1">Attach mockup files to a requirement or order. Shared mockups are visible in the client portal.</p>
       </div>
 
-      <form action={asFormAction(registerMockup)} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3">
+      <ActionForm action={registerMockup} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3" resetOnSuccess>
         <input name="file_url" required placeholder="File URL" className="rounded-lg border px-2 py-2" />
         <input name="file_name" placeholder="File name" className="rounded-lg border px-2 py-2" />
         <MobileSheetSelect
@@ -92,8 +93,8 @@ export default async function MockupsPage() {
             { value: 'client', label: 'Share with client' },
           ]}
         />
-        <button className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] md:col-span-3">Register mockup</button>
-      </form>
+        <SubmitButton className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] md:col-span-3" pendingLabel="Registering…">Register mockup</SubmitButton>
+      </ActionForm>
 
       <div className="bg-white rounded-lg border overflow-hidden">
         {mockupRows.length > 0 ? (
@@ -141,7 +142,7 @@ export default async function MockupsPage() {
                     <td className="p-3 capitalize">{mockup.status === 'shared' ? 'Client-facing' : mockup.status || 'internal'}</td>
                     <td className="p-3">{uploader?.full_name || '—'} · {formatDate(mockup.created_at)}</td>
                     <td className="p-3 text-xs space-y-2">
-                      <form action={asFormAction(updateMockup)} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <ActionForm action={updateMockup} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <input type="hidden" name="id" value={mockup.id} />
                         <MobileSheetSelect
                           name="status"
@@ -154,12 +155,12 @@ export default async function MockupsPage() {
                             { value: 'rejected', label: 'Rejected' },
                           ]}
                         />
-                        <button className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]">Save</button>
-                      </form>
+                        <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
+                      </ActionForm>
                       <ConfirmAction
                         title="Delete mockup?"
                         confirmLabel="Delete"
-                        action={asFormAction(removeMockup)}
+                        action={removeMockup}
                         hiddenFields={{ id: mockup.id }}
                         description={<p>File: <span className="font-semibold">{mockup.file_name}</span></p>}
                       >

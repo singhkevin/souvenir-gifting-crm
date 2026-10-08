@@ -1,9 +1,10 @@
 'use client'
 
 import { createPartner, updatePartner, removePartner } from '@/app/crm/partners/actions'
-import { asFormAction } from '@/lib/form-action'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 type PartnerRow = {
   id: string
@@ -44,10 +45,9 @@ export function PartnerDirectory({
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">{title}</h1>
 
       {canManage && (
-        <form
-          action={asFormAction(createPartner)}
+        <ActionForm action={createPartner}
           className="grid gap-3 rounded-2xl border border-[#E8E4DE] bg-white p-4 text-sm md:grid-cols-3"
-        >
+         resetOnSuccess>
           <input type="hidden" name="table" value={table} />
           <input name="name" required placeholder="Name" className={fieldClass} />
           <input name="city" placeholder="City" className={fieldClass} />
@@ -80,13 +80,12 @@ export function PartnerDirectory({
               Tracking supported
             </label>
           )}
-          <button
-            type="submit"
+          <SubmitButton
             className="min-h-10 rounded-lg bg-[#806A50] py-2 font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF] md:col-span-3"
-          >
+           pendingLabel="Adding…">
             Add
-          </button>
-        </form>
+          </SubmitButton>
+        </ActionForm>
       )}
 
       {/* Mobile cards */}
@@ -133,7 +132,7 @@ export function PartnerDirectory({
             </dl>
 
             {canManage && (
-              <form action={asFormAction(updatePartner)} className="grid gap-2 border-t border-[#EFE9E0] pt-3">
+              <ActionForm action={updatePartner} className="grid gap-2 border-t border-[#EFE9E0] pt-3">
                 <input type="hidden" name="table" value={table} />
                 <input type="hidden" name="id" value={row.id} />
                 <input name="name" defaultValue={row.name} required className={fieldClass} />
@@ -182,16 +181,15 @@ export function PartnerDirectory({
                   defaultValue={row.is_active ? 'true' : 'false'}
                   options={STATUS_OPTIONS}
                 />
-                <button
-                  type="submit"
+                <SubmitButton
                   className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
-                >
+                 pendingLabel="Saving…">
                   Save
-                </button>
+                </SubmitButton>
                 <ConfirmAction
                   title={`Remove ${row.name}?`}
                   confirmLabel="Delete"
-                  action={asFormAction(removePartner)}
+                  action={removePartner}
                   hiddenFields={{ table, id: row.id }}
                   description={
                     <p>
@@ -202,7 +200,7 @@ export function PartnerDirectory({
                 >
                   Remove
                 </ConfirmAction>
-              </form>
+              </ActionForm>
             )}
           </article>
         ))}
@@ -258,7 +256,7 @@ export function PartnerDirectory({
                 </td>
                 {canManage && (
                   <td className="space-y-2 p-3 text-xs">
-                    <form action={asFormAction(updatePartner)} className="grid gap-2">
+                    <ActionForm action={updatePartner} className="grid gap-2">
                       <input type="hidden" name="table" value={table} />
                       <input type="hidden" name="id" value={row.id} />
                       <input name="name" defaultValue={row.name} required className="rounded border px-2 py-1" />
@@ -326,17 +324,16 @@ export function PartnerDirectory({
                         defaultValue={row.is_active ? 'true' : 'false'}
                         options={STATUS_OPTIONS}
                       />
-                      <button
-                        type="submit"
+                      <SubmitButton
                         className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
-                      >
+                       pendingLabel="Saving…">
                         Save
-                      </button>
-                    </form>
+                      </SubmitButton>
+                    </ActionForm>
                     <ConfirmAction
                       title={`Remove ${row.name}?`}
                       confirmLabel="Delete"
-                      action={asFormAction(removePartner)}
+                      action={removePartner}
                       hiddenFields={{ table, id: row.id }}
                       description={
                         <p>

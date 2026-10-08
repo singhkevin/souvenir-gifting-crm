@@ -1,16 +1,8 @@
 'use client'
 
-import { useFormStatus } from 'react-dom'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { toggleOfferingSelectionForm } from './actions'
-
-function ActionButton({ label, className }: { label: string; className: string }) {
-  const { pending } = useFormStatus()
-  return (
-    <button disabled={pending} className={className}>
-      {pending ? 'Saving…' : label}
-    </button>
-  )
-}
 
 export function OfferingActions({
   campaignId,
@@ -26,32 +18,36 @@ export function OfferingActions({
 
   return (
     <div className="flex gap-2">
-      <form action={toggleOfferingSelectionForm} className="flex-1">
+      <ActionForm action={toggleOfferingSelectionForm} className="flex-1" successMessage="Saved">
         <input type="hidden" name="campaign_id" value={campaignId} />
         <input type="hidden" name="campaign_product_id" value={campaignProductId} />
         <input type="hidden" name="kind" value="shortlisted" />
         {shortlisted && !selected ? <input type="hidden" name="remove" value="1" /> : null}
-        <ActionButton
-          label={shortlisted && !selected ? 'Shortlisted' : 'Shortlist'}
+        <SubmitButton
+          pendingLabel="Saving…"
           className={`inline-flex min-h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-semibold ${
             shortlisted && !selected
               ? 'border border-green-200 bg-green-50 text-green-700'
               : 'border border-gray-300 bg-white text-gray-700'
           }`}
-        />
-      </form>
-      <form action={toggleOfferingSelectionForm} className="flex-1">
+        >
+          {shortlisted && !selected ? 'Shortlisted' : 'Shortlist'}
+        </SubmitButton>
+      </ActionForm>
+      <ActionForm action={toggleOfferingSelectionForm} className="flex-1" successMessage="Saved">
         <input type="hidden" name="campaign_id" value={campaignId} />
         <input type="hidden" name="campaign_product_id" value={campaignProductId} />
         <input type="hidden" name="kind" value="selected" />
         {selected ? <input type="hidden" name="remove" value="1" /> : null}
-        <ActionButton
-          label={selected ? 'Selected' : 'Select'}
+        <SubmitButton
+          pendingLabel="Saving…"
           className={`inline-flex min-h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-semibold text-white ${
             selected ? 'bg-[#806A50]' : 'bg-[#806A50] hover:bg-[#9C8567]'
           }`}
-        />
-      </form>
+        >
+          {selected ? 'Selected' : 'Select'}
+        </SubmitButton>
+      </ActionForm>
     </div>
   )
 }

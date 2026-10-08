@@ -14,9 +14,9 @@ import {
   createQuotationFromRequirement,
 } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
-import { asFormAction } from '@/lib/form-action'
 import { ActionForm } from '@/components/ui/action-form'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function RequirementDetailPage({
   params,
@@ -136,7 +136,7 @@ export default async function RequirementDetailPage({
             <ConfirmAction
               title="Remove requirement?"
               confirmLabel="Delete"
-              action={asFormAction(removeRequirement)}
+              action={removeRequirement}
               hiddenFields={{ id: req.id }}
               description={
                 <p>
@@ -255,8 +255,7 @@ export default async function RequirementDetailPage({
               <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
                 {req.description || 'No detailed description provided.'}
               </p>
-              <form
-                action={asFormAction(updateRequirementForm)}
+              <ActionForm action={updateRequirementForm}
                 className="grid md:grid-cols-2 gap-3 pt-3 border-t"
               >
                 <input type="hidden" name="id" value={req.id} />
@@ -319,10 +318,10 @@ export default async function RequirementDetailPage({
                   defaultValue={req.description || ''}
                   className="rounded-lg border px-2 py-2 md:col-span-2"
                 />
-                <button className="min-h-11 rounded-lg bg-[#806A50] px-3 py-2 font-semibold text-[#FFFFFF] md:col-span-2">
+                <SubmitButton className="min-h-11 rounded-lg bg-[#806A50] px-3 py-2 font-semibold text-[#FFFFFF] md:col-span-2" pendingLabel="Saving…">
                   Save requirement
-                </button>
-              </form>
+                </SubmitButton>
+              </ActionForm>
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-gray-200 text-xs space-y-3">
@@ -378,8 +377,7 @@ export default async function RequirementDetailPage({
         <div className="space-y-4">
           <div className="bg-white p-4 rounded-2xl border border-gray-200">
             {assignableProducts.length > 0 ? (
-              <form
-                action={asFormAction(addProductToRequirement)}
+              <ActionForm action={addProductToRequirement}
                 className="flex flex-col gap-3 sm:flex-row sm:items-end"
               >
                 <input type="hidden" name="requirement_id" value={req.id} />
@@ -409,13 +407,12 @@ export default async function RequirementDetailPage({
                     className="mt-1 min-h-11 w-full rounded-lg border px-2 py-2 text-xs"
                   />
                 </label>
-                <button
-                  type="submit"
+                <SubmitButton
                   className="inline-flex min-h-11 items-center justify-center gap-1 rounded-lg bg-[#806A50] px-4 text-xs font-semibold text-white hover:bg-[#624b32]"
-                >
+                 pendingLabel="Adding…">
                   <Plus size={14} /> Add product
-                </button>
-              </form>
+                </SubmitButton>
+              </ActionForm>
             ) : (
               <p className="text-xs text-gray-500">
                 {catalogueProducts?.length
@@ -460,8 +457,7 @@ export default async function RequirementDetailPage({
                         </div>
                       </td>
                       <td className="p-3.5">
-                        <form
-                          action={asFormAction(updateRequirementProductQty)}
+                        <ActionForm action={updateRequirementProductQty}
                           className="flex items-center gap-2"
                         >
                           <input type="hidden" name="id" value={item.id} />
@@ -473,29 +469,27 @@ export default async function RequirementDetailPage({
                             defaultValue={item.quantity || 1}
                             className="w-20 rounded-lg border px-2 py-1.5"
                           />
-                          <button
-                            type="submit"
+                          <SubmitButton
                             className="text-[10px] font-semibold text-[#806A50] hover:underline"
-                          >
+                           pendingLabel="Saving…">
                             Save
-                          </button>
-                        </form>
+                          </SubmitButton>
+                        </ActionForm>
                       </td>
                       <td className="p-3.5 text-right font-bold text-gray-900">
                         {formatCurrency(item.product?.price)}
                       </td>
                       <td className="p-3.5 text-right">
-                        <form action={asFormAction(removeProductFromRequirement)} className="inline">
+                        <ActionForm action={removeProductFromRequirement} className="inline">
                           <input type="hidden" name="id" value={item.id} />
                           <input type="hidden" name="requirement_id" value={req.id} />
-                          <button
-                            type="submit"
+                          <SubmitButton
                             className="inline-flex p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
                             title="Remove product"
-                          >
+                           pendingLabel="Saving…">
                             <Trash2 size={14} />
-                          </button>
-                        </form>
+                          </SubmitButton>
+                        </ActionForm>
                       </td>
                     </tr>
                   )

@@ -7,6 +7,8 @@ import { BackButton } from '@/components/ui/back-button'
 import { Receipt, Calendar, CreditCard, Building2, CheckCircle2 } from 'lucide-react'
 import { requireStaff } from '@/lib/auth'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -25,11 +27,6 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
   const order = oneRelation(invoice.order)
   const totalPaid = payments?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0
   const balanceDue = Number(invoice.amount) - totalPaid
-
-  const handleRecordPayment = async (formData: FormData) => {
-    'use server'
-    await recordPayment(formData)
-  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -129,7 +126,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
             <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
               <CreditCard size={14} className="text-[#806A50]" /> Record Payment
             </h2>
-            <form action={handleRecordPayment} className="space-y-3 text-xs">
+            <ActionForm action={recordPayment} className="space-y-3 text-xs" resetOnSuccess>
               <input type="hidden" name="invoice_id" value={invoice.id} />
               
               <SheetDateField
@@ -178,13 +175,12 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                 />
               </div>
 
-              <button
-                type="submit"
+              <SubmitButton
                 className="w-full py-2 bg-[#806A50] hover:bg-[#624b32] text-white rounded-lg font-semibold transition-colors shadow-sm mt-2"
-              >
+               pendingLabel="Saving…">
                 Save Payment
-              </button>
-            </form>
+              </SubmitButton>
+            </ActionForm>
           </div>
         )}
       </div>

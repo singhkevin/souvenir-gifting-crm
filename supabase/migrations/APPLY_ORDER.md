@@ -30,6 +30,7 @@ Do **not** run these against production from the agent unless explicitly request
 24. **`20261006_fulfillment_stages_client_approval.sql`** ← fulfillment stages and client approval gate (rollback: `supabase/rollbacks/20261006_fulfillment_stages_client_approval_rollback.sql`)
 25. **`20261006_buy_vs_rfq.sql`** ← stock quantity, purchase flag, direct order (rollback: `supabase/rollbacks/20261006_buy_vs_rfq_rollback.sql`). Apply before using Buy. Existing products stay on Request quote until stock or the Buy flag is set.
 26. **`20261008_harden_handle_new_user_role.sql`** ← sign-up trigger takes role/company_id only from app_metadata; self sign-ups become client_user (rollback: `supabase/rollbacks/20261008_harden_handle_new_user_role_rollback.sql`). Already applied to production on 2026-10-08.
+27. **`20261007_action_idempotency.sql`** ← idempotency for mutating actions: `action_idempotency` keys, `advance_order_stage` expected-stage guard, quote accept returns the existing order, approval repeat is a no-op (rollback: `supabase/rollbacks/20261007_action_idempotency_rollback.sql`). Safe to apply before or after the app deploy; the app falls back when the new functions are missing.
 
 ## Phase 2 verification SQL (after applying `20261001_portal_hosts.sql`)
 

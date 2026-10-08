@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { checkoutStoreCart } from '@/app/catalogue/actions'
 import { checkoutPortalCart } from '@/app/portal/catalogue/actions'
+import { useAction, useIdempotencyKey } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import type { CartItem } from '@/lib/catalogue/cart'
 
 export function CartCheckout({
@@ -15,8 +17,8 @@ export function CartCheckout({
   kind: 'store' | 'portal'
   onDone: () => void
 }) {
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { pending, error, run } = useAction()
+  const { key, rotate } = useIdempotencyKey()
   const [order, setOrder] = useState<{ id?: string; number?: string } | null>(null)
   const [form, setForm] = useState({ full_name: '', email: '', company_name: '', phone: '', fax: '' })
 
@@ -26,22 +28,22 @@ export function CartCheckout({
     catalogId: item.catalogId || null,
   }))
 
-  const submit = async () => {
-    setPending(true)
-    setError(null)
-    const result =
-      kind === 'store'
-        ? await checkoutStoreCart({ ...form, lines })
-        : await checkoutPortalCart({ lines })
-    setPending(false)
-    if (result.error) {
-      setError(result.error)
-      return
-    }
-    if (result.success) {
-      setOrder({ id: result.orderId, number: result.orderNumber })
-      onDone()
-    }
+  const submit = () => {
+    run(
+      () =>
+        kind === 'store'
+          ? checkoutStoreCart({ ...form, lines, idempotencyKey: key })
+          : checkoutPortalCart({ lines, idempotencyKey: key }),
+      {
+        successMessage: 'Order placed',
+        onSuccess: (result) => {
+          rotate()
+          const r = result as { orderId?: string; orderNumber?: string } | undefined
+          setOrder({ id: r?.orderId, number: r?.orderNumber })
+          onDone()
+        },
+      },
+    )
   }
 
   if (order) {
@@ -61,7 +63,7 @@ export function CartCheckout({
   return (
     <div className="space-y-3">
       {kind === 'store' ? (
-        <div className="space-y-2">
+        <fieldset disabled={pending} className="space-y-2">
           <input
             value={form.full_name}
             onChange={(event) => setForm({ ...form, full_name: event.target.value })}
@@ -98,16 +100,24 @@ export function CartCheckout({
             aria-hidden="true"
             className="hidden"
           />
-        </div>
+        </fieldset>
       ) : null}
       {error ? <p className="text-xs text-red-700">{error}</p> : null}
       <button
         type="button"
         disabled={pending}
+        aria-busy={pending || undefined}
         onClick={submit}
-        className="flex w-full items-center justify-center bg-[#806A50] px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#9C8567] disabled:opacity-60"
+        className="flex w-full items-center justify-center bg-[#806A50] px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {pending ? 'Placing order…' : 'Place order'}
+        {pending ? (
+          <span className="inline-flex items-center justify-center gap-2">
+            <Spinner />
+            Placing order…
+          </span>
+        ) : (
+          'Place order'
+        )}
       </button>
     </div>
   )

@@ -2,19 +2,67 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { getProfile, canChangeOrderStage, canSeeCosts, isOpsStaff } from '@/lib/auth'
 import { canAdvanceTo, nextLifecycleStatus, ORDER_STATUS_LABELS, STAGE_DEPARTMENT } from '@/lib/order-workflow'
 
-function redirectStageError(orderId: string, message: string): never {
-  const text = message.replace(/\s+/g, ' ').slice(0, 300)
-  redirect(`/crm/orders/${orderId}?stage_error=${encodeURIComponent(text)}`)
+type AdvanceArgs = {
+  orderId: string
+  status: string
+  expectedStatus?: string | null
+  assignedTo?: string | null
+  departmentId?: string | null
+  comment?: string | null
+  stageDue?: string | null
+  nextAction?: string | null
 }
 
-export async function advanceOrderStatus(orderId: string, comment?: string) {
+function alreadyMovedMessage(current: string) {
+  return `This order already moved to ${ORDER_STATUS_LABELS[current] || current}. Refresh to see the latest stage.`
+}
+
+function cleanError(message: string) {
+  return message.replace(/\s+/g, ' ').slice(0, 300)
+}
+
+/**
+ * advance_order_stage with the expected-stage guard (migration 20261007). The update only applies
+ * while the order is still in `expectedStatus`; a second request for the same click fails with
+ * "Order already moved" instead of advancing again. Falls back to the old signature when the
+ * migration has not been applied yet.
+ */
+async function callAdvanceStage(supabase: SupabaseClient, args: AdvanceArgs): Promise<{ error?: string }> {
+  const base = {
+    p_order_id: args.orderId,
+    p_status: args.status,
+    p_assigned_to: args.assignedTo ?? null,
+    p_department_id: args.departmentId ?? null,
+    p_comment: args.comment ?? null,
+    p_stage_due: args.stageDue ?? null,
+    p_next_action: args.nextAction ?? null,
+  }
+  // Only send p_expected_status when there is one; the 7-argument call is what a database
+  // without migration 20261007 understands.
+  let { error } = await supabase.rpc(
+    'advance_order_stage',
+    args.expectedStatus ? { ...base, p_expected_status: args.expectedStatus } : base,
+  )
+  if (error && args.expectedStatus && (error.code === 'PGRST202' || /could not find the function/i.test(error.message))) {
+    ;({ error } = await supabase.rpc('advance_order_stage', base))
+  }
+  if (!error) return {}
+  if (/already moved/i.test(error.message)) {
+    const { data } = await supabase.from('orders').select('status').eq('id', args.orderId).maybeSingle()
+    return { error: data?.status ? alreadyMovedMessage(String(data.status)) : cleanError(error.message) }
+  }
+  return { error: cleanError(error.message) }
+}
+
+export async function advanceOrderStatus(orderId: string, expectedStatus: string) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!canChangeOrderStage(profile.role)) return { error: 'Not permitted to change order stages' }
+  if (!orderId || !expectedStatus) return { error: 'Order is required' }
 
   const supabase = await createClient()
   const { data: order, error: loadError } = await supabase
@@ -24,26 +72,28 @@ export async function advanceOrderStatus(orderId: string, comment?: string) {
     .single()
   if (loadError) return { error: loadError.message }
   if (!order) return { error: 'Order not found' }
+  if (order.status !== expectedStatus) return { error: alreadyMovedMessage(order.status) }
   const next = nextLifecycleStatus(order.status)
   if (!next) return { error: 'Order is already at a terminal stage' }
   const gate = canAdvanceTo(order.status, next, order.client_approval_status)
-  if (!gate.ok) redirectStageError(orderId, gate.reason)
+  if (!gate.ok) return { error: gate.reason }
 
   const { data: dept } = await supabase.from('departments').select('id, manager_id').eq('slug', STAGE_DEPARTMENT[next] || 'operations').maybeSingle()
 
-  const { error } = await supabase.rpc('advance_order_stage', {
-    p_order_id: orderId,
-    p_status: next,
-    p_assigned_to: dept?.manager_id || null,
-    p_department_id: dept?.id || null,
-    p_comment: comment || `Advanced to ${ORDER_STATUS_LABELS[next] || next}`,
+  const result = await callAdvanceStage(supabase, {
+    orderId,
+    status: next,
+    expectedStatus,
+    assignedTo: dept?.manager_id || null,
+    departmentId: dept?.id || null,
+    comment: `Advanced to ${ORDER_STATUS_LABELS[next] || next}`,
   })
-  if (error) redirectStageError(orderId, error.message)
+  if (result.error) return result
   revalidatePath(`/crm/orders/${orderId}`)
   revalidatePath('/crm/order-management')
   revalidatePath('/crm/dashboard')
   revalidatePath('/crm/my-work')
-  redirect(`/crm/orders/${orderId}`)
+  return { success: true, message: `Advanced to ${ORDER_STATUS_LABELS[next] || next}` }
 }
 
 export async function handOffOrder(formData: FormData) {
@@ -53,6 +103,7 @@ export async function handOffOrder(formData: FormData) {
 
   const orderId = String(formData.get('order_id') || '')
   const status = String(formData.get('status') || '')
+  const expectedStatus = String(formData.get('expected_status') || '') || null
   const departmentId = String(formData.get('department_id') || '') || null
   const assignedTo = String(formData.get('assigned_to') || '') || null
   const comment = String(formData.get('comment') || '') || null
@@ -67,29 +118,31 @@ export async function handOffOrder(formData: FormData) {
     .select('id, status, client_approval_status')
     .eq('id', orderId)
     .single()
-  if (loadError) redirectStageError(orderId, loadError.message)
-  if (!order) redirectStageError(orderId, 'Order not found')
+  if (loadError) return { error: cleanError(loadError.message) }
+  if (!order) return { error: 'Order not found' }
+  if (expectedStatus && order.status !== expectedStatus) return { error: alreadyMovedMessage(order.status) }
   const gate = canAdvanceTo(order.status, status, order.client_approval_status)
-  if (!gate.ok) redirectStageError(orderId, gate.reason)
+  if (!gate.ok) return { error: gate.reason }
 
-  const { error } = await supabase.rpc('advance_order_stage', {
-    p_order_id: orderId,
-    p_status: status,
-    p_assigned_to: assignedTo,
-    p_department_id: departmentId,
-    p_comment: comment,
-    p_stage_due: stageDue,
-    p_next_action: nextAction,
+  const result = await callAdvanceStage(supabase, {
+    orderId,
+    status,
+    expectedStatus,
+    assignedTo,
+    departmentId,
+    comment,
+    stageDue,
+    nextAction,
   })
-  if (error) redirectStageError(orderId, error.message)
+  if (result.error) return result
   revalidatePath(`/crm/orders/${orderId}`)
   revalidatePath('/crm/order-management')
   revalidatePath('/crm/department')
   revalidatePath('/crm/my-work')
-  redirect(`/crm/orders/${orderId}`)
+  return { success: true, message: 'Stage updated' }
 }
 
-export async function setOrderStage(orderId: string, status: string) {
+export async function setOrderStage(orderId: string, status: string, expectedStatus?: string) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!canChangeOrderStage(profile.role)) return { error: 'Not permitted to change order stages' }
@@ -105,6 +158,7 @@ export async function setOrderStage(orderId: string, status: string) {
     .single()
   if (loadError) return { error: loadError.message }
   if (!order) return { error: 'Order not found' }
+  if (expectedStatus && order.status !== expectedStatus) return { error: alreadyMovedMessage(order.status) }
   if (order.status === status) return { success: true }
   const gate = canAdvanceTo(order.status, status, order.client_approval_status)
   if (!gate.ok) return { error: gate.reason }
@@ -115,14 +169,15 @@ export async function setOrderStage(orderId: string, status: string) {
     .eq('slug', STAGE_DEPARTMENT[status] || 'operations')
     .maybeSingle()
 
-  const { error } = await supabase.rpc('advance_order_stage', {
-    p_order_id: orderId,
-    p_status: status,
-    p_assigned_to: dept?.manager_id || null,
-    p_department_id: dept?.id || null,
-    p_comment: `Moved to ${ORDER_STATUS_LABELS[status] || status} from Order Control Kanban`,
+  const result = await callAdvanceStage(supabase, {
+    orderId,
+    status,
+    expectedStatus: expectedStatus ?? order.status,
+    assignedTo: dept?.manager_id || null,
+    departmentId: dept?.id || null,
+    comment: `Moved to ${ORDER_STATUS_LABELS[status] || status} from Order Control Kanban`,
   })
-  if (error) return { error: error.message }
+  if (result.error) return result
   revalidatePath('/crm/order-management')
   revalidatePath(`/crm/orders/${orderId}`)
   revalidatePath('/crm/dashboard')
@@ -144,6 +199,22 @@ export async function assignSupplier(orderId: string, supplierId: string) {
   if (error) return { error: error.message }
   revalidatePath(`/crm/orders/${orderId}`)
   return { success: true }
+}
+
+export async function assignSupplierForm(formData: FormData) {
+  const orderId = String(formData.get('order_id') || '')
+  if (!orderId) return { error: 'Order is required' }
+  return assignSupplier(orderId, String(formData.get('supplier_id') || ''))
+}
+
+export async function assignCourierForm(formData: FormData) {
+  const orderId = String(formData.get('order_id') || '')
+  if (!orderId) return { error: 'Order is required' }
+  return assignCourier(
+    orderId,
+    String(formData.get('courier_partner_id') || ''),
+    String(formData.get('tracking_number') || '') || undefined,
+  )
 }
 
 export async function assignPrintingVendor(formData: FormData) {

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
+import { useState } from 'react'
+import { IDEMPOTENCY_FIELD, useAction, useIdempotencyKey } from '@/lib/use-action'
+import { Spinner } from '@/components/ui/submit-button'
 import { ProductImage } from '@/components/ui/product-image'
 import { uploadProductImage, removeProductImage } from '@/app/crm/products/actions'
 
@@ -14,37 +15,40 @@ export function ProductImageEditor({
   imageUrl: string | null
   name: string
 }) {
-  const [pending, startTransition] = useTransition()
+  const { pending, run } = useAction()
+  const { key, rotate } = useIdempotencyKey()
+  const [which, setWhich] = useState<'upload' | 'remove' | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
 
-  const onFile = (file: File | null) => {
+  const onFile = (file: File | null, input?: HTMLInputElement) => {
     if (!file) return
-    setPreview(URL.createObjectURL(file))
-    const data = new FormData()
-    data.set('product_id', productId)
-    data.set('image', file)
-    startTransition(async () => {
-      const result = await uploadProductImage(data)
-      if (result?.error) {
-        setPreview(null)
-        toast.error(result.error)
-        return
-      }
-      toast.success('Product image updated')
-    })
+    const started = (() => {
+      setWhich('upload')
+      const data = new FormData()
+      data.set('product_id', productId)
+      data.set('image', file)
+      data.set(IDEMPOTENCY_FIELD, key)
+      return run(() => uploadProductImage(data), {
+        successMessage: 'Product image updated',
+        onSuccess: rotate,
+        onError: () => setPreview(null),
+      })
+    })()
+    if (started) setPreview(URL.createObjectURL(file))
+    if (input) input.value = ''
   }
 
   const onRemove = () => {
     const data = new FormData()
     data.set('product_id', productId)
-    startTransition(async () => {
-      const result = await removeProductImage(data)
-      setPreview(null)
-      if (result?.error) {
-        toast.error(result.error)
-        return
-      }
-      toast.success('Product image removed')
+    data.set(IDEMPOTENCY_FIELD, key)
+    setWhich('remove')
+    run(() => removeProductImage(data), {
+      successMessage: 'Product image removed',
+      onSuccess: () => {
+        rotate()
+        setPreview(null)
+      },
     })
   }
 
@@ -53,13 +57,15 @@ export function ProductImageEditor({
       <ProductImage src={preview || imageUrl} alt={name} size="lg" className="rounded-xl border border-gray-200" />
       <div className="flex flex-wrap gap-2">
         <label className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 cursor-pointer">
-          {imageUrl ? 'Replace image' : 'Upload image'}
+          {pending && which === 'upload' ? (
+            <span className="inline-flex items-center gap-2"><Spinner />Uploading…</span>
+          ) : imageUrl ? 'Replace image' : 'Upload image'}
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
             className="sr-only"
             disabled={pending}
-            onChange={(e) => onFile(e.target.files?.[0] || null)}
+            onChange={(e) => onFile(e.target.files?.[0] || null, e.target)}
           />
         </label>
         {imageUrl && (
@@ -67,9 +73,13 @@ export function ProductImageEditor({
             type="button"
             onClick={onRemove}
             disabled={pending}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-red-700 hover:bg-red-50"
+            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-red-700 hover:bg-red-50 disabled:opacity-60"
           >
-            Remove
+            {pending && which === 'remove' ? (
+              <span className="inline-flex items-center gap-2"><Spinner />Removing…</span>
+            ) : (
+              'Remove'
+            )}
           </button>
         )}
       </div>

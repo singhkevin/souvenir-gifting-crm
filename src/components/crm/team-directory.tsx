@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { formatDate } from '@/lib/utils'
 import { updateTeamMember } from '@/app/crm/team/actions'
-import { asFormAction } from '@/lib/form-action'
+import { ActionForm } from '@/components/ui/action-form'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 type Profile = {
@@ -72,8 +73,8 @@ function MemberForm({
   const [role, setRole] = useState(pending ? '' : profile.role)
   const saveBlocked = pending && role === ''
   return (
-    <form
-      action={asFormAction(updateTeamMember)}
+    <ActionForm
+      action={updateTeamMember}
       className={
         compact
           ? 'flex flex-wrap items-center gap-2 text-xs'
@@ -103,21 +104,21 @@ function MemberForm({
         defaultValue={profile.is_active === false ? 'false' : 'true'}
         options={STATUS_OPTIONS}
       />
-      <button
-        type="submit"
+      <SubmitButton
+        pendingLabel="Saving…"
         disabled={saveBlocked}
         className={`inline-flex items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF] disabled:cursor-not-allowed disabled:opacity-50 ${
           compact ? 'min-h-9' : 'min-h-10'
         }`}
       >
         Save
-      </button>
+      </SubmitButton>
       {compact ? (
         <span className="text-gray-400">{formatDate(profile.created_at)}</span>
       ) : (
         <p className="text-[11px] text-gray-400">Joined {formatDate(profile.created_at)}</p>
       )}
-    </form>
+    </ActionForm>
   )
 }
 
