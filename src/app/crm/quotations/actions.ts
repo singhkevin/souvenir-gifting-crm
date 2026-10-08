@@ -92,8 +92,8 @@ export async function convertToOrder(quotationId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('convert_quotation_to_order', { p_quotation_id: quotationId })
   if (error) {
-    // The one-order-per-quotation index fired: another request created it first. Go to that order.
-    if (error.code === '23505' || /orders_quotation_id_unique/.test(error.message)) {
+    // orders_quotation_id_key (one order per quotation) fired: another request created it first. Go to that order.
+    if (error.code === '23505') {
       const { data: existing } = await supabase.from('orders').select('id').eq('quotation_id', quotationId).maybeSingle()
       if (existing?.id) redirect(`/crm/orders/${existing.id}`)
     }

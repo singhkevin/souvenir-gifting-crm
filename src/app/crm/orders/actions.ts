@@ -41,8 +41,13 @@ async function callAdvanceStage(supabase: SupabaseClient, args: AdvanceArgs): Pr
     p_stage_due: args.stageDue ?? null,
     p_next_action: args.nextAction ?? null,
   }
-  let { error } = await supabase.rpc('advance_order_stage', { ...base, p_expected_status: args.expectedStatus ?? null })
-  if (error && args.expectedStatus && /p_expected_status|schema cache|could not find the function/i.test(error.message)) {
+  // Only send p_expected_status when there is one; the 7-argument call is what a database
+  // without migration 20261007 understands.
+  let { error } = await supabase.rpc(
+    'advance_order_stage',
+    args.expectedStatus ? { ...base, p_expected_status: args.expectedStatus } : base,
+  )
+  if (error && args.expectedStatus && (error.code === 'PGRST202' || /could not find the function/i.test(error.message))) {
     ;({ error } = await supabase.rpc('advance_order_stage', base))
   }
   if (!error) return {}

@@ -1,14 +1,9 @@
 -- Rollback for 20261007_action_idempotency.sql
 -- Restores the previous function bodies from 20261006_fulfillment_stages_client_approval.sql,
 -- 20261005_quotation_line_accept.sql and 20260909_convert_order_active_catalogue_only.sql,
--- drops the one-order-per-quotation index, and removes the idempotency table and functions.
--- Orders created while the index existed are untouched. Apply together with reverting the app.
+-- and removes the idempotency table and functions. Apply together with reverting the app.
 
 begin;
-
-drop index if exists public.orders_quotation_id_unique;
-drop index if exists public.campaign_products_campaign_product_unique;
-drop index if exists public.requirement_products_requirement_product_unique;
 
 -- advance_order_stage: back to the 7-argument signature.
 drop function if exists public.advance_order_stage(uuid, text, uuid, uuid, text, text, text, text);

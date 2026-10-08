@@ -11,15 +11,16 @@
 --    second reject is a no-op.
 -- 4. client_decide_order_approval: repeating an approval (or a just-recorded change request) is a
 --    no-op instead of a second history row and notification.
--- 5. convert_quotation_to_order locks the quotation row, and orders.quotation_id is unique, so a
---    quotation can only ever produce one order.
--- 6. Unique (campaign_id, product_id) on campaign_products and (requirement_id, product_id) on
---    requirement_products, created only when no duplicates exist (otherwise skipped with a WARNING).
+-- 5. convert_quotation_to_order locks the quotation row so two concurrent conversions serialize
+--    and the second returns the existing order.
 --
--- Pre-check for step 5 (must return no rows):
---   select quotation_id, count(*) from public.orders
---   where quotation_id is not null group by quotation_id having count(*) > 1;
--- The migration raises (and rolls back) instead of deleting anything when duplicates exist.
+-- Not in this migration, on purpose: production already has UNIQUE constraint
+-- orders_quotation_id_key on orders(quotation_id) (one order per quotation) and the unique indexes
+-- campaign_products_campaign_id_product_id_key and requirement_products_requirement_id_product_id_key.
+-- Pre-check results before writing this: 0 duplicate orders.quotation_id, 0 duplicate
+-- campaign_products (campaign_id, product_id) pairs, 0 duplicate requirement_products
+-- (requirement_id, product_id) pairs. Function bodies below are the current production bodies plus
+-- only the new guards.
 
 begin;
 
@@ -151,35 +152,7 @@ begin
   end if;
 end $$;
 
--- 2. One order per quotation -------------------------------------------------------------
-
-do $$
-declare
-  v_dupes text;
-begin
-  select string_agg(quotation_id::text || ' (' || n || ' orders)', ', ')
-    into v_dupes
-  from (
-    select quotation_id, count(*) as n
-    from public.orders
-    where quotation_id is not null
-    group by quotation_id
-    having count(*) > 1
-    limit 10
-  ) d;
-
-  if v_dupes is not null then
-    raise exception
-      'Cannot make orders.quotation_id unique: duplicate orders already exist for %. Review and merge or relink them first; nothing was changed.',
-      v_dupes;
-  end if;
-end $$;
-
-create unique index if not exists orders_quotation_id_unique
-  on public.orders (quotation_id)
-  where quotation_id is not null;
-
--- 3. advance_order_stage with an expected-stage guard ------------------------------------
+-- 2. advance_order_stage with an expected-stage guard ------------------------------------
 
 drop function if exists public.advance_order_stage(uuid, text, uuid, uuid, text, text, text);
 
@@ -355,7 +328,7 @@ begin
   end if;
 end $$;
 
--- 4. Client approval decision: repeat is a no-op -----------------------------------------
+-- 3. Client approval decision: repeat is a no-op -----------------------------------------
 
 create or replace function public.client_decide_order_approval(
   p_order_id uuid,
@@ -488,7 +461,7 @@ begin
 end;
 $$;
 
--- 5. Quotation accept: one order, repeat returns it ----------------------------------------
+-- 4. Quotation accept: one order, repeat returns it ----------------------------------------
 
 create or replace function public.client_respond_quotation(
   p_quotation_id uuid,
@@ -796,59 +769,6 @@ begin
   return v_order_id;
 end;
 $function$;
-
--- 6. Natural unique keys where a repeat insert would otherwise add a second row ----------
--- Created only when the table exists, no unique index already covers the pair, and the existing
--- rows have no duplicates. If duplicates exist the index is skipped with a WARNING and nothing is
--- deleted; resolve the listed pairs by hand and re-run this block.
-
-do $$
-declare
-  r record;
-  v_dupes integer;
-begin
-  for r in
-    select * from (values
-      ('campaign_products', 'campaign_id', 'product_id', 'campaign_products_campaign_product_unique'),
-      ('requirement_products', 'requirement_id', 'product_id', 'requirement_products_requirement_product_unique')
-    ) as t(tbl, col_a, col_b, idx)
-  loop
-    if to_regclass('public.' || r.tbl) is null then
-      raise notice 'Skipping %: table does not exist', r.tbl;
-      continue;
-    end if;
-
-    if exists (
-      select 1
-      from pg_index i
-      where i.indrelid = ('public.' || r.tbl)::regclass
-        and i.indisunique
-        and i.indnatts = 2
-        and (
-          select array_agg(a.attname::text order by a.attname::text)
-          from pg_attribute a
-          where a.attrelid = i.indrelid and a.attnum = any (i.indkey)
-        ) = array[least(r.col_a, r.col_b), greatest(r.col_a, r.col_b)]::text[]
-    ) then
-      raise notice 'Skipping %: a unique index on (%, %) already exists', r.tbl, r.col_a, r.col_b;
-      continue;
-    end if;
-
-    execute format(
-      'select count(*) from (select 1 from public.%I group by %I, %I having count(*) > 1) d',
-      r.tbl, r.col_a, r.col_b
-    ) into v_dupes;
-
-    if v_dupes > 0 then
-      raise warning
-        'Skipping unique index on %(%, %): % duplicate pair(s) exist. Review them with: select %, %, count(*) from public.% group by 1, 2 having count(*) > 1;',
-        r.tbl, r.col_a, r.col_b, v_dupes, r.col_a, r.col_b, r.tbl;
-      continue;
-    end if;
-
-    execute format('create unique index if not exists %I on public.%I (%I, %I)', r.idx, r.tbl, r.col_a, r.col_b);
-  end loop;
-end $$;
 
 notify pgrst, 'reload schema';
 
