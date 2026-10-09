@@ -1,3 +1,5 @@
+-- Applied to production on 2026-10-09. Production did still have client_respond_quotation(uuid, boolean, text)
+-- (created outside tracked migrations); this file drops it.
 -- Lock down RPCs that were reachable by anon/public (Postgres grants EXECUTE to
 -- PUBLIC by default, and several of these functions never had that revoked).
 --
