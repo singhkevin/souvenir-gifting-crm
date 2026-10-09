@@ -32,6 +32,7 @@ Do **not** run these against production from the agent unless explicitly request
 26. **`20261008_harden_handle_new_user_role.sql`** ← sign-up trigger takes role/company_id only from app_metadata; self sign-ups become client_user (rollback: `supabase/rollbacks/20261008_harden_handle_new_user_role_rollback.sql`). Already applied to production on 2026-10-08.
 27. **`20261007_action_idempotency.sql`** ← idempotency for mutating actions: `action_idempotency` keys, `advance_order_stage` expected-stage guard, quote accept returns the existing order, approval repeat is a no-op (rollback: `supabase/rollbacks/20261007_action_idempotency_rollback.sql`). Safe to apply before or after the app deploy; the app falls back when the new functions are missing.
 28. **`20261008_products_client_granted_select.sql`** ← RLS: portal clients can read active `selected`-access products they were granted and not excluded from. Already applied in production; idempotent (drop policy if exists + create).
+29. **`20261009_catalog_per_company_pricing.sql`** ← one catalog, many companies: `campaign_products.manual_price` / `priced_company_id`, `catalog_share_links.company_id`, `place_direct_order` catalog branch prices from the buying company's margin (rollback: `supabase/rollbacks/20261009_catalog_per_company_pricing_rollback.sql`). Apply after 20261006_buy_vs_rfq; the app falls back to stored prices until it is applied.
 
 ## Phase 2 verification SQL (after applying `20261001_portal_hosts.sql`)
 

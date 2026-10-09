@@ -9,6 +9,7 @@ import { companyCanUseCatalog, resolveShareCampaignId } from '@/lib/catalogs/rfq
 import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
 import { CatalogBuyPanel } from '@/components/catalogs/CatalogBuyPanel'
 import { purchaseOfferFromProduct } from '@/lib/catalogue/purchase-path'
+import { sharePricingCompanyId, withCompanyPrices } from '@/lib/catalogs/pricing'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +46,13 @@ export default async function SharedCatalogPage({ params }: PageProps) {
     )
   }
 
-  const products = catalog.products || []
+  // One catalog serves many companies: price the lines with the margin of the company viewing the link.
+  const viewer = await getProfile()
+  const viewerIsClient = viewer?.role === 'client_admin' || viewer?.role === 'client_user'
+  const campaignId = await resolveShareCampaignId(token)
+  const viewerCompanyId = viewerIsClient ? ((await (await createClient()).rpc('client_company_id')).data as string | null) : null
+  const pricingCompanyId = campaignId ? await sharePricingCompanyId(token, campaignId, viewerCompanyId) : null
+  const products = await withCompanyPrices(catalog.products || [], pricingCompanyId)
   const linesByKit = new Map<string, SharedCatalogProduct[]>()
   for (const product of products) {
     if (!product.pack_kit_id) continue

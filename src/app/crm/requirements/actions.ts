@@ -8,6 +8,7 @@ import { offersByProduct } from '@/lib/pricing/offers'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
 import { getCompanyMarginPercent, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import { withIdempotency } from '@/lib/idempotency'
+import { catalogProductPricesForCompany } from '@/lib/catalogs/pricing'
 
 export async function createRequirement(formData: FormData) {
   return withIdempotency('crm.createRequirement', formData, () => createRequirementOnce(formData))
@@ -106,6 +107,7 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
 
   const sellByProduct = new Map<string, number>()
   if (req.campaign_id) {
+    // Stored lines carry the catalog default's price; the quote must use the requesting company's.
     const { data: catalogPrices } = await supabase
       .from('campaign_products')
       .select('product_id, selling_price')
@@ -113,6 +115,11 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
       .in('product_id', reqProducts.map((row) => row.product_id))
     for (const row of catalogPrices || []) {
       if (row.selling_price != null) sellByProduct.set(row.product_id, Number(row.selling_price))
+    }
+    const companyPrices = await catalogProductPricesForCompany(req.campaign_id, req.company_id)
+    for (const row of reqProducts) {
+      const price = companyPrices.get(row.product_id)
+      if (price != null) sellByProduct.set(row.product_id, price)
     }
   }
 

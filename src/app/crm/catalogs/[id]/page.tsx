@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { formatCurrency, isUuid, oneRelation } from '@/lib/utils'
-import { setCatalogProductVisibility, removeCatalogProduct, updateCatalog, removeCatalog } from '../actions'
+import { setCatalogProductVisibility, removeCatalogProduct, setCatalogManualPrice, updateCatalog, removeCatalog } from '../actions'
 import { BudgetPackGenerator } from '../BudgetPackGenerator'
 import { CatalogProductPicker } from '../CatalogProductPicker'
 import { CatalogDuplicateForm } from '../CatalogDuplicateForm'
@@ -20,16 +20,17 @@ import { sharePath } from '@/lib/catalogs/share'
 import { shareLinkIsExpired } from '@/lib/catalogs/share-link'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { defaultCatalogCompanyId, offeringPricesForCompany } from '@/lib/catalogs/pricing'
 
 export default async function CatalogDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ removed?: string }>
+  searchParams: Promise<{ removed?: string; preview?: string }>
 }) {
   const { id } = await params
-  const { removed } = await searchParams
+  const { removed, preview } = await searchParams
   if (!isUuid(id)) notFound()
   await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
@@ -45,13 +46,21 @@ export default async function CatalogDetailPage({
 
   const [assignmentResult, shareResult, pickerProducts, origin] = await Promise.all([
     supabase.from('catalog_assignments').select('company_id, company:companies(id, name)').eq('campaign_id', id),
-    supabase
-      .from('catalog_share_links')
-      .select('token, expires_at, revoked_at')
-      .eq('campaign_id', id)
-      .is('revoked_at', null)
-      .order('created_at', { ascending: false })
-      .limit(1),
+    (async () => {
+      const query = (columns: string) =>
+        supabase
+          .from('catalog_share_links')
+          .select(columns)
+          .eq('campaign_id', id)
+          .is('revoked_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+      const withCompany = await query('token, expires_at, revoked_at, company_id')
+      // company_id arrives with migration 20261009; links keep working without it.
+      return withCompany.error && /company_id/i.test(withCompany.error.message)
+        ? query('token, expires_at, revoked_at')
+        : withCompany
+    })(),
     listCatalogPickerProducts(catalog.company_id),
     requestOrigin(),
   ])
@@ -64,6 +73,15 @@ export default async function CatalogDetailPage({
       return { companyId: row.company_id as string, name: rowCompany?.name || 'Company' }
     })
   const companyOptions = (companies || []) as { id: string; name: string }[]
+  const defaultCompanyId = (await defaultCatalogCompanyId(id)) || assigned[0]?.companyId || null
+  const previewCompanyId =
+    preview && assigned.some((row) => row.companyId === preview) ? preview : defaultCompanyId
+  const previewCompany = assigned.find((row) => row.companyId === previewCompanyId) || null
+  const previewPrices = await offeringPricesForCompany((offerings || []).map((row) => row.id), previewCompanyId)
+  const draftCount = (offerings || []).filter((row) => {
+    const rowProduct = Array.isArray(row.product) ? row.product[0] : row.product
+    return row.visibility !== 'published' && rowProduct?.status === 'active'
+  }).length
   const offeredIds = new Set((offerings || []).map((offering) => offering.product_id))
   const available = pickerProducts.filter((product) => !offeredIds.has(product.id))
   const packKits = (offerings || []).filter((offering) => offering.pack_option && offering.pack_kit_role !== 'line')
@@ -96,7 +114,8 @@ export default async function CatalogDetailPage({
     .filter((contact) => contact.email)
     .map((contact) => ({ email: contact.email as string, label: contact.full_name || contact.email as string }))
 
-  const activeLink = shareResult.error ? null : shareResult.data?.[0] || null
+  const activeLink = (shareResult.error ? null : (shareResult.data as unknown as { token: string; expires_at: string | null; company_id?: string | null }[] | null)?.[0]) || null
+  const linkCompanyName = assigned.find((row) => row.companyId === activeLink?.company_id)?.name || null
   const shareUrl = activeLink?.token ? `${origin}${sharePath(activeLink.token)}` : null
 
   return (
@@ -125,7 +144,7 @@ export default async function CatalogDetailPage({
             <p className="mt-1 text-xs text-[#7A7267]">Duplicated from {sourceName}</p>
           )}
         </div>
-        <CatalogPublishButton catalogId={catalog.id} />
+        <CatalogPublishButton catalogId={catalog.id} draftCount={draftCount} published={Boolean(catalog.published_to_client_at)} />
       </div>
       <div>
         <ConfirmAction
@@ -150,12 +169,12 @@ export default async function CatalogDetailPage({
         <button className="min-h-11 rounded-lg bg-[#806A50] font-semibold text-[#FFFFFF]">Save catalog</button>
       </CatalogForm>
 
-      <CatalogDuplicateForm catalogId={catalog.id} defaultName={catalog.name} companies={companyOptions} />
+      <CatalogDuplicateForm catalogId={catalog.id} defaultName={catalog.name} />
       <CatalogAssignPanel
         catalogId={catalog.id}
         assigned={assigned}
         companies={companyOptions}
-        pricingCompanyName={company?.name || null}
+        defaultCompanyName={assigned.find((row) => row.companyId === defaultCompanyId)?.name || company?.name || null}
       />
       <CatalogSharePanel
         key={catalog.id}
@@ -165,6 +184,8 @@ export default async function CatalogDetailPage({
         expiresAt={activeLink?.expires_at || null}
         linkExpired={shareLinkIsExpired(activeLink?.expires_at)}
         suggestions={suggestions}
+        companies={assigned.map((row) => ({ id: row.companyId, name: row.name }))}
+        linkCompanyName={linkCompanyName}
       />
 
       <BudgetPackGenerator
@@ -172,9 +193,34 @@ export default async function CatalogDetailPage({
         budgetPerEmployee={catalog.budget_per_employee}
         draftPackCount={draftPackCount}
         publishedPackCount={publishedPackCount}
+        companies={assigned.map((row) => ({ id: row.companyId, name: row.name }))}
+        defaultCompanyId={defaultCompanyId}
       />
 
       <CatalogProductPicker catalogId={catalog.id} products={available} />
+
+      <form method="get" className="flex flex-col gap-2 rounded-2xl border bg-white p-4 text-xs sm:flex-row sm:items-center">
+        <label className="flex items-center gap-2 text-[#5A5248]">
+          Preview prices as
+          <select
+            name="preview"
+            defaultValue={previewCompanyId || ''}
+            disabled={assigned.length === 0}
+            className="min-h-10 rounded-lg border bg-white px-2 py-2"
+          >
+            {assigned.length === 0 && <option value="">Assign a company first</option>}
+            {assigned.map((row) => (
+              <option key={row.companyId} value={row.companyId}>{row.name}</option>
+            ))}
+          </select>
+        </label>
+        <button type="submit" disabled={assigned.length === 0} className="min-h-10 rounded-lg border border-[#806A50] px-3 font-semibold text-[#806A50] disabled:opacity-50">
+          Preview
+        </button>
+        <p className="text-[#7A7267]">
+          Each company sees its own margin on non-pack lines. A manual price applies to every company. Pack prices are fixed when generated.
+        </p>
+      </form>
 
       <div className="overflow-hidden rounded-2xl border bg-white">
         <table className="w-full text-xs">
@@ -182,7 +228,7 @@ export default async function CatalogDetailPage({
             <tr>
               <th className="p-3">Pack</th>
               <th className="p-3">Client offering</th>
-              <th className="p-3">Client price</th>
+              <th className="p-3">Client price{previewCompany ? ` (${previewCompany.name})` : ''}</th>
               <th className="p-3">Visibility</th>
               <th className="p-3">Actions</th>
             </tr>
@@ -226,7 +272,34 @@ export default async function CatalogDetailPage({
                           <p className="text-[10px] text-[#7A7267]">kit total</p>
                         </>
                       ) : (
-                        formatCurrency(row.selling_price)
+                        <>
+                          <p className="font-semibold">{formatCurrency(previewPrices.get(row.id) ?? row.selling_price)}</p>
+                          {row.manual_price != null && (
+                            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#806A50]">manual price</p>
+                          )}
+                          {row.pack_option && row.priced_company_id && (
+                            <p className="text-[10px] text-[#7A7267]">
+                              priced for {assigned.find((a) => a.companyId === row.priced_company_id)?.name || 'one company'}
+                            </p>
+                          )}
+                        </>
+                      )}
+                      {!row.pack_option && (
+                        <ActionForm action={setCatalogManualPrice} className="mt-2 flex items-center gap-1">
+                          <input type="hidden" name="campaign_id" value={catalog.id} />
+                          <input type="hidden" name="id" value={row.id} />
+                          <input
+                            name="manual_price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            defaultValue={row.manual_price ?? ''}
+                            placeholder="Manual"
+                            aria-label="Manual price"
+                            className="w-20 rounded border px-1.5 py-1"
+                          />
+                          <SubmitButton className="underline text-[#806A50]" pendingLabel="Saving…">Set</SubmitButton>
+                        </ActionForm>
                       )}
                     </td>
                     <td className="p-3 capitalize">{row.visibility}</td>

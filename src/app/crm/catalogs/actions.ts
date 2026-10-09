@@ -12,9 +12,12 @@ import { offersByProduct } from '@/lib/pricing/offers'
 import { buildBudgetPackCandidates, planBudgetPacks } from '@/lib/catalogue/budget-packs-server'
 import { formatKitItemNames, PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
 import { sharePath } from '@/lib/catalogs/share'
+import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
 import { appName } from '@/lib/brand'
 import { extendShareExpiry, shareExpiryIso, shareLinkGrantsAccess, shareLinkIsExpired } from '@/lib/catalogs/share-link'
 import { withIdempotency } from '@/lib/idempotency'
+import { duplicateCatalogName } from '@/lib/catalogs/names'
+import { isUuid } from '@/lib/utils'
 
 function schemaHint(message: string) {
   if (/catalog_assignments|catalog_share_links|cloned_from|get_shared_catalog/i.test(message)) {
@@ -57,7 +60,9 @@ async function createCatalogOnce(formData: FormData) {
   if (!user) return { error: 'Not authenticated' }
 
   const name = String(formData.get('name') || '').trim()
-  const companyId = String(formData.get('company_id') || '')
+  // Zero or more companies. The first one becomes the default (campaigns.company_id) for pricing new lines.
+  const companyIds = [...new Set(formData.getAll('company_id').map((value) => String(value)).filter(isUuid))]
+  const companyId = companyIds[0] || ''
   const employeeQuantity = Number(formData.get('employee_quantity') || 0)
   const budgetPerEmployee = Number(formData.get('budget_per_employee') || 0)
   if (!name) return { error: 'Catalog name is required' }
@@ -76,12 +81,10 @@ async function createCatalogOnce(formData: FormData) {
   }).select('id').single()
   if (error) return { error: schemaHint(error.message) }
 
-  if (companyId) {
-    const { error: assignError } = await supabase.from('catalog_assignments').insert({
-      campaign_id: data.id,
-      company_id: companyId,
-      assigned_by: user.id,
-    })
+  if (companyIds.length) {
+    const { error: assignError } = await supabase.from('catalog_assignments').insert(
+      companyIds.map((id) => ({ campaign_id: data.id, company_id: id, assigned_by: user.id })),
+    )
     if (assignError) return { error: schemaHint(assignError.message) }
   }
 
@@ -137,7 +140,7 @@ async function duplicateCatalogOnce(formData: FormData) {
   if (!source) return { error: 'Catalog not found' }
 
   const requestedName = String(formData.get('name') || '').trim()
-  const name = requestedName || `${source.name} copy`
+  const name = requestedName || duplicateCatalogName(String(source.name))
   const sourceRow = source as Record<string, unknown>
 
   const payload: Record<string, unknown> = {
@@ -177,7 +180,7 @@ async function duplicateCatalogOnce(formData: FormData) {
 
   const { data: offerings, error: offeringsError } = await supabase
     .from('campaign_products')
-    .select('product_id, display_name, client_description, client_image_url, selling_price, moq, pack_option, pack_kit_id, pack_kit_role, pack_kit_total, display_order, personalization_options, estimated_delivery')
+    .select('*')
     .eq('campaign_id', sourceId)
     .order('display_order')
   if (offeringsError) return { error: offeringsError.message }
@@ -206,6 +209,9 @@ async function duplicateCatalogOnce(formData: FormData) {
       display_order: row.display_order,
       personalization_options: row.personalization_options,
       estimated_delivery: row.estimated_delivery,
+      // Per-line override and pack pricing context travel with the copy (absent before migration 20261009).
+      ...(row.manual_price != null ? { manual_price: row.manual_price } : {}),
+      ...(row.priced_company_id ? { priced_company_id: row.priced_company_id } : {}),
       created_by: user.id,
     })
     if (insertError) return { error: insertError.message }
@@ -479,8 +485,16 @@ async function generateBudgetPackOptionsOnce(formData: FormData) {
     .eq('id', campaignId)
     .maybeSingle()
   if (!campaign) return { error: 'Catalog not found' }
-  if (!campaign.company_id) {
-    return { error: 'Assign a company before generating budget packs. Sell prices use that company\'s margin.' }
+
+  // Packs are priced against one company's margin. The admin picks which assigned company;
+  // the catalog default is used when none is sent.
+  const requestedCompany = String(formData.get('pricing_company_id') || '')
+  const pricingCompanyId = isUuid(requestedCompany) ? requestedCompany : campaign.company_id
+  if (!pricingCompanyId) {
+    return { error: 'Assign a company before generating budget packs. Pack prices use the chosen company\'s margin.' }
+  }
+  if (pricingCompanyId !== campaign.company_id && !(await companyCanUseCatalog(supabase, campaignId, pricingCompanyId))) {
+    return { error: 'Choose a company this catalog is assigned to.' }
   }
 
   const budget = Number(campaign.budget_per_employee)
@@ -509,7 +523,7 @@ async function generateBudgetPackOptionsOnce(formData: FormData) {
     .eq('campaign_id', campaignId)
   const takenProductIds = new Set((remaining || []).map((row) => row.product_id).filter(Boolean))
 
-  const { candidates, priced } = await buildBudgetPackCandidates(campaign.company_id, budget)
+  const { candidates, priced } = await buildBudgetPackCandidates(pricingCompanyId, budget)
   const freeCandidates = candidates.filter((candidate) => !takenProductIds.has(candidate.id))
   const picks = planBudgetPacks(freeCandidates, budget)
   if (picks.length === 0) {
@@ -542,7 +556,7 @@ async function generateBudgetPackOptionsOnce(formData: FormData) {
     for (let i = 0; i < kitProducts.length; i++) {
       const product = kitProducts[i]
       const isPrimary = i === 0
-      const { error } = await supabase.from('campaign_products').insert({
+      const packRow = {
         campaign_id: campaignId,
         product_id: product.id,
         display_name: isPrimary ? `${label}: ${formatKitItemNames(names)}` : product.name,
@@ -557,7 +571,11 @@ async function generateBudgetPackOptionsOnce(formData: FormData) {
         pack_kit_role: isPrimary ? 'primary' : 'line',
         display_order: displayOrderBase + order + lineOrder,
         created_by: user.id,
-      })
+      }
+      let { error } = await supabase.from('campaign_products').insert({ ...packRow, priced_company_id: pricingCompanyId })
+      if (error && /priced_company_id/i.test(error.message)) {
+        ;({ error } = await supabase.from('campaign_products').insert(packRow))
+      }
       if (error) return { error: error.message }
       insertedProductIds.add(product.id)
       lineOrder += 1
@@ -684,18 +702,33 @@ async function generateCatalogShareLinkOnce(formData: FormData) {
   const noExpiry = formData.get('no_expiry') === '1'
   if (!campaignId) return { error: 'Catalog is required' }
 
+  // Optional: price this link with one assigned company's margin.
+  const linkCompany = String(formData.get('company_id') || '')
+  if (linkCompany) {
+    if (!isUuid(linkCompany) || !(await companyCanUseCatalog(supabase, campaignId, linkCompany))) {
+      return { error: 'Choose a company this catalog is assigned to.' }
+    }
+  }
+
   const existing = await openShareLinks(supabase, campaignId)
   if (existing.error) return { error: existing.error }
 
   const now = new Date()
   const token = randomBytes(24).toString('base64url')
   const expiresAt = noExpiry ? null : shareExpiryIso(now)
-  const { data: created, error } = await supabase.from('catalog_share_links').insert({
+  const linkRow: Record<string, unknown> = {
     campaign_id: campaignId,
     token,
     expires_at: expiresAt,
     created_by: user.id,
-  }).select('id, token, expires_at').single()
+  }
+  let { data: created, error } = await supabase.from('catalog_share_links').insert(
+    linkCompany ? { ...linkRow, company_id: linkCompany } : linkRow,
+  ).select('id, token, expires_at').single()
+  if (error && linkCompany && /company_id/i.test(error.message)) {
+    // Migration 20261009 not applied yet: the link still works, priced for the catalog default.
+    ;({ data: created, error } = await supabase.from('catalog_share_links').insert(linkRow).select('id, token, expires_at').single())
+  }
   if (error || !created) return { error: schemaHint(error?.message || 'Could not create a share link.') }
 
   const previousIds = existing.links.map((link) => link.id)
@@ -850,4 +883,42 @@ export async function removeCatalog(formData: FormData) {
   }
   revalidateCatalog()
   redirect('/crm/catalogs')
+}
+
+/** Set or clear the explicit price on one catalog line. Blank = price from cost and each company's margin. */
+export async function setCatalogManualPrice(formData: FormData) {
+  await requireStaff(['admin', 'sales', 'management'])
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const campaignId = String(formData.get('campaign_id') || '')
+  const id = String(formData.get('id') || '')
+  if (!isUuid(campaignId) || !isUuid(id)) return { error: 'Catalog line not found' }
+
+  const raw = String(formData.get('manual_price') || '').trim()
+  let manualPrice: number | null = null
+  if (raw) {
+    manualPrice = Number(raw)
+    if (!Number.isFinite(manualPrice) || manualPrice < 0) return { error: 'Enter a price of zero or more, or leave it blank to use margins.' }
+    manualPrice = Math.round((manualPrice + Number.EPSILON) * 100) / 100
+  }
+
+  const { data, error } = await supabase
+    .from('campaign_products')
+    .update({ manual_price: manualPrice })
+    .eq('id', id)
+    .eq('campaign_id', campaignId)
+    .select('id')
+  if (error) {
+    return {
+      error: /manual_price/i.test(error.message)
+        ? `${error.message} Apply supabase/migrations/20261009_catalog_per_company_pricing.sql first.`
+        : error.message,
+    }
+  }
+  if (!data?.length) return { error: 'Catalog line not found' }
+
+  revalidateCatalog(campaignId)
+  return { success: true, message: manualPrice == null ? 'Using each company\'s margin' : 'Manual price saved' }
 }
