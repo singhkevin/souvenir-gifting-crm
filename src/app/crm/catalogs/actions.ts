@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
-import { requestOrigin } from '@/lib/auth/request-origin'
+import { shareLinkOrigin } from '@/lib/auth/request-origin'
 import { sendEmail } from '@/lib/email/resend'
 import { resolveProductSellPrice, getCompanyMarginPercent, getMarginSettings, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import { offersByProduct } from '@/lib/pricing/offers'
@@ -743,7 +743,7 @@ async function generateCatalogShareLinkOnce(formData: FormData) {
   revalidateShareToken(created.token)
   return {
     success: true,
-    url: `${await requestOrigin()}${sharePath(created.token)}`,
+    url: `${await shareLinkOrigin()}${sharePath(created.token)}`,
     expiresAt: created.expires_at,
     expired: shareLinkIsExpired(created.expires_at),
   }
@@ -776,7 +776,7 @@ export async function extendCatalogShareLink(formData: FormData) {
   revalidateShareToken(data.token)
   return {
     success: true,
-    url: `${await requestOrigin()}${sharePath(data.token)}`,
+    url: `${await shareLinkOrigin()}${sharePath(data.token)}`,
     expiresAt: data.expires_at,
     expired: shareLinkIsExpired(data.expires_at),
   }
@@ -834,7 +834,7 @@ async function emailCatalogLinkOnce(formData: FormData) {
   if (!link) return { error: 'Generate a share link first.', shareUrl: null }
   if (!shareLinkGrantsAccess(link)) return { error: 'This share link has expired. Generate a new one.', shareUrl: null }
 
-  const shareUrl = `${await requestOrigin()}${sharePath(link.token)}`
+  const shareUrl = `${await shareLinkOrigin()}${sharePath(link.token)}`
   const subject = `Catalog: ${catalog.name}`
   const sent = await sendEmail({
     to,

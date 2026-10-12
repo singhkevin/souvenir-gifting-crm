@@ -1,3 +1,4 @@
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getRequestTabId } from "@/lib/auth/tab-server"
@@ -5,16 +6,30 @@ import { TabSessionRevive } from "@/components/auth/tab-session-revive"
 import { confirmSearchFromParams, hasRecoveryQuery } from "@/lib/auth/recovery"
 import { SiteShell } from "@/components/site/site-shell"
 import { PublicHome } from "@/components/site/public-home"
+import { PortalFinder } from "@/components/site/portal-finder"
 import { appName } from "@/lib/brand"
+import { domainSplitEnabled } from "@/lib/domain-flag"
+import { resolveHost } from "@/lib/portal-host"
 import type { Metadata } from "next"
 
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
 }
 
-export const metadata: Metadata = {
-  title: `${appName()} — Corporate Gifting, Refined`,
-  description: "A premium corporate gifting catalogue for teams, clients and brands.",
+export async function generateMetadata(): Promise<Metadata> {
+  const catalogue = {
+    title: `${appName()} — Corporate Gifting, Refined`,
+    description: "A premium corporate gifting catalogue for teams, clients and brands.",
+  }
+  if (!domainSplitEnabled()) return catalogue
+  const h = await headers()
+  const host = h.get("x-forwarded-host") || h.get("host")
+  if (resolveHost(host).kind !== "portal-root") return catalogue
+  return {
+    title: "Find your company portal",
+    description: "Enter your company code to open your gifting portal.",
+    robots: { index: true, follow: true },
+  }
 }
 
 export const dynamic = 'force-dynamic'
@@ -36,6 +51,14 @@ export default async function RootPage({
   if (hasRecoveryQuery(query)) {
     const dest = confirmSearchFromParams({ code, type, token_hash: tokenHash })
     redirect(`/auth/confirm?${dest}`)
+  }
+
+  if (domainSplitEnabled()) {
+    const h = await headers()
+    const host = h.get("x-forwarded-host") || h.get("host")
+    if (resolveHost(host).kind === "portal-root") {
+      return <PortalFinder notice={firstParam(params.notice) || ""} />
+    }
   }
 
   if (!(await getRequestTabId())) return <TabSessionRevive />

@@ -9,7 +9,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generateTemporaryPassword, SERVICE_ROLE_MISSING, validateNewPassword } from '@/lib/auth/password'
 import { findReusableLogo } from '@/lib/companies/identity'
 import { parseAllowedEmailDomains, isEmailAllowedForDomains } from '@/lib/pricing/domains'
-import { parsePortalSlug, isSlugReservedInHistory, clearTenantCache } from '@/lib/portal-host'
+import { domainSplitEnabled } from '@/lib/domain-flag'
+import { parsePortalSlug, isSlugReservedInHistory, clearTenantCache, portalLoginUrl } from '@/lib/portal-host'
 import { schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
 import { withIdempotency } from '@/lib/idempotency'
 
@@ -460,7 +461,7 @@ async function createPortalClientOnce(formData: FormData) {
   const supabase = await createClient()
   const { data: company } = await supabase
     .from('companies')
-    .select('id, name, allowed_email_domains')
+    .select('id, name, allowed_email_domains, portal_slug')
     .eq('id', companyId)
     .maybeSingle()
   if (!company) return { error: 'Company not found' }
@@ -535,7 +536,8 @@ async function createPortalClientOnce(formData: FormData) {
 
   revalidatePath(`/crm/companies/${companyId}`)
   revalidatePath('/crm/team')
-  return { success: true, email, temporaryPassword: password }
+  const loginUrl = domainSplitEnabled() ? portalLoginUrl(company.portal_slug) : null
+  return { success: true, email, temporaryPassword: password, portalLoginUrl: loginUrl }
 }
 
 export async function resetPortalClientPassword(formData: FormData) {

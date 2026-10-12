@@ -3,6 +3,7 @@
 // from ROOT_DOMAIN + the *.ROOT_DOMAIN wildcard without this route.
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
+import { domainSplitEnabled } from '@/lib/domain-flag'
 import { resolveHost } from '@/lib/portal-host'
 import { runPortalHostsWorker } from '@/lib/portal-hosts/worker'
 
@@ -29,7 +30,10 @@ function authorized(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
   const resolved = resolveHost(host)
-  if (resolved.kind === 'tenant') {
+  const allowed = domainSplitEnabled()
+    ? resolved.kind === 'admin' || resolved.kind === 'dev' || resolved.kind === 'main'
+    : resolved.kind !== 'tenant'
+  if (!allowed) {
     return NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
   }
 

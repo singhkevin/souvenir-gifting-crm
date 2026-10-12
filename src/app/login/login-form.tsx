@@ -8,6 +8,18 @@ import { PasswordField } from '@/components/auth/password-field';
 import { BrandName } from '@/components/brand/brand-name';
 import { assignWithTab } from '@/lib/supabase/client';
 
+function safeHelpHref(value: string | undefined) {
+  if (!value) return null;
+  if (value.startsWith('/') && !value.startsWith('//')) return value;
+  try {
+    const url = new URL(value);
+    if (url.protocol === 'https:' || url.protocol === 'http:') return url.toString();
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 function isNextRedirect(err: unknown) {
   const digest =
     typeof err === 'object' && err && 'digest' in err
@@ -18,6 +30,7 @@ function isNextRedirect(err: unknown) {
 
 export function LoginForm({ next = '', resetSuccess = false, portalError = false }: { next?: string; resetSuccess?: boolean; portalError?: boolean }) {
   const [error, setError] = useState<string | null>(null);
+  const [help, setHelp] = useState<{ href: string; label: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +42,7 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
     }
     setLoading(true);
     setError(null);
+    setHelp(null);
     const formData = new FormData();
     formData.set('email', loginEmail);
     formData.set('password', loginPassword);
@@ -37,6 +51,8 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
       const res = await signIn(formData);
       if (res?.error) {
         setError(res.error);
+        const href = safeHelpHref(res.helpHref);
+        setHelp(href && res.helpLabel ? { href, label: res.helpLabel } : null);
         setLoading(false);
         return;
       }
@@ -94,7 +110,12 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
             )}
             {error && (
               <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
-                {error}
+                <p>{error}</p>
+                {help ? (
+                  <a href={help.href} className="mt-2 inline-block font-semibold underline">
+                    {help.label}
+                  </a>
+                ) : null}
               </div>
             )}
 
