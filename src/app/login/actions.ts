@@ -9,10 +9,13 @@ import { requestOrigin, recoveryRedirectTo } from '@/lib/auth/request-origin'
 import { validateNewPassword } from '@/lib/auth/password'
 import { sendEmail, passwordResetEmailHtml } from '@/lib/email/resend'
 import { isEmailAllowedForDomains } from '@/lib/pricing/domains'
+import { accountKindForRole } from '@/lib/account-kind'
+import { domainSplitEnabled } from '@/lib/domain-flag'
+import { confirmOriginForAccount, hostLoginDecision } from '@/lib/domain-routing'
 import { readTenantFromHeaders, resolveHost, tenantPortalUrl, isPrimaryPortalLive } from '@/lib/portal-host'
 import { headers } from 'next/headers'
 
-export async function signIn(formData: FormData): Promise<{ error?: string; redirectTo?: string; externalPortal?: boolean } | undefined> {
+export async function signIn(formData: FormData): Promise<{ error?: string; redirectTo?: string; externalPortal?: boolean; helpHref?: string; helpLabel?: string } | undefined> {
   const email = String(formData.get('email') || '').trim()
   const password = String(formData.get('password') || '')
   const next = formData.get('next') as string | null
@@ -44,6 +47,12 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
     }
 
     const isClient = profile?.role === 'client_admin' || profile?.role === 'client_user'
+    const headerStore = await headers()
+    const host = headerStore.get('x-forwarded-host') || headerStore.get('host')
+    const resolved = resolveHost(host)
+    const tenant = readTenantFromHeaders(headerStore)
+    let portalSlug: string | null = null
+
     if (isClient && profile.company_id) {
       const { data: company } = await supabase
         .from('companies')
@@ -54,20 +63,33 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
         await supabase.auth.signOut()
         return { error: 'This email domain is not allowed for your company portal login.' }
       }
+      portalSlug = company?.portal_slug ?? null
+    }
 
-      const headerStore = await headers()
-      const host = headerStore.get('x-forwarded-host') || headerStore.get('host')
-      const resolved = resolveHost(host)
-      const tenant = readTenantFromHeaders(headerStore)
+    if (domainSplitEnabled()) {
+      const decision = hostLoginDecision({
+        host: resolved,
+        role: profile?.role,
+        companyId: profile?.company_id ?? null,
+        tenantCompanyId: tenant?.id ?? null,
+        portalSlug,
+      })
+      if (!decision.allow) {
+        await supabase.auth.signOut()
+        return { error: decision.message, helpHref: decision.href, helpLabel: decision.label }
+      }
+    }
+
+    if (isClient && profile.company_id) {
       if (resolved.kind === 'tenant') {
         if (!tenant || tenant.id !== profile.company_id) {
           await supabase.auth.signOut()
           return { error: 'This account cannot sign in on this portal.' }
         }
-      } else if (company?.portal_slug) {
+      } else if (portalSlug) {
         const live = await isPrimaryPortalLive(profile.company_id)
         if (live) {
-          const portalUrl = tenantPortalUrl(company.portal_slug, host)
+          const portalUrl = tenantPortalUrl(portalSlug, host)
           if (portalUrl) return { redirectTo: portalUrl, externalPortal: true }
         }
         // Subdomain not live yet — keep the client on the apex path fallback.
@@ -129,6 +151,15 @@ export async function signUp(formData: FormData): Promise<{ error?: string; mess
   }
 
   if (data.session) {
+    if (domainSplitEnabled()) {
+      const headerStore = await headers()
+      const host = headerStore.get('x-forwarded-host') || headerStore.get('host')
+      const resolved = resolveHost(host)
+      if (resolved.kind === 'store' || resolved.kind === 'admin' || resolved.kind === 'portal-root') {
+        await supabase.auth.signOut()
+        return { message: 'Company portal accounts are opened by your administrator. Shop accounts sign in on the store.' }
+      }
+    }
     return { redirectTo: '/portal/catalogue' }
   }
 
@@ -136,6 +167,38 @@ export async function signUp(formData: FormData): Promise<{ error?: string; mess
 }
 
 const GENERIC_RESET_MESSAGE = 'If an account exists for that email, a password reset link has been sent.'
+
+async function recoveryRedirectForKnownAccount(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>,
+  email: string,
+  fallback: string,
+) {
+  try {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('role, company_id')
+      .eq('email', email)
+      .maybeSingle()
+    if (!profile) return fallback
+    let portalSlug: string | null = null
+    if (accountKindForRole(profile.role) === 'client' && profile.company_id) {
+      const { data: company } = await admin
+        .from('companies')
+        .select('portal_slug')
+        .eq('id', profile.company_id)
+        .maybeSingle()
+      portalSlug = company?.portal_slug ?? null
+    }
+    const origin = confirmOriginForAccount({
+      role: profile.role,
+      portalSlug,
+      fallbackOrigin: fallback.replace(/\/auth\/confirm$/, ''),
+    })
+    return `${origin}/auth/confirm`
+  } catch {
+    return fallback
+  }
+}
 
 export async function requestPasswordReset(formData: FormData): Promise<{ error?: string; message?: string }> {
   const email = String(formData.get('email') || '').trim().toLowerCase()
@@ -148,7 +211,10 @@ export async function requestPasswordReset(formData: FormData): Promise<{ error?
     return { error: 'Unable to send a reset email right now. Try again later.' }
   }
 
-  const redirectTo = await recoveryRedirectTo()
+  let redirectTo = await recoveryRedirectTo()
+  if (domainSplitEnabled()) {
+    redirectTo = await recoveryRedirectForKnownAccount(admin, email, redirectTo)
+  }
   // Generate the recovery link via the admin API (no email sent by Supabase itself),
   // then deliver it ourselves through Resend instead of Supabase's built-in mailer.
   const { data, error } = await admin.auth.admin.generateLink({

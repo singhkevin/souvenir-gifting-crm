@@ -1,3 +1,5 @@
+import { domainSplitEnabled } from '@/lib/domain-flag'
+
 /**
  * User-facing product name and public origins.
  * Defaults match production (www.giftingstore.online). NEXT_PUBLIC_* overrides
@@ -6,6 +8,7 @@
  *
  * Company portal routing still uses server-only ROOT_DOMAIN in portal-host.ts.
  * Unset ROOT_DOMAIN keeps every host on the main site.
+ * With DOMAIN_SPLIT on, store and admin helpers point at STORE_DOMAIN and ADMIN_HOST.
  */
 
 export const DEFAULT_APP_NAME = 'Souvenir - Gifting Solutions'
@@ -73,6 +76,36 @@ export function marketingSiteUrl() {
   } catch {
     return ''
   }
+}
+
+function hostFromEnv(value: string | undefined, fallback: string) {
+  let raw = trimmed(value).toLowerCase()
+  if (!raw) return fallback
+  raw = raw.replace(/^[a-z][a-z0-9+.-]*:\/\//, '').split('/')[0] || ''
+  return raw.replace(/:\d+$/, '').replace(/\.$/, '') || fallback
+}
+
+/** Store origin. With the split off this stays the current public site URL. */
+export function storeSiteUrl() {
+  if (!domainSplitEnabled()) return publicSiteUrl()
+  return `https://${hostFromEnv(process.env.STORE_DOMAIN, 'souvenirgifting.com')}`
+}
+
+/** Staff CRM origin. With the split off this stays the current public site URL. */
+export function adminSiteUrl() {
+  if (!domainSplitEnabled()) return publicSiteUrl()
+  const explicit = trimmed(process.env.ADMIN_HOST)
+  if (explicit) return `https://${hostFromEnv(explicit, 'admin.souvenirgifting.com')}`
+  return `https://admin.${hostFromEnv(process.env.STORE_DOMAIN, 'souvenirgifting.com')}`
+}
+
+/** Finder apex. With the split off this stays the current public site URL. */
+export function portalRootSiteUrl() {
+  if (!domainSplitEnabled()) return publicSiteUrl()
+  const portal = hostFromEnv(process.env.PORTAL_ROOT_DOMAIN, '')
+  if (portal) return `https://${portal}`
+  const root = hostFromEnv(process.env.ROOT_DOMAIN, '')
+  return `https://${root || PRODUCTION_ROOT_DOMAIN}`
 }
 
 export function marketingHostLabel(url = marketingSiteUrl()) {

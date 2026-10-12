@@ -15,7 +15,7 @@ import { requireStaff } from '@/lib/auth'
 import { SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { catalogStatusLabel } from '@/lib/catalogs/status'
 import { listCatalogPickerProducts } from '@/lib/catalogs/picker-products'
-import { requestOrigin } from '@/lib/auth/request-origin'
+import { shareLinkOrigin } from '@/lib/auth/request-origin'
 import { sharePath } from '@/lib/catalogs/share'
 import { shareLinkIsExpired } from '@/lib/catalogs/share-link'
 import { ActionForm } from '@/components/ui/action-form'
@@ -62,7 +62,7 @@ export default async function CatalogDetailPage({
         : withCompany
     })(),
     listCatalogPickerProducts(catalog.company_id),
-    requestOrigin(),
+    shareLinkOrigin(),
   ])
 
   const company = oneRelation(catalog.company)

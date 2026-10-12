@@ -8,10 +8,12 @@ export async function GET(request: NextRequest) {
   const hostname = (hostHeader || '').split(',')[0].trim().toLowerCase().replace(/:\d+$/, '')
   const resolved = resolveHost(hostHeader)
 
-  const body =
-    resolved.kind === 'tenant'
-      ? { app: 'souvenir-crm', host: hostname, kind: 'tenant' as const, slug: resolved.slug }
-      : { app: 'souvenir-crm', host: hostname, kind: 'main' as const }
+  const body = {
+    app: 'souvenir-crm',
+    host: hostname,
+    kind: resolved.kind,
+    ...(resolved.kind === 'tenant' ? { slug: resolved.slug } : {}),
+  }
 
   return NextResponse.json(body, {
     headers: { 'Cache-Control': 'no-store' },

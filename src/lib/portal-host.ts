@@ -1,4 +1,5 @@
 import { PRODUCTION_ROOT_DOMAIN } from '@/lib/brand'
+import { domainSplitEnabled } from '@/lib/domain-flag'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { portalDnsMode } from '@/lib/portal-hosts/mode'
 
@@ -159,7 +160,44 @@ type CacheEntry =
 const tenantCache = new Map<string, CacheEntry>()
 
 export function rootDomain(): string {
-  return (process.env.ROOT_DOMAIN || '').trim().toLowerCase().replace(/\.$/, '')
+  return normalizeDomain(process.env.ROOT_DOMAIN)
+}
+
+const DEFAULT_STORE_DOMAIN = 'souvenirgifting.com'
+
+function normalizeDomain(value: string | undefined) {
+  let raw = (value || '').trim().toLowerCase()
+  if (!raw) return ''
+  raw = raw.replace(/^[a-z][a-z0-9+.-]*:\/\//, '')
+  raw = raw.split('/')[0] || ''
+  raw = raw.replace(/:\d+$/, '').replace(/\.$/, '')
+  return raw
+}
+
+/** Portal apex. ROOT_DOMAIN when the split is off. PORTAL_ROOT_DOMAIN wins when it is on. */
+export function effectivePortalRoot(): string {
+  const portal = normalizeDomain(process.env.PORTAL_ROOT_DOMAIN)
+  const root = rootDomain()
+  if (domainSplitEnabled()) return portal || root || PRODUCTION_ROOT_DOMAIN
+  return root
+}
+
+export function storeDomain(): string {
+  const explicit = normalizeDomain(process.env.STORE_DOMAIN)
+  if (explicit) return explicit
+  return domainSplitEnabled() ? DEFAULT_STORE_DOMAIN : ''
+}
+
+export function adminHost(): string {
+  const explicit = normalizeDomain(process.env.ADMIN_HOST)
+  if (explicit) return explicit
+  if (!domainSplitEnabled()) return ''
+  const store = storeDomain()
+  return store ? `admin.${store}` : ''
+}
+
+function portalRootForLinks() {
+  return domainSplitEnabled() ? effectivePortalRoot() : rootDomain()
 }
 
 /** Empty input clears the slug. Otherwise returns a single lowercase label. */
@@ -182,10 +220,15 @@ export function parsePortalSlug(raw: string | null | undefined): { slug: string 
 }
 
 export function portalUrlForSlug(slug: string | null | undefined): string | null {
-  const root = rootDomain()
+  const root = portalRootForLinks()
   if (!root || !slug) return null
   const proto = root === 'localhost' ? 'http' : 'https'
   return `${proto}://${slug}.${root}`
+}
+
+export function portalLoginUrl(slug: string | null | undefined): string | null {
+  const base = portalUrlForSlug(slug)
+  return base ? `${base}/login` : null
 }
 
 /** Help text for the company portal-address field. */
@@ -209,18 +252,72 @@ function hostParts(hostHeader: string | null | undefined): HostParts {
 export type ResolvedHost =
   | { kind: 'main' }
   | { kind: 'tenant'; slug: string }
+  | { kind: 'portal-root' }
+  | { kind: 'store' }
+  | { kind: 'admin' }
+  | { kind: 'dev' }
 
-export function resolveHost(hostHeader: string | null | undefined): ResolvedHost {
-  const { hostname } = hostParts(hostHeader)
-  if (!hostname || hostname === 'localhost' || hostname.endsWith('.vercel.app')) return { kind: 'main' }
+function isPreviewHost(hostname: string) {
+  return hostname.endsWith('.vercel.app')
+}
+
+function isLocalDevHost(hostname: string) {
+  return (
+    hostname === 'localhost' ||
+    hostname.endsWith('.localhost') ||
+    hostname === '127.0.0.1' ||
+    hostname === '[::1]' ||
+    hostname === '::1'
+  )
+}
+
+function isTenantSlug(slug: string) {
+  return SLUG_RE.test(slug) && slug.length >= MIN_SLUG_LEN && slug.length <= MAX_SLUG_LEN
+}
+
+function resolveLegacyHost(hostname: string): ResolvedHost {
+  if (!hostname || hostname === 'localhost' || isPreviewHost(hostname)) return { kind: 'main' }
   const root = rootDomain()
   if (!root) return { kind: 'main' }
   if (hostname === root || hostname === `www.${root}`) return { kind: 'main' }
   const suffix = `.${root}`
   if (!hostname.endsWith(suffix)) return { kind: 'main' }
   const slug = hostname.slice(0, -suffix.length)
-  if (!SLUG_RE.test(slug) || slug.length < MIN_SLUG_LEN || slug.length > MAX_SLUG_LEN) return { kind: 'main' }
+  if (!isTenantSlug(slug)) return { kind: 'main' }
   return { kind: 'tenant', slug }
+}
+
+function resolveSplitHost(hostname: string): ResolvedHost {
+  if (!hostname || isLocalDevHost(hostname) || isPreviewHost(hostname)) return { kind: 'dev' }
+
+  const admin = adminHost()
+  if (admin && hostname === admin) return { kind: 'admin' }
+
+  const store = storeDomain()
+  if (store && (hostname === store || hostname === `www.${store}`)) return { kind: 'store' }
+
+  const root = effectivePortalRoot()
+  if (root && (hostname === root || hostname === `www.${root}`)) return { kind: 'portal-root' }
+
+  if (root) {
+    const suffix = `.${root}`
+    if (hostname.endsWith(suffix)) {
+      let label = hostname.slice(0, -suffix.length)
+      if (label.startsWith('www.')) label = label.slice(4)
+      if (!label.includes('.') && isTenantSlug(label) && !RESERVED_SLUGS.has(label) && !DENYLIST_SLUGS.has(label)) {
+        return { kind: 'tenant', slug: label }
+      }
+      return { kind: 'portal-root' }
+    }
+  }
+
+  return { kind: 'dev' }
+}
+
+export function resolveHost(hostHeader: string | null | undefined): ResolvedHost {
+  const { hostname } = hostParts(hostHeader)
+  if (!domainSplitEnabled()) return resolveLegacyHost(hostname)
+  return resolveSplitHost(hostname)
 }
 
 function originForHostname(hostname: string, port: string) {
@@ -240,9 +337,30 @@ export function mainOrigin(hostHeader: string | null | undefined): string {
   return originForHostname(root, port)
 }
 
-/** Absolute portal URL on the company host. Null when ROOT_DOMAIN is unset. */
+export function storeOrigin(hostHeader: string | null | undefined): string {
+  const domain = storeDomain()
+  if (!domain) return mainOrigin(hostHeader)
+  const { port } = hostParts(hostHeader)
+  return originForHostname(domain, port)
+}
+
+export function adminOrigin(hostHeader: string | null | undefined): string {
+  const host = adminHost()
+  if (!host) return mainOrigin(hostHeader)
+  const { port } = hostParts(hostHeader)
+  return originForHostname(host, port)
+}
+
+export function portalRootOrigin(hostHeader: string | null | undefined): string {
+  const root = effectivePortalRoot()
+  if (!root) return mainOrigin(hostHeader)
+  const { port } = hostParts(hostHeader)
+  return originForHostname(root, port)
+}
+
+/** Absolute portal URL on the company host. Null when the portal root is unset. */
 export function tenantPortalUrl(slug: string, hostHeader: string | null | undefined): string | null {
-  const root = rootDomain()
+  const root = portalRootForLinks()
   if (!root || !slug) return null
   const { port } = hostParts(hostHeader)
   return `${originForHostname(`${slug}.${root}`, port)}/portal/catalogue`
@@ -475,4 +593,8 @@ export function isInternalApiPath(pathname: string) {
 
 export function isPortalPingPath(pathname: string) {
   return pathname === '/api/portal-ping' || pathname.startsWith('/api/portal-ping/')
+}
+
+export function isPortalFindPath(pathname: string) {
+  return pathname === '/api/portal-find' || pathname.startsWith('/api/portal-find/')
 }

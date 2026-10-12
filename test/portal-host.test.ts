@@ -67,7 +67,13 @@ test('local Hostinger mock stays available and the default local mode is vercel'
 })
 
 test('resolveHost sends company slugs to the tenant and keeps apex, www, localhost, and vercel.app on the main site', () => {
-  withEnv({ ROOT_DOMAIN: 'giftingstore.online' }, () => {
+  withEnv({
+    ROOT_DOMAIN: 'giftingstore.online',
+    DOMAIN_SPLIT: undefined,
+    PORTAL_ROOT_DOMAIN: undefined,
+    STORE_DOMAIN: undefined,
+    ADMIN_HOST: undefined,
+  }, () => {
     assert.deepEqual(resolveHost('acme.giftingstore.online'), { kind: 'tenant', slug: 'acme' })
     assert.deepEqual(resolveHost('www.giftingstore.online'), { kind: 'main' })
     assert.deepEqual(resolveHost('giftingstore.online'), { kind: 'main' })
@@ -77,7 +83,13 @@ test('resolveHost sends company slugs to the tenant and keeps apex, www, localho
     assert.match(portalAddressHelp('acme'), /acme\.giftingstore\.online/)
     assert.match(portalAddressHelp('acme'), /Vercel wildcard/)
   })
-  withEnv({ ROOT_DOMAIN: undefined }, () => {
+  withEnv({
+    ROOT_DOMAIN: undefined,
+    DOMAIN_SPLIT: undefined,
+    PORTAL_ROOT_DOMAIN: 'other.example',
+    STORE_DOMAIN: 'souvenirgifting.com',
+    ADMIN_HOST: 'admin.souvenirgifting.com',
+  }, () => {
     assert.deepEqual(resolveHost('acme.giftingstore.online'), { kind: 'main' })
     assert.match(portalAddressHelp('acme'), /acme\.giftingstore\.online/)
   })

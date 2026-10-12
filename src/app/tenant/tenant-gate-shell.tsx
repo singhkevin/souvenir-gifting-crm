@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { appShortName } from '@/lib/brand'
-import { mainOrigin } from '@/lib/portal-host'
+import { domainSplitEnabled } from '@/lib/domain-flag'
+import { mainOrigin, storeOrigin } from '@/lib/portal-host'
 
 export async function TenantGateShell({
   title,
@@ -14,7 +15,7 @@ export async function TenantGateShell({
 }) {
   const h = await headers()
   const host = h.get('x-forwarded-host') || h.get('host')
-  const href = mainOrigin(host)
+  const href = domainSplitEnabled() ? storeOrigin(host) : mainOrigin(host)
   const short = appShortName()
   const label = cta || `Go to ${short}`
 

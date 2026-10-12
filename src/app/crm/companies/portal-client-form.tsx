@@ -10,10 +10,12 @@ import { SubmitButton } from '@/components/ui/submit-button'
 function CredentialsOnce({
   email,
   password,
+  loginUrl,
   onDone,
 }: {
   email: string
   password: string
+  loginUrl?: string | null
   onDone: () => void
 }) {
   const [revealed, setRevealed] = useState(false)
@@ -21,6 +23,9 @@ function CredentialsOnce({
     <div className="md:col-span-2 p-3 rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] space-y-2">
       <p className="text-xs font-semibold text-[#1C1917]">Client login created</p>
       <p className="text-[11px] text-[#7A7267]">Share these credentials now. They are not stored in the CRM and cannot be recovered later.</p>
+      {loginUrl ? (
+        <p className="text-xs"><span className="text-[#7A7267]">Portal sign in:</span> <span className="font-mono break-all">{loginUrl}</span></p>
+      ) : null}
       <p className="text-xs"><span className="text-[#7A7267]">Client ID / Login email:</span> <span className="font-mono">{email}</span></p>
       <p className="text-xs">
         <span className="text-[#7A7267]">Temporary password — share securely:</span>{' '}
@@ -33,7 +38,7 @@ function CredentialsOnce({
         <button
           type="button"
           onClick={async () => {
-            await navigator.clipboard.writeText(`${email}\n${password}`)
+            await navigator.clipboard.writeText(loginUrl ? `${loginUrl}\n${email}\n${password}` : `${email}\n${password}`)
             toast.success('Copied')
           }}
           className="px-3 py-1.5 text-xs border rounded-lg"
@@ -51,14 +56,14 @@ function CredentialsOnce({
 export function PortalClientForm({ companyId }: { companyId: string }) {
   const [formKey, setFormKey] = useState(0)
   const [password, setPassword] = useState('')
-  const [created, setCreated] = useState<{ email: string; password: string } | null>(null)
+  const [created, setCreated] = useState<{ email: string; password: string; loginUrl?: string | null } | null>(null)
 
   // ActionForm adds `idempotency_key` to the FormData; the server reads it.
   const create = async (formData: FormData) => {
     const result = await createPortalClient(formData)
     if (result?.error) return { error: result.error }
     if (result?.success && result.email && result.temporaryPassword) {
-      return { email: result.email, temporaryPassword: result.temporaryPassword }
+      return { email: result.email, temporaryPassword: result.temporaryPassword, portalLoginUrl: result.portalLoginUrl }
     }
     return { error: 'Client login was not created.' }
   }
@@ -69,8 +74,8 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
       action={create}
       successMessage="Client login created"
       onSuccess={(result) => {
-        const r = result as { email?: string; temporaryPassword?: string } | undefined
-        if (r?.email && r.temporaryPassword) setCreated({ email: r.email, password: r.temporaryPassword })
+        const r = result as { email?: string; temporaryPassword?: string; portalLoginUrl?: string | null } | undefined
+        if (r?.email && r.temporaryPassword) setCreated({ email: r.email, password: r.temporaryPassword, loginUrl: r.portalLoginUrl })
         setPassword('')
         setFormKey((key) => key + 1)
       }}
@@ -115,6 +120,7 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
         <CredentialsOnce
           email={created.email}
           password={created.password}
+          loginUrl={created.loginUrl}
           onDone={() => setCreated(null)}
         />
       )}
