@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { requireStaff } from '@/lib/auth'
-import { updateQuotationStatus, convertToOrder, duplicateQuotation } from '../actions'
+import { updateQuotationStatus, convertToOrder, duplicateQuotation, createQuotationRevision } from '../actions'
 import { ActionButton } from '@/components/ui/action-button'
 import { QuotationCosting } from './QuotationCosting'
 import { offersByProduct, pickBestOffer } from '@/lib/pricing/offers'
@@ -30,6 +30,10 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     .maybeSingle()
 
   if (!quote) notFound()
+
+  const parentQuote = quote.revision_of
+    ? await supabase.from('quotations').select('quotation_number').eq('id', quote.revision_of).maybeSingle()
+    : { data: null }
 
   const company = oneRelation(quote.company)
   const contact = oneRelation(quote.contact)
@@ -101,6 +105,14 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               Requirement: <span className="font-medium text-gray-700">{requirement.name}</span>
             </p>
           )}
+          {quote.revision_of ? (
+            <p className="text-xs text-gray-500 mt-1">
+              Revision of {parentQuote.data?.quotation_number || 'a previous quotation'}
+            </p>
+          ) : null}
+          {quote.revision_requested_at ? (
+            <p className="mt-2 text-xs font-semibold text-amber-800">Revision requested{quote.client_comment ? `: ${quote.client_comment}` : ''}</p>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -114,6 +126,15 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               Mark as Sent
             </ActionButton>
           )}
+          {quote.revision_requested_at && ['sent', 'viewed', 'draft'].includes(quote.status || '') ? (
+            <ActionButton
+              action={createQuotationRevision.bind(null, quote.id)}
+              pendingLabel="Creating…"
+              className="px-3 py-1.5 bg-amber-100 text-amber-900 rounded-lg text-xs font-semibold"
+            >
+              Create revision
+            </ActionButton>
+          ) : null}
           {['sent', 'viewed'].includes(quote.status || '') && !isExpired && (
             <>
               <ActionButton

@@ -23,6 +23,12 @@ export default async function SettingsPage() {
   }
 
   const { data: settings } = await supabase.from('org_settings').select('*').limit(1).maybeSingle()
+  const { data: owners } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, role')
+    .in('role', ['admin', 'sales'])
+    .eq('is_active', true)
+    .order('full_name')
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -106,6 +112,7 @@ export default async function SettingsPage() {
               ['portal', 'B2B portal'],
               ['microsite', 'Company microsite'],
               ['store', 'Public store'],
+              ['business', 'Business portal'],
             ].map(([key, label]) => (
               <div key={key} className="rounded-lg border border-gray-200 p-3 space-y-2">
                 <p className="text-xs font-semibold text-gray-900">{label}</p>
@@ -120,6 +127,32 @@ export default async function SettingsPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="border-t pt-4 space-y-3">
+          <h2 className="text-sm font-semibold text-gray-900">Business quotes</h2>
+          <label className="block">
+            <span className="text-gray-500 text-xs">Quote validity (days)</span>
+            <input
+              name="quote_validity_days"
+              type="number"
+              min="1"
+              max="90"
+              defaultValue={settings?.quote_validity_days ?? 14}
+              className="mt-1 w-full rounded-lg border px-3 py-2"
+            />
+          </label>
+          <label className="block">
+            <span className="text-gray-500 text-xs">Default owner for new business accounts</span>
+            <select name="business_default_owner_id" defaultValue={settings?.business_default_owner_id || ''} className="mt-1 w-full rounded-lg border px-3 py-2">
+              <option value="">Least-loaded salesperson</option>
+              {(owners || []).map((owner) => (
+                <option key={owner.id} value={owner.id}>
+                  {owner.full_name || owner.email} ({owner.role})
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm" pendingLabel="Saving…">Save settings</SubmitButton>

@@ -17,6 +17,8 @@ type CompanyRow = {
   city: string | null
   status: string | null
   portal_slug?: string | null
+  account_type?: string | null
+  business_verification?: string | null
   created_at: string
   owner?: CompanyOwner | CompanyOwner[] | null
 }
@@ -37,13 +39,14 @@ function portalDotClass(status: string | undefined) {
   }
 }
 
-export default async function Companies(props: { searchParams: Promise<{ q?: string; status?: string; removed?: string }> }) {
+export default async function Companies(props: { searchParams: Promise<{ q?: string; status?: string; type?: string; removed?: string }> }) {
   const profile = await requireStaff()
   const searchParams = await props.searchParams;
   const supabase = await createClient();
 
   const q = searchParams?.q || '';
   const status = searchParams?.status || '';
+  const accountType = searchParams?.type || '';
   const removed = searchParams?.removed || '';
 
   let query = supabase.from('companies').select('*, owner:profiles!owner_id(full_name)').order('created_at', { ascending: false }).limit(50);
@@ -51,9 +54,20 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
   
   if (q) query = query.ilike('name', `%${q}%`);
   if (status) query = query.eq('status', status);
+  if (accountType === 'business' || accountType === 'corporate') query = query.eq('account_type', accountType);
 
   const wildcardDns = portalDnsMode() === 'vercel'
-  const { data: companies } = await query;
+  const listed = await query;
+  let companies = listed.data
+  const companyError = listed.error
+  if (companyError && /account_type/i.test(companyError.message)) {
+    let fallback = supabase.from('companies').select('*, owner:profiles!owner_id(full_name)').order('created_at', { ascending: false }).limit(50);
+    fallback = applyCompanyScope(fallback, profile)
+    if (q) fallback = fallback.ilike('name', `%${q}%`);
+    if (status) fallback = fallback.eq('status', status);
+    const retried = await fallback
+    companies = retried.data
+  }
   const companyRows = asRows<CompanyRow>(companies)
   const ids = companyRows.map((c) => c.id)
   const hostStatusByCompany = new Map<string, string>()
@@ -96,6 +110,7 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
       <div className="mb-6 space-y-3">
         <form className="flex gap-2">
           {status ? <input type="hidden" name="status" value={status} /> : null}
+          {accountType ? <input type="hidden" name="type" value={accountType} /> : null}
           <div className="relative min-w-0 flex-1 sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input name="q" defaultValue={q} placeholder="Search companies..." className="w-full rounded-md border py-2.5 pl-10 pr-4 text-base sm:py-2 sm:text-sm" />
@@ -104,7 +119,7 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
         </form>
         <MobileFilterBar
           pathname="/crm/companies"
-          preserveParams={q ? { q } : {}}
+          preserveParams={{ ...(q ? { q } : {}), ...(accountType ? { type: accountType } : {}) }}
           fields={[
             {
               key: 'status',
@@ -115,6 +130,17 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
                 { value: '', label: 'All statuses' },
                 { value: 'active', label: 'Active' },
                 { value: 'inactive', label: 'Inactive' },
+              ],
+            },
+            {
+              key: 'type',
+              label: 'Type',
+              value: accountType,
+              emptyLabel: 'All types',
+              options: [
+                { value: '', label: 'All types' },
+                { value: 'corporate', label: 'Corporate' },
+                { value: 'business', label: 'Business' },
               ],
             },
           ]}
@@ -145,6 +171,11 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
                       <CompanyAvatar name={c.name} logoPath={c.logo_path} size="md" />
                       <span className="font-medium inline-flex items-center gap-2">
                         {c.name}
+                        {c.account_type === 'business' ? (
+                          <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-900">
+                            Business{c.business_verification ? ` · ${c.business_verification}` : ''}
+                          </span>
+                        ) : null}
                         {c.portal_slug ? (
                           <span
                             title={wildcardDns

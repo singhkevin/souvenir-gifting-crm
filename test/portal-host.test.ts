@@ -95,6 +95,13 @@ test('resolveHost sends company slugs to the tenant and keeps apex, www, localho
   })
 })
 
+test('business portal labels cannot be used as a company portal slug', () => {
+  for (const slug of ['b2b', 'business', 'trade', 'wholesale', 'bulk']) {
+    assert.equal(parsePortalSlug(slug).slug, null)
+    assert.match(parsePortalSlug(slug).error || '', /reserved/)
+  }
+})
+
 test('brand labels cannot be used as a company portal slug', () => {
   for (const slug of ['souvenir', 'souvenirgifting', 'souvenir-gifting', 'giffter', 'oaklane', 'giftingstore']) {
     assert.equal(parsePortalSlug(slug).slug, null)

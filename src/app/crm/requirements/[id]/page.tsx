@@ -68,6 +68,12 @@ export default async function RequirementDetailPage({
 
   if (!req) notFound()
 
+  const companyId = (req.company as { id?: string } | null)?.id
+  const businessMetaQuery = companyId
+    ? await supabase.from('companies').select('account_type, business_verification, gst_number').eq('id', companyId).maybeSingle()
+    : { data: null, error: null }
+  const businessMeta = businessMetaQuery.error ? null : businessMetaQuery.data
+
   const productRows = products || []
   const quoteRows = quotations || []
   const order = relatedOrders?.[0] || null
@@ -106,6 +112,9 @@ export default async function RequirementDetailPage({
               </span>
             </div>
             <h1 className="text-2xl font-bold text-gray-900">{req.name}</h1>
+            {req.source === 'business_portal' ? (
+              <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-amber-800">Business portal</p>
+            ) : null}
             <p className="text-xs text-gray-500 mt-0.5">
               Company:{' '}
               <Link
@@ -114,6 +123,12 @@ export default async function RequirementDetailPage({
               >
                 {(req.company as { name?: string })?.name}
               </Link>
+              {(businessMeta?.account_type === 'business') ? (
+                <span className="ml-2 text-[10px] uppercase text-amber-800">
+                  {businessMeta.business_verification || 'unverified'}
+                  {businessMeta.gst_number ? ` · GSTIN ${businessMeta.gst_number}` : ''}
+                </span>
+              ) : null}
               {' · '}
               Owner:{' '}
               <span className="font-medium text-gray-700">
@@ -437,6 +452,9 @@ export default async function RequirementDetailPage({
                   (item: {
                     id: string
                     quantity?: number | null
+                    notes?: string | null
+                    target_unit_price?: number | null
+                    alt_quantities?: number[] | null
                     product?: {
                       id?: string
                       name?: string
@@ -455,6 +473,13 @@ export default async function RequirementDetailPage({
                         <div className="text-gray-400 font-mono text-[10px]">
                           {item.product?.sku}
                         </div>
+                        {item.notes ? <p className="mt-1 text-[11px] text-gray-500">{item.notes}</p> : null}
+                        {item.target_unit_price != null ? (
+                          <p className="text-[11px] text-gray-500">Target {formatCurrency(item.target_unit_price)}</p>
+                        ) : null}
+                        {item.alt_quantities?.length ? (
+                          <p className="text-[11px] text-gray-500">Breaks: {item.alt_quantities.join(', ')}</p>
+                        ) : null}
                       </td>
                       <td className="p-3.5">
                         <ActionForm action={updateRequirementProductQty}

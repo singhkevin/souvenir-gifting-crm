@@ -133,7 +133,13 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
   if (numError || !quoteNumber) return { error: numError?.message || 'Could not allocate quote number' }
 
   const validUntil = new Date()
-  validUntil.setDate(validUntil.getDate() + 14)
+  let validityDays = 14
+  const validity = await supabase.from('org_settings').select('quote_validity_days').limit(1).maybeSingle()
+  if (!validity.error && validity.data?.quote_validity_days) {
+    const days = Number(validity.data.quote_validity_days)
+    if (Number.isInteger(days) && days >= 1 && days <= 90) validityDays = days
+  }
+  validUntil.setDate(validUntil.getDate() + validityDays)
 
   const { data: quote, error } = await supabase
     .from('quotations')

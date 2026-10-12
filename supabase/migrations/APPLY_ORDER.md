@@ -34,6 +34,15 @@ Do **not** run these against production from the agent unless explicitly request
 28. **`20261008_products_client_granted_select.sql`** ← RLS: portal clients can read active `selected`-access products they were granted and not excluded from. Already applied in production; idempotent (drop policy if exists + create).
 29. **`20261009_catalog_per_company_pricing.sql`** ← one catalog, many companies: `campaign_products.manual_price` / `priced_company_id`, `catalog_share_links.company_id`, `place_direct_order` catalog branch prices from the buying company's margin (rollback: `supabase/rollbacks/20261009_catalog_per_company_pricing_rollback.sql`). Apply after 20261006_buy_vs_rfq; the app falls back to stored prices until it is applied.
 30. **`20261009_revoke_anon_rpc.sql`** ← drops the legacy `client_respond_quotation(uuid, boolean, text)` overload (still present in production until 2026-10-09) and revokes anon/public execute, granting authenticated only, on the quote/notification RPCs (rollback: `supabase/rollbacks/20261009_revoke_anon_rpc_rollback.sql`). Applied to production on 2026-10-09.
+31. **`20261012_business_role_enum.sql`** ← adds `business_user` to `app_role`. Apply in its own transaction before the next file. The enum value cannot be dropped; the rollback only deactivates those profiles (rollback: `supabase/rollbacks/20261012_business_role_enum_rollback.sql`).
+32. **`20261012_business_accounts_foundation.sql`** ← `companies.account_type` / verification columns, `is_business()`, `business_company_id()`, additive SELECT policies (rollback: `supabase/rollbacks/20261012_business_accounts_foundation_rollback.sql`).
+33. **`20261012_business_registration.sql`** ← default business owner, `rate_limit_hits`, `hit_rate_limit()`, `register_business_account()` (rollback: `supabase/rollbacks/20261012_business_registration_rollback.sql`).
+34. **`20261012_business_price_surface.sql`** ← `business_use_best_cost`, `business_show_sell_price` (rollback: `supabase/rollbacks/20261012_business_price_surface_rollback.sql`).
+35. **`20261012_business_rfq.sql`** ← requirement source and idempotency id, line target price and quantity breaks, `business_submit_rfq()` (rollback: `supabase/rollbacks/20261012_business_rfq_rollback.sql`).
+36. **`20261012_business_quotes.sql`** ← revision columns, quote validity, `business_respond_quotation()` (no order), viewed marker, `expire_business_quotations()` (rollback: `supabase/rollbacks/20261012_business_quotes_rollback.sql`).
+37. **`20261012_quote_checkout.sql`** ← `quote_checkout_tokens`, `place_quote_order()`, and a unique `orders(quotation_id)` index only when one does not already exist (rollback: `supabase/rollbacks/20261012_quote_checkout_rollback.sql`). `orders_quotation_id_key` from the base schema is left in place when present.
+
+Do not apply 31–37 from the agent. Run `supabase/tests/business_rls_check.sql` by hand after 32; it begins a transaction and rolls it back.
 
 ## Phase 2 verification SQL (after applying `20261001_portal_hosts.sql`)
 

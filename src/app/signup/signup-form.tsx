@@ -66,7 +66,7 @@ export function SignupForm() {
           Create a <BrandName /> account
         </>
       }
-      subtitle="Public signup creates a client portal login. Staff roles are assigned by an admin."
+      subtitle="Public signup creates a client portal login. Staff roles are assigned by an admin. Buying for a company? Register a business account instead."
     >
       <form onSubmit={onSubmit} className="space-y-5">
         {error && (
@@ -127,6 +127,9 @@ export function SignupForm() {
       <p className="text-xs text-center text-[#7A7267] mt-5">
         Already have an account?{' '}
         <Link href="/login" className="font-semibold text-[#624B32] hover:underline">Sign in</Link>
+      </p>
+      <p className="text-xs text-center text-[#7A7267] mt-2">
+        <Link href="/business/register" className="font-semibold text-[#624B32] hover:underline">Register a business account</Link>
       </p>
     </AuthShell>
   )

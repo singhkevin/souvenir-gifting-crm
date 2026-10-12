@@ -3,6 +3,7 @@ import 'server-only'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { getProfile } from '@/lib/auth'
+import { isBusinessRole } from '@/lib/roles'
 import { companyCanUseCatalog, resolveShareCampaignId } from '@/lib/catalogs/rfq'
 import { readTenantFromHeaders } from '@/lib/portal-host'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -150,6 +151,11 @@ export async function placeStoreDirectOrder(input: {
 }): Promise<DirectOrderResult> {
   if (clean(input.fax)) return { success: true }
 
+  const profile = await getProfile()
+  if (profile && isBusinessRole(profile.role) && profile.company_id) {
+    return placeSignedInBusinessOrder(profile, input)
+  }
+
   const fullName = clean(input.fullName)
   const email = clean(input.email).toLowerCase()
   const companyName = clean(input.companyName)
@@ -216,6 +222,68 @@ export async function placeStoreDirectOrder(input: {
     return placed
   }
   return placed
+}
+
+async function placeSignedInBusinessOrder(
+  profile: NonNullable<Awaited<ReturnType<typeof getProfile>>>,
+  input: {
+    fullName?: string
+    email?: string
+    phone?: string
+    lines: CheckoutLineInput[]
+  },
+): Promise<DirectOrderResult> {
+  const normalized = normalizeCheckout(input.lines.map((line) => ({ ...line, catalogId: null })))
+  if ('error' in normalized) return { error: normalized.error }
+
+  const admin = createAdminClient()
+  if (!admin || !profile.company_id) return { error: 'Unable to place this order just now. Please try again shortly.' }
+
+  const { data: company } = await admin
+    .from('companies')
+    .select('id, owner_id')
+    .eq('id', profile.company_id)
+    .maybeSingle()
+  if (!company) return { error: 'Unable to place this order. Please try again.' }
+
+  const email = (clean(input.email) || profile.email).toLowerCase()
+  const fullName = clean(input.fullName) || profile.full_name || email
+  const phone = clean(input.phone)
+  const { data: existing } = await admin
+    .from('contacts')
+    .select('id')
+    .eq('company_id', company.id)
+    .ilike('email', email)
+    .limit(1)
+    .maybeSingle()
+
+  let contactId = existing?.id ? String(existing.id) : null
+  if (!contactId) {
+    const { data: contact, error } = await admin
+      .from('contacts')
+      .insert({
+        company_id: company.id,
+        full_name: fullName,
+        email,
+        phone: phone || null,
+        contact_type: 'primary',
+        kind: 'business',
+        notes: 'Placed a store order from a business account.',
+      })
+      .select('id')
+      .single()
+    if (error || !contact) return { error: 'Unable to place this order. Please try again.' }
+    contactId = String(contact.id)
+  }
+
+  return callPlaceDirectOrder('service', {
+    companyId: company.id,
+    contactId,
+    ownerId: company.owner_id ?? null,
+    surface: 'store',
+    campaignId: null,
+    lines: normalized.lines,
+  })
 }
 
 export async function placeShareDirectOrder(input: {

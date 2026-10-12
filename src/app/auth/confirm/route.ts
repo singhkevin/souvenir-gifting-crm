@@ -3,6 +3,20 @@ import { type EmailOtpType } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { RECOVERY_COOKIE_NAME } from '@/lib/auth/tab'
 
+type PendingCookie = {
+  name: string
+  value: string
+  options?: {
+    path?: string
+    sameSite?: 'lax' | 'strict' | 'none' | boolean
+    httpOnly?: boolean
+    maxAge?: number
+    secure?: boolean
+    domain?: string
+    expires?: Date
+  }
+}
+
 function otpType(value: string | null): EmailOtpType {
   if (value === 'recovery' || value === 'email' || value === 'magiclink') return value
   return 'recovery'
@@ -11,7 +25,7 @@ function otpType(value: string | null): EmailOtpType {
 function redirectWithCookies(
   request: NextRequest,
   path: string,
-  cookiesToCopy?: Array<{ name: string; value: string; options?: any }>,
+  cookiesToCopy?: PendingCookie[],
 ) {
   const url = new URL(path, request.nextUrl.origin)
   const response = NextResponse.redirect(url)
@@ -32,7 +46,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/reset-password', incoming.origin))
   }
 
-  const pendingCookies: Array<{ name: string; value: string; options?: any }> = []
+  const pendingCookies: PendingCookie[] = []
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -46,7 +60,7 @@ export async function GET(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
+        setAll(cookiesToSet: PendingCookie[]) {
           pendingCookies.length = 0
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value)
@@ -60,7 +74,10 @@ export async function GET(request: NextRequest) {
   if (tokenHash) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
     if (error) {
-      return NextResponse.redirect(new URL('/reset-password?error=invalid', incoming.origin))
+      return NextResponse.redirect(new URL(type === 'recovery' ? '/reset-password?error=invalid' : '/login?error=confirm', incoming.origin))
+    }
+    if (type !== 'recovery') {
+      return redirectWithCookies(request, '/login?confirmed=1&next=/business/dashboard', clearedRecoveryCookies(request, pendingCookies))
     }
     return redirectWithCookies(request, '/reset-password', cookiesForRedirect(request, pendingCookies))
   }
@@ -74,7 +91,7 @@ export async function GET(request: NextRequest) {
 
 function cookiesForRedirect(
   request: NextRequest,
-  pending: Array<{ name: string; value: string; options?: any }>,
+  pending: PendingCookie[],
 ) {
   if (pending.length) return pending
   return request.cookies.getAll()
@@ -84,4 +101,21 @@ function cookiesForRedirect(
       value: cookie.value,
       options: { path: '/', sameSite: 'lax' as const, httpOnly: true },
     }))
+}
+
+function clearedRecoveryCookies(
+  request: NextRequest,
+  pending: PendingCookie[],
+) {
+  const names = new Set<string>([
+    ...pending.map((cookie) => cookie.name),
+    ...request.cookies.getAll()
+      .filter((cookie) => cookie.name === RECOVERY_COOKIE_NAME || cookie.name.startsWith(`${RECOVERY_COOKIE_NAME}.`))
+      .map((cookie) => cookie.name),
+  ])
+  return [...names].map((name) => ({
+    name,
+    value: '',
+    options: { path: '/', sameSite: 'lax' as const, httpOnly: true, maxAge: 0 },
+  }))
 }

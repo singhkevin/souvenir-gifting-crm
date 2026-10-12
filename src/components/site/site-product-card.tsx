@@ -12,14 +12,22 @@ import { cn } from '@/lib/utils'
 export function SiteProductCard({
   product,
   featured = false,
+  href,
+  priceText,
+  caption,
+  hideQuickAdd = false,
 }: {
   product: PublicProduct
   featured?: boolean
   showBadge?: boolean
+  href?: string
+  priceText?: string
+  caption?: string
+  hideQuickAdd?: boolean
 }) {
   return (
     <Link
-      href={`/catalogue/${product.id}`}
+      href={href || `/catalogue/${product.id}`}
       className="group block text-inherit hover:text-inherit"
     >
       <div
@@ -38,7 +46,7 @@ export function SiteProductCard({
           className="absolute inset-0 h-full w-full bg-transparent"
           imgClassName="catalogue-product-img scale-[1.03]"
         />
-        {product.purchase.buy ? (
+        {product.purchase.buy && !hideQuickAdd ? (
           <AddToCartButton
             compact
             maxQuantity={product.purchase.maxBuyQty}
@@ -63,9 +71,9 @@ export function SiteProductCard({
         >
           {product.name}
         </h3>
-        <p className="text-[15px] font-semibold text-[#806A50]">{product.price == null ? 'Request quotation' : formatCurrency(product.price)}</p>
+        <p className="text-[15px] font-semibold text-[#806A50]">{priceText || (product.price == null ? 'Request quotation' : formatCurrency(product.price))}</p>
         <p className="text-[10px] uppercase tracking-[0.12em] text-[#5C6570]">
-          {product.purchase.buy ? 'Add to cart' : 'Request quote'}
+          {caption || (product.purchase.buy ? 'Add to cart' : 'Request quote')}
         </p>
       </div>
     </Link>

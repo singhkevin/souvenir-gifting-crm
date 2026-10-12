@@ -55,22 +55,24 @@ async function createPortalRequirementOnce(formData: {
   const admin = createAdminClient()
   if (!admin) return { error: 'Unable to save this requirement just now. Please try again shortly.' }
 
-  const { data: requirement, error } = await admin
-    .from('requirements')
-    .insert({
-      name: formData.name.trim(),
-      company_id: companyId,
-      owner_id: company?.owner_id ?? null,
-      purpose: formData.purpose,
-      description: formData.description,
-      budget: budget,
-      quantity: quantity,
-      deadline: formData.deadline || null,
-      delivery_city: formData.delivery_city || null,
-      status: 'active',
-    })
-    .select('id')
-    .single()
+  const baseRow = {
+    name: formData.name.trim(),
+    company_id: companyId,
+    owner_id: company?.owner_id ?? null,
+    purpose: formData.purpose,
+    description: formData.description,
+    budget: budget,
+    quantity: quantity,
+    deadline: formData.deadline || null,
+    delivery_city: formData.delivery_city || null,
+    status: 'active',
+  }
+  let inserted = await admin.from('requirements').insert({ ...baseRow, source: 'corporate_portal' }).select('id').single()
+  if (inserted.error && /source/i.test(inserted.error.message)) {
+    inserted = await admin.from('requirements').insert(baseRow).select('id').single()
+  }
+  const requirement = inserted.data
+  const error = inserted.error
 
   if (error) return { error: error.message }
 

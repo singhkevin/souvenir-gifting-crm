@@ -8,6 +8,7 @@ import { Menu, Search, User, X } from 'lucide-react'
 import { appName } from '@/lib/brand'
 import { BrandName } from '@/components/brand/brand-name'
 import { PwaInstallButton } from '@/components/pwa/pwa-install-button'
+import { AudienceSwitch } from '@/components/site/audience-switch'
 import { CartDrawer } from '@/components/site/cart-drawer'
 
 const PRIMARY_NAV = [
@@ -30,11 +31,15 @@ export function SiteHeader({
   workspaceLabel,
   suggestions = [],
   categoryLinks = [],
+  businessHref = '/business',
+  hideAudience = false,
 }: {
   workspaceHref?: string | null
   workspaceLabel?: string | null
   suggestions?: Suggestion[]
   categoryLinks?: { href: string; label: string }[]
+  businessHref?: string
+  hideAudience?: boolean
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -124,6 +129,7 @@ export function SiteHeader({
             <Link href="/home" className="font-serif text-lg tracking-[0.04em] text-[#241C12]">
               <BrandName />
             </Link>
+            <AudienceSwitch businessHref={businessHref} hide={hideAudience} />
             <PwaInstallButton variant="light" />
             {workspaceHref && workspaceLabel ? (
               <Link href={workspaceHref} className="inline-flex items-center gap-1.5 text-xs text-[#241C12]/85">
@@ -239,6 +245,9 @@ export function SiteHeader({
         {open ? (
           <div className="fixed inset-x-0 bottom-0 top-14 z-50 overflow-y-auto border-t border-[#E8E4DE] bg-white px-4 py-6 sm:top-16 lg:hidden">
             <nav className="mx-auto flex max-w-7xl flex-col gap-1">
+              <div className="pb-3">
+                <AudienceSwitch businessHref={businessHref} hide={hideAudience} />
+              </div>
               {PRIMARY_NAV.map((item) => (
                 <Link
                   key={item.href}

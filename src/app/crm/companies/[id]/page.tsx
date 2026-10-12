@@ -25,6 +25,7 @@ import {
   type CatalogueBrowserRow,
 } from '@/components/companies/company-catalogue-browser'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { BusinessAccountPanel } from '../business-account-panel'
 
 export default async function CompanyDetailPage({
   params,
@@ -233,6 +234,11 @@ export default async function CompanyDetailPage({
         </div>
       )}
 
+      <BusinessAccountPanel
+        company={company}
+        canAct={profile.role === 'admin' || (profile.role === 'sales' && company.owner_id === profile.id)}
+      />
+
       <div className="border-b border-gray-200">
         <nav className="flex space-x-6 overflow-x-auto">
           {tabs.map((t) => (
@@ -405,7 +411,7 @@ export default async function CompanyDetailPage({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-xl border border-gray-200 text-xs space-y-3">
             <h2 className="font-bold text-sm text-gray-900 pb-2 border-b">Company Information</h2>
-            <div><span className="font-semibold text-gray-500 w-24 inline-block">Owner:</span> {(company.owner as any)?.full_name || '?'}</div>
+            <div><span className="font-semibold text-gray-500 w-24 inline-block">Owner:</span> {(company.owner as { full_name?: string | null } | null)?.full_name || '?'}</div>
             <div><span className="font-semibold text-gray-500 w-24 inline-block">GST:</span> {company.gst_number || '?'}</div>
             <div>
               <span className="font-semibold text-gray-500 w-24 inline-block">Margin %:</span>{' '}

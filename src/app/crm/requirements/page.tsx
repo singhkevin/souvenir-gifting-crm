@@ -15,7 +15,7 @@ const STATUS_COLORS: Record<string, string> = {
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
-type ReqCompany = { id: string; name: string }
+type ReqCompany = { id: string; name: string; account_type?: string | null; business_verification?: string | null; gst_number?: string | null }
 type ReqOwner = { id: string; full_name: string | null }
 type RequirementRow = {
   id: string
@@ -25,28 +25,45 @@ type RequirementRow = {
   quantity?: number | null
   deadline?: string | null
   status?: string | null
+  source?: string | null
   company?: ReqCompany | ReqCompany[] | null
   owner?: ReqOwner | ReqOwner[] | null
 }
 
-export default async function RequirementsPage(props: { searchParams: Promise<{ status?: string }> }) {
+export default async function RequirementsPage(props: { searchParams: Promise<{ status?: string; source?: string }> }) {
   const profile = await requireStaff()
   const searchParams = await props.searchParams
   const statusFilter = searchParams.status || 'all'
+  const sourceFilter = searchParams.source || 'all'
   
   const supabase = await createClient()
 
   let query = supabase
     .from('requirements')
-    .select('*, company:companies(id, name), owner:profiles(id, full_name)')
+    .select('*, company:companies(id, name, account_type, business_verification, gst_number), owner:profiles(id, full_name)')
     .order('created_at', { ascending: false })
   query = applyOwnerScope(query, profile)
 
   if (statusFilter !== 'all') {
     query = query.eq('status', statusFilter)
   }
+  if (sourceFilter !== 'all') {
+    query = query.eq('source', sourceFilter)
+  }
 
-  const { data: requirements } = await query
+  const listed = await query
+  let requirements = listed.data
+  const requirementError = listed.error
+  if (requirementError && /account_type|business_verification|gst_number|source/i.test(requirementError.message)) {
+    let fallback = supabase
+      .from('requirements')
+      .select('*, company:companies(id, name), owner:profiles(id, full_name)')
+      .order('created_at', { ascending: false })
+    fallback = applyOwnerScope(fallback, profile)
+    if (statusFilter !== 'all') fallback = fallback.eq('status', statusFilter)
+    const retried = await fallback
+    requirements = retried.data
+  }
   const requirementRows = asRows<RequirementRow>(requirements)
   const requirementIds = requirementRows.map((row) => row.id)
   const lineResult = requirementIds.length
@@ -109,10 +126,21 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
         {statuses.map(status => (
           <Link 
             key={status}
-            href={`/crm/requirements?status=${status}`}
+            href={`/crm/requirements?status=${status}${sourceFilter !== 'all' ? `&source=${sourceFilter}` : ''}`}
             className={`px-4 py-2 text-sm font-medium capitalize ${statusFilter === status ? 'border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-700'}`}
           >
             {status}
+          </Link>
+        ))}
+      </div>
+      <div className="mb-4 flex flex-wrap gap-2 text-xs">
+        {['all', 'business_portal', 'corporate_portal', 'website', 'staff'].map((source) => (
+          <Link
+            key={source}
+            href={`/crm/requirements?status=${statusFilter}${source === 'all' ? '' : `&source=${source}`}`}
+            className={`rounded-full px-3 py-1 ${sourceFilter === source ? 'bg-[#806A50] text-white' : 'bg-gray-100 text-gray-600'}`}
+          >
+            {source === 'all' ? 'All sources' : source.replace('_', ' ')}
           </Link>
         ))}
       </div>
@@ -140,6 +168,9 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
                   <Link href={`/crm/requirements/${req.id}`} className="text-blue-600 hover:underline font-medium">
                     {req.title || req.name}
                   </Link>
+                  {req.source === 'business_portal' ? (
+                    <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-900">Business</span>
+                  ) : null}
                   {(linesByRequirement.get(req.id) || []).slice(0, 3).map((line, index) => (
                     <p key={`${req.id}-${index}`} className="mt-0.5 text-[11px] text-gray-500">
                       {line.label} × {line.quantity}
@@ -151,7 +182,15 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
                     </p>
                   )}
                 </td>
-                <td className="p-4">{company?.name || '-'}</td>
+                <td className="p-4">
+                  {company?.name || '-'}
+                  {company?.account_type === 'business' ? (
+                    <span className="mt-1 block text-[10px] uppercase text-amber-800">
+                      {company.business_verification || 'unverified'}
+                      {company.gst_number ? ` · ${company.gst_number}` : ''}
+                    </span>
+                  ) : null}
+                </td>
                 <td className="p-4">{owner?.full_name || '-'}</td>
                 <td className="p-4">{req.budget ? formatCurrency(req.budget) : '-'}</td>
                 <td className="p-4">{req.quantity || '-'}</td>

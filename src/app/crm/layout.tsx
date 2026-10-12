@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CrmFrame } from '@/components/layout/crm-frame';
+import { isBusinessRole, isClientRole, isStaffRole } from '@/lib/roles'
 import type { Role } from '@/lib/types';
 import { getRequestTabId } from '@/lib/auth/tab-server';
 import { TabSessionRevive } from '@/components/auth/tab-session-revive';
@@ -33,8 +34,16 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
     redirect('/login');
   }
 
-  if (profile.role === 'client_admin' || profile.role === 'client_user') {
+  if (isBusinessRole(profile.role)) {
+    redirect('/business/dashboard');
+  }
+
+  if (isClientRole(profile.role)) {
     redirect('/portal/catalogue');
+  }
+
+  if (!isStaffRole(profile.role)) {
+    redirect('/login');
   }
 
   const displayName = profile.full_name || user.email?.split('@')[0] || 'User';

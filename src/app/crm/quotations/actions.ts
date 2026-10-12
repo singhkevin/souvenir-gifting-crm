@@ -4,6 +4,10 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
+import { requestOrigin } from '@/lib/auth/request-origin'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { businessQuoteSentEmailHtml } from '@/lib/email/business'
+import { sendEmail } from '@/lib/email/resend'
 import { isUuid } from '@/lib/utils'
 import { roundMoney } from '@/lib/pricing/resolve'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
@@ -80,6 +84,9 @@ export async function updateQuotationStatus(quotationId: string, newStatus: stri
   revalidatePath('/crm/quotations')
   if (quote.requirement_id) {
     revalidatePath(`/crm/requirements/${quote.requirement_id}`)
+  }
+  if (current === 'draft' && newStatus === 'sent') {
+    await notifyBusinessQuoteSent(quotationId)
   }
   return { success: true }
 }
@@ -170,4 +177,80 @@ export async function duplicateQuotation(quotationId: string, idempotencyKey?: s
     if (error) return { error: error.message }
     redirect(`/crm/quotations/${data}`)
   })
+}
+
+export async function createQuotationRevision(quotationId: string) {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!['admin', 'sales', 'management'].includes(profile.role)) {
+    return { error: 'Not permitted to revise quotations' }
+  }
+  const supabase = await createClient()
+  const existing = await supabase
+    .from('quotations')
+    .select('id')
+    .eq('revision_of', quotationId)
+    .eq('status', 'draft')
+    .maybeSingle()
+  if (existing.data?.id) redirect(`/crm/quotations/${existing.data.id}`)
+  if (existing.error && /revision_of/i.test(existing.error.message)) {
+    return { error: 'Apply the 20261012 business portal migrations, then retry.' }
+  }
+
+  const { data, error } = await supabase.rpc('duplicate_quotation', { p_quotation_id: quotationId })
+  if (error || !data) return { error: error?.message || 'Unable to duplicate this quotation' }
+  const linked = await supabase.from('quotations').update({ revision_of: quotationId }).eq('id', data)
+  if (linked.error) return { error: linked.error.message }
+  redirect(`/crm/quotations/${data}`)
+}
+
+async function notifyBusinessQuoteSent(quotationId: string) {
+  const admin = createAdminClient()
+  if (!admin) return
+  const { data: quote, error } = await admin
+    .from('quotations')
+    .select('id, quotation_number, company_id, contact_id, revision_of')
+    .eq('id', quotationId)
+    .maybeSingle()
+  if (error || !quote?.company_id) return
+
+  const { data: company } = await admin.from('companies').select('name, account_type').eq('id', quote.company_id).maybeSingle()
+  if (company?.account_type !== 'business') return
+
+  if (quote.revision_of) {
+    await admin
+      .from('quotations')
+      .update({ status: 'rejected', client_comment: `Superseded by ${quote.quotation_number}` })
+      .eq('id', quote.revision_of)
+      .in('status', ['sent', 'viewed', 'draft'])
+  }
+
+  const origin = await requestOrigin()
+  const quoteUrl = `${origin}/business/quotes/${quotationId}`
+  if (quote.contact_id) {
+    const { data: contact } = await admin.from('contacts').select('email').eq('id', quote.contact_id).maybeSingle()
+    if (contact?.email) {
+      await sendEmail({
+        to: contact.email,
+        subject: `Quotation ${quote.quotation_number || ''}`.trim(),
+        html: businessQuoteSentEmailHtml({ number: quote.quotation_number || 'Quotation', quoteUrl }),
+      })
+    }
+  }
+
+  const { data: users } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('company_id', quote.company_id)
+    .eq('role', 'business_user')
+    .eq('is_active', true)
+  for (const user of users || []) {
+    await admin.from('notifications').insert({
+      user_id: user.id,
+      audience: 'client',
+      title: 'Quotation ready',
+      body: `${quote.quotation_number || 'A quotation'} is ready to review.`,
+      link: `/business/quotes/${quotationId}`,
+    })
+  }
 }
