@@ -6,6 +6,8 @@ import { loadSharedCatalog, sharePath, type SharedCatalogProduct } from '@/lib/c
 import { getProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { companyCanUseCatalog, resolveShareCampaignId } from '@/lib/catalogs/rfq'
+import { withVisibleKitTotals } from '@/lib/catalogs/visibility'
+import { displayableLineIds, shareCatalogVisibilityScope } from '@/lib/catalogs/visibility-data'
 import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
 import { CatalogBuyPanel } from '@/components/catalogs/CatalogBuyPanel'
 import { purchaseOfferFromProduct } from '@/lib/catalogue/purchase-path'
@@ -52,7 +54,16 @@ export default async function SharedCatalogPage({ params }: PageProps) {
   const campaignId = await resolveShareCampaignId(token)
   const viewerCompanyId = viewerIsClient ? ((await (await createClient()).rpc('client_company_id')).data as string | null) : null
   const pricingCompanyId = campaignId ? await sharePricingCompanyId(token, campaignId, viewerCompanyId) : null
-  const products = await withCompanyPrices(catalog.products || [], pricingCompanyId)
+  const scope = await shareCatalogVisibilityScope({
+    token,
+    viewerIsClient,
+    viewerCompanyId,
+  })
+  const visibleIds = campaignId ? await displayableLineIds(campaignId, scope) : null
+  const sharedProducts = visibleIds
+    ? (catalog.products || []).filter((product) => visibleIds.has(product.id))
+    : (catalog.products || [])
+  const products = withVisibleKitTotals(await withCompanyPrices(sharedProducts, pricingCompanyId))
   const linesByKit = new Map<string, SharedCatalogProduct[]>()
   for (const product of products) {
     if (!product.pack_kit_id) continue

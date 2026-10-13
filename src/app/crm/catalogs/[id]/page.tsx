@@ -21,6 +21,7 @@ import { shareLinkIsExpired } from '@/lib/catalogs/share-link'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { defaultCatalogCompanyId, offeringPricesForCompany } from '@/lib/catalogs/pricing'
+import { hiddenCatalogItemsByCompany } from '@/lib/catalogs/visibility-data'
 
 export default async function CatalogDetailPage({
   params,
@@ -73,6 +74,16 @@ export default async function CatalogDetailPage({
       return { companyId: row.company_id as string, name: rowCompany?.name || 'Company' }
     })
   const companyOptions = (companies || []) as { id: string; name: string }[]
+  const hiddenByCompany = await hiddenCatalogItemsByCompany(
+    companyOptions.map((company) => company.id),
+    (offerings || []).map((row) => {
+      const product = Array.isArray(row.product) ? row.product[0] : row.product
+      return {
+        productId: row.product_id as string,
+        name: (row.display_name as string | null) || product?.name || product?.sku || 'Item',
+      }
+    }),
+  )
   const defaultCompanyId = (await defaultCatalogCompanyId(id)) || assigned[0]?.companyId || null
   const previewCompanyId =
     preview && assigned.some((row) => row.companyId === preview) ? preview : defaultCompanyId
@@ -175,6 +186,7 @@ export default async function CatalogDetailPage({
         assigned={assigned}
         companies={companyOptions}
         defaultCompanyName={assigned.find((row) => row.companyId === defaultCompanyId)?.name || company?.name || null}
+        hiddenByCompany={hiddenByCompany}
       />
       <CatalogSharePanel
         key={catalog.id}

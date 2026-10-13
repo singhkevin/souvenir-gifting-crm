@@ -18,6 +18,8 @@ import {
   resolveShareCampaignId,
   type ExpandedRfqLine,
 } from '@/lib/catalogs/rfq'
+import { HIDDEN_CATALOG_LINE_ERROR, selectionIncludesHiddenLine } from '@/lib/catalogs/visibility'
+import { displayableLineIds, shareCatalogVisibilityScope } from '@/lib/catalogs/visibility-data'
 
 type ShareRfqInput = {
   idempotencyKey?: string
@@ -61,23 +63,35 @@ async function submitShareCatalogRfqOnce(input: ShareRfqInput): Promise<{ error?
     return { error: 'Staff preview cannot submit a request for quotation' }
   }
 
+  const supabase = await createClient()
+  const viewerCompanyId = isClient
+    ? ((await supabase.rpc('client_company_id')).data as string | null)
+    : null
+  if (isClient && !viewerCompanyId) return { error: 'Company not found' }
+
   const { data: catalog } = await admin.from('campaigns').select('id, name').eq('id', campaignId).maybeSingle()
   if (!catalog?.name) return { error: 'This catalog link is unavailable' }
 
   const rows = await loadPublishedCatalogLines(admin, campaignId)
-  const expanded = expandCatalogRfqLines(rows, selected)
+  const scope = await shareCatalogVisibilityScope({
+    token: input.token,
+    viewerIsClient: Boolean(isClient),
+    viewerCompanyId,
+  })
+  const visibleIds = await displayableLineIds(campaignId, scope)
+  if (!visibleIds) return { error: 'Unable to send this request just now. Please try again shortly.' }
+  const visibleRows = rows.filter((row) => visibleIds.has(row.id))
+  if (selectionIncludesHiddenLine(rows, visibleRows, selected)) return { error: HIDDEN_CATALOG_LINE_ERROR }
+  const expanded = expandCatalogRfqLines(visibleRows, selected)
   if (expanded.error || !expanded.lines) return { error: expanded.error || 'Select at least one product' }
 
-  if (isClient) {
-    const supabase = await createClient()
-    const { data: companyId } = await supabase.rpc('client_company_id')
-    if (!companyId) return { error: 'Company not found' }
-    const allowed = await companyCanUseCatalog(supabase, campaignId, companyId)
+  if (isClient && viewerCompanyId) {
+    const allowed = await companyCanUseCatalog(supabase, campaignId, viewerCompanyId)
     if (!allowed) return { error: 'This catalog is not assigned to your company' }
 
-    const { data: company } = await supabase.from('companies').select('owner_id').eq('id', companyId).maybeSingle()
+    const { data: company } = await supabase.from('companies').select('owner_id').eq('id', viewerCompanyId).maybeSingle()
     const saved = await insertCatalogRequirement(admin, {
-      companyId,
+      companyId: viewerCompanyId,
       ownerId: company?.owner_id ?? null,
       campaignId,
       catalogName: catalog.name,

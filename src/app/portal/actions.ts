@@ -15,6 +15,8 @@ import {
   parseRfqSelection,
   rfqSchemaHint,
 } from '@/lib/catalogs/rfq'
+import { HIDDEN_CATALOG_LINE_ERROR, selectionIncludesHiddenLine } from '@/lib/catalogs/visibility'
+import { displayableLineIds } from '@/lib/catalogs/visibility-data'
 
 async function createPortalRequirementOnce(formData: {
   name: string
@@ -153,7 +155,11 @@ async function requestCatalogQuotationOnce(input: {
   ])
   if (!catalog?.name) return { error: 'Catalog not found' }
 
-  const expanded = expandCatalogRfqLines(rows, selected)
+  const visibleIds = await displayableLineIds(input.catalogId, { kind: 'company', companyId })
+  if (!visibleIds) return { error: 'Unable to save this requirement just now. Please try again shortly.' }
+  const visibleRows = rows.filter((row) => visibleIds.has(row.id))
+  if (selectionIncludesHiddenLine(rows, visibleRows, selected)) return { error: HIDDEN_CATALOG_LINE_ERROR }
+  const expanded = expandCatalogRfqLines(visibleRows, selected)
   if (expanded.error || !expanded.lines) return { error: expanded.error || 'Select at least one product' }
 
   const admin = createAdminClient()
