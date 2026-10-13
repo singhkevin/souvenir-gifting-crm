@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatCurrency, formatDate, asRows, oneRelation } from '@/lib/utils'
 import { ORDER_LIFECYCLE, ORDER_STATUS_LABELS } from '@/lib/order-workflow'
+import { isOrderSource, ORDER_SOURCE_LABELS, ORDER_SOURCES } from '@/lib/orders/source'
+import { isPaymentFilter, newestInvoiceStatus, PAYMENT_FILTER_LABELS, PAYMENT_FILTERS, paymentFilterKey, paymentLabel } from '@/lib/orders/payment'
 
 const STATUS_COLORS: Record<string, string> = {
   created: 'bg-blue-100 text-blue-800',
@@ -26,15 +28,27 @@ type OrderRow = {
   order_number: string | null
   order_value: number | null
   status: string
+  source?: string | null
   expected_delivery_date: string | null
   company?: OrderCompany | OrderCompany[] | null
   owner?: OrderOwner | OrderOwner[] | null
 }
 
-export default async function OrdersPage(props: { searchParams: Promise<{ status?: string }> }) {
+function ordersHref(status: string, source: string, payment: string) {
+  const params = new URLSearchParams()
+  if (status && status !== 'all') params.set('status', status)
+  if (source && source !== 'all') params.set('source', source)
+  if (payment && payment !== 'all') params.set('payment', payment)
+  const query = params.toString()
+  return query ? `/crm/orders?${query}` : '/crm/orders'
+}
+
+export default async function OrdersPage(props: { searchParams: Promise<{ status?: string; source?: string; payment?: string }> }) {
   const profile = await requireStaff()
   const searchParams = await props.searchParams
   const statusFilter = searchParams.status || 'all'
+  const sourceFilter = isOrderSource(searchParams.source) ? searchParams.source : 'all'
+  const paymentFilter = isPaymentFilter(searchParams.payment) ? searchParams.payment : 'all'
   
   const supabase = await createClient()
 
@@ -47,10 +61,34 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
   if (statusFilter !== 'all') {
     query = query.eq('status', statusFilter)
   }
+  if (sourceFilter !== 'all') {
+    query = query.eq('source', sourceFilter)
+  }
 
   const { data: orders, error } = await query
   if (error) console.error('Orders list query failed', error.message)
-  const orderRows = asRows<OrderRow>(orders)
+  let orderRows = asRows<OrderRow>(orders)
+  const invoiceByOrder = new Map<string, string | null>()
+  if (orderRows.length > 0) {
+    const { data: invoices } = await supabase
+      .from('invoices')
+      .select('order_id, status, created_at')
+      .in('order_id', orderRows.map((order) => order.id))
+    const grouped = new Map<string, { status?: string | null; created_at?: string | null }[]>()
+    for (const invoice of invoices || []) {
+      const orderId = String(invoice.order_id || '')
+      if (!orderId) continue
+      const list = grouped.get(orderId) || []
+      list.push(invoice)
+      grouped.set(orderId, list)
+    }
+    for (const order of orderRows) {
+      invoiceByOrder.set(order.id, newestInvoiceStatus(grouped.get(order.id)))
+    }
+  }
+  if (paymentFilter !== 'all') {
+    orderRows = orderRows.filter((order) => paymentFilterKey(invoiceByOrder.get(order.id)) === paymentFilter)
+  }
 
   const statuses = ['all', ...ORDER_LIFECYCLE, 'cancelled']
 
@@ -81,6 +119,26 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
                 label: status === 'all' ? 'All' : (ORDER_STATUS_LABELS[status] || status),
               })),
             },
+            {
+              key: 'source',
+              label: 'Source',
+              value: sourceFilter,
+              emptyLabel: 'All',
+              options: [
+                { value: 'all', label: 'All' },
+                ...ORDER_SOURCES.map((source) => ({ value: source, label: ORDER_SOURCE_LABELS[source] })),
+              ],
+            },
+            {
+              key: 'payment',
+              label: 'Payment',
+              value: paymentFilter,
+              emptyLabel: 'All',
+              options: [
+                { value: 'all', label: 'All' },
+                ...PAYMENT_FILTERS.map((payment) => ({ value: payment, label: PAYMENT_FILTER_LABELS[payment] })),
+              ],
+            },
           ]}
         />
       </div>
@@ -88,10 +146,25 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
         {statuses.map(status => (
           <Link 
             key={status}
-            href={`/crm/orders?status=${status}`}
+            href={ordersHref(status, sourceFilter, paymentFilter)}
             className={`shrink-0 px-4 py-2.5 text-sm font-medium capitalize ${statusFilter === status ? 'border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-700'}`}
           >
             {status === 'all' ? 'All' : (ORDER_STATUS_LABELS[status] || status)}
+          </Link>
+        ))}
+      </div>
+      <div className="mb-6 hidden flex-wrap gap-2 md:flex">
+        <Link href={ordersHref(statusFilter, 'all', paymentFilter)} className={`rounded-full px-3 py-1 text-xs font-medium ${sourceFilter === 'all' ? 'bg-[#806A50] text-white' : 'bg-white text-gray-600 border'}`}>All sources</Link>
+        {ORDER_SOURCES.map((source) => (
+          <Link key={source} href={ordersHref(statusFilter, source, paymentFilter)} className={`rounded-full px-3 py-1 text-xs font-medium ${sourceFilter === source ? 'bg-[#806A50] text-white' : 'bg-white text-gray-600 border'}`}>
+            {ORDER_SOURCE_LABELS[source]}
+          </Link>
+        ))}
+        <span className="mx-1 text-gray-300">|</span>
+        <Link href={ordersHref(statusFilter, sourceFilter, 'all')} className={`rounded-full px-3 py-1 text-xs font-medium ${paymentFilter === 'all' ? 'bg-[#1C1917] text-white' : 'bg-white text-gray-600 border'}`}>All payments</Link>
+        {PAYMENT_FILTERS.map((payment) => (
+          <Link key={payment} href={ordersHref(statusFilter, sourceFilter, payment)} className={`rounded-full px-3 py-1 text-xs font-medium ${paymentFilter === payment ? 'bg-[#1C1917] text-white' : 'bg-white text-gray-600 border'}`}>
+            {PAYMENT_FILTER_LABELS[payment]}
           </Link>
         ))}
       </div>
@@ -102,6 +175,8 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
             <tr>
               <th className="p-4 font-medium text-gray-500">Order #</th>
               <th className="p-4 font-medium text-gray-500">Company</th>
+              <th className="p-4 font-medium text-gray-500">Source</th>
+              <th className="p-4 font-medium text-gray-500">Payment</th>
               <th className="p-4 font-medium text-gray-500">Value</th>
               <th className="p-4 font-medium text-gray-500">Status</th>
               <th className="p-4 font-medium text-gray-500">Expected Delivery</th>
@@ -124,6 +199,12 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
                   <td className="p-4">
                     {company?.name || '-'}
                   </td>
+                  <td className="p-4">
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-[#FAF7F2] text-[#624B32]">
+                      {isOrderSource(order.source) ? ORDER_SOURCE_LABELS[order.source] : 'CRM'}
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm">{paymentLabel(invoiceByOrder.get(order.id))}</td>
                   <td className="p-4">{formatCurrency(order.order_value || 0)}</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[order.status] || 'bg-gray-100 text-gray-800'}`}>
@@ -142,7 +223,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
             })}
             {orderRows.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-500">No orders found.</td>
+                <td colSpan={8} className="p-8 text-center text-gray-500">No orders found.</td>
               </tr>
             )}
           </tbody>

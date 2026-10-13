@@ -2,7 +2,8 @@ import type { MetadataRoute } from 'next'
 import { headers } from 'next/headers'
 import { publicSiteUrl } from '@/lib/brand'
 import { domainSplitEnabled } from '@/lib/domain-flag'
-import { portalRootOrigin, resolveHost, storeOrigin } from '@/lib/portal-host'
+import { portalRootOrigin, resolveHost } from '@/lib/portal-host'
+import { storePublicOrigin } from '@/lib/site/store-public-origin'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const resolved = resolveHost(host)
   if (resolved.kind === 'portal-root') return entries(portalRootOrigin(host), ['/'])
   if (resolved.kind === 'admin' || resolved.kind === 'tenant') return []
-  if (resolved.kind === 'store') return entries(storeOrigin(host), [...PUBLIC_PATHS, '/business'])
+  if (resolved.kind === 'store') return entries(storePublicOrigin(host), [...PUBLIC_PATHS, '/business'])
   return entries(publicSiteUrl(), PUBLIC_PATHS)
 }

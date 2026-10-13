@@ -13,6 +13,8 @@ import {
   normalizeCheckout,
   type CheckoutLineInput,
 } from '@/lib/catalogue/purchase-path'
+import { notifyOrderPlaced } from '@/lib/email/order-emails'
+import type { OrderSource } from '@/lib/orders/source'
 
 export type DirectOrderResult = {
   error?: string
@@ -50,6 +52,7 @@ async function callPlaceDirectOrder(
     surface: 'store' | 'portal' | 'microsite' | 'catalog'
     campaignId: string | null
     lines: { productId: string; quantity: number }[]
+    source?: OrderSource | null
   },
 ): Promise<DirectOrderResult> {
   const supabase = caller === 'service' ? createAdminClient() : await createClient()
@@ -62,6 +65,7 @@ async function callPlaceDirectOrder(
     p_surface: args.surface,
     p_campaign_id: args.campaignId,
     p_lines: args.lines.map((line) => ({ product_id: line.productId, quantity: line.quantity })),
+    p_source: args.source ?? null,
   })
 
   if (error || !data) {
@@ -70,6 +74,7 @@ async function callPlaceDirectOrder(
 
   const orderId = String(data)
   revalidateOrders(orderId)
+  await notifyOrderPlaced(orderId)
   return { success: true, orderId, orderNumber: (await orderNumber(orderId)) || undefined }
 }
 
@@ -102,6 +107,7 @@ export async function placeClientDirectOrder(input: {
 
   const tenant = readTenantFromHeaders(await headers())
   const surface = catalogId ? 'catalog' : tenant ? 'microsite' : 'portal'
+  const source: OrderSource = surface === 'microsite' ? 'microsite' : 'portal'
 
   const [{ data: company }, { data: contact }] = await Promise.all([
     supabase.from('companies').select('owner_id').eq('id', companyId).maybeSingle(),
@@ -137,6 +143,7 @@ export async function placeClientDirectOrder(input: {
     surface,
     campaignId: catalogId,
     lines: normalized.lines,
+    source,
   })
 }
 
@@ -215,6 +222,7 @@ export async function placeStoreDirectOrder(input: {
     surface: 'store',
     campaignId: null,
     lines: normalized.lines,
+    source: 'store',
   })
   if (placed.error) {
     await admin.from('contacts').delete().eq('id', contact.id)
@@ -283,6 +291,7 @@ async function placeSignedInBusinessOrder(
     surface: 'store',
     campaignId: null,
     lines: normalized.lines,
+    source: 'business',
   })
 }
 

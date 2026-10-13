@@ -10,6 +10,7 @@ import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 import { withIdempotency } from '@/lib/idempotency'
+import { canonicalCategoryLabel, findCategory } from '@/lib/products/category-plan'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const VISIBILITY_ROLES = ['admin'] as const
@@ -850,4 +851,33 @@ export async function deleteSupplierOffer(formData: FormData) {
   if (error) return { error: supplierSchemaHint(error.message) }
   revalidatePath(`/crm/products/${productId}`)
   return { success: true }
+}
+
+export async function createCategory(name: string): Promise<{ id: string; name: string; created: boolean } | { error: string }> {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!CATALOGUE_ROLES.includes(profile.role as CatalogueRole)) {
+    return { error: 'Not permitted to create categories' }
+  }
+  const label = canonicalCategoryLabel(name)
+  if (!label) return { error: 'Enter a category name' }
+
+  const supabase = await createClient()
+  const { data: rows, error: loadError } = await supabase.from('categories').select('id, name')
+  if (loadError) return { error: loadError.message }
+  const existing = findCategory(rows || [], label)
+  if (existing) return { id: existing.id, name: existing.name, created: false }
+
+  const { data, error } = await supabase.from('categories').insert({ name: label }).select('id, name').single()
+  if (error) {
+    if (error.code === '23505') {
+      const { data: again } = await supabase.from('categories').select('id, name')
+      const found = findCategory(again || [], label)
+      if (found) return { id: found.id, name: found.name, created: false }
+    }
+    return { error: error.message }
+  }
+  revalidatePath('/crm/products')
+  revalidatePath('/crm/products/new')
+  return { id: data.id, name: data.name, created: true }
 }

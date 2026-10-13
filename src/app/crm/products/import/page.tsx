@@ -4,7 +4,7 @@ import { requireStaff } from '@/lib/auth'
 import { CatalogueCsvImporter } from '../CatalogueCsvImporter'
 
 export default async function ImportProductsPage() {
-  await requireStaff(['admin', 'sales'])
+  const profile = await requireStaff(['admin', 'sales'])
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -18,7 +18,7 @@ export default async function ImportProductsPage() {
           </Link>
         </p>
       </div>
-      <CatalogueCsvImporter />
+      <CatalogueCsvImporter defaultCreateCategories={profile.role === 'admin'} />
     </div>
   )
 }

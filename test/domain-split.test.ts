@@ -206,7 +206,11 @@ test('middleware allowlists and path-preserving redirects, flag on and off', () 
     assert.equal(decideHostRoute(store, '/catalogue/1').action, 'continue')
     assert.equal(decideHostRoute(store, '/business/quote').action, 'continue')
     assert.equal(decideHostRoute(store, '/login').action, 'continue')
+    assert.equal(decideHostRoute(store, '/forgot-password').action, 'continue')
+    assert.equal(decideHostRoute(store, '/reset-password').action, 'continue')
     assert.equal(decideHostRoute(store, '/signup').action, 'continue')
+    assert.equal(decideHostRoute(store, '/orders/SO-1001', '?t=token').action, 'continue')
+    assert.equal(decideHostRoute(store, '/orders/abc').action, 'redirect')
     assert.equal(decideHostRoute(store, '/auth/confirm').action, 'continue')
     assert.deepEqual(decideHostRoute(store, '/crm/orders', '?x=1'), {
       action: 'redirect',

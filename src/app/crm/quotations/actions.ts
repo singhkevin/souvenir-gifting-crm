@@ -113,6 +113,8 @@ export async function convertToOrder(quotationId: string) {
     next: { quotation_id: quotationId },
     userId: profile.id,
   })
+  const { notifyOrderPlaced } = await import('@/lib/email/order-emails')
+  await notifyOrderPlaced(String(data), { includeStaff: false })
   redirect(`/crm/orders/${data}`)
 }
 export async function applyQuotationItemPrice(formData: FormData) {

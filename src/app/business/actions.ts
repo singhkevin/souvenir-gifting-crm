@@ -157,6 +157,9 @@ async function registerBusinessOnce(formData: FormData) {
     return { error: 'We could not send the confirmation email. Please try again shortly.' }
   }
 
+  const { businessPendingVerificationEmail } = await import('@/lib/email/order-emails')
+  await businessPendingVerificationEmail(String(companyId), legalName)
+
   return { success: true, message: GENERIC_REGISTER }
 }
 

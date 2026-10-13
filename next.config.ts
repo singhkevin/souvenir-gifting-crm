@@ -47,7 +47,7 @@ const nextConfig: NextConfig = {
       { source: '/quotations', destination: '/crm/quotations' },
       { source: '/quotations/:path*', destination: '/crm/quotations/:path*' },
       { source: '/orders', destination: '/crm/orders' },
-      { source: '/orders/:path*', destination: '/crm/orders/:path*' },
+      { source: '/orders/:id([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})', destination: '/crm/orders/:id' },
       { source: '/suppliers', destination: '/crm/suppliers' },
       { source: '/printing-vendors', destination: '/crm/printing-vendors' },
       { source: '/courier-partners', destination: '/crm/courier-partners' },

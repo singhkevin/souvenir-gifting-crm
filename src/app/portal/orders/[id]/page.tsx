@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
+import { paymentLabel } from '@/lib/orders/payment'
 import { Truck } from 'lucide-react'
 import { ProductImage } from '@/components/ui/product-image'
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
@@ -36,7 +37,7 @@ export default async function PortalOrderDetailPage({
   const { data: order } = await supabase
     .from('orders')
     .select(`
-      id, order_number, status, order_value, expected_delivery_date, created_at, tracking_number, company_id, campaign_id, quotation_id, requirement_id,
+      id, order_number, status, order_value, expected_delivery_date, dispatch_date, created_at, tracking_number, company_id, campaign_id, quotation_id, requirement_id,
       client_approval_status, client_approval_note, client_approval_at,
       campaign:campaign_id(name, employee_quantity),
       courier_partner:courier_partners(name),
@@ -61,6 +62,13 @@ export default async function PortalOrderDetailPage({
     ? mockupQuery.or(`order_id.eq.${id},requirement_id.eq.${requirementId}`)
     : mockupQuery.eq('order_id', id)
   const { data: mockups } = await mockupQuery
+  const { data: invoice } = await supabase
+    .from('invoices')
+    .select('status, created_at')
+    .eq('order_id', id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
   const showMockups = (mockups || []).length > 0 || order.status === 'mockup' || order.status === 'client_approval'
 
   const campaign = oneRelation(order.campaign)
@@ -183,16 +191,20 @@ export default async function PortalOrderDetailPage({
           </div>
         )}
 
-        {order.tracking_number && (
-          <div className="px-6 pb-4">
-            <div className="bg-emerald-50 p-4 rounded-xl flex items-center gap-3 text-xs">
+        <div className="px-6 pb-4 space-y-2 text-xs text-gray-600">
+          <p>Invoice: {paymentLabel(invoice?.status)}</p>
+          {order.dispatch_date ? <p>Dispatched {formatDate(order.dispatch_date)}</p> : null}
+          {order.tracking_number ? (
+            <div className="bg-emerald-50 p-4 rounded-xl flex items-center gap-3 text-xs text-gray-800">
               <Truck size={16} />
               <div>
                 Dispatched via {courier?.name || 'courier'} · AWB {order.tracking_number}
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <p>Tracking: not available yet</p>
+          )}
+        </div>
 
         <div className="p-6">
           <h3 className="text-xs font-bold uppercase mb-3">Items</h3>

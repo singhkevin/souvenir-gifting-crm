@@ -6,6 +6,7 @@ import { parseCsv, splitCompanyNames } from '@/lib/csv'
 import { ignoredCostWarning, parseOptionalNumber, parseProductStatus, sideEffectWarning, type ImportNotice } from '@/lib/products/csv-import'
 import { revalidatePath } from 'next/cache'
 import { PRODUCT_CATEGORY_ALIASES } from '@/lib/products/categories'
+import { assignCategoryId, planMissingCategories, previewImportCategories, type CategoryRef } from '@/lib/products/category-plan'
 import { directOrderSchemaHint } from '@/lib/catalogue/purchase-path'
 import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
@@ -54,6 +55,51 @@ function parseAccess(raw: string, companyNames: string[], isAdmin: boolean): 'al
   return 'all'
 }
 
+export type CataloguePreview = {
+  categories: string[]
+  failures: { row: number; sku: string; reason: string }[]
+}
+
+export async function previewCatalogueCsv(formData: FormData): Promise<CataloguePreview | { error: string }> {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!CATALOGUE_ROLES.includes(profile.role as (typeof CATALOGUE_ROLES)[number])) {
+    return { error: 'Not permitted to import products' }
+  }
+  const file = formData.get('csv')
+  if (!(file instanceof File) || file.size === 0) return { error: 'Choose a CSV file to import' }
+  let mapping: Record<string, string> = {}
+  try {
+    mapping = JSON.parse(String(formData.get('mapping') || '{}')) as Record<string, string>
+  } catch {
+    return { error: 'Column mapping is invalid' }
+  }
+  const table = parseCsv(await file.text())
+  const headerIndex = new Map(table.headers.map((header, index) => [header, index]))
+  const rows = table.rows.map((cells, index) => {
+    const row: Record<string, string> = {}
+    for (const [field, header] of Object.entries(mapping)) {
+      if (!header) continue
+      const idx = headerIndex.get(header)
+      row[field] = idx === undefined ? '' : (cells[idx] || '')
+    }
+    return {
+      row: index + 2,
+      sku: (row.sku || '').trim().toUpperCase(),
+      name: (row.name || '').trim(),
+      category: (row.category || '').trim(),
+      price: (row.price || '').trim(),
+    }
+  })
+  const supabase = await createClient()
+  const { data: categories } = await supabase.from('categories').select('id, name')
+  return previewImportCategories({
+    rows,
+    existing: (categories || []) as CategoryRef[],
+    createMissing: formData.get('createMissingCategories') === '1',
+  })
+}
+
 export async function importCatalogueCsv(formData: FormData): Promise<ImportSummary | { error: string }> {
   return withIdempotency('crm.importCatalogueCsv', formData, () => importCatalogueCsvOnce(formData))
 }
@@ -100,7 +146,24 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     supabase.from('products').select('sku'),
   ])
 
-  const categoryByName = new Map((categories || []).map((c) => [c.name.trim().toLowerCase(), c.id]))
+  let categoryRows: CategoryRef[] = (categories || []).map((category) => ({ id: category.id, name: category.name }))
+  if (formData.get('createMissingCategories') === '1') {
+    const missing = planMissingCategories(categoryRows, mappedRows.map((row) => cell(row, 'category')).filter(Boolean))
+    for (const name of missing) {
+      const { data, error: insertError } = await supabase.from('categories').insert({ name }).select('id, name').single()
+      if (data?.id) {
+        categoryRows = [...categoryRows, { id: data.id, name: data.name }]
+        continue
+      }
+      if (insertError?.code === '23505') {
+        const { data: again } = await supabase.from('categories').select('id, name')
+        categoryRows = (again || []) as CategoryRef[]
+        continue
+      }
+      if (insertError) return { error: insertError.message }
+    }
+  }
+  const categoryByName = new Map(categoryRows.map((category) => [category.name.trim().toLowerCase(), category.id]))
   for (const [alias, canonical] of Object.entries(PRODUCT_CATEGORY_ALIASES)) {
     const id = categoryByName.get(canonical.toLowerCase())
     if (id && !categoryByName.has(alias)) categoryByName.set(alias, id)
@@ -189,7 +252,7 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
 
     const categoryName = cell(row, 'category')
     const supplierName = cell(row, 'supplier')
-    const category_id = categoryName ? categoryByName.get(categoryName.toLowerCase()) || null : null
+    const category_id = categoryName ? (assignCategoryId(categoryRows, categoryName) || categoryByName.get(categoryName.toLowerCase()) || null) : null
     if (categoryName && !category_id) {
       failures.push({ row: rowNumber, sku, reason: `Category not found: ${categoryName}` })
       return

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
+import { newestInvoiceStatus, paymentLabel } from '@/lib/orders/payment'
 
 export default async function PortalOrdersPage() {
   const supabase = await createClient()
@@ -9,7 +10,7 @@ export default async function PortalOrdersPage() {
 
   const { data: orders } = await supabase
     .from('orders')
-    .select('id, order_number, created_at, expected_delivery_date, order_value, status, tracking_number, campaign:campaign_id(name, employee_quantity)')
+    .select('id, order_number, created_at, expected_delivery_date, order_value, status, tracking_number, dispatch_date, campaign:campaign_id(name, employee_quantity), invoices(status, created_at)')
     .eq('company_id', companyId)
     .order('created_at', { ascending: false })
 
@@ -44,6 +45,7 @@ export default async function PortalOrdersPage() {
                   {order.tracking_number && (
                     <p className="mt-0.5 text-[11px] text-gray-500">AWB {order.tracking_number}</p>
                   )}
+                  <p className="mt-0.5 text-[11px] text-gray-500">{paymentLabel(newestInvoiceStatus(order.invoices))}</p>
                 </div>
               </div>
               <span className="mt-3 inline-flex min-h-9 w-full items-center justify-center rounded-lg border border-[#E5DFD5] bg-[#FAF7F2] px-3 text-xs font-semibold text-[#806A50] sm:ml-auto sm:mt-3 sm:w-auto">
