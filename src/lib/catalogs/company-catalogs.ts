@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { catalogsWithVisibleItems } from '@/lib/catalogs/visibility-data'
 
 export type CompanyCatalog = {
   id: string
@@ -18,6 +19,7 @@ const CATALOG_FIELDS =
 /**
  * Catalogs a company should see: legacy campaigns.company_id rows plus catalog_assignments.
  * If the assignment table is not migrated yet, the company_id list still loads.
+ * Catalogs with no published item that company can see are omitted.
  */
 export async function listCompanyCatalogs(
   supabase: SupabaseClient,
@@ -51,5 +53,7 @@ export async function listCompanyCatalogs(
     }
   }
 
-  return [...byId.values()].sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+  const catalogs = [...byId.values()]
+  const visible = await catalogsWithVisibleItems(companyId, catalogs)
+  return visible.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
 }

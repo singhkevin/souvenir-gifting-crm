@@ -11,18 +11,24 @@ export function CatalogAssignPanel({
   assigned,
   companies,
   defaultCompanyName,
+  hiddenByCompany,
 }: {
   catalogId: string
   assigned: { companyId: string; name: string }[]
   companies: { id: string; name: string }[]
   /** Company whose margin prices newly added lines and the default preview (campaigns.company_id). */
   defaultCompanyName: string | null
+  /** Catalog items each company cannot see. Empty when every item is visible. */
+  hiddenByCompany: { companyId: string; names: string[] }[]
 }) {
   const { pending, run } = useAction()
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [companyId, setCompanyId] = useState('')
   const keys = useRef(new Map<string, string>())
   const assignedIds = new Set(assigned.map((row) => row.companyId))
   const available = companies.filter((company) => !assignedIds.has(company.id))
+  const hiddenFor = (id: string) => hiddenByCompany.find((row) => row.companyId === id)?.names || []
+  const pendingHidden = hiddenFor(companyId)
 
   const remove = (companyId: string) => {
     let key = keys.current.get(companyId)
@@ -55,7 +61,10 @@ export function CatalogAssignPanel({
         {assigned.length === 0 && <li className="text-[#7A7267]">Not assigned yet. The catalog stays in the CRM until you share it.</li>}
         {assigned.map((row) => (
           <li key={row.companyId} className="flex items-center justify-between gap-3 rounded-lg border border-[#E5DFD5] px-3 py-2">
-            <span className="font-semibold text-[#1C1917]">{row.name}</span>
+            <div className="min-w-0">
+              <span className="font-semibold text-[#1C1917]">{row.name}</span>
+              <HiddenItemsNote names={hiddenFor(row.companyId)} />
+            </div>
             <button
               type="button"
               disabled={pending}
@@ -81,9 +90,16 @@ export function CatalogAssignPanel({
           className="flex flex-col gap-2 sm:flex-row"
           successMessage="Company assigned"
           resetOnSuccess
+          onSuccess={() => setCompanyId('')}
         >
           <input type="hidden" name="campaign_id" value={catalogId} />
-          <select name="company_id" required className="min-h-10 flex-1 rounded-lg border px-2 py-2" defaultValue="">
+          <select
+            name="company_id"
+            required
+            value={companyId}
+            onChange={(event) => setCompanyId(event.target.value)}
+            className="min-h-10 flex-1 rounded-lg border px-2 py-2"
+          >
             <option value="" disabled>Add a company</option>
             {available.map((company) => (
               <option key={company.id} value={company.id}>{company.name}</option>
@@ -94,6 +110,19 @@ export function CatalogAssignPanel({
           </SubmitButton>
         </ActionForm>
       )}
+      {pendingHidden.length > 0 && <HiddenItemsNote names={pendingHidden} />}
     </div>
+  )
+}
+
+function HiddenItemsNote({ names }: { names: string[] }) {
+  if (!names.length) return null
+  const shown = names.slice(0, 8)
+  const extra = names.length - shown.length
+  return (
+    <p className="mt-1 text-[11px] text-amber-800">
+      Cannot see {names.length} {names.length === 1 ? 'item' : 'items'}: {shown.join(', ')}
+      {extra > 0 ? `, and ${extra} more` : ''}.
+    </p>
   )
 }

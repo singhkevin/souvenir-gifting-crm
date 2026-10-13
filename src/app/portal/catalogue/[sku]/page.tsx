@@ -6,6 +6,8 @@ import { OfferingActions } from '../OfferingActions'
 import { formatCurrency } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
 import { offeringPricesForCompany } from '@/lib/catalogs/pricing'
+import { kitDisplayTotal } from '@/lib/catalogs/visibility'
+import { displayableLineIds } from '@/lib/catalogs/visibility-data'
 
 export default async function CampaignOfferingDetailPage({ params }: { params: Promise<{ sku: string }> }) {
   const { sku } = await params
@@ -23,6 +25,12 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
 
   if (!offering) notFound()
 
+  const { data: companyId } = await supabase.rpc('client_company_id')
+  const visibleIds = companyId
+    ? await displayableLineIds(offering.campaign_id, { kind: 'company', companyId })
+    : null
+  if (visibleIds && !visibleIds.has(offering.id)) notFound()
+
   let kitMembers: { id: string; display_name: string | null; selling_price: number | null }[] = []
   if (offering.pack_kit_id && offering.pack_kit_role === 'primary') {
     const { data: lines } = await supabase
@@ -33,11 +41,13 @@ export default async function CampaignOfferingDetailPage({ params }: { params: P
       .order('display_order')
     kitMembers = lines || []
   }
-  const { data: companyId } = await supabase.rpc('client_company_id')
+  if (visibleIds) kitMembers = kitMembers.filter((member) => visibleIds.has(member.id))
   const prices = await offeringPricesForCompany([offering.id, ...kitMembers.map((member) => member.id)], companyId)
   kitMembers = kitMembers.map((member) => ({ ...member, selling_price: prices.get(member.id) ?? member.selling_price }))
-  const kitTotal =
-    offering.pack_kit_total != null ? Number(offering.pack_kit_total) : (prices.get(offering.id) ?? offering.selling_price)
+  const pricedOffering = prices.get(offering.id) ?? offering.selling_price
+  const kitTotal = kitMembers.length
+    ? (kitDisplayTotal(kitMembers) ?? pricedOffering)
+    : pricedOffering
 
   const campaign = Array.isArray(offering.campaign) ? offering.campaign[0] : offering.campaign
   const { data: selection } = await supabase

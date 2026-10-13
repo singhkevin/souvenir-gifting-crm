@@ -16,6 +16,8 @@ import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
 import { headers } from 'next/headers'
 import { readTenantFromHeaders } from '@/lib/portal-host'
 import { withCompanyPrices } from '@/lib/catalogs/pricing'
+import { withVisibleKitTotals } from '@/lib/catalogs/visibility'
+import { displayableLineIds } from '@/lib/catalogs/visibility-data'
 import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 
 const PAGE_SIZE = 24
@@ -57,7 +59,13 @@ export default async function PortalCataloguePage({
           .order('display_order')).data || []) as NonNullable<Awaited<ReturnType<typeof offeringQuery>>['data']>
       : offeringsResult.data || []
     // One catalog serves many companies: price each line with the viewing company's margin.
-    const offerings = await withCompanyPrices(storedOfferings, companyId)
+    const pricedOfferings = await withCompanyPrices(storedOfferings, companyId)
+    const visibleIds = companyId && isUuid(campaignFilter)
+      ? await displayableLineIds(campaignFilter, { kind: 'company', companyId })
+      : null
+    const offerings = withVisibleKitTotals(
+      visibleIds ? pricedOfferings.filter((offering) => visibleIds.has(offering.id)) : pricedOfferings,
+    )
 
     const [{ data: selections }, { data: campaignMeta }] = await Promise.all([
       supabase.from('client_product_selections').select('campaign_product_id, kind').eq('company_id', companyId),

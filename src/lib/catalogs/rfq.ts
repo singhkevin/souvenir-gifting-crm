@@ -3,33 +3,10 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isUuid } from '@/lib/utils'
 import { isShareToken, shareLinkGrantsAccess } from '@/lib/catalogs/share-link'
+import type { CatalogLineRow, CatalogRfqLine, ExpandedRfqLine } from '@/lib/catalogs/rfq-lines'
 
-export type CatalogRfqLine = {
-  id: string
-  quantity: number
-}
-
-export type ExpandedRfqLine = {
-  product_id: string
-  quantity: number
-  sku: string | null
-  name: string | null
-}
-
-type CatalogProductEmbed = {
-  sku?: string | null
-  name?: string | null
-  status?: string | null
-}
-
-export type CatalogLineRow = {
-  id: string
-  product_id: string
-  pack_kit_id: string | null
-  pack_kit_role: string | null
-  moq: number | null
-  product?: CatalogProductEmbed | CatalogProductEmbed[] | null
-}
+export type { CatalogLineRow, CatalogRfqLine, ExpandedRfqLine } from '@/lib/catalogs/rfq-lines'
+export { expandCatalogRfqLines } from '@/lib/catalogs/rfq-lines'
 
 export function rfqSchemaHint(message: string) {
   if (/campaign_id|requirement_products|client_response|client_respond_quotation|p_accepted_item_ids/i.test(message)) {
@@ -62,46 +39,6 @@ export function cleanRfqDeadline(value: unknown): { error: string } | { deadline
   const parsed = new Date(`${raw}T00:00:00Z`)
   if (Number.isNaN(parsed.getTime())) return { error: 'Delivery date must be a valid date' }
   return { deadline: raw }
-}
-
-function embedProduct(product: CatalogLineRow['product']) {
-  return Array.isArray(product) ? product[0] : product
-}
-
-/** Selected catalog offerings become one quantity per SKU. A kit selection includes every published member. */
-export function expandCatalogRfqLines(
-  rows: CatalogLineRow[],
-  selected: CatalogRfqLine[],
-): { error?: string; lines?: ExpandedRfqLine[] } {
-  if (!selected.length) return { error: 'Select at least one product' }
-  const byId = new Map(rows.map((row) => [row.id, row]))
-  const qtyByProduct = new Map<string, ExpandedRfqLine>()
-
-  for (const line of selected) {
-    const row = byId.get(line.id)
-    if (!row?.product_id) return { error: 'One of the selected products is not on this catalog' }
-    const product = embedProduct(row.product)
-    const label = product?.name || 'A product'
-    const moq = row.moq && row.moq > 0 ? Math.round(row.moq) : 1
-    if (line.quantity < moq || line.quantity > 100000) {
-      return { error: `Quantity for ${label} must be a whole number from ${moq} to 100000` }
-    }
-    const members = row.pack_kit_id ? rows.filter((candidate) => candidate.pack_kit_id === row.pack_kit_id) : [row]
-    for (const member of members.length ? members : [row]) {
-      if (!member.product_id) continue
-      const memberProduct = embedProduct(member.product)
-      const current = qtyByProduct.get(member.product_id)
-      qtyByProduct.set(member.product_id, {
-        product_id: member.product_id,
-        quantity: (current?.quantity || 0) + line.quantity,
-        sku: memberProduct?.sku || current?.sku || null,
-        name: memberProduct?.name || current?.name || null,
-      })
-    }
-  }
-
-  if (!qtyByProduct.size) return { error: 'Select at least one product' }
-  return { lines: [...qtyByProduct.values()] }
 }
 
 export async function companyCanUseCatalog(
