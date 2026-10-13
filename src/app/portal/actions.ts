@@ -242,6 +242,14 @@ async function respondToQuotationOnce(
 
   if (error) return { error: rfqSchemaHint(error.message) }
 
+  if (status === 'accepted' && !repeatOfResponse) {
+    const { data: created } = await supabase.from('orders').select('id').eq('quotation_id', quotationId).maybeSingle()
+    if (created?.id) {
+      const { notifyOrderPlaced } = await import('@/lib/email/order-emails')
+      await notifyOrderPlaced(String(created.id))
+    }
+  }
+
   revalidatePath('/portal/quotations')
   revalidatePath(`/portal/quotations/${quotationId}`)
   revalidatePath('/portal/orders')

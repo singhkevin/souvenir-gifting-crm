@@ -13,6 +13,7 @@ import {
   handOffOrder,
 } from '../actions'
 import { getProfile, canSeeCosts, canChangeOrderStage, applyOrderScope } from '@/lib/auth'
+import { isOrderSource, ORDER_SOURCE_LABELS } from '@/lib/orders/source'
 import {
   ORDER_STATUS_LABELS,
   canAdvanceTo,
@@ -96,6 +97,7 @@ export default async function OrderDetailPage({
   const health = orderHealth(order.status, order.expected_delivery_date, order.stage_due_at)
   const showCosts = canSeeCosts(profile.role)
   const canStage = canChangeOrderStage(profile.role)
+  const sourceValue = typeof order.source === 'string' ? order.source : ''
   const assignee = oneRelation(order.assignee)
   const department = oneRelation(order.department)
   const campaign = oneRelation(order.campaign)
@@ -124,6 +126,9 @@ export default async function OrderDetailPage({
             <span className="font-mono text-xs font-bold text-gray-500">{order.order_number}</span>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#806A50] uppercase">
               {ORDER_STATUS_LABELS[order.status] || order.status}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#FAF7F2] text-[#624B32]">
+              {isOrderSource(sourceValue) ? ORDER_SOURCE_LABELS[sourceValue] : 'CRM'}
             </span>
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${HEALTH_STYLES[health]}`}>
               {HEALTH_LABELS[health]}

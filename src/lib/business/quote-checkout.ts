@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { hashCheckoutToken } from '@/lib/business/tokens'
+import { notifyOrderPlaced } from '@/lib/email/order-emails'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export type QuoteCheckoutLine = {
@@ -106,5 +107,6 @@ export async function placeQuoteOrder(input: {
   }
   const orderId = String(data)
   const { data: order } = await admin.from('orders').select('order_number, quotation_id').eq('id', orderId).maybeSingle()
+  await notifyOrderPlaced(orderId)
   return { success: true, orderId, orderNumber: order?.order_number ? String(order.order_number) : undefined }
 }

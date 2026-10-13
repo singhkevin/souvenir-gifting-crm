@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, isUuid, oneRelation } from '@/lib/utils'
 import { notFound } from 'next/navigation'
-import { sortProductCategories } from '@/lib/products/categories'
 import { BackButton } from '@/components/ui/back-button'
 import { updateProduct, removeProduct } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
@@ -10,6 +9,7 @@ import { ProductImageEditor } from '@/components/products/product-image-editor'
 import { CatalogueVisibilityEditor } from '@/components/products/catalogue-visibility-editor'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { CategoryField } from '@/components/products/category-field'
 import { readProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import { pickBestOffer } from '@/lib/pricing/offers'
@@ -325,18 +325,7 @@ export default async function ProductDetailPage({
             </p>
 
             <div className="grid grid-cols-2 gap-3">
-              <MobileSheetSelect
-                name="category_id"
-                label="Category *"
-                required
-                showDesktopLabel
-                defaultValue={product.category_id || ''}
-                emptyLabel="Select Category"
-                options={[
-                  { value: '', label: 'Select Category' },
-                  ...sortProductCategories(categories || []).map((c) => ({ value: c.id, label: c.name })),
-                ]}
-              />
+              <CategoryField categories={categories || []} defaultValue={product.category_id || ''} />
 
               <MobileSheetSelect
                 name="brand_id"

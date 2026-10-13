@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { IDEMPOTENCY_FIELD, useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { autoMapHeaders, parseCsv } from '@/lib/csv'
-import { importCatalogueCsv, type ImportSummary } from './import-actions'
+import { importCatalogueCsv, previewCatalogueCsv, type CataloguePreview, type ImportSummary } from './import-actions'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 
 const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
@@ -35,13 +35,15 @@ const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'status', label: 'Status (active / inactive / discontinued)' },
 ]
 
-export function CatalogueCsvImporter() {
+export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defaultCreateCategories?: boolean }) {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
   const [preview, setPreview] = useState<string[][]>([])
   const [mapping, setMapping] = useState<Record<string, string>>({})
   const [images, setImages] = useState<File[]>([])
   const [summary, setSummary] = useState<ImportSummary | null>(null)
+  const [createMissing, setCreateMissing] = useState(defaultCreateCategories)
+  const [categoryPreview, setCategoryPreview] = useState<CataloguePreview | null>(null)
   const { pending, run } = useAction()
   const { key, rotate } = useIdempotencyKey()
 
@@ -52,6 +54,7 @@ export function CatalogueCsvImporter() {
 
   const onCsv = async (file: File | null) => {
     setSummary(null)
+    setCategoryPreview(null)
     setCsvFile(file)
     if (!file) {
       setHeaders([])
@@ -77,6 +80,7 @@ export function CatalogueCsvImporter() {
     const data = new FormData()
     data.set('csv', csvFile)
     data.set('mapping', JSON.stringify(mapping))
+    if (createMissing) data.set('createMissingCategories', '1')
     images.forEach((image) => data.append('images', image))
     data.set(IDEMPOTENCY_FIELD, key)
     run(() => importCatalogueCsv(data), {
@@ -142,7 +146,10 @@ export function CatalogueCsvImporter() {
                 label={`${field.label}${field.required ? ' *' : ''}`}
                 showDesktopLabel
                 value={mapping[field.key] || ''}
-                onChange={(next) => setMapping((prev) => ({ ...prev, [field.key]: next }))}
+                onChange={(next) => {
+                  setCategoryPreview(null)
+                  setMapping((prev) => ({ ...prev, [field.key]: next }))
+                }}
                 emptyLabel="Ignore"
                 options={[
                   { value: '', label: 'Ignore' },
@@ -175,18 +182,67 @@ export function CatalogueCsvImporter() {
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={pending || !mappedRequired}
-            onClick={onImport}
-            className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg disabled:opacity-50"
-          >
-            {pending ? (
-              <span className="inline-flex items-center gap-2"><Spinner />Importing…</span>
-            ) : (
-              'Import products'
-            )}
-          </button>
+          <label className="flex items-center gap-2 text-xs text-gray-700">
+            <input
+              type="checkbox"
+              checked={createMissing}
+              onChange={(event) => {
+                setCreateMissing(event.target.checked)
+                setCategoryPreview(null)
+              }}
+            />
+            Create missing categories
+          </label>
+
+          {categoryPreview && (
+            <div className="rounded-lg border border-[#E5DFD5] bg-[#FAF7F2] p-3 text-xs text-[#1C1917] space-y-2">
+              <p>
+                These categories will be created:{' '}
+                {categoryPreview.categories.length ? categoryPreview.categories.join(', ') : 'none'}
+              </p>
+              {categoryPreview.failures.length > 0 && (
+                <ul className="space-y-1 text-red-700">
+                  {categoryPreview.failures.map((failure) => (
+                    <li key={`${failure.row}-${failure.reason}`}>Row {failure.row} ({failure.sku}): {failure.reason}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {!categoryPreview ? (
+            <button
+              type="button"
+              disabled={pending || !mappedRequired}
+              onClick={() => {
+                if (!csvFile) return
+                const data = new FormData()
+                data.set('csv', csvFile)
+                data.set('mapping', JSON.stringify(mapping))
+                if (createMissing) data.set('createMissingCategories', '1')
+                run(() => previewCatalogueCsv(data), {
+                  successMessage: false,
+                  onSuccess: (value) => setCategoryPreview(value as CataloguePreview),
+                })
+              }}
+              className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg disabled:opacity-50"
+            >
+              {pending ? <span className="inline-flex items-center gap-2"><Spinner />Checking…</span> : 'Preview import'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={pending || !mappedRequired}
+              onClick={onImport}
+              className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg disabled:opacity-50"
+            >
+              {pending ? (
+                <span className="inline-flex items-center gap-2"><Spinner />Importing…</span>
+              ) : (
+                'Confirm import'
+              )}
+            </button>
+          )}
         </div>
       )}
 

@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { headers } from 'next/headers'
 import { domainSplitEnabled } from '@/lib/domain-flag'
-import { portalRootOrigin, resolveHost, storeOrigin } from '@/lib/portal-host'
+import { portalRootOrigin, resolveHost } from '@/lib/portal-host'
+import { storePublicOrigin } from '@/lib/site/store-public-origin'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   if (resolved.kind === 'store') {
     return {
       rules: { userAgent: '*', allow: '/', disallow: ['/login', '/signup', '/api/'] },
-      sitemap: `${storeOrigin(host)}/sitemap.xml`,
+      sitemap: `${storePublicOrigin(host)}/sitemap.xml`,
     }
   }
   if (resolved.kind === 'portal-root') {

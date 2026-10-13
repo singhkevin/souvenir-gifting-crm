@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { requireBusiness } from '@/lib/business/session'
 import { createClient } from '@/lib/supabase/server'
+import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
+import { newestInvoiceStatus, paymentLabel } from '@/lib/orders/payment'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -12,7 +14,7 @@ export default async function BusinessOrdersPage() {
   const { data } = companyId
     ? await supabase
         .from('orders')
-        .select('id, order_number, status, order_value, created_at, quotation_id')
+        .select('id, order_number, status, order_value, created_at, quotation_id, tracking_number, dispatch_date, invoices(status, created_at)')
         .eq('company_id', companyId)
         .not('quotation_id', 'is', null)
         .order('created_at', { ascending: false })
@@ -31,8 +33,13 @@ export default async function BusinessOrdersPage() {
                 <span className="text-xs text-[#5C6570]">{formatDate(row.created_at)}</span>
               </span>
               <span className="text-right">
-                <span className="block capitalize">{row.status}</span>
+                <span className="block">{CLIENT_STATUS_LABELS[row.status] || row.status}</span>
                 <span className="text-xs text-[#5C6570]">{formatCurrency(row.order_value)}</span>
+                <span className="block text-xs text-[#5C6570]">
+                  {row.tracking_number ? `Tracking ${row.tracking_number}` : 'Tracking not available yet'}
+                  {' · '}
+                  {paymentLabel(newestInvoiceStatus(row.invoices))}
+                </span>
               </span>
             </Link>
           </li>

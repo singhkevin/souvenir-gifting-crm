@@ -89,6 +89,8 @@ export async function advanceOrderStatus(orderId: string, expectedStatus: string
     comment: `Advanced to ${ORDER_STATUS_LABELS[next] || next}`,
   })
   if (result.error) return result
+  const { orderStageChangedCustomerEmail } = await import('@/lib/email/order-emails')
+  await orderStageChangedCustomerEmail(orderId, next)
   revalidatePath(`/crm/orders/${orderId}`)
   revalidatePath('/crm/order-management')
   revalidatePath('/crm/dashboard')
@@ -135,6 +137,8 @@ export async function handOffOrder(formData: FormData) {
     nextAction,
   })
   if (result.error) return result
+  const { orderStageChangedCustomerEmail } = await import('@/lib/email/order-emails')
+  await orderStageChangedCustomerEmail(orderId, status)
   revalidatePath(`/crm/orders/${orderId}`)
   revalidatePath('/crm/order-management')
   revalidatePath('/crm/department')
@@ -178,6 +182,8 @@ export async function setOrderStage(orderId: string, status: string, expectedSta
     comment: `Moved to ${ORDER_STATUS_LABELS[status] || status} from Order Control Kanban`,
   })
   if (result.error) return result
+  const { orderStageChangedCustomerEmail } = await import('@/lib/email/order-emails')
+  await orderStageChangedCustomerEmail(orderId, status)
   revalidatePath('/crm/order-management')
   revalidatePath(`/crm/orders/${orderId}`)
   revalidatePath('/crm/dashboard')

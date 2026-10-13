@@ -5,9 +5,9 @@ import { BackButton } from '@/components/ui/back-button'
 import { BrandName } from '@/components/brand/brand-name'
 import { createProduct } from '../actions'
 import { Package, Globe, Lock, EyeOff } from 'lucide-react'
-import { sortProductCategories } from '@/lib/products/categories'
 import { ProductImageField } from '@/components/products/product-image-field'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { CategoryField } from '@/components/products/category-field'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 
@@ -74,17 +74,7 @@ export default async function NewProductPage({
               />
             </div>
 
-            <MobileSheetSelect
-              name="category_id"
-              label="Category *"
-              required
-              showDesktopLabel
-              emptyLabel="Select Category"
-              options={[
-                { value: '', label: 'Select Category' },
-                ...sortProductCategories(categories || []).map((c) => ({ value: c.id, label: c.name })),
-              ]}
-            />
+            <CategoryField categories={categories || []} />
 
             <MobileSheetSelect
               name="brand_id"

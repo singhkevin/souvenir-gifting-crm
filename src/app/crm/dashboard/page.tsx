@@ -2,16 +2,18 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff, canSeeFinance, applyOrderScope, applyOwnerScope, applyCompanyScope, seesAllSalesRecords } from '@/lib/auth'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { ORDER_LIFECYCLE, ORDER_STATUS_LABELS, orderHealth } from '@/lib/order-workflow'
+import { ORDER_SOURCE_LABELS, ORDER_SOURCES } from '@/lib/orders/source'
 import { entityHref, describeAudit } from '@/lib/entity-href'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { MobileDateRangeFilter } from '@/components/ui/mobile-filter-sheet'
 
-function Card({ label, value, href, warn }: { label: string; value: string | number; href?: string; warn?: boolean }) {
+function Card({ label, value, href, warn, detail }: { label: string; value: string | number; href?: string; warn?: boolean; detail?: string }) {
   const inner = (
     <div className={`rounded-xl border p-3 sm:p-4 ${warn ? 'bg-red-50 border-red-100' : 'bg-white border-[#E5DFD5]'}`}>
       <span className="text-[10px] font-semibold tracking-wider text-[#7A7267] uppercase">{label}</span>
       <p className="font-serif text-lg text-[#1C1917] mt-1.5 sm:mt-2 sm:text-xl break-words">{value}</p>
+      {detail ? <p className="mt-1 text-[10px] leading-snug text-[#7A7267]">{detail}</p> : null}
     </div>
   )
   return href ? <Link href={href} className="block hover:border-[#806A50]">{inner}</Link> : inner
@@ -29,6 +31,7 @@ type DashOrder = {
   company_id: string | null
   gross_profit: number | null
   created_at: string
+  source?: string | null
 }
 type DashLead = { id: string; stage: string; owner_id: string | null; created_at: string; estimated_value: number | null }
 type DashReq = { id: string; status: string; owner_id: string | null; created_at: string }
@@ -69,7 +72,7 @@ export default async function DashboardPage({
   let orderQuery = applyOrderScope(
     supabase
       .from('orders')
-      .select('id, status, order_value, expected_delivery_date, assigned_to, current_department_id, stage_due_at, owner_id, company_id, gross_profit, created_at'),
+      .select('id, status, source, order_value, expected_delivery_date, assigned_to, current_department_id, stage_due_at, owner_id, company_id, gross_profit, created_at'),
     profile
   )
   let leadQuery = applyOwnerScope(
@@ -145,6 +148,14 @@ export default async function DashboardPage({
   ])
 
   const orderRows = asList<DashOrder>(orders.data)
+  const newOrders = orderRows.filter((order) => order.created_at && order.created_at >= weekAgo)
+  const newOrderDetail = ORDER_SOURCES
+    .map((source) => {
+      const count = newOrders.filter((order) => order.source === source).length
+      return count ? `${ORDER_SOURCE_LABELS[source]} ${count}` : ''
+    })
+    .filter(Boolean)
+    .join(' · ')
   const leadRows = asList<DashLead>(leads.data)
   const reqRows = asList<DashReq>(requirements.data)
   const quoteRows = asList<DashQuote>(quotations.data)
@@ -318,6 +329,7 @@ export default async function DashboardPage({
               <Card label="Pending quotations" value={pendingQuotes.length} href="/crm/quotations?status=sent" />
               <Card label="Won quotations" value={wonQuotes.length} href="/crm/quotations?status=accepted" />
               <Card label="Orders" value={orderRows.length} href="/crm/orders" />
+              <Card label="New orders" value={newOrders.length} href="/crm/orders" detail={newOrderDetail || 'Last 7 days'} />
               <Card label="Active orders" value={inProgress.length} href="/crm/order-management" />
               <Card label="Completed orders" value={delivered.length} href="/crm/orders?status=delivered" />
               <Card label="Cancelled orders" value={cancelled.length} href="/crm/orders?status=cancelled" />
