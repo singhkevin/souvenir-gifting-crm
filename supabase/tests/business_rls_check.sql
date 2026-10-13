@@ -27,7 +27,11 @@ values
 insert into public.profiles (id, full_name, email, role, company_id, is_active)
 values
   ('e6e1c84b-ddde-44ef-8a53-b58b79f5e37a', 'Biz A', 'biz-a@example.com', 'business_user', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', true),
-  ('82cb1963-ab73-452c-8501-1ba1a0594977', 'Biz B', 'biz-b@example.com', 'business_user', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', true);
+  ('82cb1963-ab73-452c-8501-1ba1a0594977', 'Biz B', 'biz-b@example.com', 'business_user', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', true)
+on conflict (id) do update
+set role = excluded.role,
+    company_id = excluded.company_id,
+    is_active = true;
 
 insert into public.requirements (id, name, company_id, owner_id, status, source)
 select 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'A only', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
