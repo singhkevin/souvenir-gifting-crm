@@ -15,6 +15,8 @@ import {
   parseRfqSelection,
   rfqSchemaHint,
 } from '@/lib/catalogs/rfq'
+import { emailQuotationOwner } from '@/lib/quotes/notify-owner'
+import { requestOrigin } from '@/lib/auth/request-origin'
 
 async function createPortalRequirementOnce(formData: {
   name: string
@@ -146,10 +148,11 @@ async function requestCatalogQuotationOnce(input: {
   const allowed = await companyCanUseCatalog(supabase, input.catalogId, companyId)
   if (!allowed) return { error: 'This catalog is not assigned to your company' }
 
-  const [{ data: catalog }, rows, { data: company }] = await Promise.all([
+  const [{ data: catalog }, rows, { data: company }, { data: profile }] = await Promise.all([
     supabase.from('campaigns').select('id, name').eq('id', input.catalogId).maybeSingle(),
     loadPublishedCatalogLines(supabase, input.catalogId),
     supabase.from('companies').select('owner_id').eq('id', companyId).maybeSingle(),
+    supabase.from('profiles').select('full_name, email').eq('id', user.id).maybeSingle(),
   ])
   if (!catalog?.name) return { error: 'Catalog not found' }
 
@@ -159,9 +162,14 @@ async function requestCatalogQuotationOnce(input: {
   const admin = createAdminClient()
   if (!admin) return { error: 'Unable to save this requirement just now. Please try again shortly.' }
 
+  const contactId = await requesterContactId(admin, companyId, {
+    email: profile?.email || user.email || null,
+    fullName: profile?.full_name || null,
+  })
   const saved = await insertCatalogRequirement(admin, {
     companyId,
     ownerId: company?.owner_id ?? null,
+    contactId,
     campaignId: input.catalogId,
     catalogName: catalog.name,
     notes: cleanRfqNotes(input.notes),
@@ -180,6 +188,36 @@ export async function createPortalRequirement(
   input: Parameters<typeof createPortalRequirementOnce>[0] & { idempotencyKey?: string },
 ) {
   return withIdempotency('portal.createRequirement', input.idempotencyKey, () => createPortalRequirementOnce(input))
+}
+
+async function requesterContactId(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>,
+  companyId: string,
+  profile: { email: string | null; fullName: string | null },
+) {
+  const email = profile.email?.trim().toLowerCase() || ''
+  if (email) {
+    const { data: existing } = await admin
+      .from('contacts')
+      .select('id')
+      .eq('company_id', companyId)
+      .ilike('email', email)
+      .limit(1)
+    if (existing?.[0]?.id) return existing[0].id as string
+  }
+  const { data: created } = await admin
+    .from('contacts')
+    .insert({
+      company_id: companyId,
+      full_name: profile.fullName || email || 'Client',
+      email: email || null,
+      contact_type: 'primary',
+      kind: 'corporate',
+      notes: 'Created from the client profile for a catalog quotation.',
+    })
+    .select('id')
+    .single()
+  return created?.id as string | undefined
 }
 
 export async function requestCatalogQuotation(
@@ -259,5 +297,40 @@ async function respondToQuotationOnce(
   if (quotation.requirement_id) {
     revalidatePath(`/crm/requirements/${quotation.requirement_id}`)
   }
+  return { success: true }
+}
+
+export async function requestQuotationChanges(quotationId: string, comment: string, idempotencyKey?: string) {
+  return withIdempotency('portal.requestQuotationChanges', idempotencyKey, () =>
+    requestQuotationChangesOnce(quotationId, comment),
+  )
+}
+
+async function requestQuotationChangesOnce(quotationId: string, comment: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+  if (!isUuid(quotationId)) return { error: 'Quotation not found' }
+  const note = comment.trim()
+  if (!note) return { error: 'Add a short comment' }
+  const { error } = await supabase.rpc('client_request_quote_revision', {
+    p_quotation_id: quotationId,
+    p_comment: note,
+  })
+  if (error) {
+    if (/client_request_quote_revision/i.test(error.message)) {
+      return { error: `${error.message} Apply supabase/migrations/20261014_quote_requests.sql, then retry.` }
+    }
+    return { error: error.message }
+  }
+  const origin = await requestOrigin()
+  await emailQuotationOwner({
+    quotationId,
+    origin,
+    title: 'Quote revision requested',
+    detail: note,
+  })
+  revalidatePath(`/portal/quotations/${quotationId}`)
+  revalidatePath(`/crm/quotations/${quotationId}`)
   return { success: true }
 }
