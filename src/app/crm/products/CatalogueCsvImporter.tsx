@@ -19,6 +19,8 @@ const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'stock_qty', label: 'Stock on hand' },
   { key: 'fulfillment_mode', label: 'Purchase path (auto / buy / rfq)' },
   { key: 'supplier_cost', label: 'Supplier cost' },
+  { key: 'internal_margin', label: 'Product margin %' },
+  { key: 'internal_notes', label: 'Internal notes' },
   { key: 'hsn_code', label: 'HSN' },
   { key: 'image_url', label: 'Image URL' },
   { key: 'image_filename', label: 'Image filename' },
@@ -28,7 +30,9 @@ const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'size', label: 'Size' },
   { key: 'gender', label: 'Gender' },
   { key: 'material', label: 'Material' },
-  { key: 'status', label: 'Status' },
+  { key: 'variant_sku', label: 'Variant SKU' },
+  { key: 'extra_price', label: 'Variant extra price' },
+  { key: 'status', label: 'Status (active / inactive / discontinued)' },
 ]
 
 export function CatalogueCsvImporter() {
@@ -83,6 +87,9 @@ export function CatalogueCsvImporter() {
         setSummary(result)
         if (result.imported > 0) toast.success(`${result.imported} products imported`)
         if (result.failed > 0) toast.error(`${result.failed} rows failed`)
+        if (result.warnings.length > 0) {
+          toast.message(`${result.warnings.length} warning${result.warnings.length === 1 ? '' : 's'}`)
+        }
         if (result.imported === 0 && result.failed === 0) toast.success('Import finished — nothing new to add')
       },
     })
@@ -101,7 +108,8 @@ export function CatalogueCsvImporter() {
           />
           <p className="text-[11px] text-gray-500 mt-2">
             Required columns: product name, SKU, price. Optional: description, category, supplier, MOQ,
-            visibility, companies, image_url, image_filename, colour, size.
+            stock, product margin, internal notes, visibility, companies, image URL, image filename,
+            colour, size, variant SKU, extra price, status.
           </p>
         </div>
 
@@ -185,17 +193,28 @@ export function CatalogueCsvImporter() {
       {summary && (
         <div className="bg-white p-6 rounded-2xl border border-gray-200 space-y-3">
           <h2 className="text-sm font-bold text-gray-900">Import summary</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
             <SummaryStat label="Total rows" value={summary.total} />
             <SummaryStat label="Imported" value={summary.imported} />
             <SummaryStat label="Skipped" value={summary.skipped} />
             <SummaryStat label="Failed" value={summary.failed} />
+            <SummaryStat label="Warnings" value={summary.warned} />
           </div>
           {summary.failures.length > 0 && (
             <ul className="text-xs text-red-700 space-y-1">
               {summary.failures.slice(0, 50).map((failure) => (
                 <li key={`${failure.row}-${failure.sku}`}>
                   Row {failure.row} ({failure.sku}): {failure.reason}
+                </li>
+              ))}
+            </ul>
+          )}
+          {summary.warnings.length > 0 && (
+            <ul className="text-xs text-amber-800 space-y-1">
+              {summary.warnings.slice(0, 50).map((warning, index) => (
+                <li key={`${warning.row}-${warning.sku}-${index}`}>
+                  {warning.row > 0 ? `Row ${warning.row} (${warning.sku}): ` : ''}
+                  {warning.reason}
                 </li>
               ))}
             </ul>
