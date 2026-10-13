@@ -1,4 +1,5 @@
 import { domainSplitEnabled } from '@/lib/domain-flag'
+import { originForHostname } from '@/lib/local-origin'
 
 /**
  * User-facing product name and public origins.
@@ -88,24 +89,24 @@ function hostFromEnv(value: string | undefined, fallback: string) {
 /** Store origin. With the split off this stays the current public site URL. */
 export function storeSiteUrl() {
   if (!domainSplitEnabled()) return publicSiteUrl()
-  return `https://${hostFromEnv(process.env.STORE_DOMAIN, 'souvenirgifting.com')}`
+  return originForHostname(hostFromEnv(process.env.STORE_DOMAIN, 'souvenirgifting.com'))
 }
 
 /** Staff CRM origin. With the split off this stays the current public site URL. */
 export function adminSiteUrl() {
   if (!domainSplitEnabled()) return publicSiteUrl()
   const explicit = trimmed(process.env.ADMIN_HOST)
-  if (explicit) return `https://${hostFromEnv(explicit, 'admin.souvenirgifting.com')}`
-  return `https://admin.${hostFromEnv(process.env.STORE_DOMAIN, 'souvenirgifting.com')}`
+  if (explicit) return originForHostname(hostFromEnv(explicit, 'admin.souvenirgifting.com'))
+  return originForHostname(`admin.${hostFromEnv(process.env.STORE_DOMAIN, 'souvenirgifting.com')}`)
 }
 
 /** Finder apex. With the split off this stays the current public site URL. */
 export function portalRootSiteUrl() {
   if (!domainSplitEnabled()) return publicSiteUrl()
   const portal = hostFromEnv(process.env.PORTAL_ROOT_DOMAIN, '')
-  if (portal) return `https://${portal}`
+  if (portal) return originForHostname(portal)
   const root = hostFromEnv(process.env.ROOT_DOMAIN, '')
-  return `https://${root || PRODUCTION_ROOT_DOMAIN}`
+  return originForHostname(root || PRODUCTION_ROOT_DOMAIN)
 }
 
 export function marketingHostLabel(url = marketingSiteUrl()) {

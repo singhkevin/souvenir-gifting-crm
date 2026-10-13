@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { isSafeNext, landingPathForRole } from '@/lib/safe-next'
+import { authCookieOptions, localCookieWriteOptions } from '@/lib/auth/cookie-options'
 import { TAB_HEADER, TAB_QUERY, TAB_URL_HEADER, authCookieName, isPublicAuthPath, isPublicSitePath, isTabId } from '@/lib/auth/tab'
 import { domainSplitEnabled } from '@/lib/domain-flag'
 import { businessPortalRedirect, decideHostRoute, pendingPortalRedirect, robotsHeaderFor, staffAreaRedirect } from '@/lib/domain-routing'
@@ -194,14 +195,14 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookieOptions: { name: authCookieName(tabId) },
+      cookieOptions: authCookieOptions(authCookieName(tabId), host),
       cookies: {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: Record<string, unknown> }>) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = withTabRequest(request, tabId, tenant)
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, localCookieWriteOptions(options, host))
           )
         },
       },

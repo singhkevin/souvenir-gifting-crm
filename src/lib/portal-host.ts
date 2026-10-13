@@ -1,5 +1,6 @@
 import { PRODUCTION_ROOT_DOMAIN } from '@/lib/brand'
 import { domainSplitEnabled } from '@/lib/domain-flag'
+import { isLocalHostname, originForHostname } from '@/lib/local-origin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { portalDnsMode } from '@/lib/portal-hosts/mode'
 
@@ -227,8 +228,7 @@ export function parsePortalSlug(raw: string | null | undefined): { slug: string 
 export function portalUrlForSlug(slug: string | null | undefined): string | null {
   const root = portalRootForLinks()
   if (!root || !slug) return null
-  const proto = root === 'localhost' ? 'http' : 'https'
-  return `${proto}://${slug}.${root}`
+  return originForHostname(`${slug}.${root}`)
 }
 
 export function portalLoginUrl(slug: string | null | undefined): string | null {
@@ -266,14 +266,15 @@ function isPreviewHost(hostname: string) {
   return hostname.endsWith('.vercel.app')
 }
 
-function isLocalDevHost(hostname: string) {
-  return (
-    hostname === 'localhost' ||
-    hostname.endsWith('.localhost') ||
-    hostname === '127.0.0.1' ||
-    hostname === '[::1]' ||
-    hostname === '::1'
-  )
+/**
+ * Production env keeps every loopback host on the single dev surface.
+ * Local env (store, admin, and portal root are all *.localhost) lets those
+ * names resolve as the real surfaces. Browsers already map them to 127.0.0.1.
+ */
+function localSplitHostsConfigured() {
+  if (!domainSplitEnabled()) return false
+  const hosts = [storeDomain(), adminHost(), effectivePortalRoot()]
+  return hosts.every((host) => isLocalHostname(host) && (host === 'localhost' || host.endsWith('.localhost')))
 }
 
 function isTenantSlug(slug: string) {
@@ -293,7 +294,10 @@ function resolveLegacyHost(hostname: string): ResolvedHost {
 }
 
 function resolveSplitHost(hostname: string): ResolvedHost {
-  if (!hostname || isLocalDevHost(hostname) || isPreviewHost(hostname)) return { kind: 'dev' }
+  if (!hostname || isPreviewHost(hostname)) return { kind: 'dev' }
+
+  const localSplit = localSplitHostsConfigured()
+  if (!localSplit && isLocalHostname(hostname)) return { kind: 'dev' }
 
   const admin = adminHost()
   if (admin && hostname === admin) return { kind: 'admin' }
@@ -303,6 +307,12 @@ function resolveSplitHost(hostname: string): ResolvedHost {
 
   const root = effectivePortalRoot()
   if (root && (hostname === root || hostname === `www.${root}`)) return { kind: 'portal-root' }
+
+  // Bare localhost (and raw loopback) is the store. Company hosts stay under the portal root,
+  // so admin.localhost and store.localhost are not tenant labels.
+  if (localSplit && (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname === '::1')) {
+    return { kind: 'store' }
+  }
 
   if (root) {
     const suffix = `.${root}`
@@ -323,12 +333,6 @@ export function resolveHost(hostHeader: string | null | undefined): ResolvedHost
   const { hostname } = hostParts(hostHeader)
   if (!domainSplitEnabled()) return resolveLegacyHost(hostname)
   return resolveSplitHost(hostname)
-}
-
-function originForHostname(hostname: string, port: string) {
-  const proto = hostname === 'localhost' || hostname.endsWith('.localhost') ? 'http' : 'https'
-  const withPort = port && proto === 'http' ? `:${port}` : ''
-  return `${proto}://${hostname}${withPort}`
 }
 
 /** Apex for this deployment, preserving a localhost port. */

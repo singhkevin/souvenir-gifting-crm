@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { authCookieOptions } from '@/lib/auth/cookie-options'
 import { TAB_QUERY, TAB_STORAGE_KEY, authCookieName, createTabId } from '@/lib/auth/tab'
 
 export function getTabId() {
@@ -26,11 +27,10 @@ export function createClient() {
       auth: {
         detectSessionInUrl: false,
       },
-      cookieOptions: {
-        name: authCookieName(tabId),
-        path: '/',
-        sameSite: 'lax',
-      },
+      cookieOptions: authCookieOptions(
+        authCookieName(tabId),
+        typeof window === 'undefined' ? null : window.location.host,
+      ),
     }
   )
 }
