@@ -74,7 +74,7 @@ export default async function RootPage({
       .maybeSingle()
 
     if (profile?.role === "client_admin" || profile?.role === "client_user") {
-      redirect("/portal/catalogue")
+      redirect("/portal/gifts")
     }
 
     redirect("/crm/dashboard")

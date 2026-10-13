@@ -46,7 +46,9 @@ export async function toggleOfferingSelection(formData: FormData) {
   }
 
   revalidatePath('/portal/catalogue')
+  revalidatePath('/portal/gifts')
   revalidatePath('/portal/shortlist')
+  revalidatePath('/portal/quote-basket')
   revalidatePath(`/crm/catalogs/${campaignId}`)
   return { success: true }
 }

@@ -20,7 +20,7 @@ export default async function RequestQuotePage({
   const profile = await getProfile()
   const product = productId && isUuid(productId) ? await getPublicProduct(productId) : null
   const portalHref =
-    profile?.role === 'client_admin' || profile?.role === 'client_user' ? '/portal/requirements/new' : null
+    profile?.role === 'client_admin' || profile?.role === 'client_user' ? '/portal/quote-basket' : null
 
   return (
     <SiteShell>

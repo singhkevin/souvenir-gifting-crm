@@ -27,7 +27,7 @@ export async function requireBusiness(): Promise<{ profile: ProfileSession; comp
     redirect('/login')
   }
   if (!isBusinessRole(profile.role)) {
-    if (isClientRole(profile.role)) redirect('/portal/catalogue')
+    if (isClientRole(profile.role)) redirect('/portal/gifts')
     if (isStaffRole(profile.role)) redirect('/crm/dashboard')
     redirect('/login')
   }
