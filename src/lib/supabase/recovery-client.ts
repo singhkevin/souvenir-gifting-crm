@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { authCookieOptions } from '@/lib/auth/cookie-options'
 import { RECOVERY_COOKIE_NAME } from '@/lib/auth/tab'
 
 export function createRecoveryBrowserClient() {
@@ -10,11 +11,10 @@ export function createRecoveryBrowserClient() {
       auth: {
         detectSessionInUrl: false,
       },
-      cookieOptions: {
-        name: RECOVERY_COOKIE_NAME,
-        path: '/',
-        sameSite: 'lax',
-      },
+      cookieOptions: authCookieOptions(
+        RECOVERY_COOKIE_NAME,
+        typeof window === 'undefined' ? null : window.location.host,
+      ),
     }
   )
 }

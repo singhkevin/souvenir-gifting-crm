@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { type EmailOtpType } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
+import { authCookieOptions, localCookieWriteOptions } from '@/lib/auth/cookie-options'
 import { RECOVERY_COOKIE_NAME } from '@/lib/auth/tab'
 
 type PendingCookie = {
@@ -29,8 +30,9 @@ function redirectWithCookies(
 ) {
   const url = new URL(path, request.nextUrl.origin)
   const response = NextResponse.redirect(url)
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
   cookiesToCopy?.forEach(({ name, value, options }) => {
-    response.cookies.set(name, value, options)
+    response.cookies.set(name, value, localCookieWriteOptions(options, host))
   })
   return response
 }
@@ -51,11 +53,10 @@ export async function GET(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookieOptions: {
-        name: RECOVERY_COOKIE_NAME,
-        path: '/',
-        sameSite: 'lax',
-      },
+      cookieOptions: authCookieOptions(
+        RECOVERY_COOKIE_NAME,
+        request.headers.get('x-forwarded-host') || request.headers.get('host'),
+      ),
       cookies: {
         getAll() {
           return request.cookies.getAll()
