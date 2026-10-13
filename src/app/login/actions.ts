@@ -116,7 +116,7 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
           if (portalUrl) return { redirectTo: portalUrl, externalPortal: true }
         }
         // Subdomain not live yet — keep the client on the apex path fallback.
-        return { redirectTo: '/portal/catalogue' }
+        return { redirectTo: '/portal/gifts' }
       }
     }
 
@@ -183,7 +183,7 @@ export async function signUp(formData: FormData): Promise<{ error?: string; mess
         return { message: 'Company portal accounts are opened by your administrator. Shop accounts sign in on the store.' }
       }
     }
-    return { redirectTo: '/portal/catalogue' }
+    return { redirectTo: '/portal/gifts' }
   }
 
   return { message: 'Check your email to confirm your account, then sign in.' }

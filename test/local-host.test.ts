@@ -137,7 +137,7 @@ test('local split maps localhost, admin, and company hosts', () => {
     }), 'http://store.localhost:3000')
     assert.equal(portalFindResult('acme').redirectTo, 'http://acme.portal.localhost:3000/login')
     assert.equal(portalUrlForSlug('acme'), 'http://acme.portal.localhost:3000')
-    assert.equal(tenantPortalUrl('acme', 'localhost:3000'), 'http://acme.portal.localhost:3000/portal/catalogue')
+    assert.equal(tenantPortalUrl('acme', 'localhost:3000'), 'http://acme.portal.localhost:3000/portal/gifts')
     assert.equal(storeSiteUrl(), 'http://store.localhost:3000')
     assert.equal(adminSiteUrl(), 'http://admin.localhost:3000')
     assert.equal(portalRootSiteUrl(), 'http://portal.localhost:3000')

@@ -44,7 +44,7 @@ export default async function OrderDetailPage({
   const { tab = 'details', stage_error: stageError } = await searchParams
   const profile = await getProfile()
   if (!profile) return redirect('/login')
-  if (profile.role === 'client_admin') return redirect('/portal/catalogue')
+  if (profile.role === 'client_admin') return redirect('/portal/gifts')
 
   const supabase = await createClient()
 

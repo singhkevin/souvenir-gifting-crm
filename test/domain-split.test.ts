@@ -356,7 +356,7 @@ test('login role gate: staff, client, and retail stay on their own host', () => 
     }), { allow: true })
     assert.equal(landingPathForRole('retail'), '/')
     assert.equal(landingPathForRole('admin'), '/crm/dashboard')
-    assert.equal(landingPathForRole('client_user'), '/portal/catalogue')
+    assert.equal(landingPathForRole('client_user'), '/portal/gifts')
     assert.equal(landingPathForRole('business_user'), '/business/dashboard')
     assert.equal(accountKindForRole('management'), 'staff')
     assert.equal(accountKindForRole('business_admin'), 'retail')

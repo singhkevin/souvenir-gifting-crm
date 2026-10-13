@@ -372,7 +372,7 @@ export function tenantPortalUrl(slug: string, hostHeader: string | null | undefi
   const root = portalRootForLinks()
   if (!root || !slug) return null
   const { port } = hostParts(hostHeader)
-  return `${originForHostname(`${slug}.${root}`, port)}/portal/catalogue`
+  return `${originForHostname(`${slug}.${root}`, port)}/portal/gifts`
 }
 
 export function isTenantAuthPath(pathname: string) {

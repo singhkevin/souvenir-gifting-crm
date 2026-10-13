@@ -17,8 +17,8 @@ export default async function PortalOrdersPage() {
   return (
     <div>
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">My Orders</h1>
-        <p className="mt-2 text-sm text-gray-600 sm:text-base">Track only your organisation&apos;s catalogs and deliveries.</p>
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Orders</h1>
+        <p className="mt-2 text-sm text-gray-600 sm:text-base">Track deliveries and the documents for each order.</p>
       </div>
 
       <div className="grid gap-4">
@@ -58,6 +58,84 @@ export default async function PortalOrdersPage() {
           <div className="rounded-2xl border bg-white p-8 text-center text-gray-500">No orders found.</div>
         )}
       </div>
+      <OrderDocuments companyId={companyId} />
     </div>
+  )
+}
+
+async function OrderDocuments({ companyId }: { companyId: string | null }) {
+  const supabase = await createClient()
+  const [{ data: invoices }, { data: mockups }] = await Promise.all([
+    supabase
+      .from('invoices')
+      .select('id, invoice_number, amount, status, due_date, invoice_date, order_id')
+      .eq('company_id', companyId)
+      .order('invoice_date', { ascending: false }),
+    supabase
+      .from('mockups')
+      .select('id, file_name, storage_path, mime_type, created_at, status, order_id')
+      .eq('status', 'shared')
+      .order('created_at', { ascending: false }),
+  ])
+
+  return (
+    <section className="mt-8 space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900">Documents</h2>
+        <p className="mt-1 text-sm text-gray-500">Invoices and shared mockups. Open an order to see the documents filed on it.</p>
+      </div>
+      <div className="overflow-hidden rounded-2xl border bg-white">
+        <h3 className="border-b px-4 py-3 text-sm font-semibold">Invoices</h3>
+        <ul className="divide-y">
+          {(invoices || []).map((invoice) => (
+            <li key={invoice.id} className="flex flex-col gap-1 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-mono font-medium text-gray-900">{invoice.invoice_number}</p>
+                <p className="text-xs text-gray-500">{formatDate(invoice.invoice_date)} · due {formatDate(invoice.due_date)}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-semibold">{formatCurrency(invoice.amount)}</span>
+                <span className="text-xs capitalize text-gray-500">{invoice.status}</span>
+                {invoice.order_id ? (
+                  <Link href={`/portal/orders/${invoice.order_id}`} className="text-xs font-semibold text-[#806A50]">Order</Link>
+                ) : null}
+              </div>
+            </li>
+          ))}
+          {(!invoices || invoices.length === 0) && (
+            <li className="px-4 py-8 text-center text-sm text-gray-500">No invoices yet.</li>
+          )}
+        </ul>
+      </div>
+      <div className="overflow-hidden rounded-2xl border bg-white">
+        <h3 className="border-b px-4 py-3 text-sm font-semibold">Shared mockups</h3>
+        <ul className="divide-y">
+          {(mockups || []).map((mockup) => {
+            const href = mockup.storage_path && (mockup.storage_path.startsWith('http') || mockup.storage_path.startsWith('/'))
+              ? mockup.storage_path
+              : mockup.storage_path
+            return (
+              <li key={mockup.id} className="flex flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium text-gray-900">{mockup.file_name}</p>
+                  <p className="text-xs text-gray-500">{mockup.mime_type} · {formatDate(mockup.created_at)}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {mockup.order_id ? (
+                    <Link href={`/portal/orders/${mockup.order_id}`} className="text-xs font-semibold text-[#806A50]">Order</Link>
+                  ) : null}
+                  {href ? (
+                    <a href={href} target="_blank" rel="noreferrer" className="text-xs font-semibold text-[#806A50]">Open</a>
+                  ) : null}
+                </div>
+              </li>
+            )
+          })}
+          {(!mockups || mockups.length === 0) && (
+            <li className="px-4 py-8 text-center text-sm text-gray-500">No mockups shared yet.</li>
+          )}
+        </ul>
+      </div>
+    </section>
   )
 }

@@ -25,8 +25,8 @@ const nextConfig: NextConfig = {
     return [
       { source: '/crm/campaigns', destination: '/crm/catalogs', permanent: false },
       { source: '/crm/campaigns/:path*', destination: '/crm/catalogs/:path*', permanent: false },
-      { source: '/portal/campaigns', destination: '/portal/catalogs', permanent: false },
-      { source: '/portal/campaigns/:path*', destination: '/portal/catalogs/:path*', permanent: false },
+      { source: '/portal/campaigns', destination: '/portal/gifts?tab=collections', permanent: false },
+      { source: '/portal/campaigns/:path*', destination: '/portal/gifts?tab=collections', permanent: false },
     ]
   },
   async rewrites() {

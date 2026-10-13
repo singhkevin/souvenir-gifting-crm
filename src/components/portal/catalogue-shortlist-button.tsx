@@ -53,7 +53,7 @@ export function CatalogueShortlistButton({
       aria-pressed={active}
     >
       <Heart size={14} className={active ? 'fill-current' : ''} />
-      {active ? 'Shortlisted' : 'Shortlist'}
+      {active ? 'Added' : 'Add to quote'}
     </button>
   )
 }

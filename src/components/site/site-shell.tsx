@@ -15,7 +15,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
   const hostKind = resolveHost(headerStore.get('x-forwarded-host') || headerStore.get('host')).kind
   const isClient = isClientRole(profile?.role)
   const isBusiness = isBusinessRole(profile?.role)
-  const workspaceHref = profile ? (isClient ? '/portal/catalogue' : landingPathForRole(profile.role)) : null
+  const workspaceHref = profile ? (isClient ? '/portal/gifts' : landingPathForRole(profile.role)) : null
   const workspaceLabel = profile ? (isClient ? 'Client portal' : isBusiness ? 'Business portal' : 'Workspace') : null
   const [products, categories] = await Promise.all([getPublicCatalogueProducts(), getPublicCategories()])
   const suggestions = products.slice(0, 40).map((product) => ({

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
 
-export default function PortalCampaignsRedirectPage() {
-  redirect('/portal/catalogs')
+export default function CampaignsRedirect() {
+  redirect('/portal/gifts?tab=collections')
 }
