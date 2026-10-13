@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { respondToQuotation } from '../../actions'
+import { requestQuotationChanges, respondToQuotation } from '../../actions'
 import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
+import { estimateTickedLines } from '@/lib/quotes/flow'
 
 export type QuotationDecisionLine = {
   id: string
@@ -21,26 +22,34 @@ export function QuotationActions({
   items,
   discountPercent,
   taxPercent,
+  validUntil,
 }: {
   quotationId: string
   items: QuotationDecisionLine[]
   discountPercent: number
   taxPercent: number
+  validUntil: string | null
 }) {
   const { pending, run } = useAction()
   const { key, rotate } = useIdempotencyKey()
-  const [responding, setResponding] = useState<'accepted' | 'rejected' | null>(null)
+  const [responding, setResponding] = useState<'accepted' | 'rejected' | 'changes' | null>(null)
   const [rejecting, setRejecting] = useState(false)
+  const [changing, setChanging] = useState(false)
   const [comment, setComment] = useState('')
   const [checked, setChecked] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(items.map((item) => [item.id, true])),
   )
 
   const accepted = items.filter((item) => checked[item.id])
-  const subtotal = accepted.reduce((sum, item) => sum + (Number(item.lineTotal) || 0), 0)
-  const discount = subtotal * (Number(discountPercent) || 0) / 100
-  const tax = (subtotal - discount) * (Number(taxPercent) || 0) / 100
-  const estimate = { subtotal, discount, tax, total: subtotal - discount + tax }
+  const estimate = estimateTickedLines(
+    items.map((item) => ({
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineTotal: item.lineTotal,
+      ticked: Boolean(checked[item.id]),
+    })),
+    taxPercent,
+  )
 
   const handleRespond = (status: 'accepted' | 'rejected') => {
     if (status === 'rejected' && !rejecting) {
@@ -104,33 +113,37 @@ export function QuotationActions({
                 {item.quantity} × {formatCurrency(item.unitPrice)}
               </p>
             </div>
-            <p className="text-sm font-semibold text-gray-900">{formatCurrency(item.lineTotal)}</p>
+            <p className="text-right text-sm font-semibold text-gray-900">
+              {formatCurrency(item.lineTotal)}
+              <span className="block text-[10px] font-normal text-gray-400">ex-GST</span>
+            </p>
           </li>
         ))}
       </ul>
 
-      <div className="mt-4 space-y-1 text-xs text-gray-600 sm:ml-auto sm:w-64">
+      <div className="mt-4 space-y-1 text-xs text-gray-600 sm:ml-auto sm:w-72">
         <div className="flex justify-between">
-          <span>Accepted subtotal</span>
+          <span>Accepted subtotal ex-GST</span>
           <span>{formatCurrency(estimate.subtotal)}</span>
         </div>
         {discountPercent > 0 && (
           <div className="flex justify-between text-green-700">
-            <span>Discount ({discountPercent}%)</span>
+            <span>Discount ({discountPercent}%) once</span>
             <span>-{formatCurrency(estimate.discount)}</span>
           </div>
         )}
-        {taxPercent > 0 && (
-          <div className="flex justify-between">
-            <span>Tax ({taxPercent}%)</span>
-            <span>{formatCurrency(estimate.tax)}</span>
-          </div>
-        )}
+        <div className="flex justify-between">
+          <span>GST ({taxPercent || 0}%) once</span>
+          <span>{formatCurrency(estimate.tax)}</span>
+        </div>
         <div className="flex justify-between border-t border-gray-200 pt-1 text-sm font-semibold text-gray-900">
-          <span>Order total</span>
+          <span>Total incl. GST</span>
           <span>{formatCurrency(estimate.total)}</span>
         </div>
-        <p className="pt-1 text-[11px] text-gray-500">Header discount and tax apply to the accepted subtotal.</p>
+        <p className="pt-1 text-[11px] text-gray-500">
+          Line amounts are ex-GST. Discount is taken once, then GST is added once.
+          {validUntil ? ` Valid until ${formatDate(validUntil)}.` : ''}
+        </p>
       </div>
 
       <label className="mb-4 mt-4 block text-sm font-medium text-gray-700">
@@ -183,6 +196,46 @@ export function QuotationActions({
           >
             Reject quotation
           </button>
+          <button
+            type="button"
+            onClick={() => setChanging(true)}
+            disabled={pending}
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-amber-200 bg-white px-6 py-2 font-semibold text-amber-900 hover:bg-amber-50"
+          >
+            Request changes
+          </button>
+        </div>
+      )}
+      {changing && (
+        <div className="mt-4 space-y-3">
+          <p className="text-sm text-amber-900">Add what should change in the note above, then send the request.</p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              disabled={pending || !comment.trim()}
+              onClick={() => {
+                setResponding('changes')
+                run(() => requestQuotationChanges(quotationId, comment.trim(), key), {
+                  successMessage: 'Change request sent',
+                  onSuccess: () => {
+                    rotate()
+                    setChanging(false)
+                  },
+                })
+              }}
+              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-amber-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
+            >
+              {pending && responding === 'changes' ? busyLabel('Sending…') : 'Send request'}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => setChanging(false)}
+              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-600"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -4,11 +4,17 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { requireStaff } from '@/lib/auth'
-import { updateQuotationStatus, convertToOrder, duplicateQuotation, createQuotationRevision } from '../actions'
+import { updateQuotationStatus, convertToOrder, duplicateQuotation, createQuotationRevision, markQuotationSentOffline } from '../actions'
 import { ActionButton } from '@/components/ui/action-button'
 import { QuotationCosting } from './QuotationCosting'
+import { QuotationDraftEditor } from './QuotationDraftEditor'
+import { QuoteContactPicker } from './QuoteContactPicker'
+import { SendQuoteDialog } from './SendQuoteDialog'
 import { offersByProduct, pickBestOffer } from '@/lib/pricing/offers'
 import { getPricingSettings, loadSupplierOffers } from '@/lib/pricing/server'
+import { absoluteClientQuoteUrl } from '@/lib/quotes/client-link'
+import { defaultQuoteRecipientKey, quoteSendRecipients, sendQuoteWarnings } from '@/lib/quotes/flow'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { FileText, CheckCircle2, XCircle, Copy, ArrowRight } from 'lucide-react'
 
 export default async function QuotationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,7 +28,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     .from('quotations')
     .select(`
       *,
-      company:companies(id, name),
+      company:companies(id, name, account_type, portal_slug),
       contact:contacts(id, full_name, email),
       requirement:requirements(id, name)
     `)
@@ -39,9 +45,11 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
   const contact = oneRelation(quote.contact)
   const requirement = oneRelation(quote.requirement)
 
-  const [{ data: items }, { data: linkedOrder }] = await Promise.all([
-    supabase.from('quotation_items').select('*, product:products(id, name, sku, image_url)').eq('quotation_id', quote.id),
+  const [{ data: items }, { data: linkedOrder }, { data: contacts }, { data: companyUsers }] = await Promise.all([
+    supabase.from('quotation_items').select('*, product:products(id, name, sku, image_url, moq)').eq('quotation_id', quote.id),
     supabase.from('orders').select('id, order_number').eq('quotation_id', quote.id).maybeSingle(),
+    supabase.from('contacts').select('id, full_name, email').eq('company_id', quote.company_id).order('full_name'),
+    supabase.from('profiles').select('id, full_name, email, role').eq('company_id', quote.company_id).eq('is_active', true).in('role', ['client_admin', 'client_user', 'business_user']),
   ])
 
   const quoteItems = (items || []) as {
@@ -49,7 +57,9 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     product_id?: string | null
     quantity: number
     unit_price: number
-    product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null
+    line_total: number
+    description?: string | null
+    product?: { name?: string; sku?: string; moq?: number | null } | { name?: string; sku?: string; moq?: number | null }[] | null
   }[]
   const productIds = [...new Set(quoteItems.map((item) => item.product_id).filter((id): id is string => Boolean(id)))]
   const pricing = canPrice ? await getPricingSettings() : null
@@ -123,15 +133,54 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
 
         <div className="flex flex-wrap items-center gap-2">
           {quote.status === 'draft' && (
-            <ActionButton
-              action={updateQuotationStatus.bind(null, quote.id, 'sent')}
-              pendingLabel="Marking…"
-              successMessage="Marked as sent"
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
-            >
-              Mark as Sent
-            </ActionButton>
+            <>
+              <SendQuoteDialog
+                quotationId={quote.id}
+                total={Number(quote.total) || 0}
+                validUntil={quote.valid_until}
+                clientUrl={absoluteClientQuoteUrl({
+                  accountType: company?.account_type,
+                  portalSlug: company?.portal_slug,
+                  quotationId: quote.id,
+                  origin: await requestOrigin(),
+                })}
+                recipients={quoteSendRecipients({
+                  contacts: contacts || [],
+                  users: companyUsers || [],
+                })}
+                defaultRecipientKey={defaultQuoteRecipientKey({
+                  contactId: quote.contact_id,
+                  recipients: quoteSendRecipients({ contacts: contacts || [], users: companyUsers || [] }),
+                })}
+                warnings={sendQuoteWarnings(quoteItems.map((item) => {
+                  const product = oneRelation(item.product)
+                  const saved = savedCosts.find((row) => row.quotation_item_id === item.id)
+                  const catalogCost = item.product_id ? catalogCostByProduct.get(item.product_id) ?? null : null
+                  return {
+                    name: product?.name || 'Item',
+                    unitPrice: Number(item.unit_price) || 0,
+                    cost: saved?.supplier_cost == null ? catalogCost : Number(saved.supplier_cost),
+                    applied: Boolean(saved),
+                  }
+                }))}
+              />
+              <ActionButton
+                action={markQuotationSentOffline.bind(null, quote.id)}
+                pendingLabel="Marking…"
+                successMessage="Marked as sent"
+                title="Records the quotation as sent without emailing the client"
+                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition-colors"
+              >
+                Mark sent (offline)
+              </ActionButton>
+            </>
           )}
+          <Link
+            href={`/crm/quotations/${quote.id}/preview`}
+            className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            Preview as client
+          </Link>
           {quote.revision_requested_at && ['sent', 'viewed', 'draft'].includes(quote.status || '') ? (
             <ActionButton
               action={createQuotationRevision.bind(null, quote.id)}
@@ -193,7 +242,12 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
         <div className="bg-white p-5 rounded-xl border border-gray-200 text-xs space-y-2.5">
           <h3 className="font-bold text-gray-900 pb-2 border-b">Client Details</h3>
           <div><span className="text-gray-500 w-20 inline-block">Company:</span> <span className="font-semibold text-gray-900">{company?.name}</span></div>
-          <div><span className="text-gray-500 w-20 inline-block">Contact:</span> {contact?.full_name || '?'}</div>
+          <div>
+            <span className="text-gray-500 w-20 inline-block">Contact:</span>
+            {contact?.full_name ? contact.full_name : (
+              <QuoteContactPicker quotationId={quote.id} contacts={contacts || []} />
+            )}
+          </div>
           <div><span className="text-gray-500 w-20 inline-block">Email:</span> {contact?.email || '?'}</div>
         </div>
 
@@ -222,13 +276,35 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        {quote.status === 'draft' && (
+          <QuotationDraftEditor
+            quotationId={quote.id}
+            discountPercent={Number(quote.discount_percent) || 0}
+            taxPercent={quote.tax_percent == null ? null : Number(quote.tax_percent)}
+            validUntil={quote.valid_until}
+            notes={quote.notes}
+            lines={quoteItems.map((item) => {
+              const product = oneRelation(item.product)
+              return {
+                id: item.id,
+                name: product?.name || item.description || 'Item',
+                sku: product?.sku || null,
+                quantity: Number(item.quantity) || 1,
+                unitPrice: Number(item.unit_price) || 0,
+                lineTotal: Number(item.line_total) || 0,
+                moq: Number(product?.moq) || 1,
+              }
+            })}
+          />
+        )}
+        {quote.status !== 'draft' && (
         <table className="w-full text-left text-xs">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="p-3.5 font-semibold text-gray-500">Item</th>
               <th className="p-3.5 font-semibold text-gray-500 text-right">Qty</th>
               <th className="p-3.5 font-semibold text-gray-500 text-right">Unit Price</th>
-              <th className="p-3.5 font-semibold text-gray-500 text-right">Total</th>
+              <th className="p-3.5 font-semibold text-gray-500 text-right">Ex-GST</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -256,10 +332,11 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
             )}
           </tbody>
         </table>
+        )}
 
         <div className="bg-gray-50 p-5 border-t border-gray-200 flex flex-col items-end space-y-1.5 text-xs">
           <div className="flex justify-between w-60 text-gray-600">
-            <span>Subtotal:</span>
+            <span>Subtotal ex-GST:</span>
             <span>{formatCurrency(quote.subtotal)}</span>
           </div>
           {Number(quote.discount_amount) > 0 && (
@@ -268,14 +345,12 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               <span>-{formatCurrency(quote.discount_amount)}</span>
             </div>
           )}
-          {Number(quote.tax_amount) > 0 && (
-            <div className="flex justify-between w-60 text-gray-600">
-              <span>GST / Tax ({quote.tax_percent}%):</span>
-              <span>{formatCurrency(quote.tax_amount)}</span>
-            </div>
-          )}
+          <div className="flex justify-between w-60 text-gray-600">
+            <span>GST ({quote.tax_percent || 0}%):</span>
+            <span>{formatCurrency(quote.tax_amount)}</span>
+          </div>
           <div className="flex justify-between w-60 text-sm font-bold text-gray-900 pt-2 border-t border-gray-200 mt-1">
-            <span>Total:</span>
+            <span>Total incl. GST:</span>
             <span className="text-[#624B32]">{formatCurrency(quote.total)}</span>
           </div>
         </div>

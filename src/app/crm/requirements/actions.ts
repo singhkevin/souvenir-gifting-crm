@@ -153,6 +153,7 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
       ...(req.campaign_id ? { campaign_id: req.campaign_id } : {}),
       status: 'draft',
       valid_until: validUntil.toISOString().slice(0, 10),
+      tax_percent: 18,
       notes: String(formData.get('notes') || '') || null,
     })
     .select('id')

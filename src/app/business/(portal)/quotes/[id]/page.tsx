@@ -18,7 +18,7 @@ export default async function BusinessQuotePage({ params }: { params: Promise<{ 
   const supabase = await createClient()
   const { data: quote } = await supabase
     .from('quotations')
-    .select('id, quotation_number, status, valid_until, total, discount_percent, tax_percent, notes, company_id, client_comment')
+    .select('id, quotation_number, status, valid_until, subtotal, discount_percent, discount_amount, tax_percent, tax_amount, total, notes, company_id, client_comment')
     .eq('id', id)
     .maybeSingle()
   if (!quote || quote.company_id !== (company?.id || profile.company_id)) notFound()
@@ -54,8 +54,9 @@ export default async function BusinessQuotePage({ params }: { params: Promise<{ 
       <div>
         <h1 className="font-serif text-3xl">{quote.quotation_number}</h1>
         <p className="mt-2 text-sm capitalize text-[#5C6570]">
-          {quote.status} · valid until {quote.valid_until ? formatDate(quote.valid_until) : '—'} · {formatCurrency(quote.total)}
+          {quote.status} · valid until {quote.valid_until ? formatDate(quote.valid_until) : '—'} · {formatCurrency(quote.total)} incl. GST
         </p>
+        <p className="mt-1 text-xs text-[#5C6570]">Line amounts are ex-GST. GST ({quote.tax_percent || 0}%) is added once.</p>
       </div>
       {quote.notes ? <p className="text-sm text-[#5C6570]">{quote.notes}</p> : null}
       {quote.client_comment ? <p className="text-sm text-[#5C6570]">{quote.client_comment}</p> : null}
@@ -69,13 +70,22 @@ export default async function BusinessQuotePage({ params }: { params: Promise<{ 
                 <span className="text-xs text-[#5C6570]">{product?.sku} · {item.quantity} × {formatCurrency(item.unit_price)}</span>
               </span>
               <span className="text-right">
-                <span className="block">{formatCurrency(item.line_total)}</span>
+                <span className="block">{formatCurrency(item.line_total)} <span className="text-[10px] text-[#5C6570]">ex-GST</span></span>
                 {item.client_response ? <span className="text-xs capitalize text-[#5C6570]">{item.client_response}</span> : null}
               </span>
             </li>
           )
         })}
       </ul>
+      <div className="ml-auto w-full max-w-xs space-y-1 text-sm">
+        <div className="flex justify-between"><span>Subtotal ex-GST</span><span>{formatCurrency(quote.subtotal)}</span></div>
+        {Number(quote.discount_amount) > 0 ? (
+          <div className="flex justify-between"><span>Discount ({quote.discount_percent}%) once</span><span>-{formatCurrency(quote.discount_amount)}</span></div>
+        ) : null}
+        <div className="flex justify-between"><span>GST ({quote.tax_percent || 0}%) once</span><span>{formatCurrency(quote.tax_amount)}</span></div>
+        <div className="flex justify-between font-semibold"><span>Total incl. GST</span><span>{formatCurrency(quote.total)}</span></div>
+        <p className="text-xs text-[#5C6570]">Valid until {quote.valid_until ? formatDate(quote.valid_until) : '—'}.</p>
+      </div>
       {open && !expired ? (
         <QuoteResponse
           quotationId={quote.id}

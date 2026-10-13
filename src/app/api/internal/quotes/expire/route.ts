@@ -6,6 +6,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { businessQuoteExpiredEmailHtml, businessQuoteExpiringEmailHtml } from '@/lib/email/business'
 import { sendEmail } from '@/lib/email/resend'
 import { requestOrigin } from '@/lib/auth/request-origin'
+import { absoluteClientQuoteUrl } from '@/lib/quotes/client-link'
+import { oneRelation } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -35,48 +37,43 @@ async function run() {
   const admin = createAdminClient()
   if (!admin) return NextResponse.json({ error: 'Unavailable' }, { status: 500, headers: { 'Cache-Control': 'no-store' } })
 
-  const expired = await admin.rpc('expire_business_quotations')
+  const expired = await admin.rpc('expire_quotations')
   if (expired.error) {
     return NextResponse.json({ error: expired.error.message }, { status: 500, headers: { 'Cache-Control': 'no-store' } })
   }
 
-  const { data: companies } = await admin.from('companies').select('id').eq('account_type', 'business')
-  const companyIds = (companies || []).map((row) => row.id)
   let reminders = 0
   let expiredMails = 0
-  if (companyIds.length) {
-    const origin = await requestOrigin()
-    const soon = await admin
-      .from('quotations')
-      .select('id, quotation_number, contact_id, valid_until')
-      .in('company_id', companyIds)
-      .in('status', ['sent', 'viewed'])
-      .gte('valid_until', dayOffset(0))
-      .lte('valid_until', dayOffset(3))
-      .is('expiry_reminder_sent_at', null)
-      .limit(50)
-    for (const quote of soon.data || []) {
-      const sent = await mailQuote(admin, quote, origin, 'expiring')
-      if (sent) {
-        await admin.from('quotations').update({ expiry_reminder_sent_at: new Date().toISOString() }).eq('id', quote.id)
-        reminders += 1
-      }
+  const origin = await requestOrigin()
+  const quoteSelect = 'id, quotation_number, contact_id, valid_until, company:companies(account_type, portal_slug)'
+  const soon = await admin
+    .from('quotations')
+    .select(quoteSelect)
+    .in('status', ['sent', 'viewed'])
+    .gte('valid_until', dayOffset(0))
+    .lte('valid_until', dayOffset(3))
+    .is('expiry_reminder_sent_at', null)
+    .limit(50)
+  for (const quote of soon.data || []) {
+    const sent = await mailQuote(admin, quote, origin, 'expiring')
+    if (sent) {
+      await admin.from('quotations').update({ expiry_reminder_sent_at: new Date().toISOString() }).eq('id', quote.id)
+      reminders += 1
     }
+  }
 
-    const gone = await admin
-      .from('quotations')
-      .select('id, quotation_number, contact_id, valid_until')
-      .in('company_id', companyIds)
-      .eq('status', 'expired')
-      .gte('valid_until', dayOffset(-2))
-      .is('expired_notified_at', null)
-      .limit(50)
-    for (const quote of gone.data || []) {
-      const sent = await mailQuote(admin, quote, origin, 'expired')
-      if (sent) {
-        await admin.from('quotations').update({ expired_notified_at: new Date().toISOString() }).eq('id', quote.id)
-        expiredMails += 1
-      }
+  const gone = await admin
+    .from('quotations')
+    .select(quoteSelect)
+    .eq('status', 'expired')
+    .gte('valid_until', dayOffset(-2))
+    .is('expired_notified_at', null)
+    .limit(50)
+  for (const quote of gone.data || []) {
+    const sent = await mailQuote(admin, quote, origin, 'expired')
+    if (sent) {
+      await admin.from('quotations').update({ expired_notified_at: new Date().toISOString() }).eq('id', quote.id)
+      expiredMails += 1
     }
   }
 
@@ -88,14 +85,25 @@ async function run() {
 
 async function mailQuote(
   admin: NonNullable<ReturnType<typeof createAdminClient>>,
-  quote: { id: string; quotation_number: string | null; contact_id: string | null },
+  quote: {
+    id: string
+    quotation_number: string | null
+    contact_id: string | null
+    company: { account_type: string | null; portal_slug: string | null } | { account_type: string | null; portal_slug: string | null }[] | null
+  },
   origin: string,
   kind: 'expiring' | 'expired',
 ) {
   if (!quote.contact_id) return false
   const { data: contact } = await admin.from('contacts').select('email').eq('id', quote.contact_id).maybeSingle()
   if (!contact?.email) return false
-  const quoteUrl = `${origin}/business/quotes/${quote.id}`
+  const company = oneRelation(quote.company)
+  const quoteUrl = absoluteClientQuoteUrl({
+    accountType: company?.account_type,
+    portalSlug: company?.portal_slug,
+    quotationId: quote.id,
+    origin,
+  })
   const number = quote.quotation_number || 'Quotation'
   const sent = await sendEmail({
     to: contact.email,

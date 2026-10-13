@@ -18,9 +18,10 @@ import { clientIpFrom, verifyTurnstile } from '@/lib/security/turnstile'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/resend'
+import { resolveAlertOwnerId } from '@/lib/alerts/owner'
+import { emailQuotationOwner } from '@/lib/quotes/notify-owner'
 import {
   businessConfirmEmailHtml,
-  businessResponseOwnerEmailHtml,
   businessRfqOwnerEmailHtml,
   businessRfqReceiptEmailHtml,
 } from '@/lib/email/business'
@@ -244,8 +245,9 @@ async function submitBusinessRfqOnce(formData: FormData) {
   const admin = createAdminClient()
   if (admin && company) {
     const { data: companyRow } = await admin.from('companies').select('owner_id').eq('id', company.id).maybeSingle()
-    if (companyRow?.owner_id) {
-      const { data: owner } = await admin.from('profiles').select('email').eq('id', companyRow.owner_id).maybeSingle()
+    const ownerId = await resolveAlertOwnerId(admin, companyRow?.owner_id ?? null)
+    if (ownerId) {
+      const { data: owner } = await admin.from('profiles').select('email').eq('id', ownerId).eq('is_active', true).maybeSingle()
       if (owner?.email) {
         await sendEmail({
           to: owner.email,
@@ -338,20 +340,14 @@ async function emailQuoteOwner(quotationId: string, origin: string, action: stri
     .eq('id', quotationId)
     .maybeSingle()
   if (!quote?.company_id) return
-  const { data: company } = await admin.from('companies').select('name, owner_id').eq('id', quote.company_id).maybeSingle()
-  if (!company?.owner_id) return
-  const { data: owner } = await admin.from('profiles').select('email').eq('id', company.owner_id).maybeSingle()
-  if (!owner?.email) return
+  const { data: company } = await admin.from('companies').select('name').eq('id', quote.company_id).maybeSingle()
   const title = action === 'accept' ? 'Quotation accepted' : action === 'reject' ? 'Quotation declined' : 'Quote revision requested'
   const verb = action === 'accept' ? 'accepted' : action === 'reject' ? 'declined' : 'asked to revise'
-  await sendEmail({
-    to: owner.email,
-    subject: title,
-    html: businessResponseOwnerEmailHtml({
-      title,
-      detail: `${company.name || 'A business'} ${verb} ${quote.quotation_number || 'a quotation'}. ${comment}`.trim(),
-      quoteUrl: `${origin}/crm/quotations/${quotationId}`,
-    }),
+  await emailQuotationOwner({
+    quotationId,
+    origin,
+    title,
+    detail: `${company?.name || 'A business'} ${verb} ${quote.quotation_number || 'a quotation'}. ${comment}`.trim(),
   })
 }
 
