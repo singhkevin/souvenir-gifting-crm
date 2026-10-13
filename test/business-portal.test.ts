@@ -12,7 +12,9 @@ test('gstin accepts a known number and rejects a changed check digit', () => {
   assert.equal(isValidGstin('27AAACR5055K1Z7'), true)
   assert.equal(gstinCheckDigit('27AAACR5055K1Z'), '7')
   assert.match(gstinError('27AAACR5055K1Z8') || '', /check digit/)
-  assert.equal(gstinError(''), 'GSTIN is required for an Indian business')
+  assert.equal(gstinError(''), null)
+  assert.equal(gstinError('   '), null)
+  assert.equal(isValidGstin(null), true)
   assert.match(gstinError('99AAACR5055K1Z7') || '', /state code/)
 })
 

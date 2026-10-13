@@ -65,6 +65,12 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
       : null
     bestByItem[item.id] = best?.id || null
   }
+  const catalogCostResult = canPrice && productIds.length
+    ? await supabase.from('product_costs').select('product_id, supplier_cost').in('product_id', productIds)
+    : { data: [] as { product_id: string; supplier_cost: number | null }[] }
+  const catalogCostByProduct = new Map(
+    (catalogCostResult.data || []).map((row) => [row.product_id, row.supplier_cost == null ? null : Number(row.supplier_cost)]),
+  )
   const costResult = canPrice && quoteItems.length
     ? await supabase
         .from('quotation_item_costs')
@@ -288,6 +294,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               sku: product?.sku || null,
               quantity: Number(item.quantity) || 1,
               unitPrice: Number(item.unit_price) || 0,
+              catalogCost: item.product_id ? catalogCostByProduct.get(item.product_id) ?? null : null,
             }
           })}
           offers={supplierOffers}

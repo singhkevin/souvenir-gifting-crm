@@ -206,6 +206,7 @@ begin
   v_tax := round((v_subtotal - v_discount) * coalesce(q.tax_percent, 0) / 100.0, 2);
   v_total := v_subtotal - v_discount + v_tax;
 
+  -- Replaced by 20261013_product_costs.sql, which reads product_costs before these columns are dropped.
   select coalesce(sum(coalesce(p.supplier_cost, p.price * 0.62) * qi.quantity), 0)
     into v_cost
   from public.quotation_items qi
@@ -307,3 +308,39 @@ grant execute on function public.place_quote_order(text, jsonb) to service_role;
 
 comment on function public.place_quote_order(text, jsonb) is
   'Single-use quote checkout. Builds one order from accepted lines at the quoted price. A repeat returns the existing order.';
+
+-- Accepted lines are the checkout price. Block later inserts, edits, and deletes.
+create or replace function public.guard_accepted_quotation_items()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_quotation_id uuid := case when tg_op = 'DELETE' then old.quotation_id else new.quotation_id end;
+  v_status text;
+begin
+  select q.status
+    into v_status
+  from public.quotations q
+  where q.id = v_quotation_id;
+
+  if v_status = 'accepted' then
+    raise exception 'Accepted quotation lines are locked';
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.guard_accepted_quotation_items() from public, anon;
+grant execute on function public.guard_accepted_quotation_items() to authenticated, service_role;
+
+drop trigger if exists quotation_items_lock_accepted on public.quotation_items;
+create trigger quotation_items_lock_accepted
+  before insert or update or delete on public.quotation_items
+  for each row
+  execute function public.guard_accepted_quotation_items();

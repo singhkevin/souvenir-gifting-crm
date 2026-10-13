@@ -4,14 +4,16 @@ import { oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
 import { offersByProduct } from '@/lib/pricing/offers'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
+import { readProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import { purchaseOffer, type PurchaseOffer } from '@/lib/catalogue/purchase-path'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const PUBLIC_PRODUCT_SELECT =
-  'id, name, sku, description, image_url, price, moq, supplier_cost, internal_margin, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)' as const
+  'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)' as const
 const PUBLIC_PRODUCT_SELECT_WITH_PURCHASE =
-  'id, name, sku, description, image_url, price, moq, supplier_cost, internal_margin, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, category:categories(id, name), brand:brands(id, name)' as const
+  'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, category:categories(id, name), brand:brands(id, name)' as const
+const PUBLIC_COST_EMBED = 'product_costs(supplier_cost, internal_margin)'
 
 export type PublicProduct = {
   id: string
@@ -83,45 +85,111 @@ type PublicRow = Parameters<typeof toPublicProduct>[0] & {
   internal_margin?: number | null
 }
 
+function attachCosts(rows: unknown[]): PublicRow[] {
+  return rows.map((row) => {
+    const record = row as PublicRow & { product_costs?: unknown }
+    return { ...record, ...readProductCost(record as Parameters<typeof readProductCost>[0]) }
+  })
+}
+
 async function loadPublicRows(client: SupabaseClient, id?: string): Promise<PublicRow[]> {
+  const purchaseSelect = `${PUBLIC_PRODUCT_SELECT_WITH_PURCHASE}, ${PUBLIC_COST_EMBED}`
+  const plainSelect = `${PUBLIC_PRODUCT_SELECT}, ${PUBLIC_COST_EMBED}`
   if (id) {
     const single = await client
       .from('products')
-      .select(PUBLIC_PRODUCT_SELECT_WITH_PURCHASE)
+      .select(purchaseSelect)
       .eq('status', 'active')
       .eq('catalogue_access', 'all')
       .eq('id', id)
       .maybeSingle()
+    if (single.error && /product_costs/i.test(single.error.message)) {
+      const withoutCost = await client
+        .from('products')
+        .select(PUBLIC_PRODUCT_SELECT_WITH_PURCHASE)
+        .eq('status', 'active')
+        .eq('catalogue_access', 'all')
+        .eq('id', id)
+        .maybeSingle()
+      if (withoutCost.error && missingPurchaseColumn(withoutCost.error.message)) {
+        const fallback = await client
+          .from('products')
+          .select(PUBLIC_PRODUCT_SELECT)
+          .eq('status', 'active')
+          .eq('catalogue_access', 'all')
+          .eq('id', id)
+          .maybeSingle()
+        return fallback.data ? attachCosts([fallback.data]) : []
+      }
+      return withoutCost.data ? attachCosts([withoutCost.data]) : []
+    }
     if (single.error && missingPurchaseColumn(single.error.message)) {
+      const fallback = await client
+        .from('products')
+        .select(plainSelect)
+        .eq('status', 'active')
+        .eq('catalogue_access', 'all')
+        .eq('id', id)
+        .maybeSingle()
+      if (fallback.error && /product_costs/i.test(fallback.error.message)) {
+        const plain = await client
+          .from('products')
+          .select(PUBLIC_PRODUCT_SELECT)
+          .eq('status', 'active')
+          .eq('catalogue_access', 'all')
+          .eq('id', id)
+          .maybeSingle()
+        return plain.data ? attachCosts([plain.data]) : []
+      }
+      return fallback.data ? attachCosts([fallback.data]) : []
+    }
+    return single.data ? attachCosts([single.data]) : []
+  }
+
+  const first = await client
+    .from('products')
+    .select(purchaseSelect)
+    .eq('status', 'active')
+    .eq('catalogue_access', 'all')
+    .order('name')
+  if (first.error && /product_costs/i.test(first.error.message)) {
+    const withoutCost = await client
+      .from('products')
+      .select(PUBLIC_PRODUCT_SELECT_WITH_PURCHASE)
+      .eq('status', 'active')
+      .eq('catalogue_access', 'all')
+      .order('name')
+    if (withoutCost.error && missingPurchaseColumn(withoutCost.error.message)) {
       const fallback = await client
         .from('products')
         .select(PUBLIC_PRODUCT_SELECT)
         .eq('status', 'active')
         .eq('catalogue_access', 'all')
-        .eq('id', id)
-        .maybeSingle()
-      return fallback.data ? [fallback.data as unknown as PublicRow] : []
+        .order('name')
+      return attachCosts(fallback.data || [])
     }
-    return single.data ? [single.data as unknown as PublicRow] : []
+    return attachCosts(withoutCost.data || [])
   }
-
-  const first = await client
-    .from('products')
-    .select(PUBLIC_PRODUCT_SELECT_WITH_PURCHASE)
-    .eq('status', 'active')
-    .eq('catalogue_access', 'all')
-    .order('name')
   if (first.error && missingPurchaseColumn(first.error.message)) {
     const fallback = await client
       .from('products')
-      .select(PUBLIC_PRODUCT_SELECT)
+      .select(plainSelect)
       .eq('status', 'active')
       .eq('catalogue_access', 'all')
       .order('name')
-    return (fallback.data || []) as unknown as PublicRow[]
+    if (fallback.error && /product_costs/i.test(fallback.error.message)) {
+      const plain = await client
+        .from('products')
+        .select(PUBLIC_PRODUCT_SELECT)
+        .eq('status', 'active')
+        .eq('catalogue_access', 'all')
+        .order('name')
+      return attachCosts(plain.data || [])
+    }
+    return attachCosts(fallback.data || [])
   }
   if (first.error || !first.data) return []
-  return first.data as unknown as PublicRow[]
+  return attachCosts(first.data)
 }
 
 async function publicDbClient(): Promise<SupabaseClient | null> {

@@ -57,9 +57,9 @@ export function BusinessFrame({
           })}
         </nav>
       </header>
-      {verification && verification !== 'verified' ? (
+      {verification !== 'verified' ? (
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          This account is {verification}. You can request quotes now. Store checkout of an accepted quote waits until staff verify the account.
+          Pending approval. You can browse the catalogue. Quote requests open after sales approves this account.
         </div>
       ) : null}
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>

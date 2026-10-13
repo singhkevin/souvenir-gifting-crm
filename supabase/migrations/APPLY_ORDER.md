@@ -40,9 +40,10 @@ Do **not** run these against production from the agent unless explicitly request
 34. **`20261012_business_price_surface.sql`** ← `business_use_best_cost`, `business_show_sell_price` (rollback: `supabase/rollbacks/20261012_business_price_surface_rollback.sql`).
 35. **`20261012_business_rfq.sql`** ← requirement source and idempotency id, line target price and quantity breaks, `business_submit_rfq()` (rollback: `supabase/rollbacks/20261012_business_rfq_rollback.sql`).
 36. **`20261012_business_quotes.sql`** ← revision columns, quote validity, `business_respond_quotation()` (no order), viewed marker, `expire_business_quotations()` (rollback: `supabase/rollbacks/20261012_business_quotes_rollback.sql`).
-37. **`20261012_quote_checkout.sql`** ← `quote_checkout_tokens`, `place_quote_order()`, and a unique `orders(quotation_id)` index only when one does not already exist (rollback: `supabase/rollbacks/20261012_quote_checkout_rollback.sql`). `orders_quotation_id_key` from the base schema is left in place when present.
+37. **`20261012_quote_checkout.sql`** ← `quote_checkout_tokens`, `place_quote_order()`, a unique `orders(quotation_id)` index only when one does not already exist, and a trigger that locks `quotation_items` once the parent quotation is accepted (rollback: `supabase/rollbacks/20261012_quote_checkout_rollback.sql`). `orders_quotation_id_key` from the base schema is left in place when present.
+38. **`20261013_product_costs.sql`** ← staff-only `product_costs` (RLS via `is_pricing_staff()`). Backfills `supplier_cost`, `internal_margin`, and `internal_notes` from `products`, repoints catalogue and order functions at `product_costs`, then drops those columns from `products` (rollback: `supabase/rollbacks/20261013_product_costs_rollback.sql`). Apply after 37 so `place_quote_order` exists before it is replaced.
 
-Do not apply 31–37 from the agent. Run `supabase/tests/business_rls_check.sql` by hand after 32; it begins a transaction and rolls it back.
+Do not apply 31–38 from the agent. Run `supabase/tests/business_rls_check.sql` by hand after 32; it begins a transaction and rolls it back.
 
 ## Phase 2 verification SQL (after applying `20261001_portal_hosts.sql`)
 

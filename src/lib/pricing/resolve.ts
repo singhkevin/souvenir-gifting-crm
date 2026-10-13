@@ -11,7 +11,7 @@ export type MarginSettings = {
 export type PriceInputs = {
   supplierCost: number | null | undefined
   listPrice: number | null | undefined
-  /** Product-level margin % override (products.internal_margin). */
+  /** Product-level margin % override (product_costs.internal_margin). */
   productMarginPercent: number | null | undefined
   /** Company-level margin % (B2B only). */
   companyMarginPercent?: number | null | undefined

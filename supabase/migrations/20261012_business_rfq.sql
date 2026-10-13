@@ -83,6 +83,15 @@ begin
     return v_existing;
   end if;
 
+  if not exists (
+    select 1
+    from public.companies c
+    where c.id = v_company
+      and c.business_verification = 'verified'
+  ) then
+    raise exception 'Your account is pending approval';
+  end if;
+
   select owner_id into v_owner from public.companies where id = v_company;
   if v_owner is null or not exists (select 1 from public.profiles where id = v_owner and is_active) then
     select id into v_owner

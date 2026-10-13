@@ -167,9 +167,9 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
           </form>
 
           <p className="text-xs text-center text-[#7A7267] mt-5">
-            Need an account?{' '}
+            Need a business account?{' '}
             <Link href="/signup" className="font-semibold text-[#624B32] hover:underline">
-              Sign up
+              Register
             </Link>
           </p>
         </div>

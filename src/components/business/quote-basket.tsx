@@ -45,7 +45,7 @@ function loadMeta(): Meta {
   }
 }
 
-export function QuoteBasket() {
+export function QuoteBasket({ pendingApproval = false }: { pendingApproval?: boolean }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [meta, setMeta] = useState<Meta>(EMPTY_META)
   const [ready, setReady] = useState(false)
@@ -190,9 +190,12 @@ export function QuoteBasket() {
             className="mt-1 w-full rounded-md border border-[#E5DFD5] px-3 py-2"
           />
         </label>
+        {pendingApproval ? (
+          <p className="text-sm text-amber-950">Pending approval. Quote requests open after sales approves this account.</p>
+        ) : null}
         <TurnstileWidget />
         <SubmitButton
-          disabled={blocked}
+          disabled={blocked || pendingApproval}
           pendingLabel="Submitting…"
           className="w-full bg-[#806A50] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white disabled:opacity-60"
         >

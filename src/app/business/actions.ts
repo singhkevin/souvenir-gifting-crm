@@ -72,7 +72,6 @@ async function registerBusinessOnce(formData: FormData) {
   const city = clean(formData.get('city'))
   const website = clean(formData.get('website'))
   const gstin = normaliseGstin(clean(formData.get('gst_number')))
-  const taxId = clean(formData.get('tax_id'))
 
   if (!fullName) return { error: 'Name is required' }
   if (!email || !email.includes('@')) return { error: 'A valid work email is required' }
@@ -81,10 +80,9 @@ async function registerBusinessOnce(formData: FormData) {
   if (!phone) return { error: 'Phone is required' }
   if (!legalName) return { error: 'Legal name is required' }
   if (!city) return { error: 'City is required' }
-  if (country === 'India') {
-    const gstError = gstinError(gstin)
-    if (gstError) return { error: gstError }
-  }
+  if (country.toLowerCase() !== 'india') return { error: 'Business registration is available in India only' }
+  const gstError = gstinError(gstin)
+  if (gstError) return { error: gstError }
 
   const admin = createAdminClient()
   if (!admin) return { error: 'Registration is unavailable just now. Please try again shortly.' }
@@ -104,12 +102,12 @@ async function registerBusinessOnce(formData: FormData) {
   const { data: companyId, error: rpcError } = await admin.rpc('register_business_account', {
     p_company: {
       legal_name: legalName,
-      gst_number: country === 'India' ? gstin : '',
+      gst_number: gstin,
       city,
       state,
-      country,
+      country: 'India',
       website,
-      notes: registrationNotes(flags, country === 'India' ? '' : taxId),
+      notes: registrationNotes(flags, ''),
     },
     p_contact: { full_name: fullName, email, phone },
   })
@@ -173,6 +171,9 @@ async function submitBusinessRfqOnce(formData: FormData) {
 
   const { profile, company } = await requireBusiness()
   if (!profile.company_id) return { error: 'Company not found' }
+  if (company?.business_verification !== 'verified') {
+    return { error: 'Pending approval. You can browse the catalogue. Quote requests open after sales approves this account.' }
+  }
   const limited = await allowRate(`rfq:${profile.company_id}`, 86400, 10)
   if (!limited.ok) return { error: limited.error }
 
@@ -283,6 +284,8 @@ async function respondBusinessQuotationOnce(formData: FormData) {
     p_item_ids: action === 'accept' ? itemIds : null,
   })
   if (error || !data) return { error: error?.message || 'Unable to save this response' }
+  const { data: currentQuote } = await supabase.from('quotations').select('status').eq('id', quotationId).maybeSingle()
+  if (currentQuote?.status === 'expired') return { error: 'This quotation has expired' }
 
   const { company } = await requireBusiness()
   const origin = await requestOrigin()

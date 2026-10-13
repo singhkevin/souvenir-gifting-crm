@@ -15,8 +15,8 @@ insert into auth.users (
   created_at, updated_at, confirmation_token, recovery_token
 )
 values
-  ('00000000-0000-0000-0000-000000000000', '11111111-1111-4111-8111-111111111111', 'authenticated', 'authenticated', 'biz-a@example.com', '', now(), '{"role":"business_user"}'::jsonb, '{}'::jsonb, now(), now(), '', ''),
-  ('00000000-0000-0000-0000-000000000000', '22222222-2222-4222-8222-222222222222', 'authenticated', 'authenticated', 'biz-b@example.com', '', now(), '{"role":"business_user"}'::jsonb, '{}'::jsonb, now(), now(), '', '');
+  ('00000000-0000-0000-0000-000000000000', 'e6e1c84b-ddde-44ef-8a53-b58b79f5e37a', 'authenticated', 'authenticated', 'biz-a@example.com', '', now(), '{"role":"business_user"}'::jsonb, '{}'::jsonb, now(), now(), '', ''),
+  ('00000000-0000-0000-0000-000000000000', '82cb1963-ab73-452c-8501-1ba1a0594977', 'authenticated', 'authenticated', 'biz-b@example.com', '', now(), '{"role":"business_user"}'::jsonb, '{}'::jsonb, now(), now(), '', '');
 
 insert into public.companies (id, name, status, account_type, business_verification)
 values
@@ -26,12 +26,8 @@ values
 
 insert into public.profiles (id, full_name, email, role, company_id, is_active)
 values
-  ('11111111-1111-4111-8111-111111111111', 'Biz A', 'biz-a@example.com', 'business_user', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', true),
-  ('22222222-2222-4222-8222-222222222222', 'Biz B', 'biz-b@example.com', 'business_user', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', true)
-on conflict (id) do update
-set role = excluded.role,
-    company_id = excluded.company_id,
-    is_active = true;
+  ('e6e1c84b-ddde-44ef-8a53-b58b79f5e37a', 'Biz A', 'biz-a@example.com', 'business_user', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', true),
+  ('82cb1963-ab73-452c-8501-1ba1a0594977', 'Biz B', 'biz-b@example.com', 'business_user', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', true);
 
 insert into public.requirements (id, name, company_id, owner_id, status, source)
 select 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'A only', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -52,7 +48,7 @@ select 'ffffffff-ffff-4fff-8fff-ffffffffffff', 'RLS-A', 'aaaaaaaa-aaaa-4aaa-8aaa
 where exists (select 1 from public.profiles where role = 'admin' and is_active);
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"e6e1c84b-ddde-44ef-8a53-b58b79f5e37a","role":"authenticated"}', true);
 
 do $$
 declare

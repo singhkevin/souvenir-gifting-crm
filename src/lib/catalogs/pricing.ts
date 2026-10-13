@@ -3,6 +3,7 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
 import { offersByProduct } from '@/lib/pricing/offers'
+import { withProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
 
@@ -79,7 +80,7 @@ async function priceRows(
   const productIds = [...new Set(rows.filter((row) => computeIds.includes(row.id)).map((row) => row.product_id))]
   const settings = await getPricingSettings()
   const [{ data: products }, companyResult] = await Promise.all([
-    admin.from('products').select('id, price, supplier_cost, internal_margin, moq').in('id', productIds),
+    admin.from('products').select('id, price, moq, product_costs(supplier_cost, internal_margin)').in('id', productIds),
     companyId
       ? admin.from('companies').select('margin_percent').eq('id', companyId).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -88,7 +89,7 @@ async function priceRows(
   const companyMargin = num((companyResult.data as { margin_percent?: unknown } | null)?.margin_percent)
   const flags = settings.surfaces.portal
   const grouped = flags.useBestCost ? offersByProduct(await loadSupplierOffers(admin, productIds)) : new Map()
-  const byProduct = new Map(products.map((product) => [product.id as string, product]))
+  const byProduct = new Map(products.map((product) => [product.id as string, withProductCost(product)]))
 
   for (const row of rows) {
     if (!computeIds.includes(row.id)) continue

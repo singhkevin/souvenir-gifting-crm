@@ -153,6 +153,7 @@ create policy notifications_select_business on public.notifications
   using (
     public.is_business()
     and audience = 'client'
+    and company_id = public.business_company_id()
     and (user_id is null or user_id = auth.uid())
   );
 
@@ -162,10 +163,12 @@ create policy notifications_update_business on public.notifications
   using (
     public.is_business()
     and audience = 'client'
+    and company_id = public.business_company_id()
     and (user_id is null or user_id = auth.uid())
   )
   with check (
     public.is_business()
     and audience = 'client'
+    and company_id = public.business_company_id()
     and (user_id is null or user_id = auth.uid())
   );

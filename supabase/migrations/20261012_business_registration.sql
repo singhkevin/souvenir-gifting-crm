@@ -6,7 +6,7 @@ alter table public.org_settings
   add column if not exists business_default_owner_id uuid references public.profiles (id);
 
 comment on column public.org_settings.business_default_owner_id is
-  'Account manager assigned to a new business company. Null falls through to the least-loaded active sales user, then the first active admin.';
+  'Account manager assigned to a new business company. Null falls through to the first active admin.';
 
 create table if not exists public.rate_limit_hits (
   key text not null,
@@ -90,20 +90,6 @@ begin
   from public.org_settings s
   join public.profiles p on p.id = s.business_default_owner_id and p.is_active
   limit 1;
-
-  if v_owner is null then
-    select p.id
-      into v_owner
-    from public.profiles p
-    left join public.companies c
-      on c.owner_id = p.id
-     and c.account_type = 'business'
-    where p.role = 'sales'
-      and p.is_active
-    group by p.id, p.created_at
-    order by count(c.id), p.created_at
-    limit 1;
-  end if;
 
   if v_owner is null then
     select id

@@ -60,6 +60,9 @@ export function pricingSettingsFromRow(
 }
 
 export function supplierSchemaHint(message: string) {
+  if (/product_costs/i.test(message)) {
+    return `${message} Apply supabase/migrations/20261013_product_costs.sql, then retry.`
+  }
   if (/business_use_best_cost|business_show_sell_price|quote_validity_days|business_default_owner_id/i.test(message)) {
     return `${message} Apply the 20261012 business portal migrations, then retry.`
   }

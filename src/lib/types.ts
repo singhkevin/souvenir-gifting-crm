@@ -214,6 +214,7 @@ export interface Product {
   fulfillment_mode?: string | null
   image_url: string | null
   status: ProductStatus
+  /** Loaded from product_costs for staff. Absent on a public catalogue row. */
   supplier_cost: number | null
   internal_margin: number | null
   internal_notes: string | null

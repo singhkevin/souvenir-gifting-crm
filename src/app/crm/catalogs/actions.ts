@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
 import { shareLinkOrigin } from '@/lib/auth/request-origin'
 import { sendEmail } from '@/lib/email/resend'
+import { withProductCost } from '@/lib/pricing/product-costs'
 import { resolveProductSellPrice, getCompanyMarginPercent, getMarginSettings, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import { offersByProduct } from '@/lib/pricing/offers'
 import { buildBudgetPackCandidates, planBudgetPacks } from '@/lib/catalogue/budget-packs-server'
@@ -305,7 +306,7 @@ export async function addCatalogProducts(formData: FormData) {
     supabase.from('campaign_products').select('product_id').eq('campaign_id', campaignId),
     supabase
       .from('products')
-      .select('id, name, description, image_url, price, moq, status, supplier_cost, internal_margin')
+      .select('id, name, description, image_url, price, moq, status, product_costs(supplier_cost, internal_margin)')
       .in('id', productIds)
       .eq('status', 'active'),
     getMarginSettings(),
@@ -317,7 +318,7 @@ export async function addCatalogProducts(formData: FormData) {
     : new Map()
 
   const taken = new Set((existing || []).map((row) => row.product_id))
-  const byId = new Map((products || []).map((product) => [product.id, product]))
+  const byId = new Map((products || []).map((product) => [product.id, withProductCost(product)]))
   let added = 0
   let skipped = 0
 

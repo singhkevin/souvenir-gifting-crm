@@ -72,7 +72,8 @@ begin
     set status = 'expired', updated_at = now()
     where id = q.id
       and status in ('sent', 'viewed');
-    raise exception 'This quotation has expired';
+    -- Returning keeps the status change. Raising would roll the update back.
+    return q.id;
   end if;
 
   if v_action = 'revise' then

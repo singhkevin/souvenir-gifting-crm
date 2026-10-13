@@ -20,7 +20,9 @@ export default async function BusinessDashboardPage() {
       <div>
         <h1 className="font-serif text-3xl">Hello{profile.full_name ? `, ${profile.full_name}` : ''}</h1>
         <p className="mt-2 text-sm text-[#5C6570]">
-          Verification: {company?.business_verification || 'pending'}. Indicative prices are not the final quote.
+          {company?.business_verification === 'verified'
+            ? 'Your account is approved. Indicative prices are not the final quote.'
+            : 'Pending approval. You can browse the catalogue. Quote requests open after sales approves this account. Indicative prices are not the final quote.'}
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

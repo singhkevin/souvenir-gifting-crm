@@ -31,7 +31,7 @@ export function gstinCheckDigit(body: string) {
 
 export function gstinError(value: string | null | undefined): string | null {
   const gstin = normaliseGstin(value)
-  if (!gstin) return 'GSTIN is required for an Indian business'
+  if (!gstin) return null
   if (!GSTIN_RE.test(gstin)) return 'Enter a 15-character GSTIN'
   if (!STATE_CODES.has(gstin.slice(0, 2))) return 'GSTIN state code is not valid'
   if (gstinCheckDigit(gstin.slice(0, 14)) !== gstin[14]) return 'GSTIN check digit does not match'
