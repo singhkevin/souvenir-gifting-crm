@@ -76,15 +76,16 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
           </div>
 
           <div className="sm:text-right">
-            <p className="text-[10px] uppercase font-bold text-gray-400">Total Estimate</p>
+            <p className="text-[10px] uppercase font-bold text-gray-400">Total incl. GST</p>
             <p className="text-2xl font-bold text-[#624B32]">{formatCurrency(quote.total)}</p>
             <p className="text-xs text-gray-500 mt-0.5">
               Valid until:{' '}
               <span className={`font-bold ${isExpired ? 'text-red-600' : 'text-gray-800'}`}>
-                {quote.valid_until ? formatDate(quote.valid_until) : '30 Days'}
+                {quote.valid_until ? formatDate(quote.valid_until) : 'Not set'}
                 {isExpired ? ' (Expired)' : ''}
               </span>
             </p>
+            <p className="text-xs text-gray-500">GST {quote.tax_percent || 0}% is added once. Line amounts are ex-GST.</p>
           </div>
         </div>
 
@@ -115,7 +116,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
                         <p className="font-semibold text-gray-800">{formatCurrency(item.unit_price)}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase text-gray-400">Total</p>
+                        <p className="text-[10px] uppercase text-gray-400">Ex-GST</p>
                         <p className="font-semibold text-gray-900">{formatCurrency(item.line_total)}</p>
                       </div>
                     </div>
@@ -131,7 +132,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
                     <th className="px-4 py-3 font-semibold">Product</th>
                     <th className="px-4 py-3 text-center font-semibold">Quantity</th>
                     <th className="px-4 py-3 text-right font-semibold">Unit Price</th>
-                    <th className="px-4 py-3 text-right font-semibold">Line Total</th>
+                    <th className="px-4 py-3 text-right font-semibold">Ex-GST</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -171,23 +172,21 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
             
             <div className="w-full sm:w-64 space-y-2 text-xs">
               <div className="flex justify-between text-gray-600">
-                <span>Subtotal:</span>
+                <span>Subtotal ex-GST:</span>
                 <span>{formatCurrency(quote.subtotal)}</span>
               </div>
               {quote.discount_amount > 0 && (
                 <div className="flex justify-between text-green-600 font-medium">
-                  <span>Discount ({quote.discount_percent}%):</span>
+                  <span>Discount ({quote.discount_percent}%) once:</span>
                   <span>-{formatCurrency(quote.discount_amount)}</span>
                 </div>
               )}
-              {quote.tax_amount > 0 && (
-                <div className="flex justify-between text-gray-600">
-                  <span>GST / Tax ({quote.tax_percent}%):</span>
-                  <span>{formatCurrency(quote.tax_amount)}</span>
-                </div>
-              )}
+              <div className="flex justify-between text-gray-600">
+                <span>GST ({quote.tax_percent || 0}%) once:</span>
+                <span>{formatCurrency(quote.tax_amount)}</span>
+              </div>
               <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
-                <span>Total Amount:</span>
+                <span>Total incl. GST:</span>
                 <span className="text-[#624B32]">{formatCurrency(quote.total)}</span>
               </div>
             </div>
@@ -218,6 +217,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
                 quotationId={quote.id}
                 discountPercent={Number(quote.discount_percent) || 0}
                 taxPercent={Number(quote.tax_percent) || 0}
+                validUntil={quote.valid_until || null}
                 items={(quote.items || []).map((item: { id: string; quantity: number; unit_price: number; line_total: number; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
                   const product = oneRelation(item.product)
                   return {

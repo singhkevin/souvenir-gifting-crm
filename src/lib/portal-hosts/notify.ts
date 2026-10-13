@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { portalUrlForSlug } from '@/lib/portal-host'
 import { writeAudit } from '@/lib/audit'
+import { resolveAlertOwnerId } from '@/lib/alerts/owner'
 
 type PortalHostRow = {
   id: string
@@ -129,7 +130,10 @@ export async function notifyPortalLive(host: PortalHostRow, companyName: string)
       .select('owner_id')
       .eq('id', host.company_id)
       .maybeSingle()
-    if (company?.owner_id) recipientIds.add(company.owner_id)
+    if (company?.owner_id) {
+      const ownerId = await resolveAlertOwnerId(admin, company.owner_id)
+      if (ownerId) recipientIds.add(ownerId)
+    }
 
     if (host.notify_client_admins) {
       const { data: clients } = await admin

@@ -7,6 +7,7 @@ import { newPublicOrderToken } from '@/lib/orders/public-token'
 import { adminOrigin, portalUrlForSlug } from '@/lib/portal-host'
 import { storePublicOrigin } from '@/lib/site/store-public-origin'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { resolveAlertOwnerId } from '@/lib/alerts/owner'
 import { formatCurrency, oneRelation } from '@/lib/utils'
 
 const STAGE_EMAIL: Record<string, string> = {
@@ -76,14 +77,9 @@ async function loadOrder(orderId: string) {
 }
 
 async function staffRecipient(admin: NonNullable<ReturnType<typeof createAdminClient>>, ownerId: string | null | undefined) {
-  if (ownerId) {
-    const { data } = await admin.from('profiles').select('email').eq('id', ownerId).maybeSingle()
-    if (data?.email) return String(data.email)
-  }
-  const { data: settings } = await admin.from('org_settings').select('business_default_owner_id').limit(1).maybeSingle()
-  const fallback = settings?.business_default_owner_id ? String(settings.business_default_owner_id) : ''
-  if (!fallback) return null
-  const { data } = await admin.from('profiles').select('email').eq('id', fallback).maybeSingle()
+  const id = await resolveAlertOwnerId(admin, ownerId)
+  if (!id) return null
+  const { data } = await admin.from('profiles').select('email').eq('id', id).eq('is_active', true).maybeSingle()
   return data?.email ? String(data.email) : null
 }
 
@@ -92,7 +88,7 @@ function itemLines(items: OrderItem[] | null | undefined) {
     const product = oneRelation(item.product)
     const name = product?.name || item.description || 'Item'
     const qty = item.quantity ?? 0
-    const total = item.line_total != null ? ` — ${formatCurrency(item.line_total)}` : ''
+    const total = item.line_total != null ? ` — ${formatCurrency(item.line_total)} ex-GST` : ''
     return `<li>${escapeHtml(name)} × ${qty}${escapeHtml(total)}</li>`
   }).join('')
 }
@@ -141,7 +137,8 @@ export async function orderPlacedCustomerEmail(orderId: string) {
           We'll confirm and share an invoice; no online payment yet.
         </p>
         <ul style="font-size:14px;line-height:1.6;padding-left:18px;">${itemLines(order.items)}</ul>
-        <p style="font-size:14px;"><strong>Total ${escapeHtml(formatCurrency(order.order_value || 0))}</strong></p>
+        <p style="font-size:14px;"><strong>Total incl. GST ${escapeHtml(formatCurrency(order.order_value || 0))}</strong></p>
+        <p style="font-size:12px;color:#5C6570;">Line amounts are ex-GST. GST is included in the total.</p>
         ${link ? `<p style="margin:24px 0;"><a href="${escapeHtml(link)}" style="background:#806A50;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;">View order status</a></p>` : ''}
       </div>
     `
@@ -166,7 +163,8 @@ export async function orderPlacedStaffEmail(orderId: string) {
         <h1 style="font-size:20px;">New ${escapeHtml(source)} order ${escapeHtml(number)}</h1>
         <p style="font-size:14px;line-height:1.6;">${escapeHtml(company?.name || 'A customer')} placed an order.</p>
         <ul style="font-size:14px;line-height:1.6;padding-left:18px;">${itemLines(order.items)}</ul>
-        <p style="font-size:14px;"><strong>Total ${escapeHtml(formatCurrency(order.order_value || 0))}</strong></p>
+        <p style="font-size:14px;"><strong>Total incl. GST ${escapeHtml(formatCurrency(order.order_value || 0))}</strong></p>
+        <p style="font-size:12px;color:#5C6570;">Line amounts are ex-GST. GST is included in the total.</p>
         <p style="margin:24px 0;"><a href="${escapeHtml(link)}" style="background:#806A50;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-size:13px;font-weight:600;">Open in CRM</a></p>
       </div>
     `
