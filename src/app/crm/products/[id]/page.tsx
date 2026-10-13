@@ -10,6 +10,7 @@ import { ProductImageEditor } from '@/components/products/product-image-editor'
 import { CatalogueVisibilityEditor } from '@/components/products/catalogue-visibility-editor'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
+import { readProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import { pickBestOffer } from '@/lib/pricing/offers'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
@@ -42,7 +43,7 @@ export default async function ProductDetailPage({
     { data: accessRecords },
     pricing,
   ] = await Promise.all([
-    supabase.from('products').select('*, category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
+    supabase.from('products').select('*, product_costs(supplier_cost, internal_margin, internal_notes), category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
     supabase.from('categories').select('id, name'),
     supabase.from('brands').select('id, name').order('name'),
     supabase.from('suppliers').select('id, name').order('name'),
@@ -54,6 +55,7 @@ export default async function ProductDetailPage({
   const best = pickBestOffer(offers, { requireInStock: pricing.requireInStock })
 
   if (!product) notFound()
+  Object.assign(product, readProductCost(product))
 
   const priceBase = {
     listPrice: product.price,

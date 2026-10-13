@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { requireStaff } from '@/lib/auth'
-import { updateQuotationStatus, convertToOrder, duplicateQuotation } from '../actions'
+import { updateQuotationStatus, convertToOrder, duplicateQuotation, createQuotationRevision } from '../actions'
 import { ActionButton } from '@/components/ui/action-button'
 import { QuotationCosting } from './QuotationCosting'
 import { offersByProduct, pickBestOffer } from '@/lib/pricing/offers'
@@ -30,6 +30,10 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     .maybeSingle()
 
   if (!quote) notFound()
+
+  const parentQuote = quote.revision_of
+    ? await supabase.from('quotations').select('quotation_number').eq('id', quote.revision_of).maybeSingle()
+    : { data: null }
 
   const company = oneRelation(quote.company)
   const contact = oneRelation(quote.contact)
@@ -61,6 +65,12 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
       : null
     bestByItem[item.id] = best?.id || null
   }
+  const catalogCostResult = canPrice && productIds.length
+    ? await supabase.from('product_costs').select('product_id, supplier_cost').in('product_id', productIds)
+    : { data: [] as { product_id: string; supplier_cost: number | null }[] }
+  const catalogCostByProduct = new Map(
+    (catalogCostResult.data || []).map((row) => [row.product_id, row.supplier_cost == null ? null : Number(row.supplier_cost)]),
+  )
   const costResult = canPrice && quoteItems.length
     ? await supabase
         .from('quotation_item_costs')
@@ -101,6 +111,14 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               Requirement: <span className="font-medium text-gray-700">{requirement.name}</span>
             </p>
           )}
+          {quote.revision_of ? (
+            <p className="text-xs text-gray-500 mt-1">
+              Revision of {parentQuote.data?.quotation_number || 'a previous quotation'}
+            </p>
+          ) : null}
+          {quote.revision_requested_at ? (
+            <p className="mt-2 text-xs font-semibold text-amber-800">Revision requested{quote.client_comment ? `: ${quote.client_comment}` : ''}</p>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -114,6 +132,15 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               Mark as Sent
             </ActionButton>
           )}
+          {quote.revision_requested_at && ['sent', 'viewed', 'draft'].includes(quote.status || '') ? (
+            <ActionButton
+              action={createQuotationRevision.bind(null, quote.id)}
+              pendingLabel="Creating…"
+              className="px-3 py-1.5 bg-amber-100 text-amber-900 rounded-lg text-xs font-semibold"
+            >
+              Create revision
+            </ActionButton>
+          ) : null}
           {['sent', 'viewed'].includes(quote.status || '') && !isExpired && (
             <>
               <ActionButton
@@ -267,6 +294,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               sku: product?.sku || null,
               quantity: Number(item.quantity) || 1,
               unitPrice: Number(item.unit_price) || 0,
+              catalogCost: item.product_id ? catalogCostByProduct.get(item.product_id) ?? null : null,
             }
           })}
           offers={supplierOffers}

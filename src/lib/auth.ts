@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { isBusinessRole, isClientRole, isStaffRole } from "@/lib/roles"
 import type { Role } from "@/lib/types"
 
 export type ProfileSession = {
@@ -26,11 +27,10 @@ export async function getProfile(): Promise<ProfileSession | null> {
 
 export async function requireStaff(roles?: Role[]): Promise<ProfileSession> {
   const profile = await getProfile()
-  if (!profile) redirect("/login")
-  if (!profile.is_active) redirect("/login")
-  if (profile.role === "client_admin" || (profile.role as string) === "client_user") {
-    redirect("/portal/catalogue")
-  }
+  if (!profile || !profile.is_active) redirect("/login")
+  if (isBusinessRole(profile.role)) redirect("/business/dashboard")
+  if (isClientRole(profile.role)) redirect("/portal/catalogue")
+  if (!isStaffRole(profile.role)) redirect("/login")
   if (roles && !roles.includes(profile.role)) {
     redirect("/crm/access-denied")
   }

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { withProductCost } from '@/lib/pricing/product-costs'
 import { getCompanyMarginPercent, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import { offersByProduct } from '@/lib/pricing/offers'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
@@ -21,7 +22,7 @@ export async function listCatalogPickerProducts(companyId: string | null): Promi
   const [{ data: products }, settings, companyMargin] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, sku, price, moq, supplier_cost, internal_margin')
+      .select('id, name, sku, price, moq, product_costs(supplier_cost, internal_margin)')
       .eq('status', 'active')
       .order('name')
       .limit(PICKER_LIMIT),
@@ -34,7 +35,8 @@ export async function listCatalogPickerProducts(companyId: string | null): Promi
     ? offersByProduct(await loadSupplierOffers(supabase, rows.map((product) => product.id)))
     : new Map()
 
-  return rows.map((product) => {
+  return rows.map((row) => {
+    const product = withProductCost(row)
     const resolved = resolveSellPrice({
       supplierCost: supplierCostForProduct(product, offers.get(product.id) || [], {
         useBestCost: settings.surfaces.portal.useBestCost,

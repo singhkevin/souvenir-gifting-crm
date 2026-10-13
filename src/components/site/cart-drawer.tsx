@@ -33,9 +33,12 @@ export function CartDrawer({
     sync()
     window.addEventListener('storage', sync)
     window.addEventListener('giffter-cart-change', sync)
+    const openDrawer = () => setOpen(true)
+    window.addEventListener('giffter-cart-open', openDrawer)
     return () => {
       window.removeEventListener('storage', sync)
       window.removeEventListener('giffter-cart-change', sync)
+      window.removeEventListener('giffter-cart-open', openDrawer)
     }
   }, [cartKey])
 

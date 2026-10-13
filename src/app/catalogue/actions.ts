@@ -1,5 +1,6 @@
 'use server'
 
+import { placeQuoteOrder } from '@/lib/business/quote-checkout'
 import { placeStoreDirectOrder } from '@/lib/catalogue/direct-order'
 import { withIdempotency } from '@/lib/idempotency'
 import type { CheckoutLineInput } from '@/lib/catalogue/purchase-path'
@@ -15,4 +16,15 @@ export async function checkoutStoreCart(input: {
 }) {
   const { idempotencyKey, ...order } = input
   return withIdempotency('store.checkout', idempotencyKey, () => placeStoreDirectOrder(order))
+}
+
+export async function checkoutQuotedOrder(input: {
+  token: string
+  fullName?: string
+  email?: string
+  phone?: string
+  idempotencyKey?: string
+}) {
+  const { idempotencyKey, ...order } = input
+  return withIdempotency('store.quoteCheckout', idempotencyKey, () => placeQuoteOrder(order))
 }

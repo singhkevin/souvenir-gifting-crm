@@ -1,4 +1,4 @@
-export type CartSurface = 'store' | 'portal' | 'microsite' | 'catalog'
+export type CartSurface = 'store' | 'portal' | 'microsite' | 'catalog' | 'business'
 
 export type CartItem = {
   id: string
@@ -11,10 +11,15 @@ export type CartItem = {
   maxQuantity: number | null
   surface: CartSurface
   catalogId?: string | null
+  moq?: number
+  altQuantities?: number[]
+  targetUnitPrice?: number | null
+  note?: string
 }
 
 export const STORE_CART_KEY = 'giffter_cart'
 export const PORTAL_CART_KEY = 'giffter_portal_cart'
+export const BUSINESS_QUOTE_KEY = 'giffter_business_quote'
 
 /** @deprecated Use STORE_CART_KEY. Kept so older imports keep compiling. */
 export const CATALOGUE_CART_KEY = STORE_CART_KEY
@@ -30,19 +35,30 @@ function normalize(item: unknown): CartItem | null {
     maxRaw == null || maxRaw === ''
       ? null
       : Math.max(1, Math.round(Number(maxRaw) || 1))
-  const surface = raw.surface === 'portal' || raw.surface === 'microsite' || raw.surface === 'catalog'
+  const surface = raw.surface === 'portal' || raw.surface === 'microsite' || raw.surface === 'catalog' || raw.surface === 'business'
     ? raw.surface
     : 'store'
+  const moq = Math.max(1, Math.round(Number(raw.moq) || 1))
+  const altQuantities = Array.isArray(raw.altQuantities)
+    ? raw.altQuantities.map((value) => Math.round(Number(value))).filter((value) => Number.isInteger(value) && value > 0).slice(0, 3)
+    : []
+  const targetRaw = raw.targetUnitPrice
+  const targetUnitPrice = targetRaw == null || targetRaw === '' || !Number.isFinite(Number(targetRaw)) ? null : Number(targetRaw)
   return {
     id: String(raw.id || raw.sku),
     sku: String(raw.sku || raw.id),
     name: String(raw.name),
     price: raw.price == null ? null : Number(raw.price),
     image_url: raw.image_url ? String(raw.image_url) : null,
-    quantity: maxQuantity != null ? Math.min(quantity, maxQuantity) : quantity,
+    quantity: surface === 'business'
+      ? Math.min(100000, Math.max(moq, maxQuantity != null ? Math.min(quantity, maxQuantity) : quantity))
+      : maxQuantity != null ? Math.min(quantity, maxQuantity) : quantity,
     maxQuantity,
     surface,
     catalogId: raw.catalogId ? String(raw.catalogId) : null,
+    ...(surface === 'business'
+      ? { moq, altQuantities, targetUnitPrice, note: raw.note ? String(raw.note).slice(0, 500) : '' }
+      : {}),
   }
 }
 

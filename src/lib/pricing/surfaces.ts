@@ -1,6 +1,6 @@
 import type { MarginSettings } from '@/lib/pricing/resolve'
 
-export type PriceSurface = 'crm' | 'portal' | 'microsite' | 'store'
+export type PriceSurface = 'crm' | 'portal' | 'microsite' | 'store' | 'business'
 
 export type SurfacePricing = {
   useBestCost: boolean
@@ -17,6 +17,7 @@ export const DEFAULT_SURFACES: Record<PriceSurface, SurfacePricing> = {
   portal: { useBestCost: false, showSellPrice: true },
   microsite: { useBestCost: false, showSellPrice: true },
   store: { useBestCost: false, showSellPrice: true },
+  business: { useBestCost: false, showSellPrice: true },
 }
 
 const SURFACE_COLUMNS: Record<PriceSurface, { use: string; show: string }> = {
@@ -24,6 +25,7 @@ const SURFACE_COLUMNS: Record<PriceSurface, { use: string; show: string }> = {
   portal: { use: 'portal_use_best_cost', show: 'portal_show_sell_price' },
   microsite: { use: 'microsite_use_best_cost', show: 'microsite_show_sell_price' },
   store: { use: 'store_use_best_cost', show: 'store_show_sell_price' },
+  business: { use: 'business_use_best_cost', show: 'business_show_sell_price' },
 }
 
 export const SURFACE_SETTING_COLUMNS = [
@@ -58,6 +60,12 @@ export function pricingSettingsFromRow(
 }
 
 export function supplierSchemaHint(message: string) {
+  if (/product_costs/i.test(message)) {
+    return `${message} Apply supabase/migrations/20261013_product_costs.sql, then retry.`
+  }
+  if (/business_use_best_cost|business_show_sell_price|quote_validity_days|business_default_owner_id/i.test(message)) {
+    return `${message} Apply the 20261012 business portal migrations, then retry.`
+  }
   if (/product_supplier_offers|quotation_item_costs|best_supplier_cost|use_best_cost|show_sell_price|best_cost_require_in_stock/i.test(message)) {
     return `${message} Apply supabase/migrations/20261005_supplier_offers.sql, then retry.`
   }

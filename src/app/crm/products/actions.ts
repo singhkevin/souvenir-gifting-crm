@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/utils'
+import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 import { withIdempotency } from '@/lib/idempotency'
@@ -106,8 +107,6 @@ async function createProductOnce(formData: FormData) {
       supplier_id,
       description,
       price,
-      supplier_cost,
-      internal_margin,
       moq,
       stock_qty,
       fulfillment_mode,
@@ -123,6 +122,17 @@ async function createProductOnce(formData: FormData) {
   if (error) {
     if (error.code === '23505') return { error: 'SKU already exists.' }
     return { error: directOrderSchemaHint(error.message) }
+  }
+
+  if (supplier_cost != null || internal_margin != null) {
+    const { error: costError } = await upsertProductCost(supabase, product.id, {
+      supplier_cost,
+      internal_margin,
+    })
+    if (costError) {
+      await supabase.from('products').delete().eq('id', product.id)
+      return { error: supplierSchemaHint(costError.message) }
+    }
   }
 
   if (catalogue_access === 'selected') {
@@ -229,9 +239,24 @@ export async function updateProduct(productId: string, formData: FormData) {
   text('supplier_id')
   text('hsn_code')
   number('price', 'price', 0)
-  number('supplier_cost')
-  number('internal_margin')
   number('moq', 'moq', 1)
+  const costPatch: { supplier_cost?: number | null; internal_margin?: number | null } = {}
+  const readCost = (key: 'supplier_cost' | 'internal_margin', label: string) => {
+    if (!formData.has(key)) return null
+    const raw = String(formData.get(key) ?? '').trim()
+    if (!raw) {
+      costPatch[key] = null
+      return null
+    }
+    const parsed = Number(raw)
+    if (!Number.isFinite(parsed)) return `${label} must be a number`
+    costPatch[key] = parsed
+    return null
+  }
+  const supplierCostError = readCost('supplier_cost', 'Supplier cost')
+  if (supplierCostError) return { error: supplierCostError }
+  const marginError = readCost('internal_margin', 'Product margin')
+  if (marginError) return { error: marginError }
   if (formData.has('stock_qty')) {
     const raw = String(formData.get('stock_qty') ?? '').trim()
     const stock = raw ? Number(raw) : 0
@@ -281,6 +306,11 @@ export async function updateProduct(productId: string, formData: FormData) {
   if (error) {
     if (error.code === '23505') return { error: 'SKU already exists.' }
     return { error: directOrderSchemaHint(error.message) }
+  }
+
+  if (formData.has('supplier_cost') || formData.has('internal_margin')) {
+    const { error: costError } = await upsertProductCost(supabase, productId, costPatch)
+    if (costError) return { error: supplierSchemaHint(costError.message) }
   }
 
   if (update.status && update.status !== 'active') {

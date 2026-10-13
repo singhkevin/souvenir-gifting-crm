@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { writeAudit } from '@/lib/audit'
 import { offersByProduct } from '@/lib/pricing/offers'
+import { readProductCost } from '@/lib/pricing/product-costs'
 import { resolveSellPrice } from '@/lib/pricing/resolve'
 import { getCompanyMarginPercent, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
 import { withIdempotency } from '@/lib/idempotency'
@@ -98,7 +99,7 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
 
   const { data: reqProducts } = await supabase
     .from('requirement_products')
-    .select('product_id, quantity, product:products(id, name, price, internal_margin)')
+    .select('product_id, quantity, product:products(id, name, price, product_costs(supplier_cost, internal_margin))')
     .eq('requirement_id', req.id)
 
   if (!reqProducts?.length) {
@@ -133,7 +134,13 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
   if (numError || !quoteNumber) return { error: numError?.message || 'Could not allocate quote number' }
 
   const validUntil = new Date()
-  validUntil.setDate(validUntil.getDate() + 14)
+  let validityDays = 14
+  const validity = await supabase.from('org_settings').select('quote_validity_days').limit(1).maybeSingle()
+  if (!validity.error && validity.data?.quote_validity_days) {
+    const days = Number(validity.data.quote_validity_days)
+    if (Number.isInteger(days) && days >= 1 && days <= 90) validityDays = days
+  }
+  validUntil.setDate(validUntil.getDate() + validityDays)
 
   const { data: quote, error } = await supabase
     .from('quotations')
@@ -152,12 +159,20 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
     .single()
   if (error) return { error: error.message }
 
+  let businessQuote = false
+  if (req.company_id) {
+    const company = await supabase.from('companies').select('account_type').eq('id', req.company_id).maybeSingle()
+    if (!company.error) businessQuote = company.data?.account_type === 'business'
+  }
+
   const items = reqProducts.map((row) => {
     const product = Array.isArray(row.product) ? row.product[0] : row.product
+    const productCost = readProductCost(product)
     const qty = row.quantity || req.quantity || 1
-    const listOrCatalog = sellByProduct.get(row.product_id) ?? Number(product?.price || 0)
+    const listPrice = Number(product?.price || 0)
+    const listOrCatalog = sellByProduct.get(row.product_id) ?? listPrice
     const bestCost = supplierCostForProduct(
-      { id: row.product_id, supplier_cost: null, moq: qty },
+      { id: row.product_id, supplier_cost: productCost.supplier_cost, moq: qty },
       quoteOffers.get(row.product_id) || [],
       {
         useBestCost: pricing.surfaces.crm.useBestCost,
@@ -165,17 +180,25 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
         quantity: qty,
       },
     )
+    const businessUnit = resolveSellPrice({
+      supplierCost: null,
+      listPrice,
+      productMarginPercent: null,
+      companyMarginPercent: null,
+      channel: 'b2b',
+      settings: pricing,
+    }).sellPrice
     const derived = pricing.surfaces.crm.useBestCost && pricing.surfaces.crm.showSellPrice && bestCost != null
       ? resolveSellPrice({
           supplierCost: bestCost,
           listPrice: product?.price,
-          productMarginPercent: product?.internal_margin,
+          productMarginPercent: productCost.internal_margin,
           companyMarginPercent: companyMargin,
           channel: 'b2b',
           settings: pricing,
         }).sellPrice
       : null
-    const unit = derived ?? listOrCatalog
+    const unit = businessQuote ? businessUnit : (derived ?? listOrCatalog)
     return {
       quotation_id: quote.id,
       product_id: row.product_id,

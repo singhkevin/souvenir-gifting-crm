@@ -10,6 +10,7 @@ import { validateNewPassword } from '@/lib/auth/password'
 import { sendEmail, passwordResetEmailHtml } from '@/lib/email/resend'
 import { isEmailAllowedForDomains } from '@/lib/pricing/domains'
 import { accountKindForRole } from '@/lib/account-kind'
+import { isBusinessRole, isClientRole } from '@/lib/roles'
 import { domainSplitEnabled } from '@/lib/domain-flag'
 import { confirmOriginForAccount, hostLoginDecision } from '@/lib/domain-routing'
 import { readTenantFromHeaders, resolveHost, tenantPortalUrl, isPrimaryPortalLive } from '@/lib/portal-host'
@@ -46,14 +47,15 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
       return { error: 'This account is inactive' }
     }
 
-    const isClient = profile?.role === 'client_admin' || profile?.role === 'client_user'
+    const isClient = isClientRole(profile?.role)
+    const isBusiness = isBusinessRole(profile?.role)
     const headerStore = await headers()
     const host = headerStore.get('x-forwarded-host') || headerStore.get('host')
     const resolved = resolveHost(host)
     const tenant = readTenantFromHeaders(headerStore)
     let portalSlug: string | null = null
 
-    if (isClient && profile.company_id) {
+    if (profile && isClient && profile.company_id) {
       const { data: company } = await supabase
         .from('companies')
         .select('allowed_email_domains, portal_slug')
@@ -80,7 +82,28 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
       }
     }
 
-    if (isClient && profile.company_id) {
+    if (isBusiness && profile) {
+      if (resolved.kind === 'tenant') {
+        await supabase.auth.signOut()
+        return { error: 'Business accounts sign in on the store.' }
+      }
+      if (profile.company_id) {
+        const { data: businessCompany } = await supabase
+          .from('companies')
+          .select('business_verification')
+          .eq('id', profile.company_id)
+          .maybeSingle()
+        if (businessCompany?.business_verification === 'rejected') {
+          await supabase.auth.signOut()
+          return { error: 'This business account was not approved.' }
+        }
+      }
+      const home = landingPathForRole(profile.role)
+      if (isSafeNext(next) && next.startsWith('/business')) return { redirectTo: next }
+      return { redirectTo: home }
+    }
+
+    if (profile && isClient && profile.company_id) {
       if (resolved.kind === 'tenant') {
         if (!tenant || tenant.id !== profile.company_id) {
           await supabase.auth.signOut()

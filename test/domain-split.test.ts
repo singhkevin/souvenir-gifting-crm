@@ -7,6 +7,7 @@ import { domainSplitEnabled } from '../src/lib/domain-flag.ts'
 import {
   confirmOriginForAccount,
   decideHostRoute,
+  businessPortalRedirect,
   finderDestinations,
   hostLoginDecision,
   pendingPortalRedirect,
@@ -92,11 +93,15 @@ test('resolveHost is unchanged when the split is off, including new domain env',
     assert.equal(decideHostRoute({ kind: 'store' }, '/crm/orders').action, 'continue')
     assert.equal(robotsHeaderFor({ kind: 'tenant', slug: 'acme' }, '/portal/catalogue'), null)
     assert.equal(landingPathForRole('business'), '/crm/dashboard')
+    assert.equal(landingPathForRole('business_user'), '/business/dashboard')
     assert.equal(storeSiteUrl(), publicSiteUrl())
     assert.equal(adminSiteUrl(), publicSiteUrl())
     const pending = pendingPortalRedirect('giftingstore.online')
     assert.equal(pending.status, 307)
     assert.equal(pending.location, 'https://giftingstore.online/login')
+    const businessOff = businessPortalRedirect('acme.giftingstore.online', '/business/register', '')
+    assert.equal(businessOff.status, 307)
+    assert.equal(businessOff.location, 'https://giftingstore.online/business/register')
     const staff = staffAreaRedirect('acme.giftingstore.online', '/crm/orders', '?tab=1')
     assert.equal(staff.status, 307)
     assert.equal(staff.location, 'https://giftingstore.online/crm/orders?tab=1')
@@ -212,6 +217,7 @@ test('middleware allowlists and path-preserving redirects, flag on and off', () 
     assert.equal(decideHostRoute(store, '/share/catalogs/abc').action, 'redirect')
     assert.equal(decideHostRoute(store, '/portal/catalogue').action, 'not-found')
     assert.equal(decideHostRoute(store, '/api/internal/portal-hosts/run').action, 'not-found')
+    assert.equal(decideHostRoute(store, '/api/internal/quotes/expire').action, 'continue')
 
     assert.deepEqual(decideHostRoute(admin, '/'), {
       action: 'redirect',
@@ -230,6 +236,11 @@ test('middleware allowlists and path-preserving redirects, flag on and off', () 
       status: 301,
       location: 'https://souvenirgifting.com/catalogue/9?q=pen',
     })
+    assert.deepEqual(decideHostRoute(admin, '/business', '?from=admin'), {
+      action: 'redirect',
+      status: 301,
+      location: 'https://souvenirgifting.com/business?from=admin',
+    })
     assert.equal(decideHostRoute(admin, '/portal/catalogue').action, 'not-found')
 
     assert.equal(decideHostRoute(tenant, '/login').action, 'continue')
@@ -245,6 +256,11 @@ test('middleware allowlists and path-preserving redirects, flag on and off', () 
       location: 'https://admin.souvenirgifting.com/crm/orders',
     })
     assert.equal(decideHostRoute(tenant, '/api/internal/portal-hosts/run').action, 'not-found')
+    assert.deepEqual(decideHostRoute(tenant, '/business/quote', '?x=1'), {
+      action: 'redirect',
+      status: 301,
+      location: 'https://souvenirgifting.com/business/quote?x=1',
+    })
 
     assert.equal(decideHostRoute(resolveHost('localhost:3000'), '/crm/orders').action, 'continue')
     assert.equal(decideHostRoute(resolveHost('preview.vercel.app'), '/catalogue').action, 'continue')
@@ -337,6 +353,7 @@ test('login role gate: staff, client, and retail stay on their own host', () => 
     assert.equal(landingPathForRole('retail'), '/')
     assert.equal(landingPathForRole('admin'), '/crm/dashboard')
     assert.equal(landingPathForRole('client_user'), '/portal/catalogue')
+    assert.equal(landingPathForRole('business_user'), '/business/dashboard')
     assert.equal(accountKindForRole('management'), 'staff')
     assert.equal(accountKindForRole('business_admin'), 'retail')
 

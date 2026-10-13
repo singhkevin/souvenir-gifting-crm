@@ -11,15 +11,39 @@ import { purchaseCaption } from '@/lib/catalogue/purchase-path'
 
 const VIEW_KEY = 'giffter.public-catalogue.view'
 
-export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
+type CatalogueItem = PublicProduct & {
+  indicativePrice?: number | null
+  moqUnits?: number
+}
+
+export function CatalogueBrowser({
+  products,
+  hrefFor,
+  priceLabel,
+  captionFor,
+  hideQuickAdd = false,
+}: {
+  products: CatalogueItem[]
+  hrefFor?: (product: CatalogueItem) => string
+  priceLabel?: (product: CatalogueItem) => string
+  captionFor?: (product: CatalogueItem) => string
+  hideQuickAdd?: boolean
+}) {
   const [view, setView] = useState<'grid' | 'list'>('grid')
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(VIEW_KEY)
-      if (saved === 'list' || saved === 'grid') setView(saved)
-    } catch {
-      // Preference is optional.
+    let active = true
+    queueMicrotask(() => {
+      if (!active) return
+      try {
+        const saved = window.localStorage.getItem(VIEW_KEY)
+        if (saved === 'list' || saved === 'grid') setView(saved)
+      } catch {
+        // Preference is optional.
+      }
+    })
+    return () => {
+      active = false
     }
   }, [])
 
@@ -66,7 +90,14 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
       {view === 'grid' ? (
         <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-6 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
           {products.map((product) => (
-            <SiteProductCard key={product.id} product={product} />
+            <SiteProductCard
+              key={product.id}
+              product={product}
+              href={hrefFor?.(product)}
+              priceText={priceLabel?.(product)}
+              caption={captionFor?.(product)}
+              hideQuickAdd={hideQuickAdd}
+            />
           ))}
         </div>
       ) : (
@@ -74,7 +105,7 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
           {products.map((product) => (
             <Link
               key={product.id}
-              href={`/catalogue/${product.id}`}
+              href={hrefFor?.(product) || `/catalogue/${product.id}`}
               className="grid grid-cols-[5rem_1fr_auto] items-center gap-4 py-4 text-inherit hover:text-inherit sm:grid-cols-[6.5rem_1fr_auto] sm:gap-5"
             >
               <div className="aspect-square overflow-hidden rounded-md catalogue-studio-field">
@@ -94,8 +125,8 @@ export function CatalogueBrowser({ products }: { products: PublicProduct[] }) {
                 <p className="mt-1 font-mono text-[10px] text-[#5C6570]">{product.sku}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-[#806A50]">{product.price == null ? 'Request quotation' : formatCurrency(product.price)}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">{purchaseCaption(product.purchase)}</p>
+                <p className="text-sm font-semibold text-[#806A50]">{priceLabel?.(product) || (product.price == null ? 'Request quotation' : formatCurrency(product.price))}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">{captionFor?.(product) || purchaseCaption(product.purchase)}</p>
               </div>
             </Link>
           ))}

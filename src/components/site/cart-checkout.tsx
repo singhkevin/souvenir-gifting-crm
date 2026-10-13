@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { checkoutStoreCart } from '@/app/catalogue/actions'
+import { checkoutStoreCart, checkoutQuotedOrder } from '@/app/catalogue/actions'
 import { checkoutPortalCart } from '@/app/portal/catalogue/actions'
 import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
@@ -12,15 +12,31 @@ export function CartCheckout({
   items,
   kind,
   onDone,
+  quoteLock,
 }: {
   items: CartItem[]
   kind: 'store' | 'portal'
   onDone: () => void
+  quoteLock?: {
+    token: string
+    quotationNumber: string
+    fullName: string
+    email: string
+    phone: string
+    companyName: string
+    total: number
+  }
 }) {
   const { pending, error, run } = useAction()
   const { key, rotate } = useIdempotencyKey()
   const [order, setOrder] = useState<{ id?: string; number?: string } | null>(null)
-  const [form, setForm] = useState({ full_name: '', email: '', company_name: '', phone: '', fax: '' })
+  const [form, setForm] = useState({
+    full_name: quoteLock?.fullName || '',
+    email: quoteLock?.email || '',
+    company_name: quoteLock?.companyName || '',
+    phone: quoteLock?.phone || '',
+    fax: '',
+  })
 
   const lines = items.map((item) => ({
     productId: item.id,
@@ -32,7 +48,15 @@ export function CartCheckout({
     run(
       () =>
         kind === 'store'
-          ? checkoutStoreCart({ ...form, lines, idempotencyKey: key })
+          ? quoteLock
+            ? checkoutQuotedOrder({
+                token: quoteLock.token,
+                fullName: form.full_name,
+                email: form.email,
+                phone: form.phone,
+                idempotencyKey: key,
+              })
+            : checkoutStoreCart({ ...form, lines, idempotencyKey: key })
           : checkoutPortalCart({ lines, idempotencyKey: key }),
       {
         successMessage: 'Order placed',
@@ -56,6 +80,11 @@ export function CartCheckout({
             View order
           </Link>
         ) : null}
+        {quoteLock && order.id ? (
+          <Link href={`/business/orders/${order.id}`} className="inline-flex text-xs font-semibold text-[#806A50]">
+            View order
+          </Link>
+        ) : null}
       </div>
     )
   }
@@ -63,7 +92,7 @@ export function CartCheckout({
   return (
     <div className="space-y-3">
       {kind === 'store' ? (
-        <fieldset disabled={pending} className="space-y-2">
+        <fieldset disabled={pending || Boolean(quoteLock)} className="space-y-2">
           <input
             value={form.full_name}
             onChange={(event) => setForm({ ...form, full_name: event.target.value })}
@@ -115,6 +144,8 @@ export function CartCheckout({
             <Spinner />
             Placing order…
           </span>
+        ) : quoteLock ? (
+          `Place order · ${quoteLock.quotationNumber}`
         ) : (
           'Place order'
         )}

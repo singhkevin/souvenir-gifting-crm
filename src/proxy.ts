@@ -1,9 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { isSafeNext } from '@/lib/safe-next'
+import { isSafeNext, landingPathForRole } from '@/lib/safe-next'
 import { TAB_HEADER, TAB_QUERY, TAB_URL_HEADER, authCookieName, isPublicAuthPath, isPublicSitePath, isTabId } from '@/lib/auth/tab'
 import { domainSplitEnabled } from '@/lib/domain-flag'
-import { decideHostRoute, pendingPortalRedirect, robotsHeaderFor, staffAreaRedirect } from '@/lib/domain-routing'
+import { businessPortalRedirect, decideHostRoute, pendingPortalRedirect, robotsHeaderFor, staffAreaRedirect } from '@/lib/domain-routing'
 import {
   applyTenantHeaders,
   isInternalApiPath,
@@ -127,7 +127,8 @@ export async function proxy(request: NextRequest) {
 
   // Internal worker routes: apex only; tenant hosts get 404. With the split on, admin and dev only.
   if (isInternalApiPath(pathname)) {
-    if (resolved.kind === 'tenant' || (domainSplitEnabled() && resolved.kind !== 'admin' && resolved.kind !== 'dev' && resolved.kind !== 'main')) {
+    const quoteCronOnStore = domainSplitEnabled() && resolved.kind === 'store' && pathname === '/api/internal/quotes/expire'
+    if (!quoteCronOnStore && (resolved.kind === 'tenant' || (domainSplitEnabled() && resolved.kind !== 'admin' && resolved.kind !== 'dev' && resolved.kind !== 'main'))) {
       return respond(NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } }))
     }
     return respond(withTabRequest(request, tabId, null))
@@ -173,6 +174,10 @@ export async function proxy(request: NextRequest) {
     ) {
       const staff = staffAreaRedirect(host, pathname, search)
       return respond(NextResponse.redirect(staff.location, staff.status))
+    }
+    if (pathname === '/business' || pathname.startsWith('/business/')) {
+      const business = businessPortalRedirect(host, pathname, search)
+      return respond(NextResponse.redirect(business.location, business.status))
     }
   }
 
@@ -262,7 +267,12 @@ export async function proxy(request: NextRequest) {
       request.nextUrl.searchParams.has('code')
     if (user && isPublicAuthPath(pathname) && pathname.startsWith('/login') && !recoveryAttempt) {
       const next = request.nextUrl.searchParams.get('next')
-      const dest = withTabQuery(new URL(isSafeNext(next) ? next : '/', request.url), tabId)
+      let destPath = isSafeNext(next) ? next : '/'
+      if (!isSafeNext(next)) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+        destPath = landingPathForRole(profile?.role)
+      }
+      const dest = withTabQuery(new URL(destPath, request.url), tabId)
       const redirect = NextResponse.redirect(dest)
       supabaseResponse.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie))
       return respond(redirect)

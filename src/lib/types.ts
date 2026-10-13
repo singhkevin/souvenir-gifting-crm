@@ -1,4 +1,4 @@
-export type Role = "admin" | "sales" | "operations" | "accounts" | "management" | "client_admin" | "client_user"
+export type Role = "admin" | "sales" | "operations" | "accounts" | "management" | "client_admin" | "client_user" | "business_user"
 export type LeadStage = "cold" | "warm" | "hot" | "client" | "regular_client"
 export type LeadSource = "referral" | "website" | "direct" | "social_media" | "event" | "other"
 export type QuotationStatus = "draft" | "sent" | "viewed" | "accepted" | "rejected" | "expired"
@@ -214,6 +214,7 @@ export interface Product {
   fulfillment_mode?: string | null
   image_url: string | null
   status: ProductStatus
+  /** Loaded from product_costs for staff. Absent on a public catalogue row. */
   supplier_cost: number | null
   internal_margin: number | null
   internal_notes: string | null

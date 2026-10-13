@@ -6,6 +6,7 @@ import { getRequestTabId } from '@/lib/auth/tab-server'
 import { TabSessionRevive } from '@/components/auth/tab-session-revive'
 import { headers } from 'next/headers'
 import { readTenantFromHeaders } from '@/lib/portal-host'
+import { isBusinessRole, isClientRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,14 +38,18 @@ export default async function PortalLayoutWrapper({ children }: { children: Reac
   const headerStore = await headers()
   const tenant = readTenantFromHeaders(headerStore)
   if (tenant) {
-    const isClient = profile.role === 'client_admin' || profile.role === 'client_user'
+    const isClient = isClientRole(profile.role)
     if (!isClient || tenant.id !== profile.company_id) {
       await supabase.auth.signOut()
       redirect('/login?error=portal')
     }
   }
 
-  if (profile.role !== 'client_admin' && profile.role !== 'client_user') {
+  if (isBusinessRole(profile.role)) {
+    redirect('/business/dashboard')
+  }
+
+  if (!isClientRole(profile.role)) {
     redirect('/crm/dashboard')
   }
 

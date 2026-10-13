@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getProfile } from '@/lib/auth'
 import { isUuid } from '@/lib/utils'
+import { shouldAttachNamedCompany } from '@/lib/business/email-domain'
 import { appName } from '@/lib/brand'
 import { withIdempotency } from '@/lib/idempotency'
 
@@ -110,14 +111,23 @@ async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: stri
     .limit(1)
     .maybeSingle()
 
-  const { data: existingCompany } = await admin
+  const matched = await admin
     .from('companies')
-    .select('id')
+    .select('id, name, status, account_type')
     .ilike('name', companyName)
     .limit(1)
     .maybeSingle()
+  const existingCompany = matched.error && /account_type/i.test(matched.error.message)
+    ? (await admin.from('companies').select('id, name, status').ilike('name', companyName).limit(1).maybeSingle()).data
+    : matched.data
 
-  let companyId = existingCompany?.id as string | undefined
+  let companyId: string | undefined
+  let matchNote = ''
+  if (existingCompany && shouldAttachNamedCompany(existingCompany)) {
+    companyId = existingCompany.id as string
+  } else if (existingCompany) {
+    matchNote = `Possible match: ${existingCompany.name}. Not attached.`
+  }
   if (!companyId) {
     const { data: created, error: companyError } = await admin
       .from('companies')
@@ -125,7 +135,7 @@ async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: stri
         name: companyName,
         status: 'prospect',
         owner_id: owner?.id || null,
-        notes: `Created from the public ${appName()} catalogue quote form.`,
+        notes: [`Created from the public ${appName()} catalogue quote form.`, matchNote].filter(Boolean).join(' '),
       })
       .select('id')
       .single()

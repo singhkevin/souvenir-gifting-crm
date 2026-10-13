@@ -4,6 +4,7 @@ import { Plus, Search, Upload } from 'lucide-react'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { isUuid } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
+import { readProductCost } from '@/lib/pricing/product-costs'
 import { ProductsBrowser } from '@/components/products/products-browser'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
@@ -29,7 +30,7 @@ export default async function ProductsPage({
 
   let query = supabase
     .from('products')
-    .select('*, category:categories(id, name), brand:brands(id, name), company_product_access(count)', { count: 'exact' })
+    .select('*, product_costs(supplier_cost, internal_margin, internal_notes), category:categories(id, name), brand:brands(id, name), company_product_access(count)', { count: 'exact' })
     .order('name')
 
   if (search) {
@@ -172,7 +173,10 @@ export default async function ProductsPage({
         />
       </div>
 
-      <ProductsBrowser products={products || []} showCost={showCost} />
+      <ProductsBrowser
+        products={(products || []).map((row) => ({ ...row, ...readProductCost(row) }))}
+        showCost={showCost}
+      />
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">

@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { withProductCost } from '@/lib/pricing/product-costs'
 import { getCompanyMarginPercent, getPricingSettings, loadSupplierOffers, resolveProductSellPrice, supplierCostForProduct } from '@/lib/pricing/server'
 import { offersByProduct } from '@/lib/pricing/offers'
 import { pickBudgetPackKits, type BudgetPackCandidate } from '@/lib/catalogue/budget-packs'
@@ -35,18 +36,34 @@ export async function loadCompanyCatalogueProducts(companyId: string): Promise<P
   const { data: products, error } = await client
     .from('products')
     .select(
-      'id, name, description, image_url, price, moq, supplier_cost, internal_margin, catalogue_access, status'
+      'id, name, description, image_url, price, moq, catalogue_access, status, product_costs(supplier_cost, internal_margin)'
     )
     .eq('status', 'active')
     .neq('catalogue_access', 'none')
 
   if (error || !products) return []
 
-  return products.filter(
-    (p) =>
-      !excludedIds.has(p.id) &&
-      (p.catalogue_access === 'all' || grantedIds.has(p.id))
-  ) as ProductRow[]
+  return products
+    .filter(
+      (p) =>
+        !excludedIds.has(p.id) &&
+        (p.catalogue_access === 'all' || grantedIds.has(p.id))
+    )
+    .map((row) => {
+      const priced = withProductCost(row)
+      return {
+        id: priced.id,
+        name: priced.name,
+        description: priced.description,
+        image_url: priced.image_url,
+        price: priced.price,
+        moq: priced.moq,
+        supplier_cost: priced.supplier_cost,
+        internal_margin: priced.internal_margin,
+        catalogue_access: priced.catalogue_access,
+        status: priced.status,
+      }
+    }) as ProductRow[]
 }
 
 export async function buildBudgetPackCandidates(

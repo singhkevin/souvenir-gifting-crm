@@ -14,6 +14,7 @@ type Line = {
   sku: string | null
   quantity: number
   unitPrice: number
+  catalogCost?: number | null
 }
 
 type SavedCost = {
@@ -95,7 +96,7 @@ function CostLine({
   const initialOffer = saved?.supplier_offer_id || bestId || ''
   const initial = offers.find((offer) => offer.id === initialOffer)
   const [offerId, setOfferId] = useState(initialOffer)
-  const [cost, setCost] = useState(String(saved?.supplier_cost ?? initial?.cost ?? ''))
+  const [cost, setCost] = useState(String(saved?.supplier_cost ?? initial?.cost ?? line.catalogCost ?? ''))
   const [margin, setMargin] = useState(String(saved?.margin_percent ?? defaultMargin))
   const [unit, setUnit] = useState(String(line.unitPrice || ''))
   const [saving, setSaving] = useState(false)

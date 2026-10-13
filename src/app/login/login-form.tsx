@@ -28,7 +28,7 @@ function isNextRedirect(err: unknown) {
   return digest.startsWith('NEXT_REDIRECT')
 }
 
-export function LoginForm({ next = '', resetSuccess = false, portalError = false }: { next?: string; resetSuccess?: boolean; portalError?: boolean }) {
+export function LoginForm({ next = '', resetSuccess = false, portalError = false, confirmed = false }: { next?: string; resetSuccess?: boolean; portalError?: boolean; confirmed?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [help, setHelp] = useState<{ href: string; label: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -98,6 +98,11 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
           </p>
           <form onSubmit={handleSubmit} className="space-y-5">
             {next ? <input type="hidden" name="next" value={next} /> : null}
+            {confirmed && !error && (
+              <div className="p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
+                Email confirmed. Sign in to open your business account.
+              </div>
+            )}
             {resetSuccess && !error && (
               <div className="p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
                 Password updated successfully. Please sign in with your new password.
@@ -162,9 +167,9 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
           </form>
 
           <p className="text-xs text-center text-[#7A7267] mt-5">
-            Need an account?{' '}
+            Need a business account?{' '}
             <Link href="/signup" className="font-semibold text-[#624B32] hover:underline">
-              Sign up
+              Register
             </Link>
           </p>
         </div>

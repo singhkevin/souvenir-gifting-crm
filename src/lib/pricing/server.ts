@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withProductCost } from '@/lib/pricing/product-costs'
 import {
   resolveSellPrice,
   type MarginSettings,
@@ -135,15 +136,21 @@ export async function sellPricesForSurface(
   if (!flags.showSellPrice) {
     return new Map(productIds.map((id) => [id, null]))
   }
-  const { data: products, error } = await admin
+  const embedded = await admin
     .from('products')
-    .select('id, price, supplier_cost, internal_margin, moq')
+    .select('id, price, moq, product_costs(supplier_cost, internal_margin)')
     .in('id', productIds)
+  const fallback = embedded.error && /product_costs/i.test(embedded.error.message)
+    ? await admin.from('products').select('id, price, moq').in('id', productIds)
+    : null
+  const products = fallback ? fallback.data : embedded.data
+  const error = fallback ? fallback.error : embedded.error
   if (error || !products) return null
   const offers = flags.useBestCost ? await loadSupplierOffers(admin, productIds) : []
   const grouped = offersByProduct(offers)
   const prices = new Map<string, number | null>()
-  for (const product of products) {
+  for (const row of products) {
+    const product = withProductCost(row)
     const cost = supplierCostForProduct(product, grouped.get(product.id) || [], {
       useBestCost: flags.useBestCost,
       requireInStock: settings.requireInStock,

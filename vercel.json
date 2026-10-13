@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/internal/quotes/expire",
+      "schedule": "30 3 * * *"
+    }
+  ]
+}

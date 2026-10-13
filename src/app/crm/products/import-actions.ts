@@ -6,6 +6,8 @@ import { parseCsv, splitCompanyNames } from '@/lib/csv'
 import { revalidatePath } from 'next/cache'
 import { PRODUCT_CATEGORY_ALIASES } from '@/lib/products/categories'
 import { directOrderSchemaHint } from '@/lib/catalogue/purchase-path'
+import { upsertProductCost } from '@/lib/pricing/product-costs'
+import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { withIdempotency } from '@/lib/idempotency'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
@@ -276,7 +278,6 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
         category_id: item.category_id,
         supplier_id: item.supplier_id,
         price: item.price,
-        supplier_cost: Number.isFinite(item.supplier_cost as number) ? item.supplier_cost : null,
         moq: item.moq,
         stock_qty: item.stock_qty,
         fulfillment_mode: item.fulfillment_mode,
@@ -296,6 +297,20 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
         reason: error?.code === '23505' ? 'SKU already exists' : directOrderSchemaHint(error?.message || 'Could not save product'),
       })
       continue
+    }
+
+    const supplierCost = Number.isFinite(item.supplier_cost as number) ? item.supplier_cost : null
+    if (supplierCost != null) {
+      const { error: costError } = await upsertProductCost(supabase, product.id, { supplier_cost: supplierCost })
+      if (costError) {
+        await supabase.from('products').delete().eq('id', product.id)
+        failures.push({
+          row: item.rowNumber,
+          sku: item.sku,
+          reason: supplierSchemaHint(costError.message),
+        })
+        continue
+      }
     }
 
     if (item.catalogue_access === 'selected') {

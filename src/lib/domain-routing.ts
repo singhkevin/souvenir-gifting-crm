@@ -154,10 +154,12 @@ export function decideHostRoute(host: ResolvedHost, pathname: string, search = '
   if (host.kind === 'tenant') {
     if (isInternalApiPath(pathname)) return { action: 'not-found' }
     if (isStaffPath(pathname)) return redirect(301, adminOrigin(null), pathname, search)
+    if (matches(pathname, '/business')) return redirect(301, storeOrigin(null), pathname, search)
     return { action: 'continue' }
   }
 
   if (host.kind === 'store') {
+    if (pathname === '/api/internal/quotes/expire') return { action: 'continue' }
     if (isInternalApiPath(pathname)) return { action: 'not-found' }
     if (isStaffPath(pathname)) return redirect(301, adminOrigin(null), pathname, search)
     if (isStorePath(pathname)) return { action: 'continue' }
@@ -196,6 +198,13 @@ export function pendingPortalRedirect(hostHeader: string | null | undefined): { 
 
 export function staffAreaRedirect(hostHeader: string | null | undefined, pathname: string, search: string) {
   const origin = domainSplitEnabled() ? adminOrigin(hostHeader) : mainOrigin(hostHeader)
+  const status = domainSplitEnabled() ? 301 : 307
+  return { location: absolute(origin, pathname, search), status: status as 301 | 307 }
+}
+
+/** Tenant /business goes to the store when the split is on, and to the main site when it is off. */
+export function businessPortalRedirect(hostHeader: string | null | undefined, pathname: string, search: string) {
+  const origin = domainSplitEnabled() ? storeOrigin(hostHeader) : mainOrigin(hostHeader)
   const status = domainSplitEnabled() ? 301 : 307
   return { location: absolute(origin, pathname, search), status: status as 301 | 307 }
 }

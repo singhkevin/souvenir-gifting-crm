@@ -192,10 +192,13 @@ export async function insertCatalogRequirement(
 
   let inserted = await admin
     .from('requirements')
-    .insert({ ...base, campaign_id: input.campaignId })
+    .insert({ ...base, campaign_id: input.campaignId, source: 'corporate_portal' })
     .select('id')
     .single()
 
+  if (inserted.error && /campaign_id|source/i.test(inserted.error.message)) {
+    inserted = await admin.from('requirements').insert({ ...base, campaign_id: input.campaignId }).select('id').single()
+  }
   if (inserted.error && /campaign_id/i.test(inserted.error.message)) {
     inserted = await admin.from('requirements').insert(base).select('id').single()
   }
