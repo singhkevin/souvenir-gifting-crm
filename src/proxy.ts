@@ -250,12 +250,12 @@ export async function proxy(request: NextRequest) {
       request.nextUrl.searchParams.has('token_hash') ||
       request.nextUrl.searchParams.has('code')
     if (pathname.startsWith('/login') && !recoveryAttempt) {
-      const dest = trialExpired ? '/tenant/trial-expired' : '/portal/catalogue'
+      const dest = trialExpired ? '/tenant/trial-expired' : '/portal/gifts'
       return respond(copyCookies(NextResponse.redirect(withTabQuery(new URL(dest, request.url), tabId))))
     }
     const onPortal = pathname === '/portal' || pathname.startsWith('/portal/')
     if (!onPortal && !tenantCanSkipLogin(pathname)) {
-      const dest = trialExpired ? '/tenant/trial-expired' : '/portal/catalogue'
+      const dest = trialExpired ? '/tenant/trial-expired' : '/portal/gifts'
       return respond(copyCookies(NextResponse.redirect(withTabQuery(new URL(dest, request.url), tabId))))
     }
     return respond(supabaseResponse)

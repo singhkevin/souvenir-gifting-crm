@@ -16,7 +16,7 @@ export function isSafeNext(value: string | null | undefined): value is string {
 }
 
 export function landingPathForRole(role: string | null | undefined): string {
-  if (isClientRole(role)) return '/portal/catalogue'
+  if (isClientRole(role)) return '/portal/gifts'
   if (isBusinessRole(role)) return '/business/dashboard'
   if (domainSplitEnabled() && accountKindForRole(role) !== 'staff') return '/'
   return '/crm/dashboard'

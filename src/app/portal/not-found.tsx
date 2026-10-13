@@ -18,7 +18,7 @@ export default function PortalNotFound() {
             This page is not available. It may have moved, or the link may be out of date.
           </p>
           <Link
-            href="/portal/catalogue"
+            href="/portal/gifts"
             className="inline-block mt-4 px-3 py-1.5 rounded-md text-sm font-medium bg-[var(--color-primary)] text-white hover:text-white hover:opacity-90"
           >
             Browse gifts

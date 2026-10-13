@@ -60,7 +60,14 @@ export default async function PortalOrderDetailPage({
   mockupQuery = requirementId
     ? mockupQuery.or(`order_id.eq.${id},requirement_id.eq.${requirementId}`)
     : mockupQuery.eq('order_id', id)
-  const { data: mockups } = await mockupQuery
+  const [{ data: mockups }, { data: invoices }] = await Promise.all([
+    mockupQuery,
+    supabase
+      .from('invoices')
+      .select('id, invoice_number, amount, status, due_date, invoice_date')
+      .eq('order_id', id)
+      .order('invoice_date', { ascending: false }),
+  ])
   const showMockups = (mockups || []).length > 0 || order.status === 'mockup' || order.status === 'client_approval'
 
   const campaign = oneRelation(order.campaign)
@@ -77,7 +84,7 @@ export default async function PortalOrderDetailPage({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <BackButton href="/portal/orders" label="Back to Orders" />
+      <BackButton href="/portal/orders" label="Back to orders" />
       {approvalError && (
         <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">{approvalError}</p>
       )}
@@ -97,7 +104,7 @@ export default async function PortalOrderDetailPage({
             </p>
             {quotation?.quotation_number && (
               <p className="text-xs text-gray-500 mt-1">
-                Quotation {quotation.quotation_number}
+                Quote {quotation.quotation_number}
                 {quotation.total != null ? ` · ${formatCurrency(quotation.total)}` : ''}
               </p>
             )}
@@ -114,9 +121,29 @@ export default async function PortalOrderDetailPage({
           <OrderLifecycleBar status={order.status} variant="client" showActors={false} />
         </div>
 
-        {showMockups && (
-          <div className="space-y-3 border-b p-6">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">Shared mockups</h3>
+        <div className="space-y-4 border-b p-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">Documents</h3>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-gray-500">Invoices</p>
+            {(invoices || []).length === 0 ? (
+              <p className="text-sm text-gray-500">No invoices for this order yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {(invoices || []).map((invoice) => (
+                  <li key={invoice.id} className="flex flex-col gap-1 rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-mono text-sm font-medium text-gray-900">{invoice.invoice_number}</p>
+                      <p className="text-xs text-gray-500">{formatDate(invoice.invoice_date)} · due {formatDate(invoice.due_date)}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-900">{formatCurrency(invoice.amount)} · <span className="font-medium capitalize">{invoice.status}</span></p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {showMockups ? (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-gray-500">Shared mockups</p>
             {(mockups || []).length === 0 ? (
               <p className="text-sm text-gray-500">No mockups shared yet.</p>
             ) : (
@@ -145,7 +172,8 @@ export default async function PortalOrderDetailPage({
               </ul>
             )}
           </div>
-        )}
+          ) : null}
+        </div>
 
         {order.status === 'client_approval' && (
           <div className="space-y-3 border-b p-6">
@@ -217,7 +245,7 @@ export default async function PortalOrderDetailPage({
                         <div>
                           {canOpen ? (
                             <Link
-                              href={`/portal/catalogue/product/${item.product!.id}`}
+                              href={`/portal/gifts/${item.product!.id}`}
                               className="font-medium text-gray-900 hover:text-[#806A50] hover:underline"
                             >
                               {name}

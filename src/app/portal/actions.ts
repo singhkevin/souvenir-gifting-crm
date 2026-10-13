@@ -121,6 +121,7 @@ async function createPortalRequirementOnce(formData: {
   }
 
   revalidatePath('/portal/requirements')
+  revalidatePath('/portal/quotes')
   revalidatePath('/crm/requirements')
   return { success: true, id: requirement?.id }
 }
@@ -134,10 +135,10 @@ async function requestCatalogQuotationOnce(input: {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
-  if (!isUuid(input.catalogId)) return { error: 'Catalog not found' }
+  if (!isUuid(input.catalogId)) return { error: 'Collection not found' }
 
   const selected = parseRfqSelection(input.lines)
-  if (!selected) return { error: 'Select at least one product and a whole-number quantity' }
+  if (!selected) return { error: 'Add at least one gift and a whole-number quantity' }
   const deadline = cleanRfqDeadline(input.deadline)
   if ('error' in deadline) return deadline
 
@@ -151,10 +152,13 @@ async function requestCatalogQuotationOnce(input: {
     loadPublishedCatalogLines(supabase, input.catalogId),
     supabase.from('companies').select('owner_id').eq('id', companyId).maybeSingle(),
   ])
-  if (!catalog?.name) return { error: 'Catalog not found' }
+  if (!catalog?.name) return { error: 'Collection not found' }
 
   const expanded = expandCatalogRfqLines(rows, selected)
-  if (expanded.error || !expanded.lines) return { error: expanded.error || 'Select at least one product' }
+  if (expanded.error || !expanded.lines) {
+    const message = expanded.error === 'Select at least one product' ? 'Add at least one gift' : expanded.error
+    return { error: message || 'Add at least one gift' }
+  }
 
   const admin = createAdminClient()
   if (!admin) return { error: 'Unable to save this requirement just now. Please try again shortly.' }
@@ -171,8 +175,10 @@ async function requestCatalogQuotationOnce(input: {
   if (saved.error) return { error: saved.error }
 
   revalidatePath('/portal/requirements')
+  revalidatePath('/portal/quotes')
   revalidatePath('/crm/requirements')
   revalidatePath('/portal/catalogue')
+  revalidatePath('/portal/gifts')
   return { success: true, id: saved.id }
 }
 
@@ -244,6 +250,8 @@ async function respondToQuotationOnce(
 
   revalidatePath('/portal/quotations')
   revalidatePath(`/portal/quotations/${quotationId}`)
+  revalidatePath('/portal/quotes')
+  revalidatePath(`/portal/quotes/${quotationId}`)
   revalidatePath('/portal/orders')
   revalidatePath('/crm/orders')
   revalidatePath('/crm/quotations')

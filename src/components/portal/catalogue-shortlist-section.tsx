@@ -30,8 +30,8 @@ export function CatalogueShortlistSection() {
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Catalogue shortlist</h2>
-        <p className="mt-1 text-sm text-gray-500">Gifts you saved from Explore gifts. Use these when creating a requirement.</p>
+        <h2 className="text-lg font-semibold text-gray-900">Saved gifts</h2>
+        <p className="mt-1 text-sm text-gray-500">Gifts you added from All gifts.</p>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
@@ -41,7 +41,7 @@ export function CatalogueShortlistSection() {
               {item.category_name ? (
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#806A50]">{item.category_name}</p>
               ) : null}
-              <Link href={`/portal/catalogue/product/${item.id}`}>
+              <Link href={`/portal/gifts/${item.id}`}>
                 <h3 className="font-semibold text-gray-900 hover:text-[#806A50]">{item.name}</h3>
               </Link>
               <p className="text-sm text-gray-600">
@@ -49,7 +49,7 @@ export function CatalogueShortlistSection() {
               </p>
               <div className="mt-auto flex flex-col gap-2 sm:flex-row">
                 <Link
-                  href={`/portal/catalogue/product/${item.id}`}
+                  href={`/portal/gifts/${item.id}`}
                   className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
                 >
                   View
@@ -70,12 +70,6 @@ export function CatalogueShortlistSection() {
           </article>
         ))}
       </div>
-      <Link
-        href="/portal/requirements/new"
-        className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-[#FFFFFF] hover:bg-[#9C8567] sm:w-auto"
-      >
-        Create requirement from shortlist
-      </Link>
     </section>
   )
 }

@@ -3,10 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LogOut, PackageSearch, Heart, FileText, ShoppingBag, LayoutDashboard, FolderGit2, Files, ClipboardList } from 'lucide-react';
+import { Menu, X, LogOut, PackageSearch, Heart, FileText, ShoppingBag, LayoutDashboard } from 'lucide-react';
 import { BrandName } from '@/components/brand/brand-name';
-import { CartDrawer } from '@/components/site/cart-drawer';
-import { PORTAL_CART_KEY } from '@/lib/catalogue/cart';
 import { signOut } from '@/app/login/actions';
 import { CompanyAvatar } from '../ui/avatar';
 
@@ -19,18 +17,61 @@ interface PortalLayoutProps {
   };
 }
 
-const navItems = [
-  { label: 'Products', href: '/portal/catalogue', icon: PackageSearch },
-  { label: 'Dashboard', href: '/portal', icon: LayoutDashboard },
-  { label: 'Catalogs', href: '/portal/catalogs', icon: FolderGit2 },
-  { label: 'Shortlist', href: '/portal/shortlist', icon: Heart },
-  { label: 'Requirements', href: '/portal/requirements', icon: ClipboardList },
-  { label: 'Quotations', href: '/portal/quotations', icon: FileText },
-  { label: 'Orders', href: '/portal/orders', icon: ShoppingBag },
-  { label: 'Documents', href: '/portal/documents', icon: Files },
+type PortalNavItem = {
+  label: string;
+  shortLabel?: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  active: (pathname: string) => boolean;
+};
+
+const navItems: PortalNavItem[] = [
+  {
+    label: 'Home',
+    href: '/portal',
+    icon: LayoutDashboard,
+    active: (pathname) => pathname === '/portal' || pathname === '/portal/dashboard',
+  },
+  {
+    label: 'Gifts',
+    href: '/portal/gifts',
+    icon: PackageSearch,
+    active: (pathname) =>
+      pathname.startsWith('/portal/gifts') ||
+      pathname.startsWith('/portal/catalogue') ||
+      pathname.startsWith('/portal/catalogs'),
+  },
+  {
+    label: 'Quote basket',
+    href: '/portal/quote-basket',
+    icon: Heart,
+    active: (pathname) => pathname.startsWith('/portal/quote-basket') || pathname.startsWith('/portal/shortlist'),
+  },
+  {
+    label: 'Quotes & requests',
+    shortLabel: 'Quotes',
+    href: '/portal/quotes',
+    icon: FileText,
+    active: (pathname) =>
+      pathname.startsWith('/portal/quotes') ||
+      pathname.startsWith('/portal/requirements') ||
+      pathname.startsWith('/portal/quotations'),
+  },
+  {
+    label: 'Orders',
+    href: '/portal/orders',
+    icon: ShoppingBag,
+    active: (pathname) => pathname.startsWith('/portal/orders'),
+  },
 ];
 
 const SCROLL_KEY = 'giffter.portal.nav.scrollTop'
+
+function linkClass(active: boolean) {
+  return `inline-flex h-10 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors xl:px-2.5 min-[1440px]:px-3 min-[1440px]:text-sm ${
+    active ? 'bg-primary/5 text-primary' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+  }`
+}
 
 export function PortalLayout({ children, user }: PortalLayoutProps) {
   const pathname = usePathname();
@@ -83,79 +124,68 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#F4EFE6]">
       <header className="sticky top-0 z-50 border-b border-[#E5DFD5] bg-white">
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
-          <div className="flex h-14 items-center justify-between gap-3 sm:h-16">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex shrink-0 items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded bg-primary font-serif text-lg font-normal text-[#FFFFFF]">
-                  S
+        <div className="grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 px-3 sm:h-16 sm:gap-x-3 sm:px-4 lg:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary font-serif text-lg font-normal text-[#FFFFFF]">
+              S
+            </div>
+            <BrandName className="block max-w-[6.5rem] truncate text-sm tracking-tight text-primary sm:max-w-[9rem] lg:max-w-[8rem] xl:max-w-[11rem] xl:text-base min-[1440px]:max-w-[18rem] min-[1440px]:text-lg" />
+          </div>
+
+          <nav aria-label="Portal" className="hidden min-w-0 items-center gap-0.5 lg:flex xl:gap-1">
+            {navItems.map((item) => {
+              const active = item.active(pathname)
+              const Icon = item.icon
+              return (
+                <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={linkClass(active)}>
+                  <Icon className={`h-3.5 w-3.5 shrink-0 ${active ? 'text-primary' : 'text-gray-400'}`} />
+                  {item.shortLabel ? (
+                    <>
+                      <span className="whitespace-nowrap xl:hidden">{item.shortLabel}</span>
+                      <span className="hidden whitespace-nowrap xl:inline">{item.label}</span>
+                    </>
+                  ) : (
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            {user ? (
+              <div className="hidden min-w-0 items-center gap-2 border-l border-gray-200 pl-2 lg:flex">
+                <div className="min-w-0 max-w-[5.5rem] text-right xl:max-w-[8rem] min-[1440px]:max-w-[12rem]">
+                  <p className="truncate text-sm font-medium leading-tight text-gray-900" title={user.name}>{user.name}</p>
+                  <p className="truncate text-xs leading-tight text-gray-500" title={user.company_name}>{user.company_name}</p>
                 </div>
-                <BrandName className="hidden max-w-[14rem] truncate font-serif text-base tracking-tight text-primary xl:block xl:text-lg" />
+                <CompanyAvatar name={user.name} logoPath={user.avatar_url} size="md" />
               </div>
-              
-              {/* Full labeled nav only on wide screens to avoid overlap with profile */}
-              <nav className="hidden min-w-0 items-center gap-0.5 xl:flex">
-                {navItems.map((item) => {
-                  const isActive = item.href === '/portal'
-                    ? pathname === '/portal'
-                    : pathname.startsWith(item.href);
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`flex min-h-10 items-center gap-1.5 rounded-md px-2 py-2 text-xs font-medium transition-colors ${
-                        isActive
-                          ? 'bg-primary/5 text-primary'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
-                    >
-                      <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-primary' : 'text-gray-400'}`} />
-                      <span className="whitespace-nowrap">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-            
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-              <CartDrawer cartKey={PORTAL_CART_KEY} kind="portal" iconClassName="text-gray-700" />
-              {user && (
-                <div className="hidden min-w-0 max-w-[10rem] items-center gap-2 border-l border-gray-200 pl-3 lg:flex lg:max-w-[14rem]">
-                  <div className="min-w-0 text-right">
-                    <p className="truncate text-sm font-medium text-gray-900">{user.name}</p>
-                    <p className="truncate text-xs text-gray-500">{user.company_name}</p>
-                  </div>
-                  <CompanyAvatar name={user.name} logoPath={user.avatar_url} size="md" />
-                </div>
-              )}
-              <button
-                onClick={() => signOut()}
-                className="hidden h-10 w-10 items-center justify-center rounded-lg border border-[#E5DFD5] text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 xl:inline-flex"
-                title="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-              
-              <button
-                type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 xl:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-6 w-6" aria-hidden="true" />
-                ) : (
-                  <Menu className="h-6 w-6" aria-hidden="true" />
-                )}
-              </button>
-            </div>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => signOut()}
+              className="hidden h-10 w-10 items-center justify-center rounded-lg border border-[#E5DFD5] text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 lg:inline-flex"
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="portal-nav-drawer"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
+            </button>
           </div>
         </div>
 
-        {/* Keep mounted so scroll position persists between opens */}
         <div
-          className={`fixed inset-0 top-14 z-40 xl:hidden ${mobileMenuOpen ? '' : 'pointer-events-none'}`}
+          id="portal-nav-drawer"
+          className={`fixed inset-0 top-14 z-40 sm:top-16 lg:hidden ${mobileMenuOpen ? '' : 'pointer-events-none'}`}
           aria-hidden={!mobileMenuOpen}
         >
           <button
@@ -166,33 +196,32 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
             onClick={() => setMobileMenuOpen(false)}
           />
           <div
-            className={`relative max-h-[calc(100dvh-3.5rem)] overflow-hidden border-b border-gray-200 bg-white shadow-lg transition-transform duration-200 ${
+            className={`relative max-h-[calc(100dvh-3.5rem)] overflow-hidden border-b border-gray-200 bg-white shadow-lg transition-transform duration-200 sm:max-h-[calc(100dvh-4rem)] ${
               mobileMenuOpen ? 'translate-y-0' : '-translate-y-2 opacity-0'
             }`}
           >
-            <div ref={navRef} className="max-h-[calc(100dvh-3.5rem)] space-y-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-3">
+            <div ref={navRef} className="max-h-[calc(100dvh-3.5rem)] space-y-1 overflow-y-auto overscroll-contain px-2 py-3 sm:max-h-[calc(100dvh-4rem)] sm:px-3">
               {navItems.map((item) => {
-                const isActive =
-                  item.href === '/portal' ? pathname === '/portal' : pathname.startsWith(item.href);
-                const Icon = item.icon;
+                const active = item.active(pathname)
+                const Icon = item.icon
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    ref={isActive ? activeRef : undefined}
+                    ref={active ? activeRef : undefined}
+                    aria-current={active ? 'page' : undefined}
                     className={`flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium ${
-                      isActive
-                        ? 'bg-primary/5 text-primary'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      active ? 'bg-primary/5 text-primary' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Icon className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-gray-400'}`} />
+                    <Icon className={`h-5 w-5 ${active ? 'text-primary' : 'text-gray-400'}`} />
                     {item.label}
                   </Link>
-                );
+                )
               })}
               <button
+                type="button"
                 onClick={() => signOut()}
                 className="flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-red-600 hover:bg-red-50"
               >
@@ -203,8 +232,8 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
                 <div className="mt-2 flex items-center gap-3 border-t border-gray-200 px-3 py-4">
                   <CompanyAvatar name={user.name} logoPath={user.avatar_url} size="md" />
                   <div className="min-w-0">
-                    <div className="truncate text-base font-medium text-gray-800">{user.name}</div>
-                    <div className="truncate text-sm font-medium text-gray-500">{user.company_name}</div>
+                    <div className="truncate text-base font-medium text-gray-800" title={user.name}>{user.name}</div>
+                    <div className="truncate text-sm font-medium text-gray-500" title={user.company_name}>{user.company_name}</div>
                   </div>
                 </div>
               ) : null}

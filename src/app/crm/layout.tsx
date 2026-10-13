@@ -39,7 +39,7 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
   }
 
   if (isClientRole(profile.role)) {
-    redirect('/portal/catalogue');
+    redirect('/portal/gifts');
   }
 
   if (!isStaffRole(profile.role)) {

@@ -29,7 +29,7 @@ export async function requireStaff(roles?: Role[]): Promise<ProfileSession> {
   const profile = await getProfile()
   if (!profile || !profile.is_active) redirect("/login")
   if (isBusinessRole(profile.role)) redirect("/business/dashboard")
-  if (isClientRole(profile.role)) redirect("/portal/catalogue")
+  if (isClientRole(profile.role)) redirect("/portal/gifts")
   if (!isStaffRole(profile.role)) redirect("/login")
   if (roles && !roles.includes(profile.role)) {
     redirect("/crm/access-denied")

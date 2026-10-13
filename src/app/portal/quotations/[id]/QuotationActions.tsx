@@ -48,7 +48,7 @@ export function QuotationActions({
       return
     }
     if (status === 'accepted' && accepted.length === 0) {
-      toast.error('Select at least one line to accept')
+      toast.error('Choose at least one line to accept')
       return
     }
 
@@ -83,7 +83,7 @@ export function QuotationActions({
     <div className="mt-8 border-t border-gray-200 pt-8">
       <h3 className="mb-1 text-lg font-semibold text-gray-900">Your decision</h3>
       <p className="mb-4 text-sm text-gray-600">
-        Accept the lines you want. Confirming creates an order for those lines only. Rejected lines stay on this quotation.
+        Accept the lines you want. Confirming creates an order for those lines only. Declined lines stay on this quote.
       </p>
 
       <ul className="divide-y rounded-xl border border-gray-200">
@@ -181,7 +181,7 @@ export function QuotationActions({
             disabled={pending}
             className="inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-6 py-2 font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Reject quotation
+            Decline quote
           </button>
         </div>
       )}
