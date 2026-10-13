@@ -1,8 +1,9 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getProfile } from '@/lib/auth'
+import { canSeeCosts, getProfile } from '@/lib/auth'
 import { parseCsv, splitCompanyNames } from '@/lib/csv'
+import { ignoredCostWarning, parseOptionalNumber, parseProductStatus, sideEffectWarning, type ImportNotice } from '@/lib/products/csv-import'
 import { revalidatePath } from 'next/cache'
 import { PRODUCT_CATEGORY_ALIASES } from '@/lib/products/categories'
 import { directOrderSchemaHint } from '@/lib/catalogue/purchase-path'
@@ -25,14 +26,16 @@ function publicImageUrl(objectPath: string) {
   return `${base.replace(/\/$/, '')}/storage/v1/object/public/${IMAGE_BUCKET}/${objectPath.replace(/^\/+/, '')}`
 }
 
-export type ImportFailure = { row: number; sku: string; reason: string }
+export type ImportFailure = ImportNotice
 
 export type ImportSummary = {
   total: number
   imported: number
   skipped: number
   failed: number
+  warned: number
   failures: ImportFailure[]
+  warnings: ImportNotice[]
 }
 
 function cell(row: Record<string, string>, key: string) {
@@ -61,6 +64,7 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
   if (!CATALOGUE_ROLES.includes(profile.role as (typeof CATALOGUE_ROLES)[number])) {
     return { error: 'Not permitted to import products' }
   }
+  const allowCosts = canSeeCosts(profile.role)
 
   const file = formData.get('csv')
   if (!(file instanceof File) || file.size === 0) return { error: 'Choose a CSV file to import' }
@@ -133,11 +137,18 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     status: string
     stock_qty: number
     fulfillment_mode: 'auto' | 'buy' | 'rfq'
+    internal_margin: number | null
+    internal_notes: string | null
   }
 
   const prepared: Prepared[] = []
   const failures: ImportFailure[] = []
+  const warnings: ImportNotice[] = []
   let skipped = 0
+  if (!allowCosts) {
+    const costWarning = ignoredCostWarning(mappedRows)
+    if (costWarning) warnings.push(costWarning)
+  }
 
   mappedRows.forEach((row, index) => {
     const rowNumber = index + 2
@@ -219,13 +230,28 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       return
     }
 
-    const statusRaw = cell(row, 'status').toLowerCase() || 'active'
-    const status = ['active', 'inactive', 'discontinued'].includes(statusRaw) ? statusRaw : 'active'
-    const supplierCostRaw = cell(row, 'supplier_cost')
-    const supplier_cost = supplierCostRaw ? Number(supplierCostRaw) : null
-    if (supplierCostRaw && !Number.isFinite(supplier_cost as number)) {
-      failures.push({ row: rowNumber, sku, reason: 'Supplier cost must be a number' })
+    const statusResult = parseProductStatus(cell(row, 'status'))
+    if (!statusResult.ok) {
+      failures.push({ row: rowNumber, sku, reason: statusResult.reason })
       return
+    }
+    let supplier_cost: number | null = null
+    let internal_margin: number | null = null
+    let internal_notes: string | null = null
+    if (allowCosts) {
+      const supplierCost = parseOptionalNumber(cell(row, 'supplier_cost'))
+      if (!supplierCost.ok) {
+        failures.push({ row: rowNumber, sku, reason: 'Supplier cost must be a number' })
+        return
+      }
+      const margin = parseOptionalNumber(cell(row, 'internal_margin'))
+      if (!margin.ok || (margin.value != null && margin.value < 0)) {
+        failures.push({ row: rowNumber, sku, reason: 'Product margin must be a number 0 or greater' })
+        return
+      }
+      supplier_cost = supplierCost.value
+      internal_margin = margin.value
+      internal_notes = cell(row, 'internal_notes') || null
     }
 
     batchSkus.add(sku)
@@ -250,9 +276,11 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       material: cell(row, 'material') || null,
       variant_sku: cell(row, 'variant_sku').toUpperCase() || null,
       extra_price: Number(cell(row, 'extra_price') || '0') || 0,
-      status,
+      status: statusResult.status,
       stock_qty,
       fulfillment_mode,
+      internal_margin,
+      internal_notes,
     })
   })
 
@@ -299,9 +327,12 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       continue
     }
 
-    const supplierCost = Number.isFinite(item.supplier_cost as number) ? item.supplier_cost : null
-    if (supplierCost != null) {
-      const { error: costError } = await upsertProductCost(supabase, product.id, { supplier_cost: supplierCost })
+    const costPayload: { supplier_cost?: number | null; internal_margin?: number | null; internal_notes?: string | null } = {}
+    if (item.supplier_cost != null) costPayload.supplier_cost = item.supplier_cost
+    if (item.internal_margin != null) costPayload.internal_margin = item.internal_margin
+    if (item.internal_notes) costPayload.internal_notes = item.internal_notes
+    if (Object.keys(costPayload).length > 0) {
+      const { error: costError } = await upsertProductCost(supabase, product.id, costPayload)
       if (costError) {
         await supabase.from('products').delete().eq('id', product.id)
         failures.push({
@@ -334,16 +365,21 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       const { error: uploadError } = await supabase.storage
         .from(IMAGE_BUCKET)
         .upload(objectPath, item.imageFile, { contentType: item.imageFile.type, upsert: false })
-      if (!uploadError) {
-        await supabase
+      if (uploadError) {
+        const warning = sideEffectWarning(item.rowNumber, item.sku, 'image', uploadError.message)
+        if (warning) warnings.push(warning)
+      } else {
+        const { error: imageUpdateError } = await supabase
           .from('products')
           .update({ image_url: publicImageUrl(objectPath) })
           .eq('id', product.id)
+        const warning = sideEffectWarning(item.rowNumber, item.sku, 'image', imageUpdateError?.message)
+        if (warning) warnings.push(warning)
       }
     }
 
-    if (item.colour || item.size || item.gender || item.material) {
-      await supabase.from('product_variants').insert({
+    if (item.colour || item.size || item.gender || item.material || item.variant_sku || item.extra_price) {
+      const { error: variantError } = await supabase.from('product_variants').insert({
         product_id: product.id,
         colour: item.colour,
         size: item.size,
@@ -352,6 +388,8 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
         sku: item.variant_sku,
         extra_price: item.extra_price,
       })
+      const warning = sideEffectWarning(item.rowNumber, item.sku, 'variant', variantError?.message)
+      if (warning) warnings.push(warning)
     }
 
     imported += 1
@@ -366,6 +404,8 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     imported,
     skipped,
     failed: failures.length,
+    warned: warnings.length,
     failures,
+    warnings,
   }
 }
