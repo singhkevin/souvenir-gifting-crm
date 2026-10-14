@@ -10,7 +10,7 @@ Next.js 16, TypeScript, Tailwind CSS 4, Supabase (Postgres, Auth, Storage, RLS).
 
 ### Prerequisites
 
-- Node.js 20.9 or newer (Next.js 16 minimum). The repo pins no version (no `.nvmrc` or `engines`). Use Node 23.6+ if you want to run the unit tests without flags.
+- Node.js 20.9 or newer (Next.js 16 minimum). The repo pins no version (no `.nvmrc` or `engines`).
 - npm (the repo ships `package-lock.json`).
 - Access to a Supabase project (URL, anon key, and service role key).
 
@@ -91,12 +91,12 @@ Without the host split, every role signs in at http://localhost:3000/login.
 ### 6. Type check and tests
 
 ```bash
-npx tsc --noEmit
+npm run typecheck   # tsc --noEmit
 npm run lint
-node --test test/*.test.ts
+npm test            # tsx --test test/*.test.ts
 ```
 
-Tests use the built-in `node:test` runner with native TypeScript stripping (Node 23.6+; on 22.6–23.5 add `--experimental-strip-types`). Note: as of Oct 2026, tests whose source files import through the `@/` path alias fail to load under plain Node (`ERR_MODULE_NOT_FOUND`). That is a runner limitation, not a test failure.
+Tests use the built-in `node:test` runner through `tsx`, which resolves the `@/` path alias from `tsconfig.json`. Run one file with `npx tsx --test test/quote-flow.test.ts`.
 
 SQL checks live in `supabase/tests/`. They roll back or abort on their own, but still run them only against a non-production database or inside a transaction you roll back.
 
@@ -141,7 +141,7 @@ Reset password email template (Authentication → Email Templates → Reset pass
 Seeded Auth users (developer reference only — not shown on the production login screen).
 The `*@oaklane.demo` addresses are real Supabase identities and must not be renamed.
 
-Password for all demo users: `Oaklane-Demo-2026!`
+Passwords are shared privately. Ask the project owner; do not commit them.
 
 - `admin@oaklane.demo` — Admin
 - `sales@oaklane.demo` — Sales
