@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { signIn } from './actions';
 import { Mail, Loader2 } from 'lucide-react';
 import { PasswordField } from '@/components/auth/password-field';
+import Image from 'next/image';
 import { BrandName } from '@/components/brand/brand-name';
 import { assignWithTab } from '@/lib/supabase/client';
 
@@ -28,7 +29,7 @@ function isNextRedirect(err: unknown) {
   return digest.startsWith('NEXT_REDIRECT')
 }
 
-export function LoginForm({ next = '', resetSuccess = false, portalError = false, confirmed = false }: { next?: string; resetSuccess?: boolean; portalError?: boolean; confirmed?: boolean }) {
+export function LoginForm({ next = '', resetSuccess = false, portalError = false, confirmed = false, branded = false }: { next?: string; resetSuccess?: boolean; portalError?: boolean; confirmed?: boolean; branded?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [help, setHelp] = useState<{ href: string; label: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -79,6 +80,11 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
 
   return (
     <div className="flex min-h-[100dvh] flex-col justify-center bg-[#F4EFE6] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+      {branded ? (
+        <div className="mx-auto mb-6 w-full max-w-lg overflow-hidden rounded-3xl">
+          <Image src="/site/hero-composition.webp" alt="Corporate gifts" width={1200} height={640} priority className="h-40 w-full object-cover sm:h-52" />
+        </div>
+      ) : null}
       <div className="space-y-3 text-center sm:mx-auto sm:w-full sm:max-w-md">
         <Link href="/home" className="inline-block">
           <BrandName as="h1" className="font-serif text-3xl tracking-tight text-[#1C1917] sm:text-4xl" />
@@ -172,6 +178,13 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
               Register
             </Link>
           </p>
+          {branded ? (
+            <p className="mt-4 text-center text-xs leading-relaxed text-[#7A7267]">
+              <a href="https://www.souvenirgifting.com/business" className="font-semibold text-[#624B32] hover:underline">
+                Corporate gifting enquiry
+              </a>
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

@@ -2,8 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { formatCurrency, isUuid, oneRelation } from '@/lib/utils'
 import { setCatalogProductVisibility, removeCatalogProduct, setCatalogManualPrice, updateCatalog, removeCatalog } from '../actions'
-import { BudgetPackGenerator } from '../BudgetPackGenerator'
 import { CatalogProductPicker } from '../CatalogProductPicker'
+import { ProductImage } from '@/components/ui/product-image'
 import { CatalogDuplicateForm } from '../CatalogDuplicateForm'
 import { CatalogAssignPanel } from '../CatalogAssignPanel'
 import { CatalogSharePanel } from '../CatalogSharePanel'
@@ -38,7 +38,7 @@ export default async function CatalogDetailPage({
 
   const [{ data: catalog }, { data: offerings }, { data: selections }, { data: companies }] = await Promise.all([
     supabase.from('campaigns').select('*, company:companies(id, name)').eq('id', id).maybeSingle(),
-    supabase.from('campaign_products').select('*, product:products(id, name, sku, price, status)').eq('campaign_id', id).order('display_order'),
+    supabase.from('campaign_products').select('*, product:products(id, name, sku, price, status, image_url)').eq('campaign_id', id).order('display_order'),
     supabase.from('client_product_selections').select('*, selector:profiles!user_id(full_name, email), offering:campaign_products(display_name)').eq('campaign_id', id).order('created_at', { ascending: false }),
     supabase.from('companies').select('id, name').order('name'),
   ])
@@ -95,9 +95,6 @@ export default async function CatalogDetailPage({
   }).length
   const offeredIds = new Set((offerings || []).map((offering) => offering.product_id))
   const available = pickerProducts.filter((product) => !offeredIds.has(product.id))
-  const packKits = (offerings || []).filter((offering) => offering.pack_option && offering.pack_kit_role !== 'line')
-  const draftPackCount = packKits.filter((offering) => offering.visibility === 'draft').length
-  const publishedPackCount = packKits.filter((offering) => offering.visibility === 'published').length
   const kitMembersById = new Map<string, NonNullable<typeof offerings>>()
   for (const row of offerings || []) {
     if (!row.pack_kit_id) continue
@@ -200,15 +197,6 @@ export default async function CatalogDetailPage({
         linkCompanyName={linkCompanyName}
       />
 
-      <BudgetPackGenerator
-        catalogId={catalog.id}
-        budgetPerEmployee={catalog.budget_per_employee}
-        draftPackCount={draftPackCount}
-        publishedPackCount={publishedPackCount}
-        companies={assigned.map((row) => ({ id: row.companyId, name: row.name }))}
-        defaultCompanyId={defaultCompanyId}
-      />
-
       <CatalogProductPicker catalogId={catalog.id} products={available} />
 
       <form method="get" className="flex flex-col gap-2 rounded-2xl border bg-white p-4 text-xs sm:flex-row sm:items-center">
@@ -230,7 +218,7 @@ export default async function CatalogDetailPage({
           Preview
         </button>
         <p className="text-[#7A7267]">
-          Each company sees its own margin on non-pack lines. A manual price applies to every company. Pack prices are fixed when generated.
+          Price order: company special price, then a manual price on the line, then base price plus that company's margin. Existing pack rows keep the price they were saved with.
         </p>
       </form>
 
@@ -257,8 +245,11 @@ export default async function CatalogDetailPage({
                   <tr key={row.id} className="border-t">
                     <td className="p-3 font-semibold text-[#806A50]">{row.pack_option || '—'}</td>
                     <td className="p-3">
+                      <div className="flex items-center gap-3">
+                        <ProductImage src={row.client_image_url || product?.image_url} alt={row.display_name || product?.name || 'Product'} size="sm" className="shrink-0 rounded-lg" />
+                        <div>
                       <p className="font-semibold">{row.display_name || product?.name}</p>
-                      <p className="text-[#7A7267]">{product?.sku} · list {formatCurrency(product?.price)}</p>
+                      <p className="text-[#7A7267]">{product?.sku} · base {formatCurrency(product?.price)}</p>
                       {kitLines.length > 0 && (
                         <ul className="mt-2 space-y-0.5 text-[11px] text-[#5A5248]">
                           {kitLines.map((line) => {
@@ -276,6 +267,8 @@ export default async function CatalogDetailPage({
                           Master product discontinued — unpublish or replace
                         </p>
                       ) : null}
+                        </div>
+                      </div>
                     </td>
                     <td className="p-3">
                       {row.pack_kit_total != null ? (

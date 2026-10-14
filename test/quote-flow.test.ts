@@ -8,10 +8,12 @@ import {
   estimateTickedLines,
   liveMarginPercent,
   marginWarnings,
+  negativeMarginBlock,
   quoteLineTotal,
   quoteSendRecipients,
   sendQuoteWarnings,
   suggestedSell,
+  syncCostingFields,
 } from '../src/lib/quotes/flow.ts'
 
 test('line totals are pre-tax after discount and GST is added once', () => {
@@ -74,12 +76,39 @@ test('send dialog defaults to the quote contact, then the first recipient', () =
       { name: 'Mug', unitPrice: 20, cost: 30, applied: true },
     ]),
     [
-      'Pen: costing is not applied',
       'Pen: sell price is 0',
       'Pen: sell price is below cost',
       'Mug: sell price is below cost',
     ],
   )
+  assert.deepEqual(
+    sendQuoteWarnings([{ name: 'Notebook', unitPrice: 10, cost: 0 }]),
+    ['Notebook: cost is 0'],
+  )
+  assert.equal(
+    negativeMarginBlock([
+      { name: 'Pen', unitPrice: 10, cost: 40 },
+      { name: 'Mug', unitPrice: 20, cost: 0 },
+      { name: 'Card', unitPrice: 5, cost: null },
+    ]),
+    'Cannot send this quote. Sell price is below cost on Pen.',
+  )
+  assert.equal(negativeMarginBlock([{ name: 'Mug', unitPrice: 20, cost: 0 }]), null)
+  assert.deepEqual(syncCostingFields({ cost: 100, margin: 25, sell: 0, edited: 'margin' }), {
+    cost: 100,
+    margin: 25,
+    sell: 125,
+  })
+  assert.deepEqual(syncCostingFields({ cost: 80, margin: null, sell: 100, edited: 'sell' }), {
+    cost: 80,
+    margin: 25,
+    sell: 100,
+  })
+  assert.deepEqual(syncCostingFields({ cost: 50, margin: 10, sell: 40, edited: 'cost' }), {
+    cost: 50,
+    margin: 10,
+    sell: 55,
+  })
   assert.equal(clientQuotePath('business', 'q1'), '/business/quotes/q1')
   assert.equal(clientQuotePath('corporate', 'q1'), '/portal/quotations/q1')
 })

@@ -17,10 +17,10 @@ export default async function PortalHomePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold sm:text-3xl">Home</h1>
-        <p className="mt-1 text-sm text-gray-500">Your collections, quotes, and orders.</p>
+        <p className="mt-1 text-sm text-gray-500">Your catalogs, quotes, and orders.</p>
       </div>
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <Link href="/portal/gifts?tab=collections" className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Collections</p><p className="text-xl font-semibold sm:text-2xl">{catalogs.length}</p></Link>
+        <Link href="/portal/gifts?tab=catalogs" className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Catalogs</p><p className="text-xl font-semibold sm:text-2xl">{catalogs.length}</p></Link>
         <Link href="/portal/quotes?tab=quotes" className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Open quotes</p><p className="text-xl font-semibold sm:text-2xl">{quotes?.length || 0}</p></Link>
         <Link href="/portal/orders" className="rounded-2xl border bg-white p-3 sm:p-4"><p className="text-[10px] text-gray-500 sm:text-xs">Orders</p><p className="text-xl font-semibold sm:text-2xl">{orders?.length || 0}</p></Link>
       </div>

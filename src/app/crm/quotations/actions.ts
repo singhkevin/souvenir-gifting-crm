@@ -9,7 +9,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { businessQuoteSentEmailHtml } from '@/lib/email/business'
 import { sendEmail } from '@/lib/email/resend'
 import { absoluteClientQuoteUrl } from '@/lib/quotes/client-link'
-import { clientQuotePath, quoteLineTotal } from '@/lib/quotes/flow'
+import { clientQuotePath, negativeMarginBlock, quoteLineTotal } from '@/lib/quotes/flow'
 import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 import { isUuid } from '@/lib/utils'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
@@ -130,13 +130,13 @@ export async function applyQuotationItemPrice(formData: FormData) {
   const itemId = String(formData.get('item_id') || '')
   const offerId = String(formData.get('supplier_offer_id') || '')
   const costRaw = String(formData.get('supplier_cost') ?? '').trim()
-  if (!costRaw) return { error: 'Enter a cost before applying' }
-  const cost = Number(costRaw)
-  const margin = Number(formData.get('margin_percent'))
+  const cost = costRaw === '' ? null : Number(costRaw)
+  const marginRaw = String(formData.get('margin_percent') ?? '').trim()
+  const margin = marginRaw === '' ? null : Number(marginRaw)
   const unit = Number(formData.get('unit_price'))
   if (!isUuid(quotationId) || !isUuid(itemId)) return { error: 'Quotation line not found' }
-  if (!Number.isFinite(cost) || cost < 0) return { error: 'Enter a supplier cost of zero or more' }
-  if (!Number.isFinite(margin) || margin < 0) return { error: 'Enter a margin of zero or more' }
+  if (cost != null && (!Number.isFinite(cost) || cost < 0)) return { error: 'Enter a supplier cost of zero or more' }
+  if (margin != null && !Number.isFinite(margin)) return { error: 'Enter a margin percent' }
   if (!Number.isFinite(unit) || unit < 0) return { error: 'Enter a sell price of zero or more' }
 
   const supabase = await createClient()
@@ -351,7 +351,19 @@ export async function searchQuoteProducts(quotationId: string, query: string) {
   return { products: data || [] }
 }
 
-export async function addQuotationProduct(quotationId: string, productId: string) {
+export async function addQuotationProducts(
+  quotationId: string,
+  lines: { productId: string; quantity: number }[],
+) {
+  if (!lines.length) return { error: 'Choose at least one product' }
+  for (const line of lines) {
+    const result = await addQuotationProduct(quotationId, line.productId, line.quantity)
+    if (result && 'error' in result && result.error) return result
+  }
+  return { success: true }
+}
+
+export async function addQuotationProduct(quotationId: string, productId: string, quantity?: number) {
   if (!isUuid(quotationId) || !isUuid(productId)) return { error: 'Product not found' }
   const draft = await assertDraft(quotationId)
   if ('error' in draft) return { error: draft.error }
@@ -362,6 +374,8 @@ export async function addQuotationProduct(quotationId: string, productId: string
     .eq('id', productId)
     .maybeSingle()
   if (!product || product.status !== 'active') return { error: 'That product is not available' }
+  const requested = Math.round(Number(quantity))
+  const addQty = Number.isInteger(requested) && requested > 0 ? requested : Math.max(1, Number(product.moq) || 1)
   const { data: existing } = await supabase
     .from('quotation_items')
     .select('id, quantity')
@@ -369,7 +383,7 @@ export async function addQuotationProduct(quotationId: string, productId: string
     .eq('product_id', productId)
     .maybeSingle()
   if (existing) {
-    const nextQty = (Number(existing.quantity) || 0) + 1
+    const nextQty = (Number(existing.quantity) || 0) + addQty
     const { error } = await supabase.from('quotation_items').update({ quantity: nextQty }).eq('id', existing.id)
     if (error) return { error: error.message }
   } else {
@@ -380,16 +394,16 @@ export async function addQuotationProduct(quotationId: string, productId: string
       .maybeSingle()
     const surface = company?.account_type === 'business' ? 'business' : 'portal'
     const margin = company?.margin_percent == null ? await getCompanyMarginPercent(quote.company_id) : Number(company.margin_percent)
-    const prices = await sellPricesForSurface([productId], surface, Number.isFinite(margin) ? margin : null)
+    const prices = await sellPricesForSurface([productId], surface, Number.isFinite(margin) ? margin : null, quote.company_id)
     const unit = prices?.get(productId) ?? (Number(product.price) || 0)
-    const quantity = Math.max(1, Number(product.moq) || 1)
+    const quantityToSave = addQty
     const { error } = await supabase.from('quotation_items').insert({
       quotation_id: quotationId,
       product_id: productId,
       description: product.name,
-      quantity,
+      quantity: quantityToSave,
       unit_price: unit,
-      line_total: quoteLineTotal(quantity, unit, Number(quote.discount_percent) || 0),
+      line_total: quoteLineTotal(quantityToSave, unit, Number(quote.discount_percent) || 0),
     })
     if (error) return { error: error.message }
   }
@@ -495,6 +509,22 @@ async function sendQuotationToClientOnce(quotationId: string, recipientKey: stri
     .maybeSingle()
   if (!quote) return { error: 'Quotation not found' }
   if (quote.status !== 'draft') return { error: `A ${quote.status} quotation cannot move to sent` }
+
+  const { data: pricedLines, error: pricedError } = await supabase
+    .from('quotation_items')
+    .select('description, unit_price, product:products(name), cost:quotation_item_costs(supplier_cost)')
+    .eq('quotation_id', quotationId)
+  if (pricedError) return { error: pricedError.message }
+  const block = negativeMarginBlock((pricedLines || []).map((row) => {
+    const product = Array.isArray(row.product) ? row.product[0] : row.product
+    const costRow = Array.isArray(row.cost) ? row.cost[0] : row.cost
+    return {
+      name: product?.name || row.description || 'Item',
+      unitPrice: Number(row.unit_price) || 0,
+      cost: costRow?.supplier_cost == null ? null : Number(costRow.supplier_cost),
+    }
+  }))
+  if (block) return { error: block }
 
   const { data: company } = await supabase
     .from('companies')

@@ -37,21 +37,23 @@ export function estimateTickedLines(lines: EstimateLine[], taxPercent: number) {
   return { subtotal, discount, net, tax, total }
 }
 
-export type MarginWarningCode = 'missing_cost' | 'below_ten_percent' | 'above_sell'
+export type MarginWarningCode = 'missing_cost' | 'zero_cost' | 'below_ten_percent' | 'above_sell'
 
 export function marginWarnings(cost: number | null, sell: number): MarginWarningCode[] {
   if (cost == null || !Number.isFinite(cost)) return ['missing_cost']
   const sellValue = Number.isFinite(sell) ? sell : 0
   const warnings: MarginWarningCode[] = []
-  if (sellValue > 0 && cost < sellValue * 0.1) warnings.push('below_ten_percent')
+  if (cost === 0) warnings.push('zero_cost')
+  else if (sellValue > 0 && cost < sellValue * 0.1) warnings.push('below_ten_percent')
   if (cost > sellValue) warnings.push('above_sell')
   return warnings
 }
 
 export function marginWarningText(code: MarginWarningCode) {
-  if (code === 'missing_cost') return 'Cost is empty'
+  if (code === 'missing_cost') return 'Cost is empty. This line can still be sent, but check it first.'
+  if (code === 'zero_cost') return 'Cost is 0. This line can still be sent, but check it first.'
   if (code === 'below_ten_percent') return 'Cost is under 10% of the sell price'
-  return 'Cost is above the sell price'
+  return 'Sell price is below cost'
 }
 
 /** Markup percent from cost to sell. Null when there is no positive cost. */
@@ -66,6 +68,45 @@ export function suggestedSell(cost: number | null, marginPercent: number | null)
   if (cost == null || !Number.isFinite(cost) || cost < 0) return null
   if (marginPercent == null || !Number.isFinite(marginPercent)) return null
   return roundMoney(cost * (1 + marginPercent / 100))
+}
+
+/**
+ * Edit one of cost, margin %, or sell price and keep the other two in step.
+ * Sell = cost × (1 + margin / 100). Margin = (sell / cost − 1) × 100.
+ * A zero cost cannot produce a margin.
+ */
+export function syncCostingFields(input: {
+  cost: number | null
+  margin: number | null
+  sell: number | null
+  edited: 'cost' | 'margin' | 'sell'
+}): { cost: number | null; margin: number | null; sell: number | null } {
+  const cost = input.cost != null && Number.isFinite(input.cost) ? input.cost : null
+  let margin = input.margin != null && Number.isFinite(input.margin) ? input.margin : null
+  let sell = input.sell != null && Number.isFinite(input.sell) ? input.sell : null
+  if (input.edited === 'margin' && cost != null && margin != null) {
+    sell = roundMoney(cost * (1 + margin / 100))
+  } else if (input.edited === 'sell' && cost != null && cost > 0 && sell != null) {
+    margin = roundMoney((sell / cost - 1) * 100)
+  } else if (input.edited === 'cost' && cost != null && cost > 0) {
+    if (margin != null) sell = roundMoney(cost * (1 + margin / 100))
+    else if (sell != null) margin = roundMoney((sell / cost - 1) * 100)
+  }
+  return { cost, margin, sell }
+}
+
+/** Names of lines where a positive cost is higher than the sell price. Zero cost is not a block. */
+export function negativeMarginBlock(
+  lines: { name: string; unitPrice: number; cost: number | null }[],
+): string | null {
+  const names = lines
+    .filter((line) => {
+      const cost = line.cost
+      return cost != null && Number.isFinite(cost) && cost > 0 && Number(line.unitPrice) < cost
+    })
+    .map((line) => line.name)
+  if (!names.length) return null
+  return `Cannot send this quote. Sell price is below cost on ${names.join(', ')}.`
 }
 
 export type SendRecipient = {
@@ -122,13 +163,14 @@ export function sendQuoteWarnings(lines: {
   name: string
   unitPrice: number
   cost: number | null
-  applied: boolean
+  applied?: boolean
 }[]): string[] {
   const warnings: string[] = []
   for (const line of lines) {
-    if (!line.applied) warnings.push(`${line.name}: costing is not applied`)
+    if (line.cost == null || !Number.isFinite(line.cost)) warnings.push(`${line.name}: cost is empty`)
+    else if (line.cost === 0) warnings.push(`${line.name}: cost is 0`)
     if (!(Number(line.unitPrice) > 0)) warnings.push(`${line.name}: sell price is 0`)
-    if (line.cost != null && Number.isFinite(line.cost) && Number(line.unitPrice) < line.cost) {
+    if (line.cost != null && Number.isFinite(line.cost) && line.cost > 0 && Number(line.unitPrice) < line.cost) {
       warnings.push(`${line.name}: sell price is below cost`)
     }
   }

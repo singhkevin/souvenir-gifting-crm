@@ -1,6 +1,9 @@
+import Image from 'next/image'
 import { BrandName } from '@/components/brand/brand-name'
 import { PortalFinderForm } from '@/components/site/portal-finder-form'
 import { finderDestinations } from '@/lib/domain-routing'
+
+const ENQUIRY_URL = 'https://www.souvenirgifting.com/business'
 
 export function PortalFinder({ notice = '' }: { notice?: string }) {
   const links = finderDestinations()
@@ -8,41 +11,62 @@ export function PortalFinder({ notice = '' }: { notice?: string }) {
   const adminHost = links.adminLogin.replace(/^https?:\/\//, '').replace(/\/login$/, '')
 
   return (
-    <div className="flex min-h-[100dvh] flex-col justify-center bg-[#F4EFE6] px-4 py-12">
-      <div className="mx-auto w-full max-w-lg text-center">
-        <BrandName as="h1" className="font-serif text-3xl tracking-tight text-[#1C1917] sm:text-4xl" />
-        <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7A7267]">
-          Your company&apos;s gifting portal
-        </p>
-        <div className="mt-8 rounded-2xl border border-[#E5DFD5] bg-white px-6 py-8 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] sm:px-10">
-          <p className="mb-6 text-center text-sm leading-relaxed text-[#5A5248]">
+    <div className="min-h-[100dvh] bg-[#F6F4F1] text-[#1B2430]">
+      <div className="mx-auto grid min-h-[100dvh] max-w-6xl items-center gap-8 px-4 py-10 lg:grid-cols-2 lg:px-8">
+        <div className="relative hidden overflow-hidden rounded-3xl lg:block">
+          <Image
+            src="/site/hero-composition.webp"
+            alt="Corporate gifts arranged for a client programme"
+            width={1200}
+            height={1400}
+            priority
+            className="h-[36rem] w-full object-cover"
+          />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-8 text-white">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em]">Corporate gifting</p>
+            <p className="mt-2 font-serif text-3xl">Gifts, catalogs, and one quote request.</p>
+          </div>
+        </div>
+        <div>
+          <BrandName as="h1" className="font-serif text-4xl tracking-tight text-[#1C1917]" />
+          <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7A7267]">
+            Find your portal
+          </p>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-[#5A5248]">
             Enter the company code from your portal address. We only open an exact match.
           </p>
-          {notice === 'login' ? (
-            <p className="mb-6 rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] px-3 py-3 text-xs leading-relaxed text-[#5A5248]">
-              Staff sign in at{' '}
-              <a href={links.adminLogin} className="font-semibold text-[#624B32] hover:underline">
-                {adminHost}
-              </a>
-              . Shopping continues at{' '}
-              <a href={links.store} className="font-semibold text-[#624B32] hover:underline">
-                {storeHost}
-              </a>
-              .
-            </p>
-          ) : null}
-          <PortalFinderForm />
+          <div className="mt-6 overflow-hidden rounded-3xl border border-[#E5DFD5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] lg:hidden">
+            <Image
+              src="/site/hero-composition.webp"
+              alt=""
+              width={1200}
+              height={700}
+              priority
+              className="h-44 w-full object-cover"
+            />
+          </div>
+          <div className="mt-6 rounded-2xl border border-[#E5DFD5] bg-white px-6 py-8 sm:px-8">
+            {notice === 'login' ? (
+              <p className="mb-6 rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] px-3 py-3 text-xs leading-relaxed text-[#5A5248]">
+                Staff sign in at{' '}
+                <a href={links.adminLogin} className="font-semibold text-[#624B32] hover:underline">{adminHost}</a>
+                . Shopping continues at{' '}
+                <a href={links.store} className="font-semibold text-[#624B32] hover:underline">{storeHost}</a>.
+              </p>
+            ) : null}
+            <PortalFinderForm />
+          </div>
+          <a
+            href={ENQUIRY_URL}
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#806A50] px-5 text-xs font-semibold uppercase tracking-[0.14em] text-white"
+          >
+            Corporate gifting enquiry
+          </a>
+          <p className="mt-4 text-xs leading-relaxed text-[#7A7267]">
+            Not a corporate client?{' '}
+            <a href={links.store} className="font-semibold text-[#624B32] hover:underline">Shop at {storeHost}</a>
+          </p>
         </div>
-        <p className="mt-6 text-xs leading-relaxed text-[#7A7267]">
-          Not a corporate client?{' '}
-          <a href={links.store} className="font-semibold text-[#624B32] hover:underline">
-            Shop at {storeHost}
-          </a>
-          {' · '}
-          <a href={links.business} className="font-semibold text-[#624B32] hover:underline">
-            Business enquiry
-          </a>
-        </p>
       </div>
     </div>
   )

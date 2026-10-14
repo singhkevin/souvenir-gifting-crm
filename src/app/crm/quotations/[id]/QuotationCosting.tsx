@@ -1,11 +1,11 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { applyAllQuotationPrices, applyQuotationItemPrice } from '../actions'
+import { applyQuotationItemPrice } from '../actions'
 import { formatCurrency } from '@/lib/utils'
 import { useAction } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
-import { liveMarginPercent, marginWarningText, marginWarnings, suggestedSell } from '@/lib/quotes/flow'
+import { liveMarginPercent, marginWarningText, marginWarnings, syncCostingFields } from '@/lib/quotes/flow'
 import type { SupplierOffer } from '@/lib/pricing/offers'
 
 type Line = {
@@ -31,6 +31,10 @@ function parseAmount(value: string): number | null {
   if (value.trim() === '') return null
   const amount = Number(value)
   return Number.isFinite(amount) ? amount : null
+}
+
+function money(value: number | null) {
+  return value == null ? '' : String(value)
 }
 
 export function QuotationCosting({
@@ -60,11 +64,18 @@ export function QuotationCosting({
       const offer = offers.find((item) => item.id === offerId)
       const cost = row?.supplier_cost ?? offer?.cost ?? line.catalogCost
       const hasCost = cost != null && Number.isFinite(Number(cost))
+      const margin = hasCost ? (row?.margin_percent ?? defaultMargin) : null
+      const synced = syncCostingFields({
+        cost: hasCost ? Number(cost) : null,
+        margin,
+        sell: line.unitPrice,
+        edited: row?.margin_percent == null && hasCost ? 'margin' : 'sell',
+      })
       initial[line.id] = {
         offerId,
-        cost: hasCost ? String(cost) : '',
-        margin: hasCost ? String(row?.margin_percent ?? defaultMargin) : '',
-        unit: String(line.unitPrice || ''),
+        cost: money(synced.cost),
+        margin: money(synced.margin),
+        unit: money(synced.sell ?? line.unitPrice),
       }
     }
     return initial
@@ -72,34 +83,12 @@ export function QuotationCosting({
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-bold text-gray-900">Supplier cost and sell price</h2>
-          <p className="mt-1 text-xs text-gray-500">
-            Pick a supplier offer or type a negotiated cost. The client quotation shows only the sell price.
-            {editable ? ' Apply a price before sending.' : ' This quotation is no longer a draft.'}
-          </p>
-        </div>
-        {editable && (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => run(() => applyAllQuotationPrices(quotationId, lines.map((line) => {
-              const draft = drafts[line.id]
-              const costBlank = !draft || draft.cost.trim() === ''
-              return {
-                itemId: line.id,
-                offerId: draft?.offerId || '',
-                cost: costBlank ? Number.NaN : Number(draft.cost),
-                margin: !draft || draft.margin.trim() === '' ? defaultMargin : Number(draft.margin),
-                unitPrice: Number(draft.unit),
-              }
-            })), { successMessage: 'Sell prices updated' })}
-            className="rounded-lg border border-[#624B32] px-3 py-1.5 text-xs font-semibold text-[#624B32] disabled:opacity-50"
-          >
-            {pending ? <span className="inline-flex items-center gap-2"><Spinner />Applying…</span> : 'Apply all'}
-          </button>
-        )}
+      <div>
+        <h2 className="text-sm font-bold text-gray-900">Supplier cost and sell price</h2>
+        <p className="mt-1 text-xs text-gray-500">
+          Change cost, margin, or sell price. The other two update together and save on the line.
+          The client sees only the sell price.
+        </p>
       </div>
       {lines.map((line) => (
         <CostLine
@@ -107,7 +96,6 @@ export function QuotationCosting({
           quotationId={quotationId}
           line={line}
           offers={offers.filter((offer) => offer.product_id === line.productId)}
-          saved={savedByItem.get(line.id) || null}
           bestId={bestByItem[line.id] || null}
           defaultMargin={defaultMargin}
           editable={editable}
@@ -125,7 +113,6 @@ function CostLine({
   quotationId,
   line,
   offers,
-  saved,
   bestId,
   defaultMargin,
   editable,
@@ -137,7 +124,6 @@ function CostLine({
   quotationId: string
   line: Line
   offers: SupplierOffer[]
-  saved: SavedCost | null
   bestId: string | null
   defaultMargin: number
   editable: boolean
@@ -149,112 +135,113 @@ function CostLine({
   const [saving, setSaving] = useState(false)
   const costValue = parseAmount(draft.cost)
   const sellValue = parseAmount(draft.unit) ?? 0
-  const marginValue = parseAmount(draft.margin)
   const warnings = marginWarnings(costValue, sellValue)
   const marginLive = liveMarginPercent(costValue, sellValue)
-  const suggested = suggestedSell(costValue, marginValue)
-  const applied = Boolean(saved)
 
-  function update(patch: Partial<Draft>) {
-    const next = { ...draft, ...patch }
-    if (patch.cost != null && patch.cost.trim() !== '' && draft.margin.trim() === '' && patch.margin == null) {
-      next.margin = String(defaultMargin)
-    }
-    onDraft(next)
+  function edit(field: 'cost' | 'margin' | 'sell', raw: string, offerId = draft.offerId) {
+    const next = { ...draft, offerId }
+    if (field === 'cost') next.cost = raw
+    if (field === 'margin') next.margin = raw
+    if (field === 'sell') next.unit = raw
+    const synced = syncCostingFields({
+      cost: parseAmount(next.cost),
+      margin: parseAmount(next.margin),
+      sell: parseAmount(next.unit),
+      edited: field,
+    })
+    onDraft({
+      offerId,
+      cost: field === 'cost' ? raw : money(synced.cost),
+      margin: field === 'margin' ? raw : money(synced.margin),
+      unit: field === 'sell' ? raw : money(synced.sell),
+    })
+  }
+
+  function save(next = draft) {
+    if (!editable) return
+    const formData = new FormData()
+    formData.set('quotation_id', quotationId)
+    formData.set('item_id', line.id)
+    formData.set('supplier_offer_id', next.offerId)
+    formData.set('supplier_cost', next.cost)
+    formData.set('margin_percent', next.margin)
+    formData.set('unit_price', next.unit || '0')
+    setSaving(true)
+    run(() => applyQuotationItemPrice(formData), {
+      successMessage: false,
+      onSuccess: () => setSaving(false),
+      onError: () => setSaving(false),
+    })
   }
 
   return (
-    <div className={`rounded-lg border p-3 text-xs space-y-3 ${warnings.length ? 'border-amber-300 bg-amber-50/40' : 'border-gray-100'}`}>
+    <div className={`rounded-lg border p-3 text-xs space-y-3 ${warnings.some((code) => code === 'above_sell') ? 'border-red-300 bg-red-50/40' : warnings.length ? 'border-amber-300 bg-amber-50/40' : 'border-gray-100'}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-gray-900">{line.name}</p>
           <p className="font-mono text-[10px] text-gray-400">{line.sku} · qty {line.quantity}</p>
         </div>
-        <div className="text-right">
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${applied ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'}`}>
-            {applied ? 'Saved' : 'Not applied'}
-          </span>
-          <p className="mt-1 text-gray-600">Current sell {formatCurrency(line.unitPrice)}</p>
-          <p className="text-gray-700">Margin {marginLive == null ? '—' : `${marginLive}%`}</p>
+        <div className="text-right text-gray-700">
+          {saving || busy ? <span className="inline-flex items-center gap-1"><Spinner />Saving</span> : <span>Saved with the line</span>}
+          <p>Margin {marginLive == null ? '—' : `${marginLive}%`}</p>
         </div>
       </div>
       {warnings.length > 0 && (
-        <ul className="text-amber-800">
+        <ul className={warnings.includes('above_sell') ? 'text-red-800' : 'text-amber-800'}>
           {warnings.map((code) => <li key={code}>{marginWarningText(code)}</li>)}
         </ul>
       )}
       {offers.length === 0 ? (
         <p className="text-gray-500">No supplier offers on this product. Enter a negotiated cost.</p>
       ) : (
-        <div className="space-y-1">
-          {offers.map((offer) => (
-            <label key={offer.id} className="flex items-center gap-2">
-              <input
-                type="radio"
-                name={`offer-${line.id}`}
-                checked={draft.offerId === offer.id}
-                disabled={!editable}
-                onChange={() => update({ offerId: offer.id, cost: String(offer.cost), margin: draft.margin.trim() === '' ? String(defaultMargin) : draft.margin })}
-              />
-              <span>
+        <label className="block">
+          Supplier offer
+          <select
+            value={draft.offerId}
+            disabled={!editable}
+            onChange={(event) => {
+              const offer = offers.find((item) => item.id === event.target.value)
+              const margin = draft.margin.trim() === '' ? String(defaultMargin) : draft.margin
+              const next = { ...draft, offerId: event.target.value, cost: offer ? String(offer.cost) : draft.cost, margin }
+              const synced = syncCostingFields({
+                cost: parseAmount(next.cost),
+                margin: parseAmount(next.margin),
+                sell: parseAmount(next.unit),
+                edited: 'cost',
+              })
+              const savedDraft = { offerId: next.offerId, cost: money(synced.cost), margin: money(synced.margin), unit: money(synced.sell) }
+              onDraft(savedDraft)
+              save(savedDraft)
+            }}
+            className="mt-1 w-full rounded border px-2 py-1.5"
+          >
+            <option value="">Negotiated cost</option>
+            {offers.map((offer) => (
+              <option key={offer.id} value={offer.id}>
                 {offer.supplier_name || 'Supplier'}
                 {offer.supplier_sku ? ` · ${offer.supplier_sku}` : ''}
-                {' · '}{formatCurrency(offer.cost)}
-                {' · MOQ '}{offer.moq}
-                {offer.lead_time_days != null ? ` · ${offer.lead_time_days}d` : ''}
-                {offer.in_stock ? '' : ' · out of stock'}
+                {` · ${formatCurrency(offer.cost)} · MOQ ${offer.moq}`}
                 {offer.id === bestId ? ' · best' : ''}
                 {offer.is_preferred ? ' · pinned' : ''}
-                {offer.is_active ? '' : ' · inactive'}
-              </span>
-            </label>
-          ))}
-        </div>
+              </option>
+            ))}
+          </select>
+        </label>
       )}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <label>
-          Negotiated cost
-          <input type="number" min="0" step="0.01" value={draft.cost} disabled={!editable} onChange={(event) => update({ cost: event.target.value })} className="mt-1 w-full rounded border px-2 py-1.5" />
+          Cost
+          <input type="number" min="0" step="0.01" value={draft.cost} disabled={!editable} onChange={(event) => edit('cost', event.target.value)} onBlur={() => save()} className="mt-1 w-full rounded border px-2 py-1.5" />
         </label>
         <label>
           Margin %
-          <input type="number" min="0" step="0.01" value={draft.margin} disabled={!editable || costValue == null} onChange={(event) => update({ margin: event.target.value })} className="mt-1 w-full rounded border px-2 py-1.5" />
+          <input type="number" step="0.01" value={draft.margin} disabled={!editable || costValue == null || costValue <= 0} onChange={(event) => edit('margin', event.target.value)} onBlur={() => save()} className="mt-1 w-full rounded border px-2 py-1.5" />
         </label>
         <label>
-          Client sell price
-          <input type="number" min="0" step="0.01" value={draft.unit} disabled={!editable} onChange={(event) => update({ unit: event.target.value })} className="mt-1 w-full rounded border px-2 py-1.5" />
+          Sell price
+          <input type="number" min="0" step="0.01" value={draft.unit} disabled={!editable} onChange={(event) => edit('sell', event.target.value)} onBlur={() => save()} className="mt-1 w-full rounded border px-2 py-1.5" />
         </label>
       </div>
-      {suggested != null && (
-        <button type="button" className="text-[#806A50]" disabled={!editable} onClick={() => update({ unit: String(suggested) })}>
-          Use {formatCurrency(suggested)} from cost and margin
-        </button>
-      )}
-      {editable && (
-        <button
-          type="button"
-          disabled={busy}
-          aria-busy={saving || undefined}
-          className="rounded-lg bg-[#624B32] px-3 py-1.5 font-semibold text-white disabled:opacity-50"
-          onClick={() => {
-            const formData = new FormData()
-            formData.set('quotation_id', quotationId)
-            formData.set('item_id', line.id)
-            formData.set('supplier_offer_id', draft.offerId)
-            formData.set('supplier_cost', draft.cost)
-            formData.set('margin_percent', draft.margin.trim() === '' && draft.cost.trim() !== '' ? String(defaultMargin) : draft.margin)
-            formData.set('unit_price', draft.unit)
-            setSaving(true)
-            run(() => applyQuotationItemPrice(formData), {
-              successMessage: 'Sell price updated',
-              onSuccess: () => setSaving(false),
-              onError: () => setSaving(false),
-            })
-          }}
-        >
-          {saving ? <span className="inline-flex items-center gap-2"><Spinner />Saving…</span> : 'Apply sell price'}
-        </button>
-      )}
     </div>
   )
 }

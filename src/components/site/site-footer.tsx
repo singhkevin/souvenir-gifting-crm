@@ -2,16 +2,20 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { appName, marketingHostLabel, marketingSiteUrl } from '@/lib/brand'
 import { BUDGET_BANDS } from '@/lib/catalogue/collections'
+import { whatsAppHref } from '@/lib/contact/public-phone'
 
 export function SiteFooter({
   workspaceHref,
   workspaceLabel,
+  phone,
 }: {
   workspaceHref?: string | null
   workspaceLabel?: string | null
+  phone?: string | null
 }) {
   const marketingUrl = marketingSiteUrl()
   const marketingHost = marketingHostLabel(marketingUrl)
+  const whatsApp = phone ? whatsAppHref(phone) : null
   return (
     <footer className="mt-0 border-t border-[#E8E4DE] bg-[#F6F4F1] text-[#1B2430]">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-14 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
@@ -20,6 +24,17 @@ export function SiteFooter({
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#5C6570]">
             Your destination for curated corporate gifts — catalogue, quotation and fulfilment in one place.
           </p>
+          {phone ? (
+            <p className="mt-4 text-sm text-[#5C6570]">
+              <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="hover:text-[#1B2430]">{phone}</a>
+              {whatsApp ? (
+                <>
+                  {' · '}
+                  <a href={whatsApp} className="hover:text-[#1B2430]">WhatsApp</a>
+                </>
+              ) : null}
+            </p>
+          ) : null}
         </div>
 
         <div>

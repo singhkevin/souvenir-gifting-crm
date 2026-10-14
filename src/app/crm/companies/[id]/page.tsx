@@ -6,7 +6,7 @@ import { CompanyAvatar } from '@/components/ui/avatar'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { uploadCompanyLogo, removeCompanyLogo, updateCompany, removeCompany } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
-import { formatCurrency, formatDate, isUuid } from '@/lib/utils'
+import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { formatAllowedEmailDomains } from '@/lib/pricing/domains'
 import { portalAddressHelp, portalUrlForSlug } from '@/lib/portal-host'
 import { portalDnsMode } from '@/lib/portal-hosts/mode'
@@ -26,6 +26,8 @@ import {
 } from '@/components/companies/company-catalogue-browser'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { BusinessAccountPanel } from '../business-account-panel'
+import { CompanySpecialPrices, type SpecialPriceRow } from '../special-prices'
+import type { PickerProduct } from '@/components/products/product-picker-drawer'
 
 export default async function CompanyDetailPage({
   params,
@@ -40,6 +42,7 @@ export default async function CompanyDetailPage({
   const { tab = 'overview', removed } = await searchParams
   const canManageVisibility = profile.role === 'admin'
   const canEdit = profile.role === 'admin' || profile.role === 'sales'
+  const canSetPrices = ['admin', 'sales', 'management', 'accounts'].includes(profile.role)
 
   const supabase = await createClient()
 
@@ -57,6 +60,7 @@ export default async function CompanyDetailPage({
     { data: clients },
     { data: companyTasks },
     { data: portalHosts },
+    specialPricesResult,
   ] = await Promise.all([
     supabase.from('companies').select('*, owner:profiles!companies_owner_id_fkey(id, full_name, email)').eq('id', id).maybeSingle(),
     supabase.from('contacts').select('*').eq('company_id', id).order('full_name'),
@@ -68,13 +72,14 @@ export default async function CompanyDetailPage({
     supabase.from('company_product_access').select('product_id, created_at').eq('company_id', id),
     supabase
       .from('products')
-      .select('id, name, sku, price, moq, image_url, catalogue_access')
+      .select('id, name, sku, price, moq, image_url, catalogue_access, category:categories(name)')
       .eq('status', 'active')
       .order('name'),
     supabase.from('company_product_exclusions').select('product_id, created_at').eq('company_id', id),
     supabase.from('profiles').select('id, full_name, email, role, is_active').eq('company_id', id).in('role', ['client_admin', 'client_user']).order('full_name'),
     supabase.from('tasks').select('id, title, status, due_at, assigned_to, order_id, priority, assignee:profiles!assigned_to(full_name)').eq('company_id', id).order('due_at', { ascending: true }),
     supabase.from('portal_hosts').select('*').eq('company_id', id).neq('status', 'removed').order('created_at', { ascending: false }),
+    supabase.from('company_product_prices').select('product_id, price, valid_until').eq('company_id', id),
   ])
 
   if (!company) notFound()
@@ -88,9 +93,44 @@ export default async function CompanyDetailPage({
     redirectHosts.map((row) => [row.id, portalUrlForSlug(row.slug)]),
   )
 
+  const productRows = (allProducts || []) as (CatalogueBrowserProduct & {
+    category?: { name?: string | null } | { name?: string | null }[] | null
+  })[]
+  const specialMissing = Boolean(
+    specialPricesResult.error && /company_product_prices|schema cache|does not exist/i.test(specialPricesResult.error.message),
+  )
+  const pickerProducts: PickerProduct[] = productRows.map((row) => {
+    const category = oneRelation(row.category)
+    return {
+      id: row.id,
+      name: row.name,
+      sku: row.sku,
+      imageUrl: row.image_url,
+      category: category?.name || null,
+      price: Number(row.price) || 0,
+      moq: row.moq && row.moq > 0 ? row.moq : 1,
+    }
+  })
+  const productById = new Map(pickerProducts.map((product) => [product.id, product]))
+  const specialRows: SpecialPriceRow[] = ((specialPricesResult.data || []) as {
+    product_id: string
+    price: number
+    valid_until: string | null
+  }[]).map((row) => {
+    const product = productById.get(row.product_id)
+    return {
+      productId: row.product_id,
+      name: product?.name || 'Product',
+      sku: product?.sku || '',
+      imageUrl: product?.imageUrl || null,
+      price: Number(row.price) || 0,
+      validUntil: row.valid_until,
+    }
+  })
+
   const assignedProductIds = new Set((companyProducts || []).map((cp) => cp.product_id))
   const excludedProductIds = new Set((productExclusions || []).map((e) => e.product_id))
-  const products = (allProducts || []) as CatalogueBrowserProduct[]
+  const products = productRows as CatalogueBrowserProduct[]
 
   const catalogueRows: CatalogueBrowserRow[] = products
     .map((product) => {
@@ -133,6 +173,7 @@ export default async function CompanyDetailPage({
     { id: 'overview', label: 'Overview' },
     { id: 'clients', label: `Clients (${clients?.length || 0})` },
     { id: 'catalogue', label: `Catalogue (${visibleCatalogueCount})` },
+    ...(canSetPrices ? [{ id: 'prices', label: `Special prices (${specialRows.length})` }] : []),
     { id: 'contacts', label: `Contacts (${contacts?.length || 0})` },
     { id: 'leads', label: `Leads (${leads?.length || 0})` },
     { id: 'requirements', label: `Requirements (${requirements?.length || 0})` },
@@ -455,6 +496,15 @@ export default async function CompanyDetailPage({
           rows={catalogueRows}
           assignableProducts={assignableProducts}
           canManageVisibility={canManageVisibility}
+        />
+      )}
+
+      {tab === 'prices' && canSetPrices && (
+        <CompanySpecialPrices
+          companyId={id}
+          products={pickerProducts}
+          rows={specialRows}
+          missingTable={specialMissing}
         />
       )}
 

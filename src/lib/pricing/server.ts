@@ -8,6 +8,7 @@ import {
   type PriceChannel,
   type ResolvedPrice,
 } from '@/lib/pricing/resolve'
+import { listedUnitPrice } from '@/lib/pricing/listed'
 import { offersByProduct, pickBestOffer, type SupplierOffer } from '@/lib/pricing/offers'
 import {
   pricingSettingsFromRow,
@@ -123,10 +124,32 @@ export function supplierCostForProduct(
   return product.supplier_cost == null ? null : Number(product.supplier_cost)
 }
 
+type SpecialPrice = { price: number; validUntil: string | null }
+
+export async function specialPricesForCompany(
+  client: SupabaseClient,
+  companyId: string | null | undefined,
+  productIds: string[],
+): Promise<Map<string, SpecialPrice>> {
+  const prices = new Map<string, SpecialPrice>()
+  if (!companyId || !productIds.length) return prices
+  const { data, error } = await client
+    .from('company_product_prices')
+    .select('product_id, price, valid_until')
+    .eq('company_id', companyId)
+    .in('product_id', productIds)
+  if (error || !data) return prices
+  for (const row of data as { product_id: string; price: number; valid_until: string | null }[]) {
+    prices.set(row.product_id, { price: Number(row.price), validUntil: row.valid_until })
+  }
+  return prices
+}
+
 export async function sellPricesForSurface(
   productIds: string[],
   surface: PriceSurface,
   companyMarginPercent: number | null,
+  companyId?: string | null,
 ): Promise<Map<string, number | null> | null> {
   if (!productIds.length) return new Map()
   const admin = createAdminClient()
@@ -146,9 +169,23 @@ export async function sellPricesForSurface(
   const products = fallback ? fallback.data : embedded.data
   const error = fallback ? fallback.error : embedded.error
   if (error || !products) return null
+  const prices = new Map<string, number | null>()
+  if (surface !== 'store') {
+    const specials = await specialPricesForCompany(admin, companyId, productIds)
+    for (const row of products) {
+      const product = withProductCost(row)
+      const special = specials.get(product.id)
+      prices.set(product.id, listedUnitPrice({
+        specialPrice: special?.price,
+        specialValidUntil: special?.validUntil,
+        basePrice: product.price,
+        companyMarginPercent,
+      }))
+    }
+    return prices
+  }
   const offers = flags.useBestCost ? await loadSupplierOffers(admin, productIds) : []
   const grouped = offersByProduct(offers)
-  const prices = new Map<string, number | null>()
   for (const row of products) {
     const product = withProductCost(row)
     const cost = supplierCostForProduct(product, grouped.get(product.id) || [], {
@@ -160,8 +197,8 @@ export async function sellPricesForSurface(
       supplierCost: cost,
       listPrice: product.price,
       productMarginPercent: product.internal_margin,
-      companyMarginPercent: surface === 'store' ? null : companyMarginPercent,
-      channel: surface === 'store' ? 'b2c' : 'b2b',
+      companyMarginPercent: null,
+      channel: 'b2c',
       settings,
     })
     prices.set(product.id, resolved.sellPrice)

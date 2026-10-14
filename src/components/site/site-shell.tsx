@@ -8,6 +8,17 @@ import { SiteFooter } from '@/components/site/site-footer'
 import { getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
 import { homeCategoryTiles } from '@/lib/catalogue/curate'
 import { slugify } from '@/lib/utils'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { resolvePublicContactPhone } from '@/lib/contact/public-phone'
+
+async function publicContactPhone() {
+  const fromEnv = process.env.PUBLIC_CONTACT_PHONE
+  const admin = createAdminClient()
+  if (!admin) return resolvePublicContactPhone(fromEnv, null)
+  const { data, error } = await admin.from('org_settings').select('public_contact_phone').limit(1).maybeSingle()
+  if (error || !data) return resolvePublicContactPhone(fromEnv, null)
+  return resolvePublicContactPhone(fromEnv, data.public_contact_phone as string | null)
+}
 
 export async function SiteShell({ children }: { children: React.ReactNode }) {
   const profile = await getProfile()
@@ -17,7 +28,11 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
   const isBusiness = isBusinessRole(profile?.role)
   const workspaceHref = profile ? (isClient ? '/portal/gifts' : landingPathForRole(profile.role)) : null
   const workspaceLabel = profile ? (isClient ? 'Client portal' : isBusiness ? 'Business portal' : 'Workspace') : null
-  const [products, categories] = await Promise.all([getPublicCatalogueProducts(), getPublicCategories()])
+  const [products, categories, phone] = await Promise.all([
+    getPublicCatalogueProducts(),
+    getPublicCategories(),
+    publicContactPhone(),
+  ])
   const suggestions = products.slice(0, 40).map((product) => ({
     id: product.id,
     name: product.name,
@@ -40,7 +55,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         hideAudience={hostKind === 'tenant'}
       />
       <main>{children}</main>
-      <SiteFooter workspaceHref={workspaceHref} workspaceLabel={workspaceLabel} />
+      <SiteFooter workspaceHref={workspaceHref} workspaceLabel={workspaceLabel} phone={phone} />
     </div>
   )
 }
