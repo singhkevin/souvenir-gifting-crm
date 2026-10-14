@@ -112,6 +112,7 @@ function isStorePath(pathname: string) {
     matches(pathname, '/collections') ||
     matches(pathname, '/request-quote') ||
     matches(pathname, '/about') ||
+    matches(pathname, '/present') ||
     matches(pathname, '/business') ||
     matches(pathname, '/signup') ||
     isAuthPath(pathname)

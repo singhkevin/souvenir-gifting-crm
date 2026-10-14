@@ -21,3 +21,9 @@ export function isClientRole(role: string | null | undefined): boolean {
 export function isBusinessRole(role: string | null | undefined): boolean {
   return includes(BUSINESS_ROLES, role)
 }
+
+const PRESENTATION_STAFF_ROLES = ['admin', 'sales', 'operations', 'management'] as const
+
+export function isPresentationStaffRole(role: string | null | undefined): boolean {
+  return includes(PRESENTATION_STAFF_ROLES, role)
+}
