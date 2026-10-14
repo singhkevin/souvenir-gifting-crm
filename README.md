@@ -6,17 +6,108 @@ B2B corporate gifting CRM/ERP. Manage a customer from first enquiry through fulf
 
 Next.js 16, TypeScript, Tailwind CSS 4, Supabase (Postgres, Auth, Storage, RLS).
 
-## Local setup
+## Local development
+
+### Prerequisites
+
+- Node.js 20.9 or newer (Next.js 16 minimum). The repo pins no version (no `.nvmrc` or `engines`). Use Node 23.6+ if you want to run the unit tests without flags.
+- npm (the repo ships `package-lock.json`).
+- Access to a Supabase project (URL, anon key, and service role key).
+
+### 1. Install and configure
 
 ```bash
 npm install
-cp .env.example .env
+cp .env.example .env.local
+```
+
+`.env*` files are git-ignored except `.env.example`. Fill in `.env.local`. Never commit values.
+
+Required:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only; never prefix with `NEXT_PUBLIC_`)
+
+Local host split (to test the store, admin, finder, and company portals on one server). Comment out the production `ROOT_DOMAIN` line and set:
+
+- `DOMAIN_SPLIT=1`
+- `ROOT_DOMAIN=portal.localhost`
+- `PORTAL_ROOT_DOMAIN=portal.localhost`
+- `STORE_DOMAIN=store.localhost`
+- `ADMIN_HOST=admin.localhost`
+- `PORT=3000`
+
+Leave `DOMAIN_SPLIT` unset to run the old single-host app on `http://localhost:3000`.
+
+Optional: `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_SHORT_NAME`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (an empty Turnstile secret skips the check outside production), `PUBLIC_CONTACT_PHONE`, `CRON_SECRET`. See `.env.example` for the full list.
+
+> **Warning:** local development uses whatever database `.env.local` points at. With the production Supabase keys, every action on localhost (orders, quotes, registrations, emails, deletes) hits the **live** database. Point `NEXT_PUBLIC_SUPABASE_URL` and the keys at a separate project or Supabase branch for anything destructive.
+
+### 2. Run
+
+```bash
 npm run dev
 ```
 
-Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env`.
+If port 3000 is busy:
 
-Admin-created portal client logins also require the **server-only** variable `SUPABASE_SERVICE_ROLE_KEY`. Never prefix this key with `NEXT_PUBLIC_`. On Vercel, add it under Project Settings → Environment Variables (Production).
+```bash
+lsof -ti:3000 | xargs kill -9
+```
+
+### 3. Local URLs
+
+Browsers resolve `*.localhost` to `127.0.0.1`, so no `/etc/hosts` edits are needed. These assume the local host split above.
+
+| Surface | URL |
+| --- | --- |
+| Store | http://localhost:3000 (also http://store.localhost:3000) |
+| Business portal | http://localhost:3000/business |
+| Admin CRM | http://admin.localhost:3000 |
+| Portal finder | http://portal.localhost:3000 |
+| Company portal | http://`<code>`.portal.localhost:3000 (`<code>` is the company `portal_slug`) |
+
+Sessions are host-only, so signing in on `admin.localhost` does not sign you in on the store or a company host (same as production). More detail: `docs/LOCAL_DEV.md`.
+
+### 4. Supabase redirect URLs
+
+Supabase dashboard → Authentication → URL Configuration → Redirect URLs. Add:
+
+- `http://localhost:3000/**`
+- `http://*.localhost:3000/**` (store, admin, portal finder)
+- `http://*.portal.localhost:3000/**` (company portals are two labels deep)
+
+### 5. Logging in as each role
+
+Use the demo users listed under [Demo users](#demo-users), or your own accounts. Passwords are not in this section.
+
+- **Staff (Admin, Sales, Operations, Accounts, Management):** sign in at http://admin.localhost:3000/login. Operations accounts have no cost or margin access.
+- **Client admin / client user:** open the company host, e.g. http://`<code>`.portal.localhost:3000/login, with a user whose profile belongs to that company.
+- **Business (self-registered) buyer:** register or sign in at http://localhost:3000/business. Registration needs `SUPABASE_SERVICE_ROLE_KEY`.
+
+Without the host split, every role signs in at http://localhost:3000/login.
+
+### 6. Type check and tests
+
+```bash
+npx tsc --noEmit
+npm run lint
+node --test test/*.test.ts
+```
+
+Tests use the built-in `node:test` runner with native TypeScript stripping (Node 23.6+; on 22.6–23.5 add `--experimental-strip-types`). Note: as of Oct 2026, tests whose source files import through the `@/` path alias fail to load under plain Node (`ERR_MODULE_NOT_FOUND`). That is a runner limitation, not a test failure.
+
+SQL checks live in `supabase/tests/`. They roll back or abort on their own, but still run them only against a non-production database or inside a transaction you roll back.
+
+### 7. Database migrations
+
+- Forward migrations: `supabase/migrations/YYYYMMDD_name.sql`. Each has a matching `supabase/rollbacks/YYYYMMDD_name_rollback.sql`.
+- Order: `supabase/migrations/APPLY_ORDER.md`. Add every new migration there with its number and rollback.
+- Migrations are **applied manually** (Supabase SQL editor or an approved operator), in `APPLY_ORDER.md` order, after a backup of the affected data. Nothing runs them automatically on deploy or `npm run dev`.
+- Ship the code that depends on a migration only after that migration is applied.
+
+### Auth redirects (production)
 
 Password recovery uses the request host (`http://localhost:3000` locally, `https://www.giftingstore.online` in production). `resetPasswordForEmail` sets `redirectTo` to `/reset-password`. Query tokens (`code`, `token_hash`) are exchanged once at `/auth/confirm`; hash tokens are handled on `/reset-password`.
 
@@ -44,7 +135,6 @@ Reset password email template (Authentication → Email Templates → Reset pass
 <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery">Reset password</a></p>
 ```
 
-Open http://localhost:3000
 
 ## Demo users
 
