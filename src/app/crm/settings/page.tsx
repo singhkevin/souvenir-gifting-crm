@@ -46,6 +46,18 @@ export default async function SettingsPage() {
           <span className="text-gray-500 text-xs">Currency</span>
           <input name="currency" defaultValue={settings?.currency || 'INR'} className="w-full border rounded-lg px-3 py-2 mt-1" />
         </label>
+        <label className="block">
+          <span className="text-gray-500 text-xs">Public contact phone</span>
+          <input
+            name="public_contact_phone"
+            defaultValue={settings?.public_contact_phone || ''}
+            placeholder="Business number shown in the public footer and WhatsApp"
+            className="w-full border rounded-lg px-3 py-2 mt-1"
+          />
+          <span className="mt-1 block text-[11px] text-gray-500">
+            Leave blank to hide the number. PUBLIC_CONTACT_PHONE overrides this when it is set on the server.
+          </span>
+        </label>
 
         <div className="border-t pt-4 space-y-4">
           <div>

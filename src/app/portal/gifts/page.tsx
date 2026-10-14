@@ -30,7 +30,7 @@ export default async function GiftsPage({
 
   const supabase = await createClient()
   const { data: companyId } = await supabase.rpc('client_company_id')
-  const showCollections = tab === 'collections'
+  const showCollections = tab === 'catalogs' || tab === 'collections'
 
   return (
     <div className="space-y-6">
@@ -38,7 +38,7 @@ export default async function GiftsPage({
         <h1 className="text-2xl font-bold text-gray-900">Gifts</h1>
         <p className="mt-1 text-sm text-gray-500">
           {showCollections
-            ? 'Collections prepared for your team. Open one to add gifts to a quote.'
+            ? 'Catalogs prepared for your team. Open one to add gifts to a quote.'
             : 'All gifts available to you. Add the ones you want to your quote basket.'}
         </p>
       </div>
@@ -46,8 +46,8 @@ export default async function GiftsPage({
         <Link href="/portal/gifts" className={tabClass(!showCollections)} aria-current={!showCollections ? 'page' : undefined}>
           All gifts
         </Link>
-        <Link href="/portal/gifts?tab=collections" className={tabClass(showCollections)} aria-current={showCollections ? 'page' : undefined}>
-          Collections for you
+        <Link href="/portal/gifts?tab=catalogs" className={tabClass(showCollections)} aria-current={showCollections ? 'page' : undefined}>
+          Catalogs for you
         </Link>
       </div>
       {showCollections ? <Collections companyId={companyId} /> : (
@@ -68,7 +68,7 @@ async function Collections({ companyId }: { companyId: string | null }) {
   const catalogs = await listCompanyCatalogs(supabase, companyId)
 
   if (catalogs.length === 0) {
-    return <EmptyState title="No collections yet" body="Your account manager will share a collection when it is ready." />
+    return <EmptyState title="No catalogs yet" body="Your account manager will share a catalog when it is ready." />
   }
 
   return (
@@ -89,7 +89,7 @@ async function Collections({ companyId }: { companyId: string | null }) {
             href={`/portal/gifts/collection/${catalog.id}`}
             className="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-white hover:bg-[#9C8567]"
           >
-            View collection
+            View catalog
           </Link>
         </div>
       ))}
@@ -140,13 +140,14 @@ async function AllGifts({
 
   let products = productRows || []
   const tenant = readTenantFromHeaders(await headers())
-  if (tenant && products.length) {
+  if (products.length) {
     const companyMargin = companyId ? await getCompanyMarginPercent(companyId) : null
-    const micrositePrices = await sellPricesForSurface(products.map((product) => product.id), 'microsite', companyMargin)
-    if (micrositePrices) {
+    const surface = tenant ? 'microsite' : 'portal'
+    const listedPrices = await sellPricesForSurface(products.map((product) => product.id), surface, companyMargin, companyId)
+    if (listedPrices) {
       products = products.map((product) => ({
         ...product,
-        price: micrositePrices.has(product.id) ? micrositePrices.get(product.id) : product.price,
+        price: listedPrices.has(product.id) ? listedPrices.get(product.id) : product.price,
       }))
     }
   }

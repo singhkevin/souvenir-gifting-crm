@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
-import { PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
+import { PACK_OPTION_LABELS } from '@/lib/catalogs/pack-labels'
 import { loadSharedCatalog, sharePath, type SharedCatalogProduct } from '@/lib/catalogs/share'
 import { getProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'

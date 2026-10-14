@@ -1,7 +1,10 @@
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { isSafeNext } from '@/lib/safe-next'
 import { LoginForm } from './login-form'
 import { confirmSearchFromParams, hasRecoveryQuery } from '@/lib/auth/recovery'
+import { domainSplitEnabled } from '@/lib/domain-flag'
+import { resolveHost } from '@/lib/portal-host'
 
 export default async function LoginPage({
   searchParams,
@@ -16,5 +19,8 @@ export default async function LoginPage({
   if (hasRecoveryQuery(query)) {
     redirect(`/auth/confirm?${confirmSearchFromParams({ code, type, token_hash })}`)
   }
-  return <LoginForm next={isSafeNext(next) ? next : ''} resetSuccess={reset === 'success'} portalError={error === 'portal'} confirmed={confirmed === '1'} />
+  const headerStore = await headers()
+  const host = resolveHost(headerStore.get('x-forwarded-host') || headerStore.get('host'))
+  const branded = domainSplitEnabled() && (host.kind === 'tenant' || host.kind === 'portal-root')
+  return <LoginForm next={isSafeNext(next) ? next : ''} resetSuccess={reset === 'success'} portalError={error === 'portal'} confirmed={confirmed === '1'} branded={branded} />
 }

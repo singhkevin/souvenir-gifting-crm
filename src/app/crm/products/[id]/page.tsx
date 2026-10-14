@@ -248,8 +248,8 @@ export default async function ProductDetailPage({
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">List price (fallback)</label>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Base price</label>
                 <input
                   type="number"
                   step="0.01"
@@ -258,33 +258,10 @@ export default async function ProductDetailPage({
                   required
                   className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
                 />
+                <p className="mt-1 text-[10px] text-gray-500">
+                  Used when no company special price and no catalog line price apply. Company margin is added on top for that company.
+                </p>
               </div>
-              {showCost && (
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Supplier cost</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="supplier_cost"
-                  defaultValue={product.supplier_cost || ''}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
-                />
-              </div>
-              )}
-              {showCost && (
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Product margin %</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  name="internal_margin"
-                  defaultValue={product.internal_margin ?? ''}
-                  placeholder="Used only if channel % is blank"
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
-                />
-              </div>
-              )}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">MOQ</label>
                 <input

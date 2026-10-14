@@ -60,6 +60,9 @@ export function pricingSettingsFromRow(
 }
 
 export function supplierSchemaHint(message: string) {
+  if (/public_contact_phone/i.test(message)) {
+    return `${message} Apply supabase/migrations/20261016_company_product_prices.sql, then retry.`
+  }
   if (/product_costs/i.test(message)) {
     return `${message} Apply supabase/migrations/20261013_product_costs.sql, then retry.`
   }

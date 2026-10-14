@@ -35,7 +35,7 @@ export default async function QuoteBasketPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Quote basket</h1>
           <p className="mt-2 text-sm text-gray-600 sm:text-base">
-            Gifts you saved. Request one quotation when the basket is ready.
+            Items you&apos;re considering. Send them as one quote request.
           </p>
         </div>
         <Link
@@ -50,13 +50,13 @@ export default async function QuoteBasketPage() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">From your collections</h2>
-          <p className="mt-1 text-sm text-gray-500">Gifts saved from a collection.</p>
+          <h2 className="text-lg font-semibold text-gray-900">From your catalogs</h2>
+          <p className="mt-1 text-sm text-gray-500">Gifts saved from a catalog.</p>
         </div>
 
         {campaignRows.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-            <p className="text-sm text-gray-500">No collection gifts saved yet.</p>
+            <p className="text-sm text-gray-500">No catalog gifts saved yet.</p>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
               <Link
                 href="/portal/gifts"
@@ -65,10 +65,10 @@ export default async function QuoteBasketPage() {
                 Browse gifts
               </Link>
               <Link
-                href="/portal/gifts?tab=collections"
+                href="/portal/gifts?tab=catalogs"
                 className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-4 text-sm font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
               >
-                View collections
+                View catalogs
               </Link>
             </div>
           </div>

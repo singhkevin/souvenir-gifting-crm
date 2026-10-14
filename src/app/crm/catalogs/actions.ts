@@ -7,11 +7,8 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
 import { shareLinkOrigin } from '@/lib/auth/request-origin'
 import { sendEmail } from '@/lib/email/resend'
-import { withProductCost } from '@/lib/pricing/product-costs'
-import { resolveProductSellPrice, getCompanyMarginPercent, getMarginSettings, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
-import { offersByProduct } from '@/lib/pricing/offers'
-import { buildBudgetPackCandidates, planBudgetPacks } from '@/lib/catalogue/budget-packs-server'
-import { formatKitItemNames, PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
+import { listedUnitPrice } from '@/lib/pricing/listed'
+import { getCompanyMarginPercent, specialPricesForCompany } from '@/lib/pricing/server'
 import { sharePath } from '@/lib/catalogs/share'
 import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
 import { appName } from '@/lib/brand'
@@ -271,23 +268,17 @@ export async function unassignCatalogCompany(formData: FormData) {
   return { success: true }
 }
 
-async function priceForCompany(
-  product: { id?: string; moq?: number | null; supplier_cost?: number | null; price?: number | null; internal_margin?: number | null },
-  companyId: string | null,
-  settings: Awaited<ReturnType<typeof getMarginSettings>>,
+function priceForCompany(
+  product: { price?: number | null },
   companyMargin: number | null,
-  supplierCost?: number | null,
+  special?: { price: number; validUntil: string | null },
 ) {
-  const resolved = await resolveProductSellPrice(
-    { ...product, supplier_cost: supplierCost === undefined ? product.supplier_cost : supplierCost },
-    {
-      channel: 'b2b',
-      companyId,
-      companyMarginPercent: companyMargin,
-      settings,
-    },
-  )
-  return resolved.sellPrice
+  return listedUnitPrice({
+    specialPrice: special?.price,
+    specialValidUntil: special?.validUntil,
+    basePrice: product.price,
+    companyMarginPercent: companyMargin,
+  })
 }
 
 export async function addCatalogProducts(formData: FormData) {
@@ -302,23 +293,27 @@ export async function addCatalogProducts(formData: FormData) {
   const { data: catalog } = await supabase.from('campaigns').select('id, company_id').eq('id', campaignId).maybeSingle()
   if (!catalog) return { error: 'Catalog not found' }
 
-  const [{ data: existing }, { data: products }, settings, pricing, companyMargin] = await Promise.all([
+  let quantities: Record<string, number> = {}
+  try {
+    const parsed = JSON.parse(String(formData.get('quantities_json') || '{}'))
+    if (parsed && typeof parsed === 'object') quantities = parsed as Record<string, number>
+  } catch {
+    quantities = {}
+  }
+
+  const [{ data: existing }, { data: products }, companyMargin, specials] = await Promise.all([
     supabase.from('campaign_products').select('product_id').eq('campaign_id', campaignId),
     supabase
       .from('products')
-      .select('id, name, description, image_url, price, moq, status, product_costs(supplier_cost, internal_margin)')
+      .select('id, name, description, image_url, price, moq, status')
       .in('id', productIds)
       .eq('status', 'active'),
-    getMarginSettings(),
-    getPricingSettings(),
     catalog.company_id ? getCompanyMarginPercent(catalog.company_id) : Promise.resolve(null),
+    specialPricesForCompany(supabase, catalog.company_id, productIds),
   ])
-  const offerGroups = pricing.surfaces.portal.useBestCost
-    ? offersByProduct(await loadSupplierOffers(supabase, (products || []).map((product) => product.id)))
-    : new Map()
 
   const taken = new Set((existing || []).map((row) => row.product_id))
-  const byId = new Map((products || []).map((product) => [product.id, withProductCost(product)]))
+  const byId = new Map((products || []).map((product) => [product.id, product]))
   let added = 0
   let skipped = 0
 
@@ -332,17 +327,9 @@ export async function addCatalogProducts(formData: FormData) {
       skipped += 1
       continue
     }
-    const sellingPrice = await priceForCompany(
-      product,
-      catalog.company_id,
-      settings,
-      companyMargin,
-      supplierCostForProduct(product, offerGroups.get(product.id) || [], {
-        useBestCost: pricing.surfaces.portal.useBestCost,
-        requireInStock: pricing.requireInStock,
-        quantity: product.moq,
-      }),
-    )
+    const requested = Math.round(Number(quantities[productId]))
+    const moq = Number.isInteger(requested) && requested > 0 ? requested : (product.moq || 1)
+    const sellingPrice = priceForCompany(product, companyMargin, specials.get(productId))
     const { error } = await supabase.from('campaign_products').insert({
       campaign_id: campaignId,
       product_id: productId,
@@ -350,7 +337,7 @@ export async function addCatalogProducts(formData: FormData) {
       client_description: product.description,
       client_image_url: product.image_url,
       selling_price: sellingPrice || 0,
-      moq: product.moq || 1,
+      moq,
       visibility: 'draft',
       created_by: user.id,
     })
@@ -464,185 +451,6 @@ export async function removeCatalogProduct(formData: FormData) {
   if (error) return { error: error.message }
   revalidateCatalog(campaignId)
   return { success: true }
-}
-
-export async function generateBudgetPackOptions(formData: FormData) {
-  return withIdempotency('crm.generateBudgetPackOptions', formData, () => generateBudgetPackOptionsOnce(formData))
-}
-
-async function generateBudgetPackOptionsOnce(formData: FormData) {
-  await requireStaff(['admin', 'sales', 'management'])
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Not authenticated' }
-
-  const campaignId = String(formData.get('campaign_id') || '')
-  const replacePublished = formData.get('replace') === '1'
-  if (!campaignId) return { error: 'Catalog is required' }
-
-  const { data: campaign } = await supabase
-    .from('campaigns')
-    .select('id, company_id, budget_per_employee, name')
-    .eq('id', campaignId)
-    .maybeSingle()
-  if (!campaign) return { error: 'Catalog not found' }
-
-  // Packs are priced against one company's margin. The admin picks which assigned company;
-  // the catalog default is used when none is sent.
-  const requestedCompany = String(formData.get('pricing_company_id') || '')
-  const pricingCompanyId = isUuid(requestedCompany) ? requestedCompany : campaign.company_id
-  if (!pricingCompanyId) {
-    return { error: 'Assign a company before generating budget packs. Pack prices use the chosen company\'s margin.' }
-  }
-  if (pricingCompanyId !== campaign.company_id && !(await companyCanUseCatalog(supabase, campaignId, pricingCompanyId))) {
-    return { error: 'Choose a company this catalog is assigned to.' }
-  }
-
-  const budget = Number(campaign.budget_per_employee)
-  if (!Number.isFinite(budget) || budget <= 0) {
-    return { error: 'Set a budget per person on this catalog before generating options.' }
-  }
-
-  let packQuery = supabase
-    .from('campaign_products')
-    .select('id')
-    .eq('campaign_id', campaignId)
-    .not('pack_option', 'is', null)
-  if (!replacePublished) {
-    packQuery = packQuery.eq('visibility', 'draft')
-  }
-  const { data: packRows } = await packQuery
-  const packIds = (packRows || []).map((row) => row.id)
-  if (packIds.length) {
-    const { error: deleteError } = await supabase.from('campaign_products').delete().in('id', packIds)
-    if (deleteError) return { error: deleteError.message }
-  }
-
-  const { data: remaining } = await supabase
-    .from('campaign_products')
-    .select('product_id')
-    .eq('campaign_id', campaignId)
-  const takenProductIds = new Set((remaining || []).map((row) => row.product_id).filter(Boolean))
-
-  const { candidates, priced } = await buildBudgetPackCandidates(pricingCompanyId, budget)
-  const freeCandidates = candidates.filter((candidate) => !takenProductIds.has(candidate.id))
-  const picks = planBudgetPacks(freeCandidates, budget)
-  if (picks.length === 0) {
-    return {
-      error: takenProductIds.size
-        ? `No unused catalogue products fit within ${budget} per person. Remove existing catalog products, or use Replace all packs, then try again.`
-        : `No active catalogue products fit within ${budget} per person for this company. Add products or raise the budget.`,
-    }
-  }
-
-  const displayOrderBase = picks.length * 10
-  let order = 0
-  const insertedProductIds = new Set<string>()
-  for (const kit of picks) {
-    const kitId = randomUUID()
-    const kitProducts = kit.productIds
-      .map((id) => priced.get(id))
-      .filter((product): product is NonNullable<typeof product> => Boolean(product))
-      .filter((product) => !insertedProductIds.has(product.id) && !takenProductIds.has(product.id))
-    if (!kitProducts.length) continue
-
-    const names = kitProducts.map((product) => product.name)
-    const label = PACK_OPTION_LABELS[kit.packOption]
-    const kitDescription = `Multi-item kit for ${campaign.name}. Combined price per person is within your ${budget} budget.`
-    const kitTotal = Math.round(
-      (kitProducts.reduce((sum, product) => sum + product.sellPrice, 0) + Number.EPSILON) * 100
-    ) / 100
-
-    let lineOrder = 0
-    for (let i = 0; i < kitProducts.length; i++) {
-      const product = kitProducts[i]
-      const isPrimary = i === 0
-      const packRow = {
-        campaign_id: campaignId,
-        product_id: product.id,
-        display_name: isPrimary ? `${label}: ${formatKitItemNames(names)}` : product.name,
-        client_description: isPrimary ? kitDescription : product.description || `Included in ${label}.`,
-        client_image_url: product.image_url,
-        selling_price: product.sellPrice,
-        pack_kit_total: isPrimary ? kitTotal : null,
-        moq: product.moq || 1,
-        visibility: 'draft',
-        pack_option: kit.packOption,
-        pack_kit_id: kitId,
-        pack_kit_role: isPrimary ? 'primary' : 'line',
-        display_order: displayOrderBase + order + lineOrder,
-        created_by: user.id,
-      }
-      let { error } = await supabase.from('campaign_products').insert({ ...packRow, priced_company_id: pricingCompanyId })
-      if (error && /priced_company_id/i.test(error.message)) {
-        ;({ error } = await supabase.from('campaign_products').insert(packRow))
-      }
-      if (error) return { error: error.message }
-      insertedProductIds.add(product.id)
-      lineOrder += 1
-    }
-    order += 10
-  }
-
-  if (insertedProductIds.size === 0) {
-    return { error: 'Could not create kit options — every candidate product is already on this catalog.' }
-  }
-
-  revalidateCatalog(campaignId)
-  return { success: true, count: picks.length }
-}
-
-export async function publishBudgetPackOptions(formData: FormData) {
-  return withIdempotency('crm.publishBudgetPackOptions', formData, () => publishBudgetPackOptionsOnce(formData))
-}
-
-async function publishBudgetPackOptionsOnce(formData: FormData) {
-  await requireStaff(['admin', 'sales', 'management'])
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Not authenticated' }
-
-  const campaignId = String(formData.get('campaign_id') || '')
-  if (!campaignId) return { error: 'Catalog is required' }
-
-  const { data: rows, error: fetchError } = await supabase
-    .from('campaign_products')
-    .select('id, product:products!inner(status)')
-    .eq('campaign_id', campaignId)
-    .not('pack_option', 'is', null)
-    .eq('visibility', 'draft')
-
-  if (fetchError) return { error: fetchError.message }
-  if (!rows?.length) return { error: 'No draft budget pack options to publish.' }
-
-  for (const row of rows) {
-    const product = Array.isArray(row.product) ? row.product[0] : row.product
-    if (product?.status !== 'active') {
-      return { error: 'All pack products must be active before publishing.' }
-    }
-  }
-
-  const ids = rows.map((row) => row.id)
-  const { error } = await supabase
-    .from('campaign_products')
-    .update({
-      visibility: 'published',
-      published_at: new Date().toISOString(),
-      published_by: user.id,
-    })
-    .in('id', ids)
-  if (error) return { error: error.message }
-
-  await supabase
-    .from('campaigns')
-    .update({
-      published_to_client_at: new Date().toISOString(),
-      status: 'published_to_client',
-    })
-    .eq('id', campaignId)
-
-  revalidateCatalog(campaignId)
-  return { success: true, count: ids.length }
 }
 
 type OpenShareLink = {

@@ -10,13 +10,14 @@ export async function verifyTurnstile(token: string | null | undefined, ip: stri
   const secret = (process.env.TURNSTILE_SECRET_KEY || '').trim()
   if (!secret) {
     if (process.env.NODE_ENV === 'production') {
-      return { ok: false, error: 'This form is unavailable just now. Please try again shortly.' }
+      console.error('[turnstile] TURNSTILE_SECRET_KEY is unset')
+      return { ok: false, error: 'Server error. Please try again shortly.' }
     }
     console.warn('[turnstile] TURNSTILE_SECRET_KEY is unset; skipping verification outside production')
     return { ok: true }
   }
   const response = String(token || '').trim()
-  if (!response) return { ok: false, error: 'Please confirm you are not a robot.' }
+  if (!response) return { ok: false, error: 'Captcha failed. Please try again.' }
   try {
     const body = new URLSearchParams({ secret, response })
     if (ip && ip !== 'unknown') body.set('remoteip', ip)
@@ -26,9 +27,9 @@ export async function verifyTurnstile(token: string | null | undefined, ip: stri
       body,
     })
     const data = (await res.json()) as { success?: boolean }
-    if (!res.ok || !data.success) return { ok: false, error: 'Please confirm you are not a robot.' }
+    if (!res.ok || !data.success) return { ok: false, error: 'Captcha failed. Please try again.' }
     return { ok: true }
   } catch {
-    return { ok: false, error: 'Please confirm you are not a robot.' }
+    return { ok: false, error: 'Captcha failed. Please try again.' }
   }
 }

@@ -16,6 +16,8 @@ import { absoluteClientQuoteUrl } from '@/lib/quotes/client-link'
 import { defaultQuoteRecipientKey, quoteSendRecipients, sendQuoteWarnings } from '@/lib/quotes/flow'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { FileText, CheckCircle2, XCircle, Copy, ArrowRight } from 'lucide-react'
+import { listCatalogPickerProducts } from '@/lib/catalogs/picker-products'
+import { ProductImage } from '@/components/ui/product-image'
 
 export default async function QuotationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -36,6 +38,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     .maybeSingle()
 
   if (!quote) notFound()
+  const pickerProducts = quote.status === 'draft' ? await listCatalogPickerProducts(quote.company_id) : []
 
   const parentQuote = quote.revision_of
     ? await supabase.from('quotations').select('quotation_number').eq('id', quote.revision_of).maybeSingle()
@@ -59,7 +62,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     unit_price: number
     line_total: number
     description?: string | null
-    product?: { name?: string; sku?: string; moq?: number | null } | { name?: string; sku?: string; moq?: number | null }[] | null
+    product?: { name?: string; sku?: string; image_url?: string | null; moq?: number | null } | { name?: string; sku?: string; image_url?: string | null; moq?: number | null }[] | null
   }[]
   const productIds = [...new Set(quoteItems.map((item) => item.product_id).filter((id): id is string => Boolean(id)))]
   const pricing = canPrice ? await getPricingSettings() : null
@@ -283,12 +286,14 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
             taxPercent={quote.tax_percent == null ? null : Number(quote.tax_percent)}
             validUntil={quote.valid_until}
             notes={quote.notes}
+            products={pickerProducts}
             lines={quoteItems.map((item) => {
               const product = oneRelation(item.product)
               return {
                 id: item.id,
                 name: product?.name || item.description || 'Item',
                 sku: product?.sku || null,
+                imageUrl: product?.image_url || null,
                 quantity: Number(item.quantity) || 1,
                 unitPrice: Number(item.unit_price) || 0,
                 lineTotal: Number(item.line_total) || 0,
@@ -308,11 +313,14 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+            {items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string; image_url?: string | null } | { name?: string; sku?: string; image_url?: string | null }[] | null }) => {
               const product = oneRelation(item.product)
               return (
               <tr key={item.id} className="hover:bg-gray-50/50">
                 <td className="p-3.5">
+                  <div className="flex items-center gap-3">
+                    <ProductImage src={product?.image_url} alt={product?.name || 'Item'} size="sm" className="shrink-0 rounded-lg" />
+                    <div>
                   <div className="font-bold text-gray-900">{product?.name || 'Item'}</div>
                   <div className="text-gray-400 font-mono text-[10px]">{product?.sku}</div>
                   {item.client_response && (
@@ -320,6 +328,8 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
                       {item.client_response === 'accepted' ? 'Client accepted' : 'Client declined'}
                     </div>
                   )}
+                    </div>
+                  </div>
                 </td>
                 <td className="p-3.5 text-right font-medium">{item.quantity}</td>
                 <td className="p-3.5 text-right">{formatCurrency(item.unit_price)}</td>

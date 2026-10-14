@@ -27,6 +27,7 @@ export async function updateOrgSettings(formData: FormData) {
   }
   const payload = {
     organisation_name: String(formData.get('organisation_name') || '') || null,
+    public_contact_phone: String(formData.get('public_contact_phone') || '').trim() || null,
     default_tax_percent: formData.get('default_tax_percent') ? Number(formData.get('default_tax_percent')) : null,
     currency: String(formData.get('currency') || 'INR'),
     default_margin_percent: readMargin('default_margin_percent'),

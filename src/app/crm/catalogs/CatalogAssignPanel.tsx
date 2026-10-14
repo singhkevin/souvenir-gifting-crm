@@ -54,7 +54,7 @@ export function CatalogAssignPanel({
         <p className="mt-1 text-[#7A7267]">
           One catalog can be shared with several companies. The portal list uses these assignments, and each
           company sees prices worked out from its own margin (unless a line has a manual price).
-          {defaultCompanyName ? ` Default preview and new lines use ${defaultCompanyName}.` : ' Assign a company to preview prices and generate budget packs.'}
+          {defaultCompanyName ? ` Default preview and new lines use ${defaultCompanyName}.` : ' Assign a company to preview prices.'}
         </p>
       </div>
       <ul className="space-y-2">

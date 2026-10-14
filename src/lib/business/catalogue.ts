@@ -16,6 +16,7 @@ export async function getBusinessCatalogue(companyId: string | null): Promise<Bu
     products.map((product) => product.id),
     'business',
     margin,
+    companyId,
   )
   return products.map((product) => ({
     ...product,

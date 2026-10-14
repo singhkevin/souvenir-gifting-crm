@@ -1,10 +1,9 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { resolveSellPrice } from '@/lib/pricing/resolve'
-import { offersByProduct } from '@/lib/pricing/offers'
+import { listedUnitPrice } from '@/lib/pricing/listed'
 import { withProductCost } from '@/lib/pricing/product-costs'
-import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
+import { specialPricesForCompany } from '@/lib/pricing/server'
 import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
 
 /**
@@ -12,12 +11,11 @@ import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
  *
  * One catalog can be assigned to many companies, so a catalog line has no single sell price.
  * What a company sees is resolved at read time:
- *   1. campaign_products.manual_price (explicit override, same for every company), else
- *   2. pack / kit rows keep their stored price (the pack was composed against one company's prices;
- *      see campaign_products.priced_company_id), else
- *   3. product cost (best supplier offer when the portal surface uses it) or list price,
- *      with THAT company's margin (company -> channel -> product -> global, see resolveMarginPercent).
- * campaign_products.selling_price stays as the default snapshot used when nothing else can be computed.
+ *   1. company_product_prices (while valid_until is blank or still current), else
+ *   2. campaign_products.manual_price, else
+ *   3. pack / kit rows keep their stored price, else
+ *   4. base price marked up by that company's margin percent.
+ * campaign_products.selling_price stays as the snapshot used when the product row is missing.
  * Mirrors public.place_direct_order for the catalog surface so the price shown is the price charged.
  */
 
@@ -68,8 +66,7 @@ async function priceRows(
   const prices = new Map<string, number | null>()
   const computeIds: string[] = []
   for (const row of rows) {
-    if (row.manual_price != null) prices.set(row.id, row.manual_price)
-    else if (row.pack_option || row.pack_kit_id) prices.set(row.id, row.selling_price)
+    if (row.pack_option || row.pack_kit_id) prices.set(row.id, row.selling_price)
     else {
       prices.set(row.id, row.selling_price)
       computeIds.push(row.id)
@@ -78,38 +75,31 @@ async function priceRows(
   if (!computeIds.length) return prices
 
   const productIds = [...new Set(rows.filter((row) => computeIds.includes(row.id)).map((row) => row.product_id))]
-  const settings = await getPricingSettings()
-  const [{ data: products }, companyResult] = await Promise.all([
-    admin.from('products').select('id, price, moq, product_costs(supplier_cost, internal_margin)').in('id', productIds),
+  const [{ data: products }, companyResult, specials] = await Promise.all([
+    admin.from('products').select('id, price').in('id', productIds),
     companyId
       ? admin.from('companies').select('margin_percent').eq('id', companyId).maybeSingle()
       : Promise.resolve({ data: null }),
+    specialPricesForCompany(admin, companyId, productIds),
   ])
   if (!products) return prices
   const companyMargin = num((companyResult.data as { margin_percent?: unknown } | null)?.margin_percent)
-  const flags = settings.surfaces.portal
-  const grouped = flags.useBestCost ? offersByProduct(await loadSupplierOffers(admin, productIds)) : new Map()
   const byProduct = new Map(products.map((product) => [product.id as string, withProductCost(product)]))
 
   for (const row of rows) {
     if (!computeIds.includes(row.id)) continue
     const product = byProduct.get(row.product_id)
     if (!product) continue
-    const cost = supplierCostForProduct(product, grouped.get(product.id) || [], {
-      useBestCost: flags.useBestCost,
-      requireInStock: settings.requireInStock,
-      quantity: product.moq,
-    })
+    const special = specials.get(row.product_id)
     prices.set(
       row.id,
-      resolveSellPrice({
-        supplierCost: cost,
-        listPrice: product.price,
-        productMarginPercent: product.internal_margin,
+      listedUnitPrice({
+        specialPrice: special?.price,
+        specialValidUntil: special?.validUntil,
+        catalogManualPrice: row.manual_price,
+        basePrice: product.price,
         companyMarginPercent: companyMargin,
-        channel: 'b2b',
-        settings,
-      }).sellPrice,
+      }),
     )
   }
   return prices

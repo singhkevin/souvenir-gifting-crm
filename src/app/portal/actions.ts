@@ -139,7 +139,7 @@ async function requestCatalogQuotationOnce(input: {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
-  if (!isUuid(input.catalogId)) return { error: 'Collection not found' }
+  if (!isUuid(input.catalogId)) return { error: 'Catalog not found' }
 
   const selected = parseRfqSelection(input.lines)
   if (!selected) return { error: 'Add at least one gift and a whole-number quantity' }
@@ -157,7 +157,7 @@ async function requestCatalogQuotationOnce(input: {
     supabase.from('companies').select('owner_id').eq('id', companyId).maybeSingle(),
     supabase.from('profiles').select('full_name, email').eq('id', user.id).maybeSingle(),
   ])
-  if (!catalog?.name) return { error: 'Collection not found' }
+  if (!catalog?.name) return { error: 'Catalog not found' }
 
   const visibleIds = await displayableLineIds(input.catalogId, { kind: 'company', companyId })
   if (!visibleIds) return { error: 'Unable to save this requirement just now. Please try again shortly.' }

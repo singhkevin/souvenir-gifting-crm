@@ -10,6 +10,12 @@ import { getProfile } from '@/lib/auth'
 import { isBusinessRole } from '@/lib/roles'
 import { classifyBusinessEmail, registrationNotes } from '@/lib/business/email-domain'
 import { gstinError, normaliseGstin } from '@/lib/business/gstin'
+import {
+  mapRegistrationFailure,
+  REGISTER_EMAIL_TAKEN,
+  REGISTER_SERVER,
+} from '@/lib/business/register-errors'
+import { storePublicOrigin } from '@/lib/site/store-public-origin'
 import { allowRate } from '@/lib/business/rate-limit'
 import { requireBusiness } from '@/lib/business/session'
 import { issueQuoteCheckoutLink } from '@/lib/business/tokens'
@@ -86,7 +92,13 @@ async function registerBusinessOnce(formData: FormData) {
   if (gstError) return { error: gstError }
 
   const admin = createAdminClient()
-  if (!admin) return { error: 'Registration is unavailable just now. Please try again shortly.' }
+  if (!admin) {
+    console.error('[registerBusiness] SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL is missing')
+    return { error: REGISTER_SERVER }
+  }
+
+  const existingProfile = await admin.from('profiles').select('id').ilike('email', email).maybeSingle()
+  if (existingProfile.data?.id) return { error: REGISTER_EMAIL_TAKEN }
 
   const { data: corporates } = await admin
     .from('companies')
@@ -114,7 +126,7 @@ async function registerBusinessOnce(formData: FormData) {
   })
   if (rpcError || !companyId) {
     console.error('[registerBusiness]', rpcError?.message)
-    return { error: 'Registration is unavailable just now. Please try again shortly.' }
+    return { error: mapRegistrationFailure(rpcError?.message) }
   }
 
   const created = await admin.auth.admin.createUser({
@@ -128,24 +140,29 @@ async function registerBusinessOnce(formData: FormData) {
     await removeRegistration(String(companyId))
     const message = created.error?.message.toLowerCase() || ''
     if (message.includes('already') || message.includes('registered') || message.includes('exists')) {
-      return { success: true, message: GENERIC_REGISTER }
+      return { error: REGISTER_EMAIL_TAKEN }
     }
-    return { error: 'Registration is unavailable just now. Please try again shortly.' }
+    console.error('[registerBusiness] createUser', created.error?.message)
+    return { error: REGISTER_SERVER }
   }
 
-  const origin = confirmOriginForAccount({
+  const accountOrigin = confirmOriginForAccount({
     role: 'business_user',
     portalSlug: null,
     fallbackOrigin: await requestOrigin(),
   })
+  const origin = accountOrigin === storePublicOrigin(null) || accountOrigin === 'https://souvenirgifting.com'
+    ? storePublicOrigin(null)
+    : accountOrigin
   const link = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,
     options: { redirectTo: `${origin}/auth/confirm` },
   })
   if (link.error || !link.data?.properties?.action_link) {
+    console.error('[registerBusiness] generateLink', link.error?.message, origin)
     await removeRegistration(String(companyId), created.data.user.id)
-    return { error: 'Registration is unavailable just now. Please try again shortly.' }
+    return { error: REGISTER_SERVER }
   }
 
   const sent = await sendEmail({

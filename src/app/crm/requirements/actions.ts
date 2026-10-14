@@ -4,10 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { writeAudit } from '@/lib/audit'
-import { offersByProduct } from '@/lib/pricing/offers'
-import { readProductCost } from '@/lib/pricing/product-costs'
-import { resolveSellPrice } from '@/lib/pricing/resolve'
-import { getCompanyMarginPercent, getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
+import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 import { withIdempotency } from '@/lib/idempotency'
 import { catalogProductPricesForCompany } from '@/lib/catalogs/pricing'
 
@@ -124,11 +121,13 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
     }
   }
 
-  const pricing = await getPricingSettings()
   const companyMargin = req.company_id ? await getCompanyMarginPercent(req.company_id) : null
-  const quoteOffers = pricing.surfaces.crm.useBestCost
-    ? offersByProduct(await loadSupplierOffers(supabase, reqProducts.map((row) => row.product_id)))
-    : new Map()
+  const listedPrices = await sellPricesForSurface(
+    reqProducts.map((row) => row.product_id),
+    'portal',
+    companyMargin,
+    req.company_id,
+  )
 
   const { data: quoteNumber, error: numError } = await supabase.rpc('next_quotation_number')
   if (numError || !quoteNumber) return { error: numError?.message || 'Could not allocate quote number' }
@@ -160,46 +159,11 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
     .single()
   if (error) return { error: error.message }
 
-  let businessQuote = false
-  if (req.company_id) {
-    const company = await supabase.from('companies').select('account_type').eq('id', req.company_id).maybeSingle()
-    if (!company.error) businessQuote = company.data?.account_type === 'business'
-  }
-
   const items = reqProducts.map((row) => {
     const product = Array.isArray(row.product) ? row.product[0] : row.product
-    const productCost = readProductCost(product)
     const qty = row.quantity || req.quantity || 1
     const listPrice = Number(product?.price || 0)
-    const listOrCatalog = sellByProduct.get(row.product_id) ?? listPrice
-    const bestCost = supplierCostForProduct(
-      { id: row.product_id, supplier_cost: productCost.supplier_cost, moq: qty },
-      quoteOffers.get(row.product_id) || [],
-      {
-        useBestCost: pricing.surfaces.crm.useBestCost,
-        requireInStock: pricing.requireInStock,
-        quantity: qty,
-      },
-    )
-    const businessUnit = resolveSellPrice({
-      supplierCost: null,
-      listPrice,
-      productMarginPercent: null,
-      companyMarginPercent: null,
-      channel: 'b2b',
-      settings: pricing,
-    }).sellPrice
-    const derived = pricing.surfaces.crm.useBestCost && pricing.surfaces.crm.showSellPrice && bestCost != null
-      ? resolveSellPrice({
-          supplierCost: bestCost,
-          listPrice: product?.price,
-          productMarginPercent: productCost.internal_margin,
-          companyMarginPercent: companyMargin,
-          channel: 'b2b',
-          settings: pricing,
-        }).sellPrice
-      : null
-    const unit = businessQuote ? businessUnit : (derived ?? listOrCatalog)
+    const unit = sellByProduct.get(row.product_id) ?? listedPrices?.get(row.product_id) ?? listPrice
     return {
       quotation_id: quote.id,
       product_id: row.product_id,

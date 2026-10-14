@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { isUuid } from '@/lib/utils'
-import { PACK_OPTION_LABELS } from '@/lib/catalogue/budget-packs'
+import { PACK_OPTION_LABELS } from '@/lib/catalogs/pack-labels'
 import { withCompanyPrices } from '@/lib/catalogs/pricing'
 import { withVisibleKitTotals } from '@/lib/catalogs/visibility'
 import { displayableLineIds } from '@/lib/catalogs/visibility-data'
@@ -107,7 +107,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{campaignMeta.name || 'Collection'}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{campaignMeta.name || 'Catalog'}</h1>
         <p className="mt-1 text-sm text-gray-500">
           Add the gifts you need, set a quantity for each, and request one quote.
         </p>
@@ -119,7 +119,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
         <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
           <Package className="mx-auto mb-3 h-10 w-10 text-gray-300" />
           <p className="text-sm font-semibold text-gray-700">Nothing to review just yet</p>
-          <p className="mt-1 text-xs text-gray-400">Your account manager will share gifts for this collection shortly.</p>
+          <p className="mt-1 text-xs text-gray-400">Your account manager will share gifts for this catalog shortly.</p>
         </div>
       ) : (
         <CatalogQuoteBoard catalogId={id} budget={budget} groups={groups} />

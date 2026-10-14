@@ -37,7 +37,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
     if (tenant) {
       const { data: companyId } = await supabase.rpc('client_company_id')
       const companyMargin = companyId ? await getCompanyMarginPercent(companyId) : null
-      const micrositePrices = await sellPricesForSurface([product.id], 'microsite', companyMargin)
+      const micrositePrices = await sellPricesForSurface([product.id], 'microsite', companyMargin, companyId)
       if (micrositePrices?.has(product.id)) product.price = micrositePrices.get(product.id) ?? null
     }
 
@@ -124,7 +124,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <BackButton href={`/portal/gifts/collection/${offering.campaign_id}`} label="Back to collection" className="min-h-10" />
+      <BackButton href={`/portal/gifts/collection/${offering.campaign_id}`} label="Back to catalog" className="min-h-10" />
       <div className="grid grid-cols-1 gap-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8 md:grid-cols-2 md:gap-8">
         <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="hero" className="min-h-[240px] rounded-xl border border-gray-100 sm:min-h-[300px]" />
         <div className="flex flex-col justify-between space-y-6">
@@ -170,7 +170,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
               href={`/portal/gifts/collection/${offering.campaign_id}`}
               className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-white hover:bg-[#9C8567]"
             >
-              Open collection
+              Open catalog
             </Link>
             <ActionForm action={toggleOfferingSelectionForm} successMessage="Saved">
               <input type="hidden" name="campaign_id" value={offering.campaign_id} />

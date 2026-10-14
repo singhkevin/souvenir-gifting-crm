@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid } from '@/lib/utils'
 import { ClipboardList, Plus, Trash2 } from 'lucide-react'
+import { ProductImage } from '@/components/ui/product-image'
 import { requireStaff } from '@/lib/auth'
 import {
   updateRequirementForm,
@@ -460,10 +461,14 @@ export default async function RequirementDetailPage({
                       name?: string
                       sku?: string
                       price?: number | null
+                      image_url?: string | null
                     } | null
                   }) => (
                     <tr key={item.id} className="hover:bg-gray-50/50">
                       <td className="p-3.5">
+                        <div className="flex items-center gap-3">
+                        <ProductImage src={item.product?.image_url} alt={item.product?.name || 'Product'} size="sm" className="shrink-0 rounded-lg" />
+                        <div>
                         <Link
                           href={`/crm/products/${item.product?.id}`}
                           className="font-bold text-gray-900 hover:text-[#624B32]"
@@ -480,6 +485,8 @@ export default async function RequirementDetailPage({
                         {item.alt_quantities?.length ? (
                           <p className="text-[11px] text-gray-500">Breaks: {item.alt_quantities.join(', ')}</p>
                         ) : null}
+                        </div>
+                        </div>
                       </td>
                       <td className="p-3.5">
                         <ActionForm action={updateRequirementProductQty}
