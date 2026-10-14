@@ -1,9 +1,9 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { BrandName } from '@/components/brand/brand-name'
 import { ProductImage } from '@/components/ui/product-image'
 import { SiteProductCard } from '@/components/site/site-product-card'
-import { HeroStage } from '@/components/site/hero-stage'
+import { AddToCartButton } from '@/components/site/add-to-cart-button'
+import { SlimHero } from '@/components/site/slim-hero'
 import { ProductRail } from '@/components/site/product-rail'
 import { Reveal } from '@/components/site/reveal'
 import { slugify } from '@/lib/utils'
@@ -12,10 +12,15 @@ import {
   CATALOGUE_COLLECTIONS,
   CATALOGUE_OCCASIONS,
 } from '@/lib/catalogue/collections'
-import { getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
+import { getPublicCatalogueProducts, getPublicCategories, getPublicBrands } from '@/lib/catalogue/products'
 import { curatePublicHome, homeCategoryTiles } from '@/lib/catalogue/curate'
 
 const ARROW = '\u2192'
+
+const TILE_LABEL: Record<string, string> = {
+  Drinkware: 'Drinkware & Mugs',
+  'Desk & Stationery': 'Diaries & Notebooks',
+}
 
 const CATEGORY_LINES: Record<string, string> = {
   Drinkware: 'Bottles, tumblers and everyday presence',
@@ -27,11 +32,32 @@ const CATEGORY_LINES: Record<string, string> = {
 }
 
 export async function PublicHome() {
-  const products = await getPublicCatalogueProducts()
-  const categories = homeCategoryTiles(await getPublicCategories(), 6)
+  const loaded = await getPublicCatalogueProducts()
+  const preview = process.env.STOREFRONT_UI_PREVIEW === '1' && loaded.length === 0
+  const products = loaded
+  const loadedBrands = await getPublicBrands()
+  const brands = preview
+    ? [
+        { id: '11111111-1111-4111-8111-111111111111', name: 'Souvenir', logo_url: '/logo.png' },
+        { id: '22222222-2222-4222-8222-222222222222', name: 'Field', logo_url: null },
+      ]
+    : loadedBrands
+  const liveCategories = await getPublicCategories()
+  const categories = homeCategoryTiles(
+    preview
+      ? [
+          { id: 'c1', name: 'Welcome Kits' },
+          { id: 'c2', name: 'Drinkware' },
+          { id: 'c3', name: 'Bottles' },
+          { id: 'c4', name: 'Desk & Stationery' },
+          { id: 'c5', name: 'Apparel' },
+          { id: 'c6', name: 'Watches' },
+        ]
+      : liveCategories,
+    6,
+  )
   const collections = CATALOGUE_COLLECTIONS.filter((collection) => products.some(collection.match)).slice(0, 6)
   const {
-    heroProducts,
     categorySamples,
     collectionSamples,
     occasionSamples,
@@ -39,20 +65,6 @@ export async function PublicHome() {
     featured,
     more,
   } = curatePublicHome(products, categories, collections, CATALOGUE_OCCASIONS)
-
-  const rankedHero = [...products]
-    .filter((product) => Boolean(product.image_url?.trim()))
-    .sort((a, b) => {
-      const rank = (url: string) => {
-        if (/square-/i.test(url)) return 3
-        if (/\/site\/home-/i.test(url)) return 2
-        if (/studio-pack-/i.test(url)) return 1
-        return 0
-      }
-      return rank(b.image_url || '') - rank(a.image_url || '')
-    })
-  const heroOffset = rankedHero.length > 12 ? 10 : 0
-  const heroSlideshow = rankedHero.slice(heroOffset).concat(rankedHero.slice(0, heroOffset))
 
   const budgetCounts = BUDGET_BANDS.map((band) => ({
     ...band,
@@ -69,7 +81,7 @@ export async function PublicHome() {
 
   return (
     <div className="bg-white">
-      <HeroStage products={heroSlideshow.length ? heroSlideshow : heroProducts} />
+      <SlimHero />
 
       {/* Top Trending — Bombay Store pattern */}
       <section className="bg-white py-10 sm:py-14 lg:py-16">
@@ -128,7 +140,7 @@ export async function PublicHome() {
                       ) : null}
                     </div>
                     <div className="border-t border-[#E8E4DE] px-3 py-3 text-center sm:px-4 sm:py-4">
-                      <p className="font-serif text-lg text-[#1B2430] sm:text-xl">{category.name}</p>
+                      <p className="font-serif text-lg text-[#1B2430] sm:text-xl">{TILE_LABEL[category.name] || category.name}</p>
                       {CATEGORY_LINES[category.name] ? (
                         <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#5C6570]">
                           {CATEGORY_LINES[category.name]}
@@ -143,29 +155,29 @@ export async function PublicHome() {
         </div>
       </section>
 
-      {/* Brand / legacy banner */}
-      <section className="relative overflow-hidden py-20 text-white">
-        <div className="absolute inset-0">
-          <Image src="/site/banner-brand.webp" alt="" fill sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-[#806A50]/88" />
-        </div>
-        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <Reveal>
-            <h2 className="mx-auto max-w-3xl font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">
-              Gifts that represent your brand.
-            </h2>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/80">
-              From first enquiry to fulfilment — catalogue, quotation and delivery in one <BrandName /> workflow.
-            </p>
-            <Link
-              href="/catalogue"
-              className="mt-8 inline-flex border border-white/40 px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-white/10"
-            >
-              Browse the Catalogue {ARROW}
-            </Link>
-          </Reveal>
-        </div>
-      </section>
+      {brands.length ? (
+        <section className="border-y border-[#E8E4DE] bg-white py-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#806A50]">Brands</p>
+            <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+              {brands.map((brand) => (
+                <Link
+                  key={brand.id}
+                  href={`/catalogue?brand=${brand.id}`}
+                  className="flex h-16 w-28 shrink-0 items-center justify-center rounded-md border border-[#E8E4DE] bg-[#F6F4F1] px-2 text-center text-xs font-medium text-[#1B2430]"
+                >
+                  {brand.logo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={brand.logo_url} alt={brand.name} className="max-h-10 w-auto object-contain" />
+                  ) : (
+                    brand.name
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* Collections */}
       <section className="bg-white py-10 sm:py-14 lg:py-16">
@@ -369,28 +381,31 @@ export async function PublicHome() {
         </div>
       </section>
 
-      {/* Quote CTA */}
-      <section className="relative overflow-hidden py-14 text-center text-white sm:py-20">
-        <div className="absolute inset-0">
-          <Image src="/site/cta-dark.webp" alt="" fill sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-[#1A1108]/86" />
-        </div>
-        <div className="relative mx-auto max-w-3xl px-4 sm:px-6">
-          <Reveal>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#FFD001]">Request a quote</p>
-            <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">
-              Ready for your next gifting programme?
-            </h2>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/80">
-              Tell us who you are gifting, and we will prepare the quotation.
-            </p>
-            <Link
-              href="/request-quote"
-              className="mt-8 inline-flex bg-white px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#806A50]"
-            >
+      {preview ? (
+        <section className="bg-white py-8">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 sm:px-6 lg:px-8">
+            <p className="text-sm text-[#5C6570]">In stock</p>
+            <AddToCartButton
+              maxQuantity={1}
+              label="Buy 1 sample"
+              product={{ id: '33333333-3333-4333-8333-333333333333', sku: 'BTL-1', name: 'Steel bottle', price: 450, image_url: '/site/home-festive-cane.webp' }}
+              className="inline-flex bg-[#806A50] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+            />
+            <a href="/request-quote" className="inline-flex border border-[#E5DFD5] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#806A50]">
               Request a Quote
-            </Link>
-          </Reveal>
+            </a>
+          </div>
+        </section>
+      ) : null}
+      <section className="bg-[#241C12] py-8 text-center text-white">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 px-4 sm:flex-row sm:justify-between sm:text-left">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#E8E4DE]">Request a quote</p>
+            <h2 className="mt-1 font-serif text-2xl">Ready for your next gifting programme?</h2>
+          </div>
+          <Link href="/request-quote" className="inline-flex bg-white px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#241C12]">
+            Request a Quote
+          </Link>
         </div>
       </section>
     </div>

@@ -20,6 +20,7 @@ export function AddToCartButton({
   maxQuantity = null,
   surface = 'store',
   catalogId = null,
+  label = 'Add to cart',
 }: {
   product: CartDraft
   className: string
@@ -29,6 +30,7 @@ export function AddToCartButton({
   maxQuantity?: number | null
   surface?: CartSurface
   catalogId?: string | null
+  label?: string
 }) {
   const [open, setOpen] = useState(false)
   const [qty, setQty] = useState(1)
@@ -106,7 +108,7 @@ export function AddToCartButton({
           </span>
         ) : (
           <span className="inline-flex items-center gap-2">
-            <ShoppingBag size={14} /> Add to cart
+            <ShoppingBag size={14} /> {label}
           </span>
         )}
       </button>

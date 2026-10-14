@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Menu, Search, User, X } from 'lucide-react'
 import { appName } from '@/lib/brand'
 import { BrandName } from '@/components/brand/brand-name'
@@ -46,6 +46,13 @@ export function SiteHeader({
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
+  const [corporate, setCorporate] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    const mode = document.cookie.split('; ').find((part) => part.startsWith('gf-shop='))
+    setCorporate(mode === 'gf-shop=corporate' || pathname.startsWith('/business'))
+  }, [pathname])
 
   const matches = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -142,7 +149,7 @@ export function SiteHeader({
                 Account
               </Link>
             )}
-            <CartDrawer iconClassName="text-[#241C12]" />
+            {corporate ? null : <CartDrawer iconClassName="text-[#241C12]" />}
             <Link
               href="/request-quote"
               className="rounded-sm bg-[#241C12] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
@@ -181,7 +188,7 @@ export function SiteHeader({
             >
               <Search size={20} />
             </button>
-            <CartDrawer iconClassName="text-[#806A50]" />
+            {corporate ? null : <CartDrawer iconClassName="text-[#806A50]" />}
             <Link
               href="/login"
               className="rounded-sm bg-[#806A50] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white"

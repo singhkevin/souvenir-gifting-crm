@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { SHOP_MODE_COOKIE, type ShopMode } from '@/lib/catalogue/storefront'
 
 export function AudienceSwitch({
   businessHref,
@@ -12,12 +13,17 @@ export function AudienceSwitch({
 }) {
   const pathname = usePathname() || ''
   if (hide) return null
-  const business = pathname === '/business' || pathname.startsWith('/business/')
+  const corporate = pathname === '/business' || pathname.startsWith('/business/')
 
-  const item = (href: string, label: string, active: boolean) => (
+  function choose(mode: ShopMode) {
+    document.cookie = `${SHOP_MODE_COOKIE}=${mode}; path=/; max-age=31536000; samesite=lax`
+  }
+
+  const item = (href: string, label: string, active: boolean, mode: ShopMode) => (
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
+      onClick={() => choose(mode)}
       className={`rounded-sm px-2.5 py-1 ${active ? 'bg-[#241C12] text-white' : 'text-[#241C12]'}`}
     >
       {label}
@@ -26,8 +32,8 @@ export function AudienceSwitch({
 
   return (
     <div className="inline-flex items-center rounded-sm border border-[#241C12]/25 p-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]">
-      {item('/home', 'Shop', !business)}
-      {item(businessHref, 'For Business', business)}
+      {item('/home', 'Retail', !corporate, 'retail')}
+      {item(businessHref, 'Corporate/Business', corporate, 'corporate')}
     </div>
   )
 }

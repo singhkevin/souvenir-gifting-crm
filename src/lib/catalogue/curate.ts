@@ -128,12 +128,12 @@ const PREVIOUS_HOME_FEATURED = [
 ]
 
 const HOME_CATEGORY_TILES = [
+  'Welcome Kits',
   'Drinkware',
-  'Bags & Travel',
-  'Tech & Electronics',
+  'Bottles',
   'Desk & Stationery',
   'Apparel',
-  'Hampers & Gift Sets',
+  'Watches',
 ] as const
 
 function isExclusiveGiftHamper(product: PublicProduct) {

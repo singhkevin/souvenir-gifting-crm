@@ -13,6 +13,7 @@ import {
 } from '@/lib/catalogue/products'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { appName } from '@/lib/brand'
+import { STORE_OCCASIONS } from '@/lib/catalogue/storefront'
 
 export const metadata: Metadata = {
   title: 'Catalogue',
@@ -29,9 +30,10 @@ export default async function CataloguePage({
     priceMin?: string
     priceMax?: string
     sort?: string
+    occasion?: string
   }>
 }) {
-  const { q = '', category = '', brand = '', priceMin = '', priceMax = '', sort = 'name' } = await searchParams
+  const { q = '', category = '', brand = '', priceMin = '', priceMax = '', sort = 'name', occasion = '' } = await searchParams
   const search = sanitiseCatalogueSearch(q)
   const [products, categories, brands] = await Promise.all([
     getPublicCatalogueProducts(),
@@ -40,6 +42,7 @@ export default async function CataloguePage({
   ])
   const categoryFilter = isUuid(category) ? category : ''
   const brandFilter = isUuid(brand) ? brand : ''
+  const occasionFilter = STORE_OCCASIONS.some((item) => item.id === occasion) ? occasion : ''
 
   const priceBounds = {
     min: 0,
@@ -66,6 +69,9 @@ export default async function CataloguePage({
   if (brandFilter) {
     filtered = filtered.filter((product) => product.brand_id === brandFilter)
   }
+  if (occasionFilter) {
+    filtered = filtered.filter((product) => product.occasion_tags.includes(occasionFilter))
+  }
   if (priceIsFiltered) {
     filtered = filtered.filter((product) => {
       const price = product.price || 0
@@ -85,6 +91,7 @@ export default async function CataloguePage({
     if (search) params.set('q', search)
     if (categoryFilter) params.set('category', categoryFilter)
     if (brandFilter) params.set('brand', brandFilter)
+    if (occasionFilter) params.set('occasion', occasionFilter)
     if (priceMinFilter > priceBounds.min) params.set('priceMin', String(priceMinFilter))
     if (priceMaxFilter < priceBounds.max) params.set('priceMax', String(priceMaxFilter))
     if (sort && sort !== 'name') params.set('sort', sort)
@@ -106,7 +113,7 @@ export default async function CataloguePage({
   const activeCategoryName = categories.find((item) => item.id === categoryFilter)?.name
   const activeBrandName = brands.find((item) => item.id === brandFilter)?.name
   const hasFilters = Boolean(
-    search || categoryFilter || brandFilter || priceIsFiltered || (sort && sort !== 'name'),
+    search || categoryFilter || brandFilter || occasionFilter || priceIsFiltered || (sort && sort !== 'name'),
   )
 
   const filterLinkClass = (active: boolean) =>
@@ -192,6 +199,7 @@ export default async function CataloguePage({
                       q: search,
                       category: categoryFilter,
                       brand: brandFilter,
+                      occasion: occasionFilter,
                       sort: sort !== 'name' ? sort : '',
                     }}
                   />
@@ -219,6 +227,7 @@ export default async function CataloguePage({
             <form className="flex flex-col gap-3 border border-[#E8E4DE] bg-white p-3 sm:flex-row sm:items-center sm:gap-6 sm:p-4">
               {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
               {brandFilter ? <input type="hidden" name="brand" value={brandFilter} /> : null}
+              {occasionFilter ? <input type="hidden" name="occasion" value={occasionFilter} /> : null}
               {priceMinFilter > priceBounds.min ? (
                 <input type="hidden" name="priceMin" value={priceMinFilter} />
               ) : null}
@@ -263,6 +272,21 @@ export default async function CataloguePage({
                 Apply
               </button>
             </form>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link href={hrefFor({ occasion: '' })} className={`rounded-full border px-3 py-1 text-xs ${occasionFilter ? 'border-[#E8E4DE]' : 'border-[#241C12] bg-[#241C12] text-white'}`}>
+                Any occasion
+              </Link>
+              {STORE_OCCASIONS.map((item) => (
+                <Link
+                  key={item.id}
+                  href={hrefFor({ occasion: item.id })}
+                  className={`rounded-full border px-3 py-1 text-xs ${occasionFilter === item.id ? 'border-[#241C12] bg-[#241C12] text-white' : 'border-[#E8E4DE]'}`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-[#806A50]">
