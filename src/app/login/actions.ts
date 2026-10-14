@@ -10,7 +10,8 @@ import { validateNewPassword } from '@/lib/auth/password'
 import { sendEmail, passwordResetEmailHtml } from '@/lib/email/resend'
 import { isEmailAllowedForDomains } from '@/lib/pricing/domains'
 import { accountKindForRole } from '@/lib/account-kind'
-import { isBusinessRole, isClientRole } from '@/lib/roles'
+import { isBusinessRole, isClientRole, isGiftEmployeeRole } from '@/lib/roles'
+import { giftEmailProblem } from '@/lib/gifts/rules'
 import { domainSplitEnabled } from '@/lib/domain-flag'
 import { confirmOriginForAccount, hostLoginDecision } from '@/lib/domain-routing'
 import { readTenantFromHeaders, resolveHost, tenantPortalUrl, isPrimaryPortalLive } from '@/lib/portal-host'
@@ -66,6 +67,32 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
         return { error: 'This email domain is not allowed for your company portal login.' }
       }
       portalSlug = company?.portal_slug ?? null
+    }
+
+    if (profile && isGiftEmployeeRole(profile.role)) {
+      if (!profile.company_id) {
+        await supabase.auth.signOut()
+        return { error: 'This gift account is not linked to a company.' }
+      }
+      const reader = createAdminClient() ?? supabase
+      const { data: giftRows, error: giftError } = await reader
+        .from('gift_selections')
+        .select('allowed_email_domains')
+        .eq('company_id', profile.company_id)
+      if (giftError) {
+        await supabase.auth.signOut()
+        return { error: 'Gift selection is not available yet.' }
+      }
+      const giftDomains = [...new Set((giftRows || []).flatMap((row) => row.allowed_email_domains || []))]
+      const giftEmailError = giftEmailProblem(email, giftDomains)
+      if (giftEmailError) {
+        await supabase.auth.signOut()
+        return { error: giftEmailError }
+      }
+      if (tenant && tenant.id !== profile.company_id) {
+        await supabase.auth.signOut()
+        return { error: 'This account cannot sign in on this portal.' }
+      }
     }
 
     if (domainSplitEnabled()) {

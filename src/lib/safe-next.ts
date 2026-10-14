@@ -1,6 +1,6 @@
 import { accountKindForRole } from '@/lib/account-kind'
 import { domainSplitEnabled } from '@/lib/domain-flag'
-import { isBusinessRole, isClientRole } from '@/lib/roles'
+import { isBusinessRole, isClientRole, isGiftEmployeeRole } from '@/lib/roles'
 
 /**
  * Only allow in-app relative paths as post-login destinations.
@@ -16,6 +16,7 @@ export function isSafeNext(value: string | null | undefined): value is string {
 }
 
 export function landingPathForRole(role: string | null | undefined): string {
+  if (isGiftEmployeeRole(role)) return '/gift'
   if (isClientRole(role)) return '/portal/gifts'
   if (isBusinessRole(role)) return '/business/dashboard'
   if (domainSplitEnabled() && accountKindForRole(role) !== 'staff') return '/'

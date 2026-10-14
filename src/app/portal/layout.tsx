@@ -6,7 +6,7 @@ import { getRequestTabId } from '@/lib/auth/tab-server'
 import { TabSessionRevive } from '@/components/auth/tab-session-revive'
 import { headers } from 'next/headers'
 import { readTenantFromHeaders } from '@/lib/portal-host'
-import { isBusinessRole, isClientRole } from '@/lib/roles'
+import { isBusinessRole, isClientRole, isGiftEmployeeRole } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +33,10 @@ export default async function PortalLayoutWrapper({ children }: { children: Reac
   if (profile.is_active === false) {
     await supabase.auth.signOut()
     redirect('/login')
+  }
+
+  if (isGiftEmployeeRole(profile.role)) {
+    redirect('/gift')
   }
 
   const headerStore = await headers()

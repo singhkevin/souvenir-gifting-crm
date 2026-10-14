@@ -2,7 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CrmFrame } from '@/components/layout/crm-frame';
-import { isBusinessRole, isClientRole, isStaffRole } from '@/lib/roles'
+import { isBusinessRole, isClientRole, isGiftEmployeeRole, isStaffRole } from '@/lib/roles'
 import type { Role } from '@/lib/types';
 import { getRequestTabId } from '@/lib/auth/tab-server';
 import { TabSessionRevive } from '@/components/auth/tab-session-revive';
@@ -32,6 +32,10 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
   if (!profile.is_active) {
     await supabase.auth.signOut();
     redirect('/login');
+  }
+
+  if (isGiftEmployeeRole(profile.role)) {
+    redirect('/gift')
   }
 
   if (isBusinessRole(profile.role)) {

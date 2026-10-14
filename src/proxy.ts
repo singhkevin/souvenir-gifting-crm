@@ -56,6 +56,7 @@ function withHostRobots(response: NextResponse, host: ResolvedHost, pathname: st
 }
 
 function tenantCanSkipLogin(pathname: string) {
+  if (pathname === '/gift/join' || pathname.startsWith('/gift/join/')) return true
   if (isTenantAuthPath(pathname) || isTenantGatePath(pathname)) return true
   return domainSplitEnabled() && (pathname === '/auth' || pathname.startsWith('/auth/'))
 }
@@ -220,6 +221,9 @@ export async function proxy(request: NextRequest) {
       return respond(supabaseResponse)
     }
     if (!user) {
+      if (pathname === '/gift' || (pathname.startsWith('/gift/') && !pathname.startsWith('/gift/join'))) {
+        return respond(copyCookies(NextResponse.redirect(withTabQuery(new URL('/gift/join', request.url), tabId))))
+      }
       if (!tenantCanSkipLogin(pathname)) {
         const login = withTabQuery(new URL('/login', request.url), tabId)
         const intended = `${pathname}${search}`
@@ -234,7 +238,10 @@ export async function proxy(request: NextRequest) {
       .eq('id', user.id)
       .maybeSingle()
     const isClient = profile?.role === 'client_admin' || profile?.role === 'client_user'
-    const matches = Boolean(isClient && profile?.is_active !== false && profile?.company_id === tenant.id)
+    const isGiftEmployee = profile?.role === 'gift_employee'
+    const matches = Boolean(
+      (isClient || isGiftEmployee) && profile?.is_active !== false && profile?.company_id === tenant.id,
+    )
     if (!matches) {
       await supabase.auth.signOut()
       const login = withTabQuery(new URL('/login', request.url), tabId)
@@ -249,6 +256,16 @@ export async function proxy(request: NextRequest) {
       request.nextUrl.searchParams.get('type') === 'recovery' ||
       request.nextUrl.searchParams.has('token_hash') ||
       request.nextUrl.searchParams.has('code')
+    if (isGiftEmployee) {
+      const onGift = pathname === '/gift' || pathname.startsWith('/gift/')
+      if (pathname.startsWith('/login') && !recoveryAttempt) {
+        return respond(copyCookies(NextResponse.redirect(withTabQuery(new URL('/gift', request.url), tabId))))
+      }
+      if (!onGift && !tenantCanSkipLogin(pathname)) {
+        return respond(copyCookies(NextResponse.redirect(withTabQuery(new URL('/gift', request.url), tabId))))
+      }
+      return respond(supabaseResponse)
+    }
     if (pathname.startsWith('/login') && !recoveryAttempt) {
       const dest = trialExpired ? '/tenant/trial-expired' : '/portal/gifts'
       return respond(copyCookies(NextResponse.redirect(withTabQuery(new URL(dest, request.url), tabId))))

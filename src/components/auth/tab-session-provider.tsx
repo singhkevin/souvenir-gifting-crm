@@ -112,6 +112,7 @@ export function TabSessionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return
     clearLegacyAuthCookies()
     if (!isAuthCallbackLocation(window.location.href) && !window.location.pathname.startsWith('/reset-password')) {
       void createClient().auth.getSession()
