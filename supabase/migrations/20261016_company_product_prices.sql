@@ -568,6 +568,13 @@ comment on column public.org_settings.public_contact_phone is
 alter table public.contacts
   add column if not exists kind text;
 
+-- Live contacts_kind_check only allowed corporate/direct, so every
+-- self-registration (kind = 'business') failed. Allow business too.
+alter table public.contacts drop constraint if exists contacts_kind_check;
+alter table public.contacts
+  add constraint contacts_kind_check
+  check (kind in ('corporate', 'direct', 'business'));
+
 comment on column public.contacts.kind is
   'business for a self-registered business contact. CRM contacts use corporate.';
 

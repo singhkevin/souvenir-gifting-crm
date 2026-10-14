@@ -624,4 +624,12 @@ $$;
 revoke all on function public.register_business_account(jsonb, jsonb) from public, anon, authenticated;
 grant execute on function public.register_business_account(jsonb, jsonb) to service_role;
 
+-- Restore the original contacts_kind_check (corporate/direct only).
+-- Self-registered rows are moved to direct first so the check can be re-added.
+update public.contacts set kind = 'direct' where kind = 'business';
+alter table public.contacts drop constraint if exists contacts_kind_check;
+alter table public.contacts
+  add constraint contacts_kind_check
+  check (kind in ('corporate', 'direct'));
+
 commit;
