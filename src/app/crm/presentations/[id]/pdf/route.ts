@@ -40,7 +40,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (!isUuid(id)) return new NextResponse('Not found', { status: 404 })
   const supabase = await createClient()
   const [{ data: deck }, { data: items }, contact] = await Promise.all([
-    supabase.from('presentations').select('title, client_name, notes').eq('id', id).maybeSingle(),
+    supabase.from('presentations').select('title, client_name, notes, show_prices').eq('id', id).maybeSingle(),
     supabase.from('presentation_items').select('title, image_url, specs, price, moq, kind, member_names, sort_order').eq('presentation_id', id).order('sort_order'),
     publicDeckContact(),
   ])
@@ -63,6 +63,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     notes: deck.notes || '',
     organisation: contact.organisation,
     phone: contact.phone,
+    showPrices: deck.show_prices !== false,
     slides,
   })
   const filename = `${deck.title.replace(/[^\w.-]+/g, '-').slice(0, 40) || 'presentation'}.pdf`

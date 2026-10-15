@@ -39,6 +39,7 @@ export function DeckEditor({
     clientName: string
     notes: string
     companyId: string
+    showPrices?: boolean
     slides: Slide[]
   }
 }) {
@@ -139,6 +140,10 @@ export function DeckEditor({
         <label className="flex items-center gap-2 pb-2 text-sm text-gray-700">
           <input type="checkbox" name="use_company_prices" />
           Fill product prices from this company
+        </label>
+        <label className="flex items-center gap-2 pb-2 text-sm text-gray-700">
+          <input type="checkbox" name="show_prices" defaultChecked={initial?.showPrices ?? true} />
+          Show prices on the share link and PDF
         </label>
       </div>
 

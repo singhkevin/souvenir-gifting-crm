@@ -8,6 +8,7 @@ import { SiteShell } from "@/components/site/site-shell"
 import { PublicHome } from "@/components/site/public-home"
 import { PortalFinder } from "@/components/site/portal-finder"
 import { appName } from "@/lib/brand"
+import { isGiftEmployeeRole } from "@/lib/roles"
 import { domainSplitEnabled } from "@/lib/domain-flag"
 import { resolveHost } from "@/lib/portal-host"
 import type { Metadata } from "next"
@@ -72,6 +73,10 @@ export default async function RootPage({
       .select("role")
       .eq("id", user.id)
       .maybeSingle()
+
+    if (isGiftEmployeeRole(profile?.role)) {
+      redirect("/gift")
+    }
 
     if (profile?.role === "client_admin" || profile?.role === "client_user") {
       redirect("/portal/gifts")

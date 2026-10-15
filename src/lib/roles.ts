@@ -1,6 +1,7 @@
 export const STAFF_ROLES = ['admin', 'sales', 'operations', 'accounts', 'management'] as const
 export const CLIENT_ROLES = ['client_admin', 'client_user'] as const
 export const BUSINESS_ROLES = ['business_user'] as const
+export const GIFT_STAFF_ROLES = ['admin', 'sales', 'operations', 'management'] as const
 
 export type StaffRole = (typeof STAFF_ROLES)[number]
 export type ClientRole = (typeof CLIENT_ROLES)[number]
@@ -20,6 +21,14 @@ export function isClientRole(role: string | null | undefined): boolean {
 
 export function isBusinessRole(role: string | null | undefined): boolean {
   return includes(BUSINESS_ROLES, role)
+}
+
+export function isGiftStaffRole(role: string | null | undefined): boolean {
+  return includes(GIFT_STAFF_ROLES, role)
+}
+
+export function isGiftEmployeeRole(role: string | null | undefined): boolean {
+  return role === 'gift_employee'
 }
 
 const PRESENTATION_STAFF_ROLES = ['admin', 'sales', 'operations', 'management'] as const

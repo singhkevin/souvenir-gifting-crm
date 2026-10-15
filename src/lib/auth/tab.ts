@@ -73,6 +73,7 @@ export function isPublicSitePath(pathname: string) {
     '/about',
     '/tenant',
     '/share',
+    '/gift',
     '/present',
   ]
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))

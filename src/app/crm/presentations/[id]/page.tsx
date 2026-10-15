@@ -19,7 +19,7 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
   if (!isUuid(id)) notFound()
   const supabase = await createClient()
   const [{ data: deck }, { data: items }, { data: products }, { data: companies }, { data: links }, contact] = await Promise.all([
-    supabase.from('presentations').select('id, title, client_name, notes, company_id').eq('id', id).maybeSingle(),
+    supabase.from('presentations').select('id, title, client_name, notes, company_id, show_prices').eq('id', id).maybeSingle(),
     supabase.from('presentation_items').select('id, kind, product_id, title, image_url, specs, price, moq, member_names, sort_order').eq('presentation_id', id).order('sort_order'),
     supabase.from('products').select('id, name, sku, image_url, description, price, moq').eq('status', 'active').order('name').limit(80),
     supabase.from('companies').select('id, name').order('name').limit(200),
@@ -125,6 +125,7 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
             clientName: deck.client_name,
             notes: deck.notes || '',
             companyId: deck.company_id || '',
+            showPrices: deck.show_prices !== false,
             slides,
           }}
         />
@@ -137,7 +138,7 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
         title={deck.title}
         clientName={deck.client_name}
         notes={deck.notes || ''}
-        showPrices
+        showPrices={deck.show_prices !== false}
         organisation={contact.organisation}
         phone={contact.phone}
         items={(items || []).map((item) => ({

@@ -17,6 +17,7 @@ export type DeckPdfInput = {
   organisation: string
   phone: string | null
   slides: DeckSlide[]
+  showPrices?: boolean
 }
 
 const PAGE: [number, number] = [841.89, 595.28]
@@ -118,7 +119,9 @@ export async function buildPresentationPdf(input: DeckPdfInput): Promise<Uint8Ar
       y = drawLines(page, wrap(slide.specs, sans, 12, 360).slice(0, 8), sans, 12, x, y, INK)
       y -= 16
     }
-    page.drawText(money(slide.price), { x, y: Math.min(y, 180), size: 20, font: sansBold, color: INK })
+    if (input.showPrices !== false) {
+      page.drawText(money(slide.price), { x, y: Math.min(y, 180), size: 20, font: sansBold, color: INK })
+    }
     page.drawText(`MOQ ${slide.moq}`, { x, y: Math.min(y, 180) - 24, size: 12, font: sans, color: MUTED })
   }
 

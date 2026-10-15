@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { DeckView } from '@/components/presentations/deck-view'
 import { publicDeckContact } from '@/lib/presentations/contact'
-import { publicSlide, type PublicSlide } from '@/lib/presentations/rules'
+import { DeckView, type DeckViewItem } from '@/components/presentations/deck-view'
+import { publicSlide } from '@/lib/presentations/rules'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,11 +10,13 @@ type Payload = {
   title: string
   client_name: string
   notes: string
+  show_prices?: boolean
   items: {
     title: string
     image_url: string | null
     specs: string
     moq: number
+    price?: number | null
     kind: 'product' | 'combo'
     member_names: string[]
   }[]
@@ -36,13 +38,17 @@ export default async function PublicPresentationPage({ params }: { params: Promi
   const payload = data as Payload | null
   if (!payload?.title) notFound()
   const contact = await publicDeckContact()
-  const items: PublicSlide[] = (payload.items || []).map((item) => publicSlide({
+  const showPrices = payload.show_prices !== false
+  const items: DeckViewItem[] = (payload.items || []).map((item) => ({
+    ...publicSlide({
     title: item.title,
     imageUrl: item.image_url,
     specs: item.specs || '',
     moq: item.moq,
     kind: item.kind,
     memberNames: item.member_names || [],
+    }),
+    price: showPrices && item.price != null ? Number(item.price) : null,
   }))
   return (
     <DeckView
@@ -50,7 +56,7 @@ export default async function PublicPresentationPage({ params }: { params: Promi
       clientName={payload.client_name}
       notes={payload.notes || ''}
       items={items}
-      showPrices={false}
+      showPrices={showPrices}
       organisation={contact.organisation}
       phone={contact.phone}
     />

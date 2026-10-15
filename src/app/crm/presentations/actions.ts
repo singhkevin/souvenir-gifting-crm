@@ -164,7 +164,7 @@ function readHeader(formData: FormData) {
   const companyId = isUuid(companyRaw) ? companyRaw : null
   if (!title) return { error: 'Name the presentation.' }
   if (!clientName) return { error: 'Enter the client name.' }
-  return { title, clientName, notes, companyId, useCompany: formData.get('use_company_prices') === 'on' }
+  return { title, clientName, notes, companyId, useCompany: formData.get('use_company_prices') === 'on', showPrices: formData.get('show_prices') === 'on' }
 }
 
 export async function createPresentation(formData: FormData) {
@@ -194,6 +194,7 @@ async function createPresentationOnce(formData: FormData) {
       client_name: header.clientName,
       notes: header.notes,
       company_id: header.companyId,
+      show_prices: header.showPrices,
       created_by: profile.id,
     })
     .select('id')
@@ -240,6 +241,7 @@ async function updatePresentationOnce(formData: FormData) {
       client_name: header.clientName,
       notes: header.notes,
       company_id: header.companyId,
+      show_prices: header.showPrices,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

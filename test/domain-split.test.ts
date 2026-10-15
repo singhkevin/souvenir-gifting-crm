@@ -359,6 +359,15 @@ test('login role gate: staff, client, and retail stay on their own host', () => 
     assert.equal(landingPathForRole('admin'), '/crm/dashboard')
     assert.equal(landingPathForRole('client_user'), '/portal/gifts')
     assert.equal(landingPathForRole('business_user'), '/business/dashboard')
+    assert.equal(landingPathForRole('gift_employee'), '/gift')
+    assert.equal(accountKindForRole('gift_employee'), 'client')
+    assert.deepEqual(hostLoginDecision({
+      host: tenant, role: 'gift_employee', companyId: 'co', tenantCompanyId: 'co', portalSlug: 'acme',
+    }), { allow: true })
+    const giftOnStore = hostLoginDecision({
+      host: store, role: 'gift_employee', companyId: 'co', tenantCompanyId: null, portalSlug: 'acme',
+    })
+    assert.equal(giftOnStore.allow, false)
     assert.equal(accountKindForRole('management'), 'staff')
     assert.equal(accountKindForRole('business_admin'), 'retail')
 

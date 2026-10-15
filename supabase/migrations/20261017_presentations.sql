@@ -1,4 +1,4 @@
--- Pitch decks. Staff curate products and combos. Public links omit price.
+-- Pitch decks. Staff curate products and combos. Public links show sell price unless the deck hides prices.
 -- Do not apply from the agent.
 
 begin;
@@ -28,6 +28,7 @@ create table public.presentations (
   client_name text not null,
   company_id uuid references public.companies (id) on delete set null,
   notes text not null default '',
+  show_prices boolean not null default true,
   created_by uuid references public.profiles (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -110,7 +111,7 @@ grant select, insert, update, delete on public.presentation_items to authenticat
 grant select, insert, update, delete on public.presentation_combo_products to authenticated;
 grant select, insert, update, delete on public.presentation_links to authenticated;
 
--- Guest payload. Price is not selected.
+-- Guest payload. Sell price is included unless the deck hides prices. Costs and margins are never read.
 create or replace function public.presentation_public(p_token text)
 returns jsonb
 language sql
@@ -122,6 +123,7 @@ as $$
     'title', p.title,
     'client_name', p.client_name,
     'notes', p.notes,
+    'show_prices', p.show_prices,
     'items', coalesce((
       select jsonb_agg(
         jsonb_build_object(
@@ -129,6 +131,7 @@ as $$
           'image_url', i.image_url,
           'specs', i.specs,
           'moq', i.moq,
+          'price', case when p.show_prices then i.price end,
           'kind', i.kind,
           'member_names', to_jsonb(i.member_names)
         )
