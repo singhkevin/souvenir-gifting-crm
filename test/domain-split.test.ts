@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
 import { accountKindForRole } from '../src/lib/account-kind.ts'
+import { isPublicSitePath } from '../src/lib/auth/tab.ts'
 import { adminSiteUrl, publicSiteUrl, storeSiteUrl } from '../src/lib/brand.ts'
 import { domainSplitEnabled } from '../src/lib/domain-flag.ts'
 import {
@@ -204,6 +205,8 @@ test('middleware allowlists and path-preserving redirects, flag on and off', () 
 
     assert.equal(decideHostRoute(store, '/').action, 'continue')
     assert.equal(decideHostRoute(store, '/catalogue/1').action, 'continue')
+    assert.equal(decideHostRoute(store, '/brands').action, 'continue')
+    assert.equal(decideHostRoute(store, '/brands/rare-rabbit').action, 'continue')
     assert.equal(decideHostRoute(store, '/business/quote').action, 'continue')
     assert.equal(decideHostRoute(store, '/login').action, 'continue')
     assert.equal(decideHostRoute(store, '/forgot-password').action, 'continue')
@@ -240,6 +243,11 @@ test('middleware allowlists and path-preserving redirects, flag on and off', () 
       action: 'redirect',
       status: 301,
       location: 'https://souvenirgifting.com/catalogue/9?q=pen',
+    })
+    assert.deepEqual(decideHostRoute(admin, '/brands/rare-rabbit'), {
+      action: 'redirect',
+      status: 301,
+      location: 'https://souvenirgifting.com/brands/rare-rabbit',
     })
     assert.deepEqual(decideHostRoute(admin, '/business', '?from=admin'), {
       action: 'redirect',
@@ -284,6 +292,12 @@ test('middleware allowlists and path-preserving redirects, flag on and off', () 
     assert.equal(links.business, 'https://souvenirgifting.com/business')
     assert.equal(links.adminLogin, 'https://admin.souvenirgifting.com/login')
   })
+})
+
+test('brand pages are public store paths', () => {
+  assert.equal(isPublicSitePath('/brands'), true)
+  assert.equal(isPublicSitePath('/brands/rare-rabbit'), true)
+  assert.equal(isPublicSitePath('/crm/orders'), false)
 })
 
 test('login role gate: staff, client, and retail stay on their own host', () => {
