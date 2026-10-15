@@ -17,8 +17,11 @@ begin
   if has_table_privilege('anon', 'public.presentation_items', 'select') then
     raise exception 'anon must not select presentation items';
   end if;
-  if position('i.price' in pg_get_functiondef('public.presentation_public(text)'::regprocedure)) > 0 then
-    raise exception 'public payload must not read the slide price';
+  if position('show_prices' in pg_get_functiondef('public.presentation_public(text)'::regprocedure)) = 0 then
+    raise exception 'public payload must gate the sell price on show_prices';
+  end if;
+  if pg_get_functiondef('public.presentation_public(text)'::regprocedure) ~* '(cost|margin)' then
+    raise exception 'public payload must never read costs or margins';
   end if;
 end $$;
 
