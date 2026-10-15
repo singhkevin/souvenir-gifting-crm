@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
 import { ProductImage } from '@/components/ui/product-image'
@@ -8,6 +9,7 @@ import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { getPublicProduct } from '@/lib/catalogue/products'
 import { purchaseCaption } from '@/lib/catalogue/purchase-path'
+import { shopModeFromCookie, SHOP_MODE_COOKIE } from '@/lib/catalogue/storefront'
 import { appName } from '@/lib/brand'
 
 type Props = { params: Promise<{ id: string }> }
@@ -34,6 +36,39 @@ export default async function PublicProductPage({ params }: Props) {
   if (!isUuid(id)) notFound()
   const product = await getPublicProduct(id)
   if (!product) notFound()
+  const jar = await cookies()
+  const corporate = shopModeFromCookie(jar.get(SHOP_MODE_COOKIE)?.value) === 'corporate'
+  const buy = product.purchase.buy ? (
+    <AddToCartButton
+      maxQuantity={1}
+      label="Buy 1 sample"
+      product={{
+        id: product.id,
+        sku: product.sku,
+        name: product.name,
+        price: product.price,
+        image_url: product.image_url,
+      }}
+      className={`inline-flex justify-center px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] sm:py-3 ${
+        corporate
+          ? 'border border-[#E5DFD5] text-[#806A50] hover:bg-[#FAF7F2]'
+          : 'bg-[#806A50] text-white hover:bg-[#9C8567]'
+      }`}
+    />
+  ) : null
+  const quote = product.purchase.rfq ? (
+    <QuoteModal
+      productId={product.id}
+      productName={product.name}
+      triggerClassName={`inline-flex justify-center px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] sm:py-3 ${
+        corporate || !product.purchase.buy
+          ? 'bg-[#806A50] text-white hover:bg-[#9C8567]'
+          : 'border border-[#E5DFD5] text-[#806A50] hover:bg-[#FAF7F2]'
+      }`}
+    >
+      Request a Quote
+    </QuoteModal>
+  ) : null
 
   return (
     <SiteShell>
@@ -80,32 +115,8 @@ export default async function PublicProductPage({ params }: Props) {
           </dl>
 
           <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4">
-            {product.purchase.buy ? (
-              <AddToCartButton
-                maxQuantity={product.purchase.maxBuyQty}
-                product={{
-                  id: product.id,
-                  sku: product.sku,
-                  name: product.name,
-                  price: product.price,
-                  image_url: product.image_url,
-                }}
-                className="inline-flex justify-center bg-[#806A50] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#9C8567] sm:py-3"
-              />
-            ) : null}
-            {product.purchase.rfq ? (
-              <QuoteModal
-                productId={product.id}
-                productName={product.name}
-                triggerClassName={`inline-flex justify-center px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] sm:py-3 ${
-                  product.purchase.buy
-                    ? 'border border-[#E5DFD5] text-[#806A50] hover:bg-[#FAF7F2]'
-                    : 'bg-[#806A50] text-white hover:bg-[#9C8567]'
-                }`}
-              >
-                Request a Quote
-              </QuoteModal>
-            ) : null}
+            {corporate ? quote : buy}
+            {corporate ? buy : quote}
             <Link
               href="/catalogue"
               className="inline-flex justify-center py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#806A50]"

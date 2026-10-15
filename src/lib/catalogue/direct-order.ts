@@ -13,6 +13,7 @@ import {
   normalizeCheckout,
   type CheckoutLineInput,
 } from '@/lib/catalogue/purchase-path'
+import { storeSampleQuantityError } from '@/lib/catalogue/storefront'
 import { notifyOrderPlaced } from '@/lib/email/order-emails'
 import type { OrderSource } from '@/lib/orders/source'
 
@@ -157,6 +158,11 @@ export async function placeStoreDirectOrder(input: {
   lines: CheckoutLineInput[]
 }): Promise<DirectOrderResult> {
   if (clean(input.fax)) return { success: true }
+
+  const normalizedSample = normalizeCheckout(input.lines.map((line) => ({ ...line, catalogId: null })))
+  if ('error' in normalizedSample) return { error: normalizedSample.error }
+  const sampleError = storeSampleQuantityError(normalizedSample.lines.map((line) => line.quantity))
+  if (sampleError) return { error: sampleError }
 
   const profile = await getProfile()
   if (profile && isBusinessRole(profile.role) && profile.company_id) {
