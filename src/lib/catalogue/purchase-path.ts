@@ -29,6 +29,7 @@ export type PurchaseReason =
   | 'zero-stock'
   | 'no-price'
   | 'catalog-kit'
+  | 'sample'
 
 export type PurchaseOffer = {
   buy: boolean
@@ -60,11 +61,16 @@ export function purchaseOffer(input: {
   hasSellPrice?: boolean
   /** Multi-item catalog kits are quoted as a set. */
   catalogKit?: boolean
+  /** Sample stock is not sellable and is not offered as a purchase. */
+  sampleOnly?: boolean
 }): PurchaseOffer {
   const mode = parseFulfillmentMode(input.fulfillmentMode)
   const stockQty = parseStockQty(input.stockQty)
   const hasSellPrice = input.hasSellPrice !== false
 
+  if (input.sampleOnly) {
+    return { buy: false, rfq: true, maxBuyQty: null, stockQty: 0, mode, reason: 'sample' }
+  }
   if (input.catalogKit) {
     return { buy: false, rfq: true, maxBuyQty: null, stockQty, mode, reason: 'catalog-kit' }
   }
@@ -90,6 +96,8 @@ export function purchaseOfferFromProduct(product: {
   stockQty?: number | null
   price?: number | null
   catalogKit?: boolean
+  sample_only?: boolean | null
+  sampleOnly?: boolean
 }): PurchaseOffer {
   const price = product.price
   return purchaseOffer({
@@ -97,6 +105,7 @@ export function purchaseOfferFromProduct(product: {
     stockQty: product.stockQty ?? product.stock_qty,
     hasSellPrice: price != null && Number.isFinite(Number(price)),
     catalogKit: product.catalogKit,
+    sampleOnly: product.sampleOnly ?? product.sample_only ?? false,
   })
 }
 
@@ -106,6 +115,7 @@ export function purchaseCaption(offer: PurchaseOffer) {
   }
   if (offer.buy && offer.maxBuyQty == null) return 'Available to buy'
   if (offer.buy && offer.maxBuyQty != null) return `${offer.maxBuyQty} in stock`
+  if (offer.reason === 'sample') return 'Request one sample'
   return 'Request a quote'
 }
 

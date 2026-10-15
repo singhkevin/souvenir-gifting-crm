@@ -18,11 +18,7 @@ export type CartItem = {
 }
 
 export const STORE_CART_KEY = 'giffter_cart'
-export const PORTAL_CART_KEY = 'giffter_portal_cart'
 export const BUSINESS_QUOTE_KEY = 'giffter_business_quote'
-
-/** @deprecated Use STORE_CART_KEY. Kept so older imports keep compiling. */
-export const CATALOGUE_CART_KEY = STORE_CART_KEY
 
 function normalize(item: unknown): CartItem | null {
   if (!item || typeof item !== 'object') return null

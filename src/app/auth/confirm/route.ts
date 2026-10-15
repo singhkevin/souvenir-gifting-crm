@@ -3,7 +3,7 @@ import { type EmailOtpType } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { authCookieOptions, localCookieWriteOptions } from '@/lib/auth/cookie-options'
 import { RECOVERY_COOKIE_NAME } from '@/lib/auth/tab'
-import { isSafeNext } from '@/lib/safe-next'
+import { confirmLandingPath, isAccountConfirmType } from '@/lib/auth/confirm-landing'
 
 type PendingCookie = {
   name: string
@@ -73,25 +73,23 @@ export async function GET(request: NextRequest) {
     },
   )
 
+  const rawType = incoming.searchParams.get('type')
   if (tokenHash) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
     if (error) {
-      return NextResponse.redirect(new URL(type === 'recovery' ? '/reset-password?error=invalid' : '/login?error=confirm', incoming.origin))
+      return NextResponse.redirect(new URL(isAccountConfirmType(rawType) ? '/login?error=confirm' : '/reset-password?error=invalid', incoming.origin))
     }
-    if (type !== 'recovery') {
-      const next = incoming.searchParams.get('next')
-      if (next === '/gift') {
-        return redirectWithCookies(request, next, clearedRecoveryCookies(request, pendingCookies))
-      }
-      return redirectWithCookies(request, `/login?confirmed=1&next=${isSafeNext(next) ? encodeURIComponent(next) : '/business/dashboard'}`, clearedRecoveryCookies(request, pendingCookies))
-    }
+    const landing = confirmLandingPath(rawType, incoming.searchParams.get('next'))
+    if (landing) return redirectWithCookies(request, landing, pendingCookies)
     return redirectWithCookies(request, '/reset-password', cookiesForRedirect(request, pendingCookies))
   }
 
   const { error } = await supabase.auth.exchangeCodeForSession(code as string)
   if (error) {
-    return NextResponse.redirect(new URL('/reset-password?error=invalid', incoming.origin))
+    return NextResponse.redirect(new URL(isAccountConfirmType(rawType) ? '/login?error=confirm' : '/reset-password?error=invalid', incoming.origin))
   }
+  const landing = confirmLandingPath(rawType, incoming.searchParams.get('next'))
+  if (landing) return redirectWithCookies(request, landing, pendingCookies)
   return redirectWithCookies(request, '/reset-password', cookiesForRedirect(request, pendingCookies))
 }
 
@@ -109,19 +107,3 @@ function cookiesForRedirect(
     }))
 }
 
-function clearedRecoveryCookies(
-  request: NextRequest,
-  pending: PendingCookie[],
-) {
-  const names = new Set<string>([
-    ...pending.map((cookie) => cookie.name),
-    ...request.cookies.getAll()
-      .filter((cookie) => cookie.name === RECOVERY_COOKIE_NAME || cookie.name.startsWith(`${RECOVERY_COOKIE_NAME}.`))
-      .map((cookie) => cookie.name),
-  ])
-  return [...names].map((name) => ({
-    name,
-    value: '',
-    options: { path: '/', sameSite: 'lax' as const, httpOnly: true, maxAge: 0 },
-  }))
-}

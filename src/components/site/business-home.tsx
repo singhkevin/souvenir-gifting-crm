@@ -11,8 +11,8 @@ import { isBusinessRole } from '@/lib/roles'
 import type { PublicProduct } from '@/lib/catalogue/products'
 
 function businessPrice(product: PublicProduct) {
-  const indicative = 'indicativePrice' in product ? (product as BusinessProduct).indicativePrice : null
-  return indicative ?? product.price
+  if ('indicativePrice' in product) return (product as BusinessProduct).indicativePrice
+  return product.price
 }
 
 function withImage<T extends { image_url: string | null }>(products: T[]) {

@@ -8,8 +8,9 @@ import { requestOrigin } from '@/lib/auth/request-origin'
 import { validateNewPassword } from '@/lib/auth/password'
 import { getProfile } from '@/lib/auth'
 import { isBusinessRole } from '@/lib/roles'
-import { classifyBusinessEmail, registrationNotes } from '@/lib/business/email-domain'
-import { gstinError, normaliseGstin } from '@/lib/business/gstin'
+import { classifyBusinessEmail, registrationNotes, workEmailBlock } from '@/lib/business/email-domain'
+import { gstinRequiredError, normaliseGstin } from '@/lib/business/gstin'
+import { businessConfirmUrl } from '@/lib/auth/confirm-landing'
 import {
   mapRegistrationFailure,
   REGISTER_EMAIL_TAKEN,
@@ -88,7 +89,7 @@ async function registerBusinessOnce(formData: FormData) {
   if (!legalName) return { error: 'Legal name is required' }
   if (!city) return { error: 'City is required' }
   if (country.toLowerCase() !== 'india') return { error: 'Business registration is available in India only' }
-  const gstError = gstinError(gstin)
+  const gstError = gstinRequiredError(gstin)
   if (gstError) return { error: gstError }
 
   const admin = createAdminClient()
@@ -99,6 +100,10 @@ async function registerBusinessOnce(formData: FormData) {
 
   const existingProfile = await admin.from('profiles').select('id').ilike('email', email).maybeSingle()
   if (existingProfile.data?.id) return { error: REGISTER_EMAIL_TAKEN }
+
+  const allowlist = await admin.from('email_domain_allowlist').select('domain')
+  const emailBlock = workEmailBlock(email, (allowlist.data || []).map((row) => row.domain as string))
+  if (emailBlock) return { error: emailBlock }
 
   const { data: corporates } = await admin
     .from('companies')
@@ -157,9 +162,15 @@ async function registerBusinessOnce(formData: FormData) {
   const link = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,
-    options: { redirectTo: `${origin}/auth/confirm` },
+    options: { redirectTo: `${origin}/auth/confirm?next=/business/dashboard` },
   })
-  if (link.error || !link.data?.properties?.action_link) {
+  const properties = link.data?.properties
+  const confirmHref = businessConfirmUrl(origin, {
+    hashedToken: properties?.hashed_token,
+    verificationType: properties?.verification_type,
+    actionLink: properties?.action_link,
+  })
+  if (link.error || !confirmHref) {
     console.error('[registerBusiness] generateLink', link.error?.message, origin)
     await removeRegistration(String(companyId), created.data.user.id)
     return { error: REGISTER_SERVER }
@@ -168,7 +179,7 @@ async function registerBusinessOnce(formData: FormData) {
   const sent = await sendEmail({
     to: email,
     subject: 'Confirm your business account',
-    html: businessConfirmEmailHtml(link.data.properties.action_link),
+    html: businessConfirmEmailHtml(confirmHref),
   })
   if (sent.error) {
     await removeRegistration(String(companyId), created.data.user.id)

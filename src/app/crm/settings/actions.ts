@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
+import { normalizeEmailDomain } from '@/lib/pricing/domains'
 
 export async function updateOrgSettings(formData: FormData) {
   const supabase = await createClient()
@@ -53,6 +54,46 @@ export async function updateOrgSettings(formData: FormData) {
     ? (await supabase.from('org_settings').update(payload).eq('id', existing.id)).error
     : (await supabase.from('org_settings').insert(payload)).error
   if (error) return { error: supplierSchemaHint(error.message) }
+  revalidatePath('/crm/settings')
+  return { success: true }
+}
+
+async function requireAdmin() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' as const }
+  const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+  if (me?.role !== 'admin') return { error: 'Admin only' as const }
+  return { supabase }
+}
+
+export async function addEmailDomainAllowlist(formData: FormData) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+  const domain = normalizeEmailDomain(String(formData.get('domain') || ''))
+  if (!domain) return { error: 'Enter a domain such as acme.com' }
+  const { error } = await auth.supabase.from('email_domain_allowlist').insert({
+    domain,
+    note: String(formData.get('note') || '').trim() || null,
+  })
+  if (error) {
+    if (error.code === '23505') return { error: 'That domain is already allowed' }
+    if (/email_domain_allowlist/i.test(error.message)) {
+      return { error: 'Apply supabase/migrations/20261018_registration_pricing_samples.sql, then retry.' }
+    }
+    return { error: error.message }
+  }
+  revalidatePath('/crm/settings')
+  return { success: true }
+}
+
+export async function removeEmailDomainAllowlist(formData: FormData) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+  const domain = normalizeEmailDomain(String(formData.get('domain') || ''))
+  if (!domain) return { error: 'Domain not found' }
+  const { error } = await auth.supabase.from('email_domain_allowlist').delete().eq('domain', domain)
+  if (error) return { error: error.message }
   revalidatePath('/crm/settings')
   return { success: true }
 }

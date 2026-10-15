@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { appName } from '@/lib/brand'
-import { updateOrgSettings } from './actions'
+import { addEmailDomainAllowlist, removeEmailDomainAllowlist, updateOrgSettings } from './actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 
@@ -23,6 +23,7 @@ export default async function SettingsPage() {
   }
 
   const { data: settings } = await supabase.from('org_settings').select('*').limit(1).maybeSingle()
+  const allowlist = await supabase.from('email_domain_allowlist').select('domain, note').order('domain')
   const { data: owners } = await supabase
     .from('profiles')
     .select('id, full_name, email, role')
@@ -63,9 +64,8 @@ export default async function SettingsPage() {
           <div>
             <h2 className="text-sm font-semibold text-gray-900">Sell-price margins (%)</h2>
             <p className="text-xs text-gray-500 mt-1">
-              Customer price = supplier cost (or list price if cost is blank) × (1 + margin%).
-              Public store uses the B2C %. Corporate catalogue uses that company’s %, then the B2B %.
-              A product margin % is used only when the channel % is blank.
+              The store shows the product retail price. A company sees its special price, then a catalog line price, then the retail price plus that company’s margin.
+              These percentages remain for internal costing. They are not the customer price.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -169,6 +169,43 @@ export default async function SettingsPage() {
 
         <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm" pendingLabel="Saving…">Save settings</SubmitButton>
       </ActionForm>
+
+      <div className="mt-6 rounded-lg border bg-white p-6 text-sm">
+        <h2 className="font-semibold text-gray-900">Work-email allowlist</h2>
+        <p className="mt-1 text-xs text-gray-500">
+          Business registration blocks free inboxes such as Gmail, Yahoo, and Outlook. Add a domain here to allow it.
+        </p>
+        {allowlist.error ? (
+          <p className="mt-3 text-xs text-amber-800">Apply supabase/migrations/20261018_registration_pricing_samples.sql, then retry.</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {(allowlist.data || []).length === 0 && <li className="text-xs text-gray-500">No overrides yet.</li>}
+            {(allowlist.data || []).map((row) => (
+              <li key={row.domain} className="flex items-center justify-between gap-3">
+                <span>
+                  <span className="font-mono">{row.domain}</span>
+                  {row.note ? <span className="ml-2 text-xs text-gray-500">{row.note}</span> : null}
+                </span>
+                <ActionForm action={removeEmailDomainAllowlist}>
+                  <input type="hidden" name="domain" value={row.domain} />
+                  <button type="submit" className="text-xs text-red-700 underline">Remove</button>
+                </ActionForm>
+              </li>
+            ))}
+          </ul>
+        )}
+        <ActionForm action={addEmailDomainAllowlist} className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <label className="block text-xs text-gray-500">
+            Domain
+            <input name="domain" placeholder="acme.com" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+          </label>
+          <label className="block text-xs text-gray-500">
+            Note
+            <input name="note" placeholder="Optional" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+          </label>
+          <SubmitButton className="rounded-lg bg-[#806A50] px-3 py-2 text-sm text-white" pendingLabel="Adding…">Add domain</SubmitButton>
+        </ActionForm>
+      </div>
     </div>
   )
 }

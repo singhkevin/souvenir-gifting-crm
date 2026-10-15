@@ -11,9 +11,11 @@ import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 import { CategoryField } from '@/components/products/category-field'
 import { readProductCost } from '@/lib/pricing/product-costs'
-import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
+import { getPricingSettings, loadSupplierOffers } from '@/lib/pricing/server'
 import { pickBestOffer } from '@/lib/pricing/offers'
-import { resolveSellPrice } from '@/lib/pricing/resolve'
+import { surfaceUnitPrice } from '@/lib/pricing/listed'
+import { NameCreateField } from '@/components/products/name-create-field'
+import { createBrand, createSupplier } from '../actions'
 import { SupplierOffersEditor } from './SupplierOffersEditor'
 import { purchaseCaption, purchaseOffer } from '@/lib/catalogue/purchase-path'
 import { ActionForm } from '@/components/ui/action-form'
@@ -57,29 +59,7 @@ export default async function ProductDetailPage({
   if (!product) notFound()
   Object.assign(product, readProductCost(product))
 
-  const priceBase = {
-    listPrice: product.price,
-    productMarginPercent: product.internal_margin,
-    settings: pricing,
-  }
-  const b2cPrice = resolveSellPrice({
-    ...priceBase,
-    supplierCost: supplierCostForProduct(product, offers, {
-      useBestCost: pricing.surfaces.store.useBestCost,
-      requireInStock: pricing.requireInStock,
-      quantity: product.moq,
-    }),
-    channel: 'b2c',
-  })
-  const b2bPrice = resolveSellPrice({
-    ...priceBase,
-    supplierCost: supplierCostForProduct(product, offers, {
-      useBestCost: pricing.surfaces.portal.useBestCost,
-      requireInStock: pricing.requireInStock,
-      quantity: product.moq,
-    }),
-    channel: 'b2b',
-  })
+  const storePrice = surfaceUnitPrice({ channel: 'b2c', retailPrice: product.price })
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
 
@@ -167,14 +147,13 @@ export default async function ProductDetailPage({
 
           <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-100">
             <div>
-              <p className="text-[10px] text-gray-400 uppercase font-semibold">Public (B2C)</p>
-              <p className="text-xl font-bold text-[#806A50]">{formatCurrency(b2cPrice.sellPrice)}</p>
-              <p className="text-[10px] text-gray-400">{b2cPrice.marginPercent ?? '—'}% margin</p>
+              <p className="text-[10px] text-gray-400 uppercase font-semibold">Store price</p>
+              <p className="text-xl font-bold text-[#806A50]">{formatCurrency(storePrice)}</p>
+              <p className="text-[10px] text-gray-400">Retail price on the store</p>
             </div>
             <div>
-              <p className="text-[10px] text-gray-400 uppercase font-semibold">Corporate (B2B)</p>
-              <p className="text-xl font-bold text-[#806A50]">{formatCurrency(b2bPrice.sellPrice)}</p>
-              <p className="text-[10px] text-gray-400">{b2bPrice.marginPercent ?? '—'}% before company override</p>
+              <p className="text-[10px] text-gray-400 uppercase font-semibold">Company price</p>
+              <p className="text-sm font-semibold text-gray-700">Special, then catalog line, then this price plus the company margin</p>
             </div>
             {showCost && (
             <div>
@@ -304,30 +283,31 @@ export default async function ProductDetailPage({
             <div className="grid grid-cols-2 gap-3">
               <CategoryField categories={categories || []} defaultValue={product.category_id || ''} />
 
-              <MobileSheetSelect
+              <NameCreateField
                 name="brand_id"
                 label="Brand"
-                showDesktopLabel
+                options={brands || []}
                 defaultValue={product.brand_id || ''}
                 emptyLabel="Select Brand"
-                options={[
-                  { value: '', label: 'Select Brand' },
-                  ...(brands || []).map((b) => ({ value: b.id, label: b.name })),
-                ]}
+                placeholder="New brand name"
+                create={createBrand}
               />
             </div>
 
-            <MobileSheetSelect
+            <NameCreateField
               name="supplier_id"
               label="Supplier"
-              showDesktopLabel
+              options={suppliers || []}
               defaultValue={product.supplier_id || ''}
               emptyLabel="No supplier"
-              options={[
-                { value: '', label: 'No supplier' },
-                ...(suppliers || []).map((s) => ({ value: s.id, label: s.name })),
-              ]}
+              placeholder="New supplier name"
+              create={createSupplier}
             />
+            <input type="hidden" name="sample_only_present" value="1" />
+            <label className="flex items-center gap-2 text-xs text-gray-700">
+              <input type="checkbox" name="sample_only" value="on" defaultChecked={Boolean(product.sample_only)} />
+              Sample only. This stock is not sellable and the product is not buyable. Request one sample instead.
+            </label>
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>

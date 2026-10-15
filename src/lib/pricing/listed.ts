@@ -15,11 +15,47 @@ export function specialPriceActive(validUntil: string | null | undefined, today 
   return end >= stamp
 }
 
+export type SurfacePriceInput = {
+  /** b2c is the store retail price. b2b follows the company ladder below. */
+  channel: 'b2c' | 'b2b'
+  retailPrice?: number | null
+  specialPrice?: number | null
+  specialValidUntil?: string | null
+  catalogManualPrice?: number | null
+  companyMarginPercent?: number | null
+  /**
+   * Admin quote-line override. When set, every later surface (quote, order, email, PDF)
+   * keeps this amount and does not recompute it.
+   */
+  quoteOverride?: number | null
+  today?: Date
+}
+
 /**
- * Client price order:
- * company special price, then a catalog line's manual price, then base price marked up by the company margin.
- * Margin is a percent: base × (1 + margin / 100). No company margin leaves the base price as-is.
+ * One sell price for every surface.
+ * A quote-line override wins.
+ * B2C is the store retail price (`products.price`).
+ * B2B is the company special, then the catalog line manual price, then retail plus that company's margin.
  */
+export function surfaceUnitPrice(input: SurfacePriceInput): number {
+  const override = asFinite(input.quoteOverride)
+  if (override != null && override >= 0) return roundMoney(override)
+  if (input.channel === 'b2c') {
+    return roundMoney(Math.max(0, asFinite(input.retailPrice) ?? 0))
+  }
+  const special = asFinite(input.specialPrice)
+  if (special != null && special >= 0 && specialPriceActive(input.specialValidUntil, input.today)) {
+    return roundMoney(special)
+  }
+  const manual = asFinite(input.catalogManualPrice)
+  if (manual != null && manual >= 0) return roundMoney(manual)
+  const base = asFinite(input.retailPrice) ?? 0
+  const margin = asFinite(input.companyMarginPercent)
+  if (margin != null) return roundMoney(base * (1 + margin / 100))
+  return roundMoney(Math.max(0, base))
+}
+
+/** B2B ladder. Store retail and quote overrides go through surfaceUnitPrice. */
 export function listedUnitPrice(input: {
   specialPrice?: number | null
   specialValidUntil?: string | null
@@ -28,14 +64,13 @@ export function listedUnitPrice(input: {
   companyMarginPercent?: number | null
   today?: Date
 }): number {
-  const special = asFinite(input.specialPrice)
-  if (special != null && special >= 0 && specialPriceActive(input.specialValidUntil, input.today)) {
-    return roundMoney(special)
-  }
-  const manual = asFinite(input.catalogManualPrice)
-  if (manual != null && manual >= 0) return roundMoney(manual)
-  const base = asFinite(input.basePrice) ?? 0
-  const margin = asFinite(input.companyMarginPercent)
-  if (margin != null) return roundMoney(base * (1 + margin / 100))
-  return roundMoney(Math.max(0, base))
+  return surfaceUnitPrice({
+    channel: 'b2b',
+    retailPrice: input.basePrice,
+    specialPrice: input.specialPrice,
+    specialValidUntil: input.specialValidUntil,
+    catalogManualPrice: input.catalogManualPrice,
+    companyMarginPercent: input.companyMarginPercent,
+    today: input.today,
+  })
 }

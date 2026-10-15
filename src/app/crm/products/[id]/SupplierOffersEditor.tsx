@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { deleteSupplierOffer, saveSupplierOffer } from '../actions'
+import { createSupplier, deleteSupplierOffer, saveSupplierOffer } from '../actions'
 import { formatCurrency } from '@/lib/utils'
 import { IDEMPOTENCY_FIELD, useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
@@ -23,6 +23,8 @@ export function SupplierOffersEditor({
   const { pending: saving, run } = useAction()
   const { key, rotate } = useIdempotencyKey()
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [supplierRows, setSupplierRows] = useState(suppliers)
+  const [newSupplier, setNewSupplier] = useState('')
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id || '')
   const [sku, setSku] = useState('')
   const [cost, setCost] = useState('')
@@ -144,10 +146,36 @@ export function SupplierOffersEditor({
         <label className="block sm:col-span-2">
           <span className="text-[10px] font-semibold uppercase text-gray-500">Supplier</span>
           <select value={supplierId} onChange={(event) => setSupplierId(event.target.value)} className="mt-1 w-full rounded-lg border px-2 py-2 text-xs">
-            {suppliers.map((supplier) => (
+            {supplierRows.map((supplier) => (
               <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
             ))}
           </select>
+          <span className="mt-2 flex gap-2">
+            <input
+              value={newSupplier}
+              onChange={(event) => setNewSupplier(event.target.value)}
+              placeholder="New supplier"
+              className="w-full rounded-lg border px-2 py-1.5 text-xs"
+            />
+            <button
+              type="button"
+              className="shrink-0 text-[#806A50]"
+              disabled={saving || !newSupplier.trim()}
+              onClick={() => {
+                setActiveId('supplier')
+                run(async () => {
+                  const created = await createSupplier(newSupplier)
+                  if ('error' in created) return created
+                  setSupplierRows((current) => current.some((row) => row.id === created.id) ? current : [...current, created])
+                  setSupplierId(created.id)
+                  setNewSupplier('')
+                  return { success: true }
+                }, { successMessage: 'Supplier added' })
+              }}
+            >
+              Add
+            </button>
+          </span>
         </label>
         <label className="block">
           <span className="text-[10px] font-semibold uppercase text-gray-500">Supplier SKU</span>

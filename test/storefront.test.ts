@@ -19,6 +19,10 @@ test('a store sample is one unit from stock', () => {
 
   const kit = storefrontSampleOffer({ fulfillmentMode: 'auto', stockQty: 4, catalogKit: true })
   assert.equal(kit.buy, false)
+
+  const sample = storefrontSampleOffer({ fulfillmentMode: 'auto', stockQty: 8, hasSellPrice: true, sampleOnly: true })
+  assert.equal(sample.buy, false)
+  assert.equal(sample.reason, 'sample')
 })
 
 test('store checkout rejects more than one sample', () => {

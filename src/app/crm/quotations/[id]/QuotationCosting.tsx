@@ -69,7 +69,7 @@ export function QuotationCosting({
         cost: hasCost ? Number(cost) : null,
         margin,
         sell: line.unitPrice,
-        edited: row?.margin_percent == null && hasCost ? 'margin' : 'sell',
+        edited: 'sell',
       })
       initial[line.id] = {
         offerId,

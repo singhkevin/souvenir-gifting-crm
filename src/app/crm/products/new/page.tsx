@@ -8,6 +8,8 @@ import { Package, Globe, Lock, EyeOff } from 'lucide-react'
 import { ProductImageField } from '@/components/products/product-image-field'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 import { CategoryField } from '@/components/products/category-field'
+import { NameCreateField } from '@/components/products/name-create-field'
+import { createBrand, createSupplier } from '../actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 
@@ -76,15 +78,13 @@ export default async function NewProductPage({
 
             <CategoryField categories={categories || []} />
 
-            <MobileSheetSelect
+            <NameCreateField
               name="brand_id"
               label="Brand"
-              showDesktopLabel
+              options={brands || []}
               emptyLabel="Select Brand (Optional)"
-              options={[
-                { value: '', label: 'Select Brand (Optional)' },
-                ...(brands || []).map((b) => ({ value: b.id, label: b.name })),
-              ]}
+              placeholder="New brand name"
+              create={createBrand}
             />
 
             <div>
@@ -161,16 +161,35 @@ export default async function NewProductPage({
               </p>
             </div>
 
-            <MobileSheetSelect
+            <NameCreateField
               name="supplier_id"
-              label="Primary Supplier"
-              showDesktopLabel
+              label="Supplier"
+              options={suppliers || []}
               emptyLabel="Select Supplier (Optional)"
-              options={[
-                { value: '', label: 'Select Supplier (Optional)' },
-                ...(suppliers || []).map((s) => ({ value: s.id, label: s.name })),
-              ]}
+              placeholder="New supplier name"
+              create={createSupplier}
             />
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Lead time (days)</label>
+              <input
+                type="number"
+                name="lead_time_days"
+                min="0"
+                step="1"
+                placeholder="For this supplier"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-xs text-gray-700">
+              <input type="checkbox" name="is_preferred" value="on" />
+              Preferred supplier
+            </label>
+            <label className="flex items-center gap-2 text-xs text-gray-700">
+              <input type="checkbox" name="sample_only" value="on" />
+              Sample only — not sellable stock
+            </label>
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">HSN code</label>

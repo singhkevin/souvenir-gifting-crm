@@ -8,6 +8,15 @@ import {
 
 const PRODUCT = '11111111-1111-4111-8111-111111111111'
 
+test('sample stock is not sellable', () => {
+  const offer = purchaseOffer({ fulfillmentMode: 'buy', stockQty: 12, hasSellPrice: true, sampleOnly: true })
+  assert.equal(offer.buy, false)
+  assert.equal(offer.rfq, true)
+  assert.equal(offer.stockQty, 0)
+  assert.equal(offer.reason, 'sample')
+  assert.equal(purchaseCaption(offer), 'Request one sample')
+})
+
 test('rfq flag ignores stock', () => {
   const offer = purchaseOffer({ fulfillmentMode: 'rfq', stockQty: 40, hasSellPrice: true })
   assert.equal(offer.buy, false)

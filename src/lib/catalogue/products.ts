@@ -2,10 +2,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
-import { offersByProduct } from '@/lib/pricing/offers'
-import { resolveSellPrice } from '@/lib/pricing/resolve'
+import { surfaceUnitPrice } from '@/lib/pricing/listed'
 import { readProductCost } from '@/lib/pricing/product-costs'
-import { getPricingSettings, loadSupplierOffers, supplierCostForProduct } from '@/lib/pricing/server'
+import { getPricingSettings } from '@/lib/pricing/server'
 import { type PurchaseOffer } from '@/lib/catalogue/purchase-path'
 import { occasionTagList, storefrontSampleOffer } from '@/lib/catalogue/storefront'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -13,7 +12,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 const PUBLIC_PRODUCT_SELECT =
   'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)' as const
 const PUBLIC_PRODUCT_SELECT_WITH_PURCHASE =
-  'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, category:categories(id, name), brand:brands(id, name)' as const
+  'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, sample_only, category:categories(id, name), brand:brands(id, name)' as const
 const PUBLIC_COST_EMBED = 'product_costs(supplier_cost, internal_margin)'
 
 export type PublicProduct = {
@@ -52,6 +51,7 @@ function toPublicProduct(
     created_at?: string | null
     stock_qty?: number | null
     fulfillment_mode?: string | null
+    sample_only?: boolean | null
     category?: Named | Named[] | null
     brand?: Named | Named[] | null
   },
@@ -77,6 +77,7 @@ function toPublicProduct(
       fulfillmentMode: row.fulfillment_mode,
       stockQty: row.stock_qty,
       hasSellPrice: sellPrice != null && Number.isFinite(Number(sellPrice)),
+      sampleOnly: Boolean(row.sample_only),
     }),
   }
 }
@@ -98,7 +99,11 @@ function attachCosts(rows: unknown[]): PublicRow[] {
 }
 
 async function loadPublicRows(client: SupabaseClient, id?: string): Promise<PublicRow[]> {
-  const purchaseSelect = `${PUBLIC_PRODUCT_SELECT_WITH_PURCHASE}, ${PUBLIC_COST_EMBED}`
+  const probe = await client.from('products').select('sample_only').limit(1)
+  const purchaseColumns = probe.error && /sample_only/i.test(probe.error.message)
+    ? PUBLIC_PRODUCT_SELECT_WITH_PURCHASE.replace(', sample_only', '')
+    : PUBLIC_PRODUCT_SELECT_WITH_PURCHASE
+  const purchaseSelect = `${purchaseColumns}, ${PUBLIC_COST_EMBED}`
   const plainSelect = `${PUBLIC_PRODUCT_SELECT}, ${PUBLIC_COST_EMBED}`
   if (id) {
     const single = await client
@@ -111,7 +116,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
     if (single.error && /product_costs/i.test(single.error.message)) {
       const withoutCost = await client
         .from('products')
-        .select(PUBLIC_PRODUCT_SELECT_WITH_PURCHASE)
+        .select(purchaseColumns)
         .eq('status', 'active')
         .eq('catalogue_access', 'all')
         .eq('id', id)
@@ -160,7 +165,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
   if (first.error && /product_costs/i.test(first.error.message)) {
     const withoutCost = await client
       .from('products')
-      .select(PUBLIC_PRODUCT_SELECT_WITH_PURCHASE)
+      .select(purchaseColumns)
       .eq('status', 'active')
       .eq('catalogue_access', 'all')
       .order('name')
@@ -235,25 +240,7 @@ export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
     const settings = await getPricingSettings()
     const priced = !settings.surfaces.store.showSellPrice
       ? data.map((row) => toPublicProduct(row, null))
-      : await (async () => {
-          const offers = settings.surfaces.store.useBestCost
-            ? offersByProduct(await loadSupplierOffers(client, data.map((row) => row.id)))
-            : new Map()
-          return data.map((row) => {
-            const resolved = resolveSellPrice({
-              supplierCost: supplierCostForProduct(row, offers.get(row.id) || [], {
-                useBestCost: settings.surfaces.store.useBestCost,
-                requireInStock: settings.requireInStock,
-                quantity: row.moq,
-              }),
-              listPrice: row.price,
-              productMarginPercent: row.internal_margin,
-              channel: 'b2c',
-              settings,
-            })
-            return toPublicProduct(row, resolved.sellPrice)
-          })
-        })()
+      : data.map((row) => toPublicProduct(row, surfaceUnitPrice({ channel: 'b2c', retailPrice: row.price })))
     return decorateStorefront(client, priced)
   } catch {
     return []
@@ -300,21 +287,7 @@ export async function getPublicProduct(id: string): Promise<PublicProduct | null
     if (!settings.surfaces.store.showSellPrice) {
       return (await decorateStorefront(client, [toPublicProduct(data, null)]))[0] || null
     }
-    const offers = settings.surfaces.store.useBestCost
-      ? await loadSupplierOffers(client, [data.id])
-      : []
-    const resolved = resolveSellPrice({
-      supplierCost: supplierCostForProduct(data, offers, {
-        useBestCost: settings.surfaces.store.useBestCost,
-        requireInStock: settings.requireInStock,
-        quantity: data.moq,
-      }),
-      listPrice: data.price,
-      productMarginPercent: data.internal_margin,
-      channel: 'b2c',
-      settings,
-    })
-    return (await decorateStorefront(client, [toPublicProduct(data, resolved.sellPrice)]))[0] || null
+    return (await decorateStorefront(client, [toPublicProduct(data, surfaceUnitPrice({ channel: 'b2c', retailPrice: data.price }))]))[0] || null
   } catch {
     return null
   }

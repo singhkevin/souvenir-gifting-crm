@@ -154,10 +154,13 @@ export async function applyQuotationItemPrice(formData: FormData) {
 
   const quantity = Number(item.quantity) || 1
   const lineTotal = quoteLineTotal(quantity, unit, Number(quote.discount_percent) || 0)
-  const { error: priceError } = await supabase
+  const locked = await supabase
     .from('quotation_items')
-    .update({ unit_price: unit, line_total: lineTotal })
+    .update({ unit_price: unit, line_total: lineTotal, price_locked: true })
     .eq('id', itemId)
+  const priceError = locked.error && /price_locked/i.test(locked.error.message)
+    ? (await supabase.from('quotation_items').update({ unit_price: unit, line_total: lineTotal }).eq('id', itemId)).error
+    : locked.error
   if (priceError) return { error: priceError.message }
 
   const { error: costError } = await supabase.from('quotation_item_costs').upsert({
@@ -458,13 +461,15 @@ export async function applyAllQuotationPrices(
       .maybeSingle()
     if (!item) return { error: 'Quotation line not found' }
     const quantity = Number(item.quantity) || 1
-    const { error: priceError } = await supabase
-      .from('quotation_items')
-      .update({
-        unit_price: line.unitPrice,
-        line_total: quoteLineTotal(quantity, line.unitPrice, Number(quote.discount_percent) || 0),
-      })
-      .eq('id', line.itemId)
+    const lockedUpdate = {
+      unit_price: line.unitPrice,
+      line_total: quoteLineTotal(quantity, line.unitPrice, Number(quote.discount_percent) || 0),
+      price_locked: true,
+    }
+    const locked = await supabase.from('quotation_items').update(lockedUpdate).eq('id', line.itemId)
+    const priceError = locked.error && /price_locked/i.test(locked.error.message)
+      ? (await supabase.from('quotation_items').update({ unit_price: lockedUpdate.unit_price, line_total: lockedUpdate.line_total }).eq('id', line.itemId)).error
+      : locked.error
     if (priceError) return { error: priceError.message }
     const { error: costError } = await supabase.from('quotation_item_costs').upsert({
       quotation_item_id: line.itemId,

@@ -23,8 +23,10 @@ export function storefrontSampleOffer(input: {
   stockQty?: number | null
   hasSellPrice?: boolean
   catalogKit?: boolean
+  sampleOnly?: boolean
 }): PurchaseOffer {
   const offer = purchaseOffer(input)
+  if (input.sampleOnly || offer.reason === 'sample') return offer
   if (!offer.buy || offer.stockQty < 1 || offer.maxBuyQty == null) {
     return { ...offer, buy: false, rfq: true, maxBuyQty: null }
   }
