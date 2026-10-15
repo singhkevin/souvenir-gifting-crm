@@ -4,11 +4,11 @@ import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Building2, Users, TrendingUp, FolderGit2, ClipboardList, Store,
+  LayoutDashboard, Building2, Users, TrendingUp, FolderGit2, ClipboardList, Presentation, Store,
   Package, Image as ImageIcon, FileText, ShoppingBag, KanbanSquare,
   Truck, Printer, Package2, Receipt, CreditCard, ArrowDownToLine,
   BarChart3, Activity, UserCog, Settings, ShieldCheck, LogOut,
-  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X
+  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift
 } from 'lucide-react';
 import { signOut } from '@/app/login/actions';
 import { BrandName } from '@/components/brand/brand-name';
@@ -60,6 +60,20 @@ const navGroups: NavGroup[] = [
       { label: 'Catalogs', href: '/crm/catalogs', matchPrefix: '/crm/catalogs', icon: FolderGit2 },
       { label: 'Storefront', href: '/crm/storefront', matchPrefix: '/crm/storefront', icon: Store },
       { label: 'Activities', href: '/crm/activities', matchPrefix: '/crm/activities', icon: Activity },
+    ]
+  },
+  {
+    label: 'GIFTS',
+    roles: ['admin', 'sales', 'operations', 'management'],
+    items: [
+      { label: 'Gift selection', href: '/crm/gift-selections', matchPrefix: '/crm/gift-selections', icon: Gift },
+    ]
+  },
+  {
+    label: 'PITCH',
+    roles: ['admin', 'sales', 'operations', 'management'],
+    items: [
+      { label: 'Presentations', href: '/crm/presentations', matchPrefix: '/crm/presentations', icon: Presentation },
     ]
   },
   {
