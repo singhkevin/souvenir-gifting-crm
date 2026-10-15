@@ -6,7 +6,9 @@
     "dev": "node --max-http-header-size=131072 ./node_modules/next/dist/bin/next dev",
     "build": "next build --webpack",
     "start": "node --max-http-header-size=131072 ./node_modules/next/dist/bin/next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.2.6",
@@ -42,6 +44,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
