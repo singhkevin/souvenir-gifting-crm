@@ -6,6 +6,7 @@ import {
   readCatalogueFilters,
   priceBoundsOf,
 } from '../src/lib/catalogue/catalogue-query.ts'
+import { retailHeroSlides } from '../src/lib/catalogue/curate.ts'
 import { brandByPublicSlug, brandPath, brandPublicSlug, STORE_NAV_CATEGORIES } from '../src/lib/catalogue/store-nav.ts'
 import { whatsAppHref } from '../src/lib/contact/public-phone.ts'
 import type { PublicProduct } from '../src/lib/catalogue/products.ts'
@@ -82,6 +83,32 @@ test('catalogue filters keep category, brand, price and occasion', () => {
     catalogueHref('/home', filters, bounds, { occasion: '' }),
     '/home?category=11111111-1111-4111-8111-111111111111&brand=22222222-2222-4222-8222-222222222222&priceMax=999',
   )
+})
+
+test('retail hero groups featured gifts into sets of four', () => {
+  const products = Array.from({ length: 9 }, (_, index) =>
+    product({
+      id: `gift-${index}`,
+      name: `Desk gift ${index}`,
+      image_url: `/images/gift-${index}.webp`,
+      price: 1000 - index,
+      category_name: index % 2 === 0 ? 'Desk & Stationery' : 'Drinkware',
+    }),
+  )
+  products.push(product({ id: 'plain', name: 'No photo', image_url: null, price: 5000 }))
+  const slides = retailHeroSlides(products)
+  assert.equal(slides.length, 2)
+  assert.deepEqual(
+    slides.map((slide) => slide.length),
+    [4, 4],
+  )
+  const ids = slides.flat().map((item) => item.id)
+  assert.equal(new Set(ids).size, ids.length)
+  assert.equal(ids.includes('plain'), false)
+
+  const short = retailHeroSlides(products.slice(0, 2))
+  assert.equal(short.length, 1)
+  assert.equal(short[0].length, 2)
 })
 
 test('whatsapp link is absent until a public phone is set', () => {

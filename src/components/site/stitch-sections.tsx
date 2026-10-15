@@ -140,12 +140,37 @@ export function SectionHeading({
   title,
   actionHref,
   action,
+  tone = 'default',
+  dark = false,
 }: {
   eyebrow?: string
   title: string
   actionHref?: string
   action?: string
+  tone?: 'default' | 'retail'
+  dark?: boolean
 }) {
+  if (tone === 'retail') {
+    return (
+      <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
+        <div>
+          {eyebrow ? (
+            <p className={`text-[11px] font-semibold tracking-[0.22em] uppercase ${dark ? 'text-[#ffe088]' : 'text-[#735c00]'}`}>{eyebrow}</p>
+          ) : null}
+          <h2 className={`font-serif text-[1.75rem] leading-tight tracking-tight sm:text-4xl ${dark ? 'text-[#fff8f4]' : 'text-[#22180b]'}`}>{title}</h2>
+        </div>
+        {actionHref && action ? (
+          <Link
+            href={actionHref}
+            className={`shrink-0 text-sm font-semibold underline decoration-[#c4a35a] underline-offset-4 ${dark ? 'text-[#ffe088] hover:text-white' : 'text-[#382c1e] hover:text-[#735c00]'}`}
+          >
+            {action}
+          </Link>
+        ) : null}
+      </div>
+    )
+  }
+
   return (
     <div className="mb-4 flex items-end justify-between gap-3">
       <div>
@@ -171,14 +196,15 @@ export function RetailOccasionBento({
   priceOf: (product: PublicProduct) => number | null
 }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
       <SectionHeading
         eyebrow="Curated collections"
         title="Procure by occasion & milestone"
         actionHref="/collections"
-        action="Explore the catalogue"
+        action="View all"
+        tone="retail"
       />
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
         {RETAIL_OCCASIONS.map((occasion) => {
           const items = matches(products, occasion.slug)
           const sample = sampleFor(items)
@@ -188,7 +214,7 @@ export function RetailOccasionBento({
             <Link
               key={occasion.slug + occasion.title}
               href={occasion.href}
-              className={`group relative overflow-hidden rounded border border-[#d0c5bb] ${tall ? 'h-52 sm:h-60' : 'h-40 sm:h-48'} lg:col-span-2`}
+              className={`group relative overflow-hidden rounded-xl border border-[#eadfd4] shadow-[0_8px_24px_rgba(34,24,11,0.05)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(34,24,11,0.1)] ${tall ? 'h-56 sm:h-64' : 'h-44 sm:h-52'} lg:col-span-2`}
             >
               {sample ? (
                 <ProductImage
@@ -290,12 +316,37 @@ export function BrandLogoRow({
   brands,
   title,
   eyebrow,
+  tone = 'default',
 }: {
   brands: Brand[]
   title: string
   eyebrow?: string
+  tone?: 'default' | 'retail'
 }) {
   if (!brands.length) return null
+  if (tone === 'retail') {
+    return (
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <SectionHeading eyebrow={eyebrow} title={title} actionHref="/catalogue" action="View all" tone="retail" />
+        <div className="flex overflow-x-auto rounded-xl border border-[#eadfd4] bg-white shadow-[0_8px_24px_rgba(34,24,11,0.04)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {brands.map((brand, index) => (
+            <Link
+              key={brand.id}
+              href={brandPath(brand, brands)}
+              className={`flex h-20 min-w-36 flex-1 items-center justify-center px-4 text-center hover:bg-[#fbf6f0] ${index > 0 ? 'border-l border-[#eadfd4]' : ''}`}
+            >
+              {brand.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={brand.logo_url} alt={brand.name} className="max-h-10 w-auto object-contain" />
+              ) : (
+                <span className="font-serif text-lg leading-none text-[#22180b]">{brand.name}</span>
+              )}
+            </Link>
+          ))}
+        </div>
+      </section>
+    )
+  }
   return (
     <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
       <SectionHeading eyebrow={eyebrow} title={title} />
@@ -330,6 +381,7 @@ export function ProductSection({
   captionFor,
   dark = false,
   columns = 'lg:grid-cols-5',
+  tone = 'default',
 }: {
   title: string
   eyebrow?: string
@@ -341,29 +393,45 @@ export function ProductSection({
   captionFor?: (product: PublicProduct) => string
   dark?: boolean
   columns?: string
+  tone?: 'default' | 'retail'
 }) {
   if (!products.length) return null
+  const retail = tone === 'retail'
   return (
-    <section className={dark ? 'bg-[#382c1e] py-8 text-[#fff8f4]' : 'mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8'}>
+    <section
+      className={
+        dark
+          ? retail
+            ? 'bg-[#2a2118] py-14 text-[#fff8f4] sm:py-16'
+            : 'bg-[#382c1e] py-8 text-[#fff8f4]'
+          : retail
+            ? 'mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8'
+            : 'mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8'
+      }
+    >
       <div className={dark ? 'mx-auto max-w-7xl px-4 sm:px-6 lg:px-8' : undefined}>
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <div>
-            {eyebrow ? (
-              <p className={`text-[11px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-[#ffe088]' : 'text-[#715a3e]'}`}>
-                {eyebrow}
-              </p>
+        {retail ? (
+          <SectionHeading eyebrow={eyebrow} title={title} actionHref={actionHref} action={action} tone="retail" dark={dark} />
+        ) : (
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              {eyebrow ? (
+                <p className={`text-[11px] font-bold uppercase tracking-[0.16em] ${dark ? 'text-[#ffe088]' : 'text-[#715a3e]'}`}>
+                  {eyebrow}
+                </p>
+              ) : null}
+              <h2 className={`font-serif text-[26px] leading-8 sm:text-[28px] sm:leading-9 ${dark ? 'text-[#fff8f4]' : 'text-[#22180b]'}`}>
+                {title}
+              </h2>
+            </div>
+            {actionHref && action ? (
+              <Link href={actionHref} className={`shrink-0 text-sm font-semibold ${dark ? 'text-[#ffe088]' : 'text-[#715a3e]'}`}>
+                {action}
+              </Link>
             ) : null}
-            <h2 className={`font-serif text-[26px] leading-8 sm:text-[28px] sm:leading-9 ${dark ? 'text-[#fff8f4]' : 'text-[#22180b]'}`}>
-              {title}
-            </h2>
           </div>
-          {actionHref && action ? (
-            <Link href={actionHref} className={`shrink-0 text-sm font-semibold ${dark ? 'text-[#ffe088]' : 'text-[#715a3e]'}`}>
-              {action}
-            </Link>
-          ) : null}
-        </div>
-        <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${columns}`}>
+        )}
+        <div className={`grid grid-cols-2 sm:grid-cols-3 ${retail ? 'gap-4' : 'gap-3'} ${columns}`}>
           {products.map((product) => (
             <StitchProductCard
               key={product.id}
@@ -371,6 +439,7 @@ export function ProductSection({
               price={priceOf(product)}
               showSample={showSample}
               caption={captionFor?.(product)}
+              tone={tone}
             />
           ))}
         </div>
