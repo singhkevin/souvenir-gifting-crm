@@ -19,10 +19,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default function HomeAliasPage() {
+export default async function HomeAliasPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
   return (
     <SiteShell>
-      <PublicHome />
+      <PublicHome searchParams={params} basePath="/home" />
     </SiteShell>
   )
 }
