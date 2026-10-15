@@ -98,31 +98,35 @@ async function createProductOnce(formData: FormData) {
     return { error: 'Select at least one company for personalized catalogue access.' }
   }
 
-  const { data: product, error } = await supabase
-    .from('products')
-    .insert({
-      name,
-      sku: sku.trim().toUpperCase(),
-      category_id,
-      brand_id,
-      supplier_id,
-      description,
-      price,
-      moq,
-      stock_qty,
-      fulfillment_mode,
-      image_url,
-      hsn_code,
-      status,
-      catalogue_access,
-      visibility: catalogue_access === 'all' ? 'catalogue' : (catalogue_access === 'selected' ? 'selected_companies' : 'internal_only'),
-    })
-    .select('id')
-    .single()
+  const insertRow: Record<string, unknown> = {
+    name,
+    sku: sku.trim().toUpperCase(),
+    category_id,
+    brand_id,
+    supplier_id,
+    description,
+    price,
+    moq,
+    stock_qty,
+    fulfillment_mode,
+    sample_only: formData.get('sample_only') === 'on',
+    image_url,
+    hsn_code,
+    status,
+    catalogue_access,
+    visibility: catalogue_access === 'all' ? 'catalogue' : (catalogue_access === 'selected' ? 'selected_companies' : 'internal_only'),
+  }
+  let inserted = await supabase.from('products').insert(insertRow).select('id').single()
+  if (inserted.error && /sample_only/i.test(inserted.error.message)) {
+    delete insertRow.sample_only
+    inserted = await supabase.from('products').insert(insertRow).select('id').single()
+  }
+  const product = inserted.data
+  const error = inserted.error
 
-  if (error) {
-    if (error.code === '23505') return { error: 'SKU already exists.' }
-    return { error: directOrderSchemaHint(error.message) }
+  if (error || !product) {
+    if (error?.code === '23505') return { error: 'SKU already exists.' }
+    return { error: directOrderSchemaHint(error?.message || 'Product was not saved') }
   }
 
   if (supplier_cost != null || internal_margin != null) {
@@ -133,6 +137,25 @@ async function createProductOnce(formData: FormData) {
     if (costError) {
       await supabase.from('products').delete().eq('id', product.id)
       return { error: supplierSchemaHint(costError.message) }
+    }
+  }
+
+  if (supplier_id && supplier_cost != null) {
+    const leadRaw = String(formData.get('lead_time_days') || '').trim()
+    const lead = leadRaw ? Number(leadRaw) : null
+    const { error: offerError } = await supabase.from('product_supplier_offers').insert({
+      product_id: product.id,
+      supplier_id,
+      cost: supplier_cost,
+      moq,
+      lead_time_days: lead != null && Number.isInteger(lead) && lead >= 0 ? lead : null,
+      in_stock: true,
+      is_active: true,
+      is_preferred: formData.get('is_preferred') === 'on',
+    })
+    if (offerError && !/product_supplier_offers/i.test(offerError.message)) {
+      await supabase.from('products').delete().eq('id', product.id)
+      return { error: supplierSchemaHint(offerError.message) }
     }
   }
 
@@ -268,6 +291,9 @@ export async function updateProduct(productId: string, formData: FormData) {
   }
   if (formData.has('fulfillment_mode')) {
     update.fulfillment_mode = parseFulfillmentMode(formData.get('fulfillment_mode'))
+  }
+  if (formData.has('sample_only_present')) {
+    update.sample_only = formData.get('sample_only') === 'on'
   }
 
   if (formData.has('status')) {
@@ -880,4 +906,48 @@ export async function createCategory(name: string): Promise<{ id: string; name: 
   revalidatePath('/crm/products')
   revalidatePath('/crm/products/new')
   return { id: data.id, name: data.name, created: true }
+}
+
+async function createNamedRow(
+  table: 'brands' | 'suppliers',
+  label: string,
+  noun: string,
+): Promise<{ id: string; name: string } | { error: string }> {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!CATALOGUE_ROLES.includes(profile.role as CatalogueRole)) {
+    return { error: `Not permitted to create ${noun}s` }
+  }
+  const name = label.trim().replace(/\s+/g, ' ')
+  if (!name) return { error: `Enter a ${noun} name` }
+  const supabase = await createClient()
+  const { data: rows, error: loadError } = await supabase.from(table).select('id, name')
+  if (loadError) return { error: loadError.message }
+  const existing = (rows || []).find((row) => row.name.trim().toLowerCase() === name.toLowerCase())
+  if (existing) return { id: existing.id, name: existing.name }
+  const inserted = table === 'suppliers'
+    ? await supabase.from('suppliers').insert({ name, is_active: true }).select('id, name').single()
+    : await supabase.from('brands').insert({ name }).select('id, name').single()
+  const data = inserted.data
+  const error = inserted.error
+  if (error) {
+    if (error.code === '23505') {
+      const { data: again } = await supabase.from(table).select('id, name')
+      const found = (again || []).find((row) => row.name.trim().toLowerCase() === name.toLowerCase())
+      if (found) return { id: found.id, name: found.name }
+    }
+    return { error: error.message }
+  }
+  if (!data) return { error: `Could not save that ${noun}` }
+  revalidatePath('/crm/products')
+  revalidatePath('/crm/products/new')
+  return { id: data.id, name: data.name }
+}
+
+export async function createBrand(name: string) {
+  return createNamedRow('brands', name, 'brand')
+}
+
+export async function createSupplier(name: string) {
+  return createNamedRow('suppliers', name, 'supplier')
 }

@@ -8,8 +8,8 @@ import {
   type PriceChannel,
   type ResolvedPrice,
 } from '@/lib/pricing/resolve'
-import { listedUnitPrice } from '@/lib/pricing/listed'
-import { offersByProduct, pickBestOffer, type SupplierOffer } from '@/lib/pricing/offers'
+import { surfaceUnitPrice } from '@/lib/pricing/listed'
+import { pickBestOffer, type SupplierOffer } from '@/lib/pricing/offers'
 import {
   pricingSettingsFromRow,
   SURFACE_SETTING_COLUMNS,
@@ -175,33 +175,19 @@ export async function sellPricesForSurface(
     for (const row of products) {
       const product = withProductCost(row)
       const special = specials.get(product.id)
-      prices.set(product.id, listedUnitPrice({
+      prices.set(product.id, surfaceUnitPrice({
+        channel: 'b2b',
+        retailPrice: product.price,
         specialPrice: special?.price,
         specialValidUntil: special?.validUntil,
-        basePrice: product.price,
         companyMarginPercent,
       }))
     }
     return prices
   }
-  const offers = flags.useBestCost ? await loadSupplierOffers(admin, productIds) : []
-  const grouped = offersByProduct(offers)
   for (const row of products) {
     const product = withProductCost(row)
-    const cost = supplierCostForProduct(product, grouped.get(product.id) || [], {
-      useBestCost: flags.useBestCost,
-      requireInStock: settings.requireInStock,
-      quantity: product.moq,
-    })
-    const resolved = resolveSellPrice({
-      supplierCost: cost,
-      listPrice: product.price,
-      productMarginPercent: product.internal_margin,
-      companyMarginPercent: null,
-      channel: 'b2c',
-      settings,
-    })
-    prices.set(product.id, resolved.sellPrice)
+    prices.set(product.id, surfaceUnitPrice({ channel: 'b2c', retailPrice: product.price }))
   }
   return prices
 }

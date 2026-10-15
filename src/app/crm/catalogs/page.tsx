@@ -10,6 +10,7 @@ import { requireStaff } from '@/lib/auth'
 import { SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { catalogStatusLabel } from '@/lib/catalogs/status'
+import { companyHint, companyListLabel, dedupeById } from '@/lib/catalogs/company-option'
 
 type CatalogCompany = { name: string | null }
 type CatalogRow = {
@@ -36,9 +37,15 @@ export default async function CatalogsPage({
   const supabase = await createClient()
   const [{ data: catalogs }, { data: companies }] = await Promise.all([
     supabase.from('campaigns').select('*, company:companies(name)').order('created_at', { ascending: false }),
-    supabase.from('companies').select('id, name').order('name'),
+    supabase.from('companies').select('id, name, portal_slug, allowed_email_domains, gst_number').order('name'),
   ])
-  const companyOptions = asRows<{ id: string; name: string }>(companies)
+  const companyOptions = dedupeById(
+    asRows<{ id: string; name: string; portal_slug?: string | null; allowed_email_domains?: string[] | null; gst_number?: string | null }>(companies).map((company) => ({
+      id: company.id,
+      name: company.name,
+      hint: companyHint(company),
+    })),
+  )
   const allCatalogs = asRows<CatalogRow>(catalogs)
   const ids = allCatalogs.map((row) => row.id)
   const [assignmentResult, offeringResult] = ids.length
@@ -89,32 +96,38 @@ export default async function CatalogsPage({
         <p className="mt-1 text-xs text-[#7A7267]">Create a curated product set once, assign it to one or more companies, and share a link.</p>
       </div>
 
-      <CatalogForm action={createCatalog} className="grid items-end gap-3 rounded-2xl border border-[#E5DFD5] bg-white p-5 text-xs md:grid-cols-3">
-        <label className="block space-y-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Catalog name</span>
-          <input name="name" required placeholder="e.g. Diwali 2026" className="min-h-11 w-full rounded-lg border px-3 py-2" />
-        </label>
+      <CatalogForm action={createCatalog} className="space-y-3 rounded-2xl border border-[#E5DFD5] bg-white p-5 text-xs">
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="block space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Catalog name</span>
+            <input name="name" required placeholder="e.g. Diwali 2026" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+          </label>
+          <label className="block space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Occasion</span>
+            <input name="occasion" placeholder="Diwali, onboarding…" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+          </label>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          <label className="block space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Number of employees</span>
+            <input name="employee_quantity" type="number" min="1" defaultValue={1000} placeholder="e.g. 1000" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+          </label>
+          <label className="block space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Budget per person</span>
+            <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={3000} placeholder="e.g. 3000" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+          </label>
+          <SheetDateField name="required_delivery_date" label="Required delivery" showDesktopLabel />
+        </div>
         <CompanyMultiSelect companies={companyOptions} />
-        <label className="block space-y-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Occasion</span>
-          <input name="occasion" placeholder="Diwali, onboarding…" className="min-h-11 w-full rounded-lg border px-3 py-2" />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Number of employees</span>
-          <input name="employee_quantity" type="number" min="1" defaultValue={1000} placeholder="e.g. 1000" className="min-h-11 w-full rounded-lg border px-3 py-2" />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Budget per person</span>
-          <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={3000} placeholder="e.g. 3000" className="min-h-11 w-full rounded-lg border px-3 py-2" />
-        </label>
-        <SheetDateField name="required_delivery_date" label="Required delivery" showDesktopLabel />
-        <label className="block space-y-1 md:col-span-2">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Notes</span>
-          <input name="description" placeholder="Optional notes" className="min-h-11 w-full rounded-lg border px-3 py-2" />
-        </label>
-        <SubmitButton pendingLabel="Creating…" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF]">
-          Create catalog
-        </SubmitButton>
+        <div className="grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+          <label className="block space-y-1">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Notes</span>
+            <input name="description" placeholder="Optional notes" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+          </label>
+          <SubmitButton pendingLabel="Creating…" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 py-2.5 font-semibold text-[#FFFFFF]">
+            Create catalog
+          </SubmitButton>
+        </div>
       </CatalogForm>
 
       <form method="get" className="flex flex-col gap-2 sm:flex-row sm:items-center" role="search">
@@ -133,7 +146,7 @@ export default async function CatalogsPage({
         >
           <option value="">All companies</option>
           {companyOptions.map((company) => (
-            <option key={company.id} value={company.id}>{company.name}</option>
+            <option key={company.id} value={company.id}>{companyListLabel(company)}</option>
           ))}
         </select>
         <button type="submit" className="min-h-10 rounded-lg border border-[#806A50] px-4 text-xs font-semibold text-[#806A50]">

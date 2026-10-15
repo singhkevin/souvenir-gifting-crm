@@ -36,6 +36,23 @@ export function classifyBusinessEmail(
   }
 }
 
+/**
+ * Business sign-up must use a work email.
+ * Free and disposable domains are blocked unless an admin added that domain to the allowlist.
+ */
+export function workEmailBlock(email: string, allowlist: string[] | null | undefined): string | null {
+  const domain = emailDomain(email)
+  if (!domain) return 'A valid work email is required'
+  const allowed = new Set(
+    (allowlist || []).map((entry) => normalizeEmailDomain(entry)).filter((entry): entry is string => Boolean(entry)),
+  )
+  if (allowed.has(domain)) return null
+  if (FREE_MAIL.has(domain) || DISPOSABLE.has(domain)) {
+    return 'Use a work email. Free inboxes such as Gmail, Yahoo, and Outlook are not accepted.'
+  }
+  return null
+}
+
 export function registrationNotes(flags: EmailDomainFlags, taxId?: string | null) {
   const parts = ['Registered from the business portal.']
   if (flags.freeMail) parts.push('Flag: free-mail domain. Left unverified.')

@@ -6,6 +6,7 @@ import {
   REGISTER_EMAIL_TAKEN,
   REGISTER_GSTIN,
   REGISTER_SERVER,
+  REGISTER_WORK_EMAIL,
 } from '../src/lib/business/register-errors.ts'
 import { resolvePublicContactPhone, whatsAppHref } from '../src/lib/contact/public-phone.ts'
 
@@ -14,6 +15,7 @@ test('registration failures map to a specific message', () => {
   assert.equal(mapRegistrationFailure('email already registered'), REGISTER_EMAIL_TAKEN)
   assert.equal(mapRegistrationFailure('Captcha failed. Please try again.'), REGISTER_CAPTCHA)
   assert.equal(mapRegistrationFailure('invalid GSTIN'), REGISTER_GSTIN)
+  assert.equal(mapRegistrationFailure('work email required'), REGISTER_WORK_EMAIL)
   assert.equal(mapRegistrationFailure('duplicate key value'), REGISTER_SERVER)
   assert.equal(mapRegistrationFailure(''), REGISTER_SERVER)
 })
