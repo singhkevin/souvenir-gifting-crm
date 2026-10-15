@@ -30,3 +30,9 @@ export function isGiftStaffRole(role: string | null | undefined): boolean {
 export function isGiftEmployeeRole(role: string | null | undefined): boolean {
   return role === 'gift_employee'
 }
+
+const PRESENTATION_STAFF_ROLES = ['admin', 'sales', 'operations', 'management'] as const
+
+export function isPresentationStaffRole(role: string | null | undefined): boolean {
+  return includes(PRESENTATION_STAFF_ROLES, role)
+}

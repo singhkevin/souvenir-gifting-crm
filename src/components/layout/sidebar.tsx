@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Building2, Users, TrendingUp, FolderGit2, ClipboardList,
+  LayoutDashboard, Building2, Users, TrendingUp, FolderGit2, ClipboardList, Presentation,
   Package, Image as ImageIcon, FileText, ShoppingBag, KanbanSquare,
   Truck, Printer, Package2, Receipt, CreditCard, ArrowDownToLine,
   BarChart3, Activity, UserCog, Settings, ShieldCheck, LogOut,
@@ -66,6 +66,13 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'sales', 'operations', 'management'],
     items: [
       { label: 'Gift selection', href: '/crm/gift-selections', matchPrefix: '/crm/gift-selections', icon: Gift },
+    ]
+  },
+  {
+    label: 'PITCH',
+    roles: ['admin', 'sales', 'operations', 'management'],
+    items: [
+      { label: 'Presentations', href: '/crm/presentations', matchPrefix: '/crm/presentations', icon: Presentation },
     ]
   },
   {
