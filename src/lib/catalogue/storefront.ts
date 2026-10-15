@@ -17,7 +17,10 @@ export function shopModeFromCookie(value: string | null | undefined): ShopMode {
   return value === 'corporate' ? 'corporate' : 'retail'
 }
 
-/** One sample from stock. Out of stock, quote-only, and kits stay on Request a quote. */
+/**
+ * Retail store: an in-stock gift with a price is bought at products.price, from quantity 1 up to stock.
+ * Sample-only gifts stay unsellable. The rfq flag is left as the business-mode quote signal.
+ */
 export function storefrontSampleOffer(input: {
   fulfillmentMode?: string | null
   stockQty?: number | null
@@ -26,18 +29,38 @@ export function storefrontSampleOffer(input: {
   sampleOnly?: boolean
 }): PurchaseOffer {
   const offer = purchaseOffer(input)
-  if (input.sampleOnly || offer.reason === 'sample') return offer
-  if (!offer.buy || offer.stockQty < 1 || offer.maxBuyQty == null) {
-    return { ...offer, buy: false, rfq: true, maxBuyQty: null }
+  if (input.sampleOnly || offer.reason === 'sample') {
+    return { ...offer, buy: false, maxBuyQty: null, reason: 'sample' }
   }
-  return { ...offer, buy: true, rfq: true, maxBuyQty: 1 }
+  if (!offer.buy || offer.stockQty < 1) {
+    return { ...offer, buy: false, maxBuyQty: null }
+  }
+  return { ...offer, buy: true, maxBuyQty: offer.stockQty }
 }
 
 export function storeSampleQuantityError(quantities: number[]) {
-  if (quantities.some((quantity) => quantity !== 1)) {
-    return 'The store sells one sample of each gift. Request a quote for a larger order.'
+  if (quantities.some((quantity) => !Number.isInteger(quantity) || quantity < 1)) {
+    return 'Choose a quantity of at least 1.'
   }
   return null
+}
+
+export type RetailAvailability = 'buy' | 'sample' | 'out' | 'closed'
+
+/** What a retail shopper can do. Quotes are not a retail action. */
+export function retailAvailability(offer: PurchaseOffer): RetailAvailability {
+  if (offer.reason === 'sample') return 'sample'
+  if (offer.buy) return 'buy'
+  if (offer.reason === 'catalog-kit' || offer.reason === 'flag-rfq' || offer.reason === 'no-price') return 'closed'
+  return 'out'
+}
+
+export function retailStatusLabel(offer: PurchaseOffer) {
+  const state = retailAvailability(offer)
+  if (state === 'buy') return offer.maxBuyQty != null ? `${offer.maxBuyQty} in stock` : 'In stock'
+  if (state === 'sample') return 'Sample only'
+  if (state === 'out') return 'Out of stock'
+  return 'Not available to buy'
 }
 
 export function occasionTagList(value: unknown): string[] {

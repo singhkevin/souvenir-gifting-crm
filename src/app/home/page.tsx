@@ -5,9 +5,9 @@ import { SiteShell } from '@/components/site/site-shell'
 import { PublicHome } from '@/components/site/public-home'
 import { RetailHomeSkeleton } from '@/components/site/retail-hero'
 
-const title = `${appName()} — Corporate Gifting, Designed to be Remembered`
+const title = `${appName()} — Gifts for every occasion`
 const description =
-  'Premium corporate gifting catalogue for teams, clients and brands. Browse by category, budget and occasion, then request a quotation.'
+  'Curated gifts, designed to be remembered. Browse by category, budget and occasion, then order what you love.'
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -28,7 +28,7 @@ export default async function HomeAliasPage({
 }) {
   const params = await searchParams
   return (
-    <SiteShell categoryVariant="compact">
+    <SiteShell>
       <Suspense fallback={<RetailHomeSkeleton />}>
         <PublicHome searchParams={params} basePath="/home" />
       </Suspense>

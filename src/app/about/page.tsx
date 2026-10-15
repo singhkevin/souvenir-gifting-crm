@@ -1,45 +1,37 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { appName } from '@/lib/brand'
 import { BrandName } from '@/components/brand/brand-name'
 import { SiteShell } from '@/components/site/site-shell'
+import { StoreButton, StorePageHeader } from '@/components/site/store-ui'
 
 export const metadata: Metadata = {
   title: 'About',
-  description: `${appName()} is a corporate gifting CRM and catalogue, from enquiry through fulfilment.`,
+  description: `${appName()} is a gift catalogue you can shop, with a business desk for larger programmes.`,
 }
 
 export default function AboutPage() {
   return (
     <SiteShell>
-      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
-        <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-          <p className="store-eyebrow">About us</p>
-          <h1 className="mt-3 font-serif text-[1.75rem] font-normal tracking-tight text-[#1B2430] sm:text-3xl lg:text-4xl">
-            Welcome to <BrandName />.
-          </h1>
-          <p className="mt-4 text-lg leading-relaxed text-[#5C6570]">
-            Your destination for curated corporate gifts and programme-ready fulfilment.
-          </p>
-        </div>
-      </div>
+      <StorePageHeader
+        eyebrow="About us"
+        title={`Welcome to ${appName()}.`}
+        lede="Curated gifts for every occasion, and a business desk when a programme needs a quotation."
+      />
 
-      <div className="mx-auto max-w-3xl space-y-6 px-4 py-12 text-base leading-relaxed text-[#5C6570] sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-3xl space-y-6 px-4 py-12 text-base leading-7 text-[#4d453e] sm:px-6 lg:px-8">
         <p>
-          <BrandName /> is a corporate gifting CRM and product catalogue. Teams use it to select gifts, prepare quotations,
-          manage orders and follow the work through fulfilment and invoicing.
+          <BrandName /> keeps one catalogue. On the shop you can add an in-stock gift to your cart and check out.
+          Sample-only pieces stay off the cart.
         </p>
         <p>
-          This public collection is the same catalogue the <BrandName /> team maintains — not a second store, and not a
-          consumer checkout. When you request a quote, the enquiry reaches the existing sales workflow.
+          Teams that need branding, larger quantities, or a formal quotation use Business. Those prices stay indicative
+          until a quote is sent.
         </p>
-        <div className="pt-4">
-          <Link
-            href="/catalogue"
-            className="inline-flex bg-[#806A50] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white"
-          >
-            Explore Catalogue
-          </Link>
+        <div className="flex flex-wrap gap-3 pt-2">
+          <StoreButton href="/catalogue">Shop gifts</StoreButton>
+          <StoreButton href="/business" variant="line">
+            Business
+          </StoreButton>
         </div>
       </div>
     </SiteShell>

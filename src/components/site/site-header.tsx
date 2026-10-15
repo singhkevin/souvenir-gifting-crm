@@ -43,12 +43,12 @@ export function SiteHeader({
   children?: React.ReactNode
 }) {
   const router = useRouter()
+  const pathname = usePathname() || ''
   const [open, setOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
-  const [corporate, setCorporate] = useState(false)
-  const pathname = usePathname()
+  const [corporate, setCorporate] = useState(() => pathname.startsWith('/business'))
 
   useEffect(() => {
     const mode = document.cookie.split('; ').find((part) => part.startsWith('gf-shop='))
@@ -151,12 +151,14 @@ export function SiteHeader({
               </Link>
             )}
             {corporate ? null : <CartDrawer iconClassName="text-[#22180b]" />}
-            <Link
-              href="/request-quote"
-              className="rounded-sm bg-[#382c1e] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
-            >
-              Quote
-            </Link>
+            {corporate ? (
+              <Link
+                href="/request-quote"
+                className="rounded-sm bg-[#382c1e] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
+              >
+                Quote
+              </Link>
+            ) : null}
           </div>
 
           <div className="flex items-center gap-1 sm:gap-2 lg:hidden">
@@ -267,13 +269,15 @@ export function SiteHeader({
                   {item.label}
                 </Link>
               ))}
-              <Link
-                href="/request-quote"
-                onClick={() => setOpen(false)}
-                className="mt-6 inline-flex items-center justify-center bg-[#806A50] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
-              >
-                Request a Quote
-              </Link>
+              {corporate ? (
+                <Link
+                  href="/request-quote"
+                  onClick={() => setOpen(false)}
+                  className="mt-6 inline-flex items-center justify-center bg-[#806A50] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+                >
+                  Request a Quote
+                </Link>
+              ) : null}
               {workspaceHref && workspaceLabel ? (
                 <Link
                   href={workspaceHref}

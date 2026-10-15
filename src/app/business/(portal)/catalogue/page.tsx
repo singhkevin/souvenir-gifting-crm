@@ -1,4 +1,5 @@
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
+import { StoreTitle } from '@/components/site/store-ui'
 import { getBusinessCatalogue } from '@/lib/business/catalogue'
 import { requireBusiness } from '@/lib/business/session'
 import { formatCurrency } from '@/lib/utils'
@@ -10,10 +11,7 @@ export default async function BusinessCataloguePage() {
   const products = await getBusinessCatalogue(company?.id || profile.company_id)
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-serif text-3xl">Catalogue</h1>
-        <p className="mt-2 text-sm text-[#5C6570]">Prices are indicative. The final price is the quotation we send.</p>
-      </div>
+      <StoreTitle eyebrow="Business" title="Catalogue" lede="Prices are indicative. The final price is the quotation we send." />
       <CatalogueBrowser
         products={products}
         hideQuickAdd

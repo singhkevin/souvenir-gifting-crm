@@ -163,8 +163,15 @@
 .storefront {
   --font-serif: "Playfair Display", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", "Outfit", sans-serif;
-  background: #fff8f4;
-  color: #221a10;
+  --store-bg: #fff8f4;
+  --store-ink: #22180b;
+  --store-muted: #4d453e;
+  --store-gold: #735c00;
+  --store-gold-bright: #ffe088;
+  --store-line: #eadfd4;
+  --store-brown: #382c1e;
+  background: var(--store-bg);
+  color: var(--store-ink);
   font-family: var(--font-sans);
 }
 
@@ -178,11 +185,11 @@
   }
 
   .store-section-title {
-    @apply font-serif text-[1.75rem] tracking-tight text-[#1B2430] sm:text-3xl lg:text-4xl;
+    @apply font-serif text-[1.75rem] leading-tight tracking-tight text-[#22180b] sm:text-4xl;
   }
 
   .store-eyebrow {
-    @apply text-[11px] font-medium uppercase tracking-[0.22em] text-[#8B6508];
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-[#735c00];
   }
 
   .crm-table-wrap {

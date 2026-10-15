@@ -108,7 +108,7 @@ export function addToCart(
   if (existing && maxQuantity != null && existing.quantity + addQty > maxQuantity) {
     return {
       items: current,
-      error: `Only ${maxQuantity} in stock. Request a quote if you need more.`,
+      error: `Only ${maxQuantity} in stock.`,
     }
   }
   const nextQuantity = existing ? existing.quantity + addQty : addQty
