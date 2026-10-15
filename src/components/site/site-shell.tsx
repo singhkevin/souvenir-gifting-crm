@@ -23,7 +23,13 @@ async function publicContactPhone() {
   return resolvePublicContactPhone(fromEnv, data.public_contact_phone as string | null)
 }
 
-export async function SiteShell({ children }: { children: React.ReactNode }) {
+export async function SiteShell({
+  children,
+  categoryVariant = 'cards',
+}: {
+  children: React.ReactNode
+  categoryVariant?: 'cards' | 'compact'
+}) {
   const profile = await getProfile()
   const headerStore = await headers()
   const hostKind = resolveHost(headerStore.get('x-forwarded-host') || headerStore.get('host')).kind
@@ -67,7 +73,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         businessHref={isBusiness ? '/business/dashboard' : '/business'}
         hideAudience={hostKind === 'tenant'}
       >
-        <CategoryIconStrip items={navCategories} />
+        <CategoryIconStrip items={navCategories} variant={categoryVariant} />
       </SiteHeader>
       <main>{children}</main>
       <SiteFooter workspaceHref={workspaceHref} workspaceLabel={workspaceLabel} phone={phone} />

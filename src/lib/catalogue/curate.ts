@@ -362,6 +362,35 @@ export function curateFeaturedProducts(products: PublicProduct[], limit = 8, usa
   return curateHomepageProducts(products, limit, 0, usage)
 }
 
+/** Featured products first, then bestsellers, in complete sets of four for the retail hero. */
+export function retailHeroSlides(products: PublicProduct[], perSlide = 4, maxSlides = 3) {
+  const featured = curateFeaturedProducts(products, perSlide * maxSlides)
+  const bestsellers = curateTrendingProducts(products, perSlide * maxSlides)
+  const seen = new Set<string>()
+  const seenImages = new Set<string>()
+  const ordered: PublicProduct[] = []
+
+  const push = (product: PublicProduct) => {
+    const image = imageKey(product)
+    if (!image || seen.has(product.id) || seenImages.has(image)) return
+    if (ordered.length >= perSlide * maxSlides) return
+    seen.add(product.id)
+    seenImages.add(image)
+    ordered.push(product)
+  }
+
+  for (const product of featured) push(product)
+  for (const product of bestsellers) push(product)
+  for (const product of products) push(product)
+
+  const slides: PublicProduct[][] = []
+  for (let index = 0; index + perSlide <= ordered.length && slides.length < maxSlides; index += perSlide) {
+    slides.push(ordered.slice(index, index + perSlide))
+  }
+  if (!slides.length && ordered.length) slides.push(ordered.slice(0, perSlide))
+  return slides
+}
+
 export function curateMoreProducts(
   products: PublicProduct[],
   exclude: PublicProduct[],

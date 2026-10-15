@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
@@ -6,6 +7,7 @@ import { TabSessionRevive } from "@/components/auth/tab-session-revive"
 import { confirmSearchFromParams, hasRecoveryQuery } from "@/lib/auth/recovery"
 import { SiteShell } from "@/components/site/site-shell"
 import { PublicHome } from "@/components/site/public-home"
+import { RetailHomeSkeleton } from "@/components/site/retail-hero"
 import { PortalFinder } from "@/components/site/portal-finder"
 import { appName } from "@/lib/brand"
 import { isGiftEmployeeRole } from "@/lib/roles"
@@ -86,8 +88,10 @@ export default async function RootPage({
   }
 
   return (
-    <SiteShell>
-      <PublicHome searchParams={params} basePath="/" />
+    <SiteShell categoryVariant="compact">
+      <Suspense fallback={<RetailHomeSkeleton />}>
+        <PublicHome searchParams={params} basePath="/" />
+      </Suspense>
     </SiteShell>
   )
 }

@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
+import { RetailHero } from '@/components/site/retail-hero'
 import { BrandLogoRow, ProductSection, RetailOccasionBento } from '@/components/site/stitch-sections'
 import { StorefrontCatalog } from '@/components/site/storefront-catalog'
 import { readCatalogueFilters } from '@/lib/catalogue/catalogue-query'
-import { curateTrendingProducts } from '@/lib/catalogue/curate'
+import { curateTrendingProducts, retailHeroSlides } from '@/lib/catalogue/curate'
 import { getPublicBrands, getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
 import type { PublicProduct } from '@/lib/catalogue/products'
 
@@ -36,6 +37,9 @@ export async function PublicHome({
     : loadedBrands
   const categories = await getPublicCategories()
 
+  const heroSlides = retailHeroSlides(products).map((slide) =>
+    slide.map((product) => ({ id: product.id, name: product.name, image_url: product.image_url })),
+  )
   const bestsellers = withImage(curateTrendingProducts(products, 5)).slice(0, 5)
   const under999 = [...products]
     .filter((product) => product.price != null && product.price > 0 && product.price < 999)
@@ -51,6 +55,8 @@ export async function PublicHome({
 
   return (
     <div className="bg-[#fff8f4] text-[#221a10]">
+      <RetailHero slides={heroSlides} />
+
       <RetailOccasionBento products={products} priceOf={storePrice} />
 
       <ProductSection
@@ -61,28 +67,32 @@ export async function PublicHome({
         products={bestsellers}
         priceOf={storePrice}
         columns="lg:grid-cols-5"
+        tone="retail"
       />
 
-      <BrandLogoRow brands={brands} eyebrow="Enterprise brand alliances" title="Authorised merchandise partners" />
+      <BrandLogoRow brands={brands} eyebrow="Merchandise partners" title="Authorised brand alliances" tone="retail" />
 
       <ProductSection
-        title="Everyday merchandise under ₹999"
+        eyebrow="Everyday"
+        title="Merchandise under ₹999"
         actionHref="/catalogue?priceMax=998"
         action="View all"
         products={underRail}
         priceOf={storePrice}
         columns="lg:grid-cols-6"
+        tone="retail"
       />
 
       <ProductSection
         eyebrow="Seasonal"
         title="Diwali & bespoke festive hampers"
         actionHref="/collections/festival-gifting"
-        action="View festive"
+        action="View all"
         products={festive}
         priceOf={storePrice}
         dark
         columns="lg:grid-cols-4"
+        tone="retail"
       />
 
       <StorefrontCatalog
@@ -95,6 +105,7 @@ export async function PublicHome({
         intro="Filter the live catalogue by category, brand, price and occasion."
         priceOf={storePrice}
         limit={8}
+        tone="retail"
       />
 
       {preview ? (

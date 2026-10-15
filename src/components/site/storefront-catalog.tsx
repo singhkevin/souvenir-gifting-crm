@@ -29,6 +29,7 @@ export function StorefrontCatalog({
   captionFor,
   limit,
   brandMode = 'filter',
+  tone = 'default',
 }: {
   products: PublicProduct[]
   categories: Category[]
@@ -42,6 +43,7 @@ export function StorefrontCatalog({
   captionFor?: (product: PublicProduct) => string
   limit?: number
   brandMode?: 'filter' | 'page'
+  tone?: 'default' | 'retail'
 }) {
   const priced = products.map((product) => ({ ...product, price: priceOf(product) }))
   const bounds = priceBoundsOf(priced)
@@ -58,12 +60,14 @@ export function StorefrontCatalog({
   const brandHref = (brand: Brand) => (brandMode === 'page' ? brandPath(brand, brands) : href({ brand: brand.id }))
 
   return (
-    <section id="catalog" className="scroll-mt-36 border-t border-[#d0c5bb] bg-[#fff8f4]">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <section id="catalog" className={tone === 'retail' ? 'scroll-mt-28 border-t border-[#eadfd4] bg-[#fff8f4]' : 'scroll-mt-36 border-t border-[#d0c5bb] bg-[#fff8f4]'}>
+      <div className={tone === 'retail' ? 'mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8' : 'mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8'}>
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="font-serif text-[26px] leading-8 text-[#22180b] sm:text-[28px] sm:leading-9">{heading}</h2>
-            {intro ? <p className="mt-1 max-w-xl text-sm text-[#4d453e]">{intro}</p> : null}
+            <h2 className={tone === 'retail' ? 'font-serif text-[1.75rem] leading-tight tracking-tight text-[#22180b] sm:text-4xl' : 'font-serif text-[26px] leading-8 text-[#22180b] sm:text-[28px] sm:leading-9'}>{heading}</h2>
+            {intro ? (
+              <p className={tone === 'retail' ? 'mt-2 max-w-xl text-sm leading-6 text-[#4d453e]' : 'mt-1 max-w-xl text-sm text-[#4d453e]'}>{intro}</p>
+            ) : null}
           </div>
           <p className="text-sm text-[#715a3e]">
             <span className="font-semibold text-[#22180b]">{filtered.length}</span>{' '}
@@ -172,7 +176,7 @@ export function StorefrontCatalog({
             {visible.length === 0 ? (
               <p className="py-16 text-center text-sm text-[#4d453e]">No gifts match these filters.</p>
             ) : (
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
+              <div className={tone === 'retail' ? 'grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4' : 'grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4'}>
                 {visible.map((product) => (
                   <StitchProductCard
                     key={product.id}
@@ -180,6 +184,7 @@ export function StorefrontCatalog({
                     price={product.price}
                     showSample={showSample}
                     caption={captionFor?.(product)}
+                    tone={tone}
                   />
                 ))}
               </div>
