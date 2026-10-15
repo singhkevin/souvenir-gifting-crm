@@ -79,7 +79,13 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col justify-center bg-[#F4EFE6] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+    <div className={`flex min-h-[100dvh] flex-col justify-center px-4 py-10 sm:px-6 sm:py-12 lg:px-8 ${branded ? 'bg-[#F4EFE6]' : 'storefront bg-[#fff8f4]'}`}>
+      {branded ? null : (
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        />
+      )}
       {branded ? (
         <div className="mx-auto mb-6 w-full max-w-lg overflow-hidden rounded-3xl">
           <Image src="/site/hero-composition.webp" alt="Corporate gifts" width={1200} height={640} priority className="h-40 w-full object-cover sm:h-52" />
@@ -89,16 +95,16 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
         <Link href="/home" className="inline-block">
           <BrandName as="h1" className="font-serif text-3xl tracking-tight text-[#1C1917] sm:text-4xl" />
         </Link>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7A7267]">
-          Corporate Gifting CRM
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#735c00]">
+          {branded ? 'Company portal' : 'Sign in'}
         </p>
-        <p className="text-xs leading-relaxed text-[#7A7267]">
-          Corporate gifting, from enquiry to payment.
+        <p className="text-xs leading-relaxed text-[#4d453e]">
+          {branded ? 'Open your company gifting portal.' : 'Shop gifts, or open a business account.'}
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
-        <div className="bg-white py-8 px-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] rounded-2xl border border-[#E5DFD5] sm:px-10">
+        <div className="rounded-xl border border-[#eadfd4] bg-white px-6 py-8 shadow-[0_8px_24px_rgba(34,24,11,0.05)] sm:px-10">
           <p className="text-sm text-[#5A5248] mb-6 text-center">
             Sign in to <BrandName />
           </p>
@@ -166,7 +172,7 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] hover:text-[#FFFFFF] focus:outline-none shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="flex w-full items-center justify-center bg-[#22180b] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#382c1e] focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
             </button>

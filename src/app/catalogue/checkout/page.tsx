@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { SiteShell } from '@/components/site/site-shell'
+import { StoreCard, StorePageHeader } from '@/components/site/store-ui'
 import { CartCheckout } from '@/components/site/cart-checkout'
 import { loadQuoteCheckout } from '@/lib/business/quote-checkout'
 import { formatCurrency } from '@/lib/utils'
@@ -16,10 +17,14 @@ export default async function QuoteCheckoutPage({
 
   return (
     <SiteShell>
+      <StorePageHeader
+        eyebrow="Checkout"
+        title="Quoted checkout"
+        lede="A locked quotation. Stock and catalogue flags are not rechecked."
+      />
       <div className="mx-auto max-w-lg px-4 py-12">
-        <h1 className="font-serif text-3xl">Quoted checkout</h1>
         {!view.ok ? (
-          <p className="mt-4 text-sm text-[#5C6570]">
+          <p className="text-sm text-[#4d453e]">
             {view.reason === 'used'
               ? 'This checkout link has already been used.'
               : view.reason === 'expired'
@@ -27,16 +32,16 @@ export default async function QuoteCheckoutPage({
                 : 'This checkout link is not valid.'}
           </p>
         ) : (
-          <div className="mt-6 space-y-4">
-            <p className="text-sm text-[#5C6570]">
-              {view.quotationNumber} is locked at the quoted price. Stock and catalogue flags are not rechecked.
+          <StoreCard className="space-y-4 p-5">
+            <p className="text-sm text-[#4d453e]">
+              {view.quotationNumber} is locked at the quoted price.
             </p>
-            <ul className="divide-y divide-[#E8E4DE] border-y border-[#E8E4DE]">
+            <ul className="divide-y divide-[#eadfd4] border-y border-[#eadfd4]">
               {view.lines.map((line) => (
                 <li key={`${line.sku}-${line.name}`} className="flex justify-between gap-3 py-3 text-sm">
                   <span>
                     <span className="block">{line.name}</span>
-                    <span className="text-xs text-[#5C6570]">{line.sku} · {line.quantity} × {formatCurrency(line.unitPrice)}</span>
+                    <span className="text-xs text-[#4d453e]">{line.sku} · {line.quantity} × {formatCurrency(line.unitPrice)}</span>
                   </span>
                   <span>{formatCurrency(line.quantity * line.unitPrice)}</span>
                 </li>
@@ -49,8 +54,8 @@ export default async function QuoteCheckoutPage({
               quoteLock={view}
               onDone={() => undefined}
             />
-            <Link href="/catalogue" className="block text-center text-xs text-[#5C6570]">Back to the catalogue</Link>
-          </div>
+            <Link href="/catalogue" className="block text-center text-xs font-semibold text-[#735c00]">Back to the catalogue</Link>
+          </StoreCard>
         )}
       </div>
     </SiteShell>

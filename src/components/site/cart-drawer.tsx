@@ -89,13 +89,13 @@ export function CartDrawer({
             onClick={closeDrawer}
           />
           <div className="relative z-10 flex h-full w-full max-w-md flex-col bg-white shadow-[0_0_60px_rgba(0,0,0,0.25)]">
-            <div className="flex items-center justify-between gap-3 border-b border-[#E8E4DE] px-5 py-4">
-              <h2 className="font-serif text-xl text-[#1B2430]">Your cart</h2>
+            <div className="flex items-center justify-between gap-3 border-b border-[#eadfd4] px-5 py-4">
+              <h2 className="font-serif text-xl text-[#22180b]">Your cart</h2>
               <button
                 type="button"
                 aria-label="Close"
                 onClick={closeDrawer}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F6F4F1] text-[#5C6570] hover:bg-[#EFE9E0]"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f6efe6] text-[#4d453e] hover:bg-[#EFE9E0]"
               >
                 <X size={16} />
               </button>
@@ -106,10 +106,10 @@ export function CartDrawer({
                 placed ? null : (
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <ShoppingBag size={28} className="text-[#C4B8A8]" />
-                  <p className="mt-3 text-sm text-[#5C6570]">Your cart is empty.</p>
+                  <p className="mt-3 text-sm text-[#4d453e]">Your cart is empty.</p>
                   <p className="mt-1 text-xs text-[#8A929C]">
                     {kind === 'store'
-                      ? 'Add gifts that are ready to buy. Quote-only gifts use Request a quote.'
+                      ? 'Add a gift to get started.'
                       : 'Add gifts that are ready to buy. Quote-only gifts use Request quote.'}
                   </p>
                 </div>
@@ -128,16 +128,16 @@ export function CartDrawer({
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-[#1B2430]">{item.name}</p>
+                        <p className="truncate text-sm text-[#22180b]">{item.name}</p>
                         {item.price != null ? (
-                          <p className="mt-0.5 text-xs text-[#806A50]">{formatCurrency(item.price)}</p>
+                          <p className="mt-0.5 text-xs text-[#735c00]">{formatCurrency(item.price)}</p>
                         ) : null}
                         <div className="mt-2 flex items-center gap-2">
                           <button
                             type="button"
                             aria-label="Decrease quantity"
                             onClick={() => setItems(updateCartQuantity(item.id, item.quantity - 1, cartKey))}
-                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
+                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#4d453e] hover:bg-[#FAF7F2]"
                           >
                             <Minus size={12} />
                           </button>
@@ -146,7 +146,7 @@ export function CartDrawer({
                             type="button"
                             aria-label="Increase quantity"
                             onClick={() => setItems(updateCartQuantity(item.id, item.quantity + 1, cartKey))}
-                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
+                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#4d453e] hover:bg-[#FAF7F2]"
                           >
                             <Plus size={12} />
                           </button>
@@ -167,11 +167,11 @@ export function CartDrawer({
             </div>
 
             {items.length > 0 || placed ? (
-              <div className="space-y-3 border-t border-[#E8E4DE] px-5 py-4">
+              <div className="space-y-3 border-t border-[#eadfd4] px-5 py-4">
                 {items.length > 0 && subtotal > 0 ? (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#5C6570]">Estimated subtotal</span>
-                    <span className="font-semibold text-[#1B2430]">{formatCurrency(subtotal)}</span>
+                    <span className="text-[#4d453e]">Estimated subtotal</span>
+                    <span className="font-semibold text-[#22180b]">{formatCurrency(subtotal)}</span>
                   </div>
                 ) : null}
                 <CartCheckout

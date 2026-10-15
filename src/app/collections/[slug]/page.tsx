@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
+import { StorePageHeader } from '@/components/site/store-ui'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
 import { collectionBySlug, productsInCollection } from '@/lib/catalogue/collections'
 import { getPublicCatalogueProducts } from '@/lib/catalogue/products'
@@ -25,13 +26,7 @@ export default async function CollectionDetailPage({ params }: Props) {
 
   return (
     <SiteShell>
-      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <p className="store-eyebrow">{collection.kicker}</p>
-          <h1 className="store-section-title mt-2">{collection.title}</h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">{collection.description}</p>
-        </div>
-      </div>
+      <StorePageHeader eyebrow={collection.kicker} title={collection.title} lede={collection.description} />
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <CatalogueBrowser products={products} />
       </div>

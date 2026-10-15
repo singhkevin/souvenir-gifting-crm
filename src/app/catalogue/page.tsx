@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BrandName } from '@/components/brand/brand-name'
 import { SiteShell } from '@/components/site/site-shell'
+import { StorePageHeader } from '@/components/site/store-ui'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
 import { MobileCatalogueFilters } from '@/components/site/mobile-catalogue-filters'
 import { PriceRangeFilter } from '@/components/site/price-range-filter'
@@ -17,7 +18,7 @@ import { STORE_OCCASIONS } from '@/lib/catalogue/storefront'
 
 export const metadata: Metadata = {
   title: 'Catalogue',
-  description: `Browse the ${appName()} corporate gifting catalogue.`,
+  description: `Browse gifts from the ${appName()} catalogue.`,
 }
 
 export default async function CataloguePage({
@@ -119,27 +120,18 @@ export default async function CataloguePage({
   const filterLinkClass = (active: boolean) =>
     `flex items-center justify-between gap-3 border-l-2 py-2 pl-3 text-sm transition-colors ${
       active
-        ? 'border-[#806A50] font-medium text-[#806A50]'
-        : 'border-transparent text-[#5C6570] hover:border-[#C9C3BA] hover:text-[#1B2430]'
+        ? 'border-[#22180b] font-medium text-[#22180b]'
+        : 'border-transparent text-[#4d453e] hover:border-[#C9C3BA] hover:text-[#22180b]'
     }`
 
   return (
     <SiteShell>
-      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <p className="text-sm text-[#5C6570]">
-            <Link href="/home" className="hover:text-[#806A50]">
-              Home
-            </Link>
-            <span className="mx-2 text-[#C9C3BA]">/</span>
-            <span className="text-[#1B2430]">Catalogue</span>
-          </p>
-          <h1 className="store-section-title mt-3">Catalogue</h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">
-            Browse live <BrandName /> gifts — filter by category, brand and price, then request a quote.
-          </p>
-        </div>
-      </div>
+      <StorePageHeader
+        eyebrow="Shop"
+        title="Catalogue"
+        lede={<>Browse <BrandName /> gifts — filter by category, brand and price, then add what you like to your cart.</>}
+        crumbs={[{ href: '/home', label: 'Home' }]}
+      />
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[16.5rem_minmax(0,1fr)]">
@@ -147,8 +139,8 @@ export default async function CataloguePage({
           <aside className="hidden lg:sticky lg:top-28 lg:flex lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:self-start lg:overflow-hidden lg:pr-1">
             <div className="min-h-0 flex-1 space-y-8 overflow-y-auto pr-2 [scrollbar-width:thin]">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Category</p>
-                <nav className="mt-3 space-y-0.5 border-t border-[#E8E4DE] pt-2">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#22180b]">Category</p>
+                <nav className="mt-3 space-y-0.5 border-t border-[#eadfd4] pt-2">
                   <Link href={hrefFor({ category: '' })} className={filterLinkClass(!categoryFilter)}>
                     <span>All gifts</span>
                     <span className="text-xs text-[#8A929C]">{products.length}</span>
@@ -168,8 +160,8 @@ export default async function CataloguePage({
 
               {brands.length ? (
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Brand</p>
-                  <nav className="mt-3 space-y-0.5 border-t border-[#E8E4DE] pt-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#22180b]">Brand</p>
+                  <nav className="mt-3 space-y-0.5 border-t border-[#eadfd4] pt-2">
                     <Link href={hrefFor({ brand: '' })} className={filterLinkClass(!brandFilter)}>
                       <span>All brands</span>
                     </Link>
@@ -188,8 +180,8 @@ export default async function CataloguePage({
               ) : null}
 
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Price</p>
-                <div className="mt-3 border-t border-[#E8E4DE] pt-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#22180b]">Price</p>
+                <div className="mt-3 border-t border-[#eadfd4] pt-4">
                   <PriceRangeFilter
                     key={`${priceMinFilter}-${priceMaxFilter}`}
                     bounds={priceBounds}
@@ -207,12 +199,12 @@ export default async function CataloguePage({
               </div>
             </div>
 
-            <div className="shrink-0 border-t border-[#E8E4DE] bg-white pt-4">
+            <div className="shrink-0 border-t border-[#eadfd4] bg-white pt-4">
               <Link
                 href="/catalogue"
                 className={`inline-flex min-h-10 w-full items-center text-[12px] font-bold uppercase tracking-[0.14em] transition-colors ${
                   hasFilters
-                    ? 'text-[#806A50] hover:text-[#9C8567]'
+                    ? 'text-[#22180b] hover:text-[#9C8567]'
                     : 'pointer-events-none text-[#C4BDB3]'
                 }`}
                 aria-disabled={!hasFilters}
@@ -224,7 +216,7 @@ export default async function CataloguePage({
 
           {/* Results */}
           <div className="min-w-0">
-            <form className="flex flex-col gap-3 border border-[#E8E4DE] bg-white p-3 sm:flex-row sm:items-center sm:gap-6 sm:p-4">
+            <form className="flex flex-col gap-3 border border-[#eadfd4] bg-white p-3 sm:flex-row sm:items-center sm:gap-6 sm:p-4">
               {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
               {brandFilter ? <input type="hidden" name="brand" value={brandFilter} /> : null}
               {occasionFilter ? <input type="hidden" name="occasion" value={occasionFilter} /> : null}
@@ -240,16 +232,16 @@ export default async function CataloguePage({
                   name="q"
                   defaultValue={search}
                   placeholder="Search products"
-                  className="w-full bg-transparent py-1 text-base text-[#1B2430] outline-none placeholder:text-[#8A929C] sm:text-sm"
+                  className="w-full bg-transparent py-1 text-base text-[#22180b] outline-none placeholder:text-[#8A929C] sm:text-sm"
                 />
               </label>
-              <div className="hidden items-center gap-6 border-l border-[#E8E4DE] pl-6 lg:flex">
-                <label className="flex items-center gap-2 text-sm text-[#5C6570]">
+              <div className="hidden items-center gap-6 border-l border-[#eadfd4] pl-6 lg:flex">
+                <label className="flex items-center gap-2 text-sm text-[#4d453e]">
                   <span className="whitespace-nowrap">Sort by</span>
                   <select
                     name="sort"
                     defaultValue={sort}
-                    className="bg-transparent py-1 text-sm text-[#1B2430] outline-none"
+                    className="bg-transparent py-1 text-sm text-[#22180b] outline-none"
                   >
                     <option value="name">A–Z</option>
                     <option value="newest">Newest</option>
@@ -259,7 +251,7 @@ export default async function CataloguePage({
                 </label>
                 <button
                   type="submit"
-                  className="bg-[#806A50] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white"
+                  className="bg-[#22180b] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white"
                 >
                   Apply
                 </button>
@@ -267,21 +259,21 @@ export default async function CataloguePage({
               {sort && sort !== 'name' ? <input type="hidden" name="sort" value={sort} className="lg:hidden" /> : null}
               <button
                 type="submit"
-                className="bg-[#806A50] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white lg:hidden"
+                className="bg-[#22180b] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white lg:hidden"
               >
                 Apply
               </button>
             </form>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <Link href={hrefFor({ occasion: '' })} className={`rounded-full border px-3 py-1 text-xs ${occasionFilter ? 'border-[#E8E4DE]' : 'border-[#241C12] bg-[#241C12] text-white'}`}>
+              <Link href={hrefFor({ occasion: '' })} className={`rounded-full border px-3 py-1 text-xs ${occasionFilter ? 'border-[#eadfd4]' : 'border-[#241C12] bg-[#241C12] text-white'}`}>
                 Any occasion
               </Link>
               {STORE_OCCASIONS.map((item) => (
                 <Link
                   key={item.id}
                   href={hrefFor({ occasion: item.id })}
-                  className={`rounded-full border px-3 py-1 text-xs ${occasionFilter === item.id ? 'border-[#241C12] bg-[#241C12] text-white' : 'border-[#E8E4DE]'}`}
+                  className={`rounded-full border px-3 py-1 text-xs ${occasionFilter === item.id ? 'border-[#241C12] bg-[#241C12] text-white' : 'border-[#eadfd4]'}`}
                 >
                   {item.label}
                 </Link>
@@ -289,20 +281,20 @@ export default async function CataloguePage({
             </div>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-[#806A50]">
+              <p className="text-sm text-[#22180b]">
                 <span className="font-semibold">{filtered.length}</span>
-                <span className="text-[#5C6570]"> {filtered.length === 1 ? 'product' : 'products'}</span>
+                <span className="text-[#4d453e]"> {filtered.length === 1 ? 'product' : 'products'}</span>
                 {activeCategoryName ? (
-                  <span className="text-[#5C6570]"> in {activeCategoryName}</span>
+                  <span className="text-[#4d453e]"> in {activeCategoryName}</span>
                 ) : null}
-                {activeBrandName ? <span className="text-[#5C6570]"> · {activeBrandName}</span> : null}
+                {activeBrandName ? <span className="text-[#4d453e]"> · {activeBrandName}</span> : null}
                 {priceIsFiltered ? (
-                  <span className="text-[#5C6570]">
+                  <span className="text-[#4d453e]">
                     {' '}
                     · {formatCurrency(priceMinFilter)} – {formatCurrency(priceMaxFilter)}
                   </span>
                 ) : null}
-                {search ? <span className="text-[#5C6570]"> · “{search}”</span> : null}
+                {search ? <span className="text-[#4d453e]"> · “{search}”</span> : null}
               </p>
             </div>
 

@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { ShopModeGate } from '@/components/site/shop-mode-gate'
 import { appName, marketingHostLabel, marketingSiteUrl } from '@/lib/brand'
 import { BUDGET_BANDS } from '@/lib/catalogue/collections'
 import { whatsAppHref } from '@/lib/contact/public-phone'
@@ -24,7 +25,9 @@ export function SiteFooter({
             <Image src="/logo.png" alt={appName()} width={196} height={85} className="h-16 w-auto" />
           </div>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#d7c3af]">
-            Your destination for curated corporate gifts — catalogue, quotation and fulfilment in one place.
+            <ShopModeGate mode="business" fallback={<>Curated gifts for every occasion, ready to order.</>}>
+              Curated gifts for teams and clients — catalogue, quotation and fulfilment in one place.
+            </ShopModeGate>
           </p>
           {phone ? (
             <p className="mt-4 text-sm text-[#d7c3af]">
@@ -54,9 +57,11 @@ export function SiteFooter({
             <Link href="/collections#occasions" className="hover:text-white">
               Shop by Occasion
             </Link>
-            <Link href="/request-quote" className="hover:text-white">
-              Request a Quote
-            </Link>
+            <ShopModeGate mode="business">
+              <Link href="/request-quote" className="hover:text-white">
+                Request a Quote
+              </Link>
+            </ShopModeGate>
           </div>
         </div>
 
@@ -94,7 +99,9 @@ export function SiteFooter({
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-[#d7c3af] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© {new Date().getFullYear()} {appName()}. All rights reserved.</p>
           <p className="flex flex-wrap gap-x-3">
-            <span>Corporate gifting for teams, clients and brands.</span>
+            <ShopModeGate mode="business" fallback={<span>Gifts for every occasion.</span>}>
+              <span>Gifting for teams, clients and brands.</span>
+            </ShopModeGate>
             {marketingUrl && marketingHost ? (
               <a href={marketingUrl} className="hover:text-white">
                 {marketingHost}

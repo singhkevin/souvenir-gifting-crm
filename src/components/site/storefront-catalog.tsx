@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { StoreSectionHeading } from '@/components/site/store-ui'
 import { StitchProductCard } from '@/components/site/stitch-product-card'
 import { BUDGET_BANDS } from '@/lib/catalogue/collections'
 import {
@@ -60,14 +61,12 @@ export function StorefrontCatalog({
   const brandHref = (brand: Brand) => (brandMode === 'page' ? brandPath(brand, brands) : href({ brand: brand.id }))
 
   return (
-    <section id="catalog" className={tone === 'retail' ? 'scroll-mt-28 border-t border-[#eadfd4] bg-[#fff8f4]' : 'scroll-mt-36 border-t border-[#d0c5bb] bg-[#fff8f4]'}>
-      <div className={tone === 'retail' ? 'mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8' : 'mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8'}>
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <section id="catalog" className="scroll-mt-28 border-t border-[#eadfd4] bg-[#fff8f4]">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <StoreSectionHeading title={heading} />
+        <div className="-mt-4 mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className={tone === 'retail' ? 'font-serif text-[1.75rem] leading-tight tracking-tight text-[#22180b] sm:text-4xl' : 'font-serif text-[26px] leading-8 text-[#22180b] sm:text-[28px] sm:leading-9'}>{heading}</h2>
-            {intro ? (
-              <p className={tone === 'retail' ? 'mt-2 max-w-xl text-sm leading-6 text-[#4d453e]' : 'mt-1 max-w-xl text-sm text-[#4d453e]'}>{intro}</p>
-            ) : null}
+            {intro ? <p className="max-w-xl text-sm leading-6 text-[#4d453e]">{intro}</p> : null}
           </div>
           <p className="text-sm text-[#715a3e]">
             <span className="font-semibold text-[#22180b]">{filtered.length}</span>{' '}
@@ -90,7 +89,7 @@ export function StorefrontCatalog({
             name="q"
             defaultValue={filters.q}
             placeholder="Search gifts, kits, brands"
-            className="min-w-0 flex-1 rounded border border-[#d0c5bb] bg-white px-3 py-2 text-sm text-[#22180b] outline-none focus:border-[#715a3e]"
+            className="min-w-0 flex-1 rounded border border-[#eadfd4] bg-white px-3 py-2 text-sm text-[#22180b] outline-none focus:border-[#715a3e]"
           />
           <button type="submit" className="rounded bg-[#382c1e] px-4 py-2 text-sm font-semibold text-white">
             Search
@@ -101,7 +100,7 @@ export function StorefrontCatalog({
           <aside className="space-y-6">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#22180b]">Category</p>
-              <nav className="mt-2 border-t border-[#d0c5bb] pt-2">
+              <nav className="mt-2 border-t border-[#eadfd4] pt-2">
                 <Link href={href({ category: '' })} className={linkClass(!filters.category)}>
                   All gifts
                 </Link>
@@ -116,7 +115,7 @@ export function StorefrontCatalog({
             {brands.length ? (
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#22180b]">Brand</p>
-                <nav className="mt-2 border-t border-[#d0c5bb] pt-2">
+                <nav className="mt-2 border-t border-[#eadfd4] pt-2">
                   <Link href={brandMode === 'page' ? '/catalogue' : href({ brand: '' })} className={linkClass(!filters.brand)}>
                     All brands
                   </Link>
@@ -131,7 +130,7 @@ export function StorefrontCatalog({
 
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#22180b]">Price</p>
-              <nav className="mt-2 border-t border-[#d0c5bb] pt-2">
+              <nav className="mt-2 border-t border-[#eadfd4] pt-2">
                 <Link href={href({ priceMin: null, priceMax: null })} className={linkClass(!window.active)}>
                   Any price
                 </Link>
@@ -153,7 +152,7 @@ export function StorefrontCatalog({
 
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#22180b]">Occasion</p>
-              <nav className="mt-2 border-t border-[#d0c5bb] pt-2">
+              <nav className="mt-2 border-t border-[#eadfd4] pt-2">
                 <Link href={href({ occasion: '' })} className={linkClass(!filters.occasion)}>
                   Any occasion
                 </Link>

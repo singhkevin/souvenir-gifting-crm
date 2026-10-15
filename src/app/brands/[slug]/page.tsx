@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
+import { StorePageHeader } from '@/components/site/store-ui'
 import { StorefrontCatalog } from '@/components/site/storefront-catalog'
 import { readCatalogueFilters } from '@/lib/catalogue/catalogue-query'
 import { getPublicBrands, getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
@@ -38,19 +39,11 @@ export default async function BrandPage({ params, searchParams }: Props) {
 
   return (
     <SiteShell>
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 pt-8 sm:px-6 lg:px-8">
-        {brand.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={brand.logo_url} alt="" className="h-12 w-auto object-contain" />
-        ) : null}
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#715a3e]">Brand</p>
-          <h1 className="font-serif text-3xl text-[#22180b]">{brand.name}</h1>
-          <p className="mt-1 text-sm text-[#4d453e]">
-            {owned.length} {owned.length === 1 ? 'product' : 'products'} in this brand.
-          </p>
-        </div>
-      </div>
+      <StorePageHeader
+        eyebrow="Brand"
+        title={brand.name}
+        lede={`${owned.length} ${owned.length === 1 ? 'gift' : 'gifts'} in this brand.`}
+      />
       <StorefrontCatalog
         products={products}
         categories={categories}
@@ -58,9 +51,10 @@ export default async function BrandPage({ params, searchParams }: Props) {
         filters={filters}
         basePath={`/brands/${brandPublicSlug(brand, brands)}`}
         heading={`${brand.name} catalogue`}
-        intro="Every product in this brand. Filter by category, price and occasion."
+        intro="Every gift in this brand. Filter by category, price and occasion."
         priceOf={(product) => product.price}
         brandMode="page"
+        tone="retail"
       />
     </SiteShell>
   )

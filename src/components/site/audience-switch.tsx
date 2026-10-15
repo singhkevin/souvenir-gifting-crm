@@ -33,7 +33,7 @@ export function AudienceSwitch({
   return (
     <div className="inline-flex items-center rounded-sm border border-[#d0c5bb] bg-[#fff1e5] p-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]">
       {item('/home', 'Retail', !corporate, 'retail')}
-      {item(businessHref, 'Corporate/Business', corporate, 'corporate')}
+      {item(businessHref, 'Business', corporate, 'corporate')}
     </div>
   )
 }
