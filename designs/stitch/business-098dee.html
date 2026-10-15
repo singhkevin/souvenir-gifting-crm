@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Souvenir Gifting Solutions - Atelier &amp; Corporate Merchandising</title>
+<!-- Google Fonts & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config verbatim -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-low": "#fff1e5",
+            "secondary-container": "#fdddb9",
+            "secondary-fixed": "#fdddb9",
+            "surface-bright": "#fff8f4",
+            "on-primary-container": "#a49380",
+            "primary-fixed": "#f4dfca",
+            "tertiary-fixed-dim": "#e9c349",
+            "on-tertiary": "#ffffff",
+            "on-primary": "#ffffff",
+            "on-error": "#ffffff",
+            "background": "#fff8f4",
+            "surface-dim": "#e7d7c7",
+            "on-tertiary-container": "#4f3e00",
+            "on-surface": "#221a10",
+            "error-container": "#ffdad6",
+            "on-error-container": "#93000a",
+            "surface-container-lowest": "#ffffff",
+            "outline-variant": "#d0c5bb",
+            "on-primary-fixed": "#241a0d",
+            "surface-container": "#fcebdb",
+            "on-secondary-fixed": "#281803",
+            "secondary-fixed-dim": "#e0c29f",
+            "on-secondary": "#ffffff",
+            "inverse-primary": "#d7c3af",
+            "outline": "#7f756d",
+            "on-surface-variant": "#4d453e",
+            "tertiary-fixed": "#ffe088",
+            "on-background": "#221a10",
+            "surface-tint": "#6b5c4b",
+            "on-tertiary-fixed": "#241a00",
+            "primary-container": "#382c1e",
+            "surface": "#fff8f4",
+            "on-secondary-fixed-variant": "#584329",
+            "on-secondary-container": "#786044",
+            "error": "#ba1a1a",
+            "surface-variant": "#f0e0d0",
+            "primary": "#22180b",
+            "on-primary-fixed-variant": "#524435",
+            "on-tertiary-fixed-variant": "#574500",
+            "primary-fixed-dim": "#d7c3af",
+            "inverse-surface": "#382f24",
+            "tertiary": "#735c00",
+            "secondary": "#715a3e",
+            "inverse-on-surface": "#ffeedd",
+            "surface-container-highest": "#f0e0d0",
+            "tertiary-container": "#cca730",
+            "surface-container-high": "#f6e6d5"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-md": "0.875rem",
+            "space-2xl": "3rem",
+            "margin-desktop": "3rem",
+            "space-lg": "1.25rem",
+            "gutter-desktop": "1.25rem",
+            "space-sm": "0.5rem",
+            "margin-tablet": "2rem",
+            "gutter": "1rem",
+            "margin": "1rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "price-lg": ["Plus Jakarta Sans"],
+            "label-xs": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-xl": ["Playfair Display"],
+            "display-lg": ["Playfair Display"],
+            "price-md": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Playfair Display"],
+            "headline-lg": ["Playfair Display"],
+            "body-md": ["Plus Jakarta Sans"],
+            "title-sm": ["Plus Jakarta Sans"],
+            "title-md": ["Plus Jakarta Sans"],
+            "headline-sm": ["Playfair Display"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "display-lg-mobile": ["Playfair Display"],
+            "headline-md": ["Playfair Display"]
+          },
+          "fontSize": {
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.03em", "fontWeight": "600"}],
+            "price-lg": ["20px", {"lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "label-xs": ["10px", {"lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "700"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "headline-xl": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.005em", "fontWeight": "600"}],
+            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "price-md": ["15px", {"lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+            "headline-xl-mobile": ["26px", {"lineHeight": "34px", "letterSpacing": "0em", "fontWeight": "600"}],
+            "headline-lg": ["28px", {"lineHeight": "36px", "fontWeight": "500"}],
+            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "title-sm": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+            "title-md": ["16px", {"lineHeight": "22px", "fontWeight": "600"}],
+            "headline-sm": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+            "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+            "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "headline-md": ["22px", {"lineHeight": "30px", "fontWeight": "500"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      vertical-align: middle;
+      display: inline-block;
+      line-height: 1;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      height: 4px;
+      width: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #d0c5bb;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased font-body-md selection:bg-secondary-container selection:text-on-secondary-fixed">
+<!-- Curated Festive Ribbon Banner (Top Announcement Bar) -->
+<div class="bg-primary-container text-surface-container-lowest border-b border-secondary/40 text-label-md py-1.5 px-4 tracking-wide">
+<div class="max-w-[1440px] mx-auto flex items-center justify-between text-body-sm font-label-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed text-[16px]" style="font-variation-settings: 'FILL' 1;">arrow_back_ios_new</span>
+<span class="text-tertiary-fixed font-title-sm">Diwali Corporate Bookings Open</span>
+<span class="text-on-primary-container">|</span>
+<span class="hidden sm:inline text-surface-bright">Express Custom Co-Branding Across India</span>
+<span class="text-on-primary-container hidden sm:inline">|</span>
+<span class="text-surface-dim">100% GST ITC Compliant Invoicing</span>
+</div>
+<div class="flex items-center gap-4 text-surface-dim">
+<span class="flex items-center gap-1 hover:text-tertiary-fixed transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[15px]">verified</span>
+          Verified HSN &amp; GST Catalog
+        </span>
+<span class="hidden md:inline">|</span>
+<span class="flex items-center gap-1 hover:text-tertiary-fixed transition-colors cursor-pointer hidden md:flex">
+<span class="material-symbols-outlined text-[15px]">local_shipping</span>
+          19,000+ PIN Codes Serviceable
+        </span>
+</div>
+</div>
+</div>
+<!-- Main Top Navigation (Shared Component Execution: TopNavBar) -->
+<header class="bg-surface border-b border-outline-variant shadow-sm sticky top-0 z-40">
+<div class="w-full max-w-[1440px] mx-auto px-6 py-3 flex items-center justify-between gap-4">
+<!-- Brand & Mode Toggle -->
+<div class="flex items-center gap-6 shrink-0">
+<div class="flex flex-col">
+<a class="font-headline-md text-headline-md tracking-tight font-semibold text-primary" href="#">
+            Souvenir Gifting Solutions
+          </a>
+<span class="font-label-xs text-label-xs tracking-wider text-secondary uppercase font-semibold">Atelier &amp; Corporate Merchandising</span>
+</div>
+<!-- Corporate vs Retail Segment Switcher -->
+<div class="hidden lg:flex items-center bg-surface-container p-0.5 rounded-lg border border-outline-variant/60">
+<button class="px-3 py-1 text-label-md font-label-md rounded bg-primary text-surface-container-lowest shadow-sm">
+            Corporate (Bulk)
+          </button>
+<button class="px-3 py-1 text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors">
+            Retail / Bespoke
+          </button>
+</div>
+</div>
+<!-- High-Utility Search Bar with Category Dropdown -->
+<div class="flex-1 max-w-xl mx-2 hidden md:flex items-center">
+<div class="relative w-full flex items-center border border-outline-variant bg-surface-container-lowest rounded-lg focus-within:border-secondary focus-within:ring-1 focus-within:ring-secondary overflow-hidden">
+<div class="border-r border-outline-variant bg-surface-container-low px-2.5 py-2 shrink-0">
+<select class="bg-transparent text-label-md font-label-md text-on-surface border-none focus:ring-0 py-0 pl-1 pr-6 cursor-pointer outline-none">
+<option>All Procurement Categories</option>
+<option>Welcome Kits</option>
+<option>Drinkware &amp; Flasks</option>
+<option>Festive Hampers</option>
+<option>Apparel &amp; Polos</option>
+<option>Executive Tech</option>
+</select>
+</div>
+<span class="material-symbols-outlined text-outline ml-2 text-[20px]">search</span>
+<input class="w-full border-none bg-transparent py-2 px-2 text-body-md text-on-surface placeholder-outline focus:ring-0 text-sm focus:outline-none" placeholder="Search 2,400+ curated bulk items, HSN code, or gift hamper..." type="text"/>
+<button class="bg-primary hover:bg-primary-container text-surface-container-lowest px-4 py-2 font-label-md text-label-md shrink-0 flex items-center gap-1 transition-colors">
+            Find
+          </button>
+</div>
+</div>
+<!-- Quick Trailing Actions -->
+<div class="flex items-center gap-3 shrink-0">
+<!-- Bulk Sample Action -->
+<a class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 border border-secondary text-primary font-title-sm text-title-sm rounded-lg hover:bg-surface-container transition-colors" href="#samples">
+<span class="material-symbols-outlined text-[18px] text-tertiary">inventory_2</span>
+<span>Sample Kit</span>
+</a>
+<!-- Corporate Bulk RFQ CTA -->
+<button class="bg-primary-container text-surface-container-lowest px-4 py-2 rounded-lg font-title-sm text-title-sm flex items-center gap-1.5 shadow-sm hover:bg-primary active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px] text-tertiary-fixed">request_quote</span>
+<span>Corporate Bulk RFQ</span>
+</button>
+<!-- Icon Trailing Actions from JSON -->
+<button class="p-2 text-on-surface-variant hover:text-tertiary transition-colors relative" title="Shortlist &amp; RFQ Basket">
+<span class="material-symbols-outlined text-[24px]">shopping_bag</span>
+<span class="absolute top-1 right-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">3</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-tertiary transition-colors" title="Live Concierge Support">
+<span class="material-symbols-outlined text-[24px]">headset_mic</span>
+</button>
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-primary border-l border-outline-variant pl-3 font-title-sm text-title-sm">
+<span class="material-symbols-outlined text-[22px]">account_circle</span>
+<span class="hidden sm:inline">Sign In</span>
+</button>
+</div>
+</div>
+<!-- Sub-navigation links from Shared Components JSON -->
+<nav class="border-t border-outline-variant/50 bg-surface-container-lowest hidden md:block">
+<div class="max-w-[1440px] mx-auto px-6 py-2 flex items-center justify-between text-body-md">
+<div class="flex items-center gap-8">
+<a class="text-primary font-title-sm border-b-2 border-tertiary pb-1 flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[16px] text-tertiary">card_giftcard</span>
+            Welcome Kits
+          </a>
+<a class="text-on-surface-variant font-body-md pb-1 hover:text-tertiary transition-colors" href="#">Drinkware</a>
+<a class="text-on-surface-variant font-body-md pb-1 hover:text-tertiary transition-colors" href="#">Diaries</a>
+<a class="text-on-surface-variant font-body-md pb-1 hover:text-tertiary transition-colors" href="#">Apparel</a>
+<a class="text-tertiary font-title-sm pb-1 flex items-center gap-1 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">stars</span>
+            Festive Specials
+          </a>
+</div>
+<div class="flex items-center gap-5 text-label-md font-label-md text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">palette</span>
+            Free Co-Branded Digital Proofs
+          </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">schedule</span>
+            Ready Dispatch: 48-72h
+          </span>
+</div>
+</div>
+</nav>
+</header>
+<main class="max-w-[1440px] mx-auto px-6 py-4 space-y-8">
+<!-- Category Visual Icon Strip (Dense FNP Ergonomics) -->
+<section class="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+<a class="group flex flex-col items-center p-3 rounded-lg bg-surface-container-low hover:bg-secondary-container transition-all text-center border border-outline-variant/40" href="#catalog">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary group-hover:scale-110 transition-transform mb-2 shadow-xs">
+<span class="material-symbols-outlined text-[26px] text-primary">work</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">Welcome Kits</span>
+<span class="font-label-xs text-label-xs text-secondary mt-0.5">380+ Options</span>
+</a>
+<a class="group flex flex-col items-center p-3 rounded-lg bg-surface-container-low hover:bg-secondary-container transition-all text-center border border-outline-variant/40" href="#catalog">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary group-hover:scale-110 transition-transform mb-2 shadow-xs">
+<span class="material-symbols-outlined text-[26px] text-primary">coffee</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">Drinkware &amp; Mugs</span>
+<span class="font-label-xs text-label-xs text-secondary mt-0.5">Ceramic &amp; Insulated</span>
+</a>
+<a class="group flex flex-col items-center p-3 rounded-lg bg-surface-container-low hover:bg-secondary-container transition-all text-center border border-outline-variant/40" href="#catalog">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary group-hover:scale-110 transition-transform mb-2 shadow-xs">
+<span class="material-symbols-outlined text-[26px] text-primary">water_drop</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">Bottles</span>
+<span class="font-label-xs text-label-xs text-secondary mt-0.5">Copper &amp; Steel Flasks</span>
+</a>
+<a class="group flex flex-col items-center p-3 rounded-lg bg-surface-container-low hover:bg-secondary-container transition-all text-center border border-outline-variant/40" href="#catalog">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary group-hover:scale-110 transition-transform mb-2 shadow-xs">
+<span class="material-symbols-outlined text-[26px] text-primary">menu_book</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">Diaries &amp; Notebooks</span>
+<span class="font-label-xs text-label-xs text-secondary mt-0.5">Vegan Leather &amp; Kraft</span>
+</a>
+<a class="group flex flex-col items-center p-3 rounded-lg bg-surface-container-low hover:bg-secondary-container transition-all text-center border border-outline-variant/40" href="#catalog">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary group-hover:scale-110 transition-transform mb-2 shadow-xs">
+<span class="material-symbols-outlined text-[26px] text-primary">apparel</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">Apparel</span>
+<span class="font-label-xs text-label-xs text-secondary mt-0.5">Polo &amp; Fleeces</span>
+</a>
+<a class="group flex flex-col items-center p-3 rounded-lg bg-surface-container-low hover:bg-secondary-container transition-all text-center border border-outline-variant/40" href="#catalog">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary group-hover:scale-110 transition-transform mb-2 shadow-xs">
+<span class="material-symbols-outlined text-[26px] text-primary">watch</span>
+</div>
+<span class="font-title-sm text-title-sm text-primary">Watches</span>
+<span class="font-label-xs text-label-xs text-secondary mt-0.5">Titan, Fossil &amp; Smart</span>
+</a>
+</div>
+</section>
+<!-- Curated Occasions Bento Grid -->
+<section>
+<div class="flex items-end justify-between mb-4">
+<div>
+<span class="text-tertiary font-label-md text-label-md uppercase tracking-wider block">Enterprise Curations</span>
+<h2 class="font-headline-lg text-headline-lg text-primary">Occasions &amp; Strategic Gifting Suites</h2>
+</div>
+<a class="font-title-sm text-title-sm text-tertiary hover:underline flex items-center gap-1" href="#catalog">
+          Explore All Curations <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<!-- Festive & Diwali Specials (Double Span Bento Lead) -->
+<div class="col-span-1 md:col-span-2 lg:col-span-2 bg-gradient-to-br from-primary-container via-primary to-inverse-surface text-surface-container-lowest p-6 rounded-xl relative overflow-hidden flex flex-col justify-between shadow-md border border-tertiary-container/40">
+<div class="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-tertiary-container/10 blur-2xl pointer-events-none"></div>
+<div>
+<div class="inline-flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed text-label-xs font-label-xs px-2.5 py-1 rounded mb-3 font-bold uppercase tracking-wider">
+<span class="material-symbols-outlined text-[14px]">auto_awesome</span> Festive Season 2024
+            </div>
+<h3 class="font-headline-md text-headline-md font-semibold text-surface-container-lowest leading-snug">Festive &amp; Diwali Specials</h3>
+<p class="font-body-sm text-body-sm text-surface-dim mt-2 max-w-xs">
+              Handcrafted brass lamps, silver medallions, artisan Mithai, and luxury nut chests customized with foil logos.
+            </p>
+</div>
+<div class="mt-6 flex items-center justify-between pt-4 border-t border-outline-variant/30">
+<span class="font-label-xs text-label-xs text-tertiary-fixed">Tier MOQ: 25 Kits</span>
+<button class="bg-tertiary-fixed hover:bg-tertiary-container text-on-tertiary-fixed px-3 py-1.5 rounded font-title-sm text-title-sm flex items-center gap-1 transition-colors">
+              Request Hamper PDF <span class="material-symbols-outlined text-[16px]">download</span>
+</button>
+</div>
+</div>
+<!-- Welcome & Joining Kits -->
+<div class="col-span-1 md:col-span-1 lg:col-span-2 bg-surface-container-lowest border border-outline-variant p-5 rounded-xl hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="bg-surface-container text-primary font-label-xs text-label-xs px-2 py-0.5 rounded font-semibold uppercase">HR Favorite</span>
+<span class="material-symbols-outlined text-secondary">badge</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-primary">Welcome &amp; Joining Kits</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1.5">
+              Turn Day 1 into brand loyalty. Pre-configured backpacks, vacuum flasks, notebooks, and metallic pens.
+            </p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant flex items-center justify-between text-body-sm">
+<span class="font-price-md text-price-md text-primary">From ₹849 <span class="text-xs font-normal text-outline">/ kit</span></span>
+<span class="text-tertiary font-title-sm flex items-center">View 42 Kits <span class="material-symbols-outlined text-[16px]">chevron_right</span></span>
+</div>
+</div>
+<!-- Employee Onboarding & Swag -->
+<div class="col-span-1 bg-surface-container-lowest border border-outline-variant p-5 rounded-xl hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="bg-secondary-container text-on-secondary-fixed font-label-xs text-label-xs px-2 py-0.5 rounded font-semibold uppercase">Turnkey</span>
+<span class="material-symbols-outlined text-secondary">groups</span>
+</div>
+<h3 class="font-title-md text-title-md text-primary">Employee Onboarding</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Branded tech peripherals and desk organizers.</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant">
+<span class="font-label-xs text-label-xs text-secondary font-semibold">MOQ 50 Units • 4-Day Ship</span>
+</div>
+</div>
+<!-- Client & CXO Gifting -->
+<div class="col-span-1 bg-surface-container-high border border-outline-variant p-5 rounded-xl hover:shadow-md transition-shadow flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="bg-primary text-surface-container-lowest font-label-xs text-label-xs px-2 py-0.5 rounded font-semibold uppercase">Prestige</span>
+<span class="material-symbols-outlined text-tertiary">diamond</span>
+</div>
+<h3 class="font-title-md text-title-md text-primary">Client &amp; CXO Suites</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Italian leather folios, Montblanc/Parker, audio gear.</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant">
+<span class="font-label-xs text-label-xs text-primary font-semibold">Bespoke Engraving Included</span>
+</div>
+</div>
+<!-- Conferences & Summits -->
+<div class="col-span-1 md:col-span-1 lg:col-span-3 bg-surface-container-lowest border border-outline-variant p-5 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-surface-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[24px]">co_present</span>
+</div>
+<div>
+<h4 class="font-title-md text-title-md text-primary">Conferences &amp; Summits</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Lanyards, recycled cotton tote bags, conference kits, and attendee badges in under 72h.</p>
+</div>
+</div>
+<button class="shrink-0 ml-4 px-3 py-1.5 border border-outline-variant hover:border-primary rounded text-title-sm font-title-sm text-primary">Explore</button>
+</div>
+<!-- Work Anniversary & Milestones -->
+<div class="col-span-1 md:col-span-2 lg:col-span-3 bg-surface-container-lowest border border-outline-variant p-5 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded bg-surface-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[24px]">military_tech</span>
+</div>
+<div>
+<h4 class="font-title-md text-title-md text-primary">Work Anniversary &amp; Milestones</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Customized crystal plaques, branded gold coins, and luxury lifestyle vouchers.</p>
+</div>
+</div>
+<button class="shrink-0 ml-4 px-3 py-1.5 border border-outline-variant hover:border-primary rounded text-title-sm font-title-sm text-primary">Explore</button>
+</div>
+</div>
+</section>
+<!-- Authorized Brand Partners Ribbon -->
+<section class="bg-surface-container-lowest py-3 px-6 rounded-xl border border-outline-variant shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-2 shrink-0">
+<span class="material-symbols-outlined text-secondary text-[20px]">verified_user</span>
+<span class="font-title-sm text-title-sm text-primary">Authorized Corporate Co-Brand Partners:</span>
+</div>
+<div class="flex flex-wrap items-center justify-center md:justify-end gap-6 text-on-surface-variant font-label-md text-label-md tracking-wider uppercase font-semibold">
+<span class="hover:text-primary transition-colors cursor-pointer">RARE RABBIT</span>
+<span class="text-outline-variant">•</span>
+<span class="hover:text-primary transition-colors cursor-pointer">PETER ENGLAND</span>
+<span class="text-outline-variant">•</span>
+<span class="hover:text-primary transition-colors cursor-pointer">INDIAN TERRAIN</span>
+<span class="text-outline-variant">•</span>
+<span class="hover:text-primary transition-colors cursor-pointer">TITAN</span>
+<span class="text-outline-variant">•</span>
+<span class="hover:text-primary transition-colors cursor-pointer">PARKER</span>
+<span class="text-outline-variant">•</span>
+<span class="hover:text-primary transition-colors cursor-pointer">BOMBAY SHAVING CO.</span>
+<span class="text-outline-variant">•</span>
+<span class="hover:text-primary transition-colors cursor-pointer">boAt LIFESTYLE</span>
+</div>
+</section>
+<!-- High Velocity Bestsellers (Instant Procurement Grid) -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="p-1.5 bg-secondary-container rounded">
+<span class="material-symbols-outlined text-primary text-[20px]">trending_up</span>
+</div>
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">High Velocity Corporate Bestsellers</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Immediate inventory dispatch ready with high-precision screen print &amp; laser co-branding.</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded border border-outline-variant hover:bg-surface-container text-on-surface transition-colors" title="Previous items">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="p-2 rounded border border-outline-variant hover:bg-surface-container text-on-surface transition-colors" title="Next items">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- 4 Product Row Desktop Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Card 1: Welcome Kit -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3.5 flex flex-col justify-between hover:border-secondary transition-all group">
+<div>
+<div class="relative w-full aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A curated executive corporate welcome kit arranged neatly on a warm cream surface. Includes a matte black vacuum flask with subtle laser engraving, a bonded leather notebook, a brass pen, and a sleek wireless mouse. High-end editorial studio lighting, soft warm shadows, and luxury Indian corporate gifting aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4rdf10-YiK_lUWA5ENqphU9oNSndV8zsk1MrSYjkiKDGPURH9TSmXAh3e1hpqFleMAJ2jrdMUj7ZsQce_DYj_bQidnVYqwXc2RCwI7A-_ajfZ6DPlNBvUyBE4kBANaW8ExF5shsQBpQmvqisP7rdvdplz6BQhGKuv4kivv-IuKjyK043I8EM0Yv1DvY5mLk5EZmRVSti2OEcp6_MpKlrQDtsaga53yuvjiy3BP5bRQPtnLwiqhca0WLv85BKselVPF76ame-7vF3g"/>
+<span class="absolute top-2 left-2 bg-surface-container-lowest/95 text-primary text-label-xs font-label-xs px-2 py-0.5 rounded shadow-xs">Sample Ready</span>
+<button class="absolute top-2 right-2 p-1.5 bg-surface-container-lowest/80 rounded-full hover:bg-surface-container-lowest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">bookmark_border</span>
+</button>
+</div>
+<div class="flex items-center gap-1.5 mb-1">
+<span class="text-tertiary font-label-xs text-label-xs font-bold uppercase tracking-wider">HSN 4820</span>
+<span class="text-outline-variant">•</span>
+<span class="text-outline text-label-xs font-label-xs">Lead Time: 3 Days</span>
+</div>
+<h3 class="font-title-sm text-title-sm text-primary line-clamp-1 group-hover:text-tertiary transition-colors">Vanguard Executive Welcome Set</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">Matte black flask, vegan folio &amp; metal stylus pen</p>
+<div class="mt-3 flex items-baseline justify-between">
+<div>
+<span class="font-price-lg text-price-lg text-primary">₹1,450</span>
+<span class="text-xs text-outline line-through ml-1">₹1,999</span>
+</div>
+<span class="font-label-xs text-label-xs bg-surface-container px-1.5 py-0.5 rounded text-on-surface-variant">MOQ: 25 pcs</span>
+</div>
+<p class="font-label-xs text-label-xs text-secondary mt-1">Tier: ₹1,220 for 150+ units</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant grid grid-cols-2 gap-2">
+<button class="px-2 py-1.5 border border-secondary text-primary font-label-md text-label-md rounded hover:bg-surface-container text-center transition-colors">
+              + Sample
+            </button>
+<button class="px-2 py-1.5 bg-primary hover:bg-primary-container text-surface-container-lowest font-label-md text-label-md rounded text-center transition-colors">
+              Request Quote
+            </button>
+</div>
+</div>
+<!-- Card 2: Copper Flask -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3.5 flex flex-col justify-between hover:border-secondary transition-all group">
+<div>
+<div class="relative w-full aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Pure hammered Ayurvedic copper water bottle set with two matching copper tumblers on an elegant polished beige travertine stone block. Warm golden ambient light reflecting off the handcrafted metallic texture, conveying traditional Indian artisanal luxury and healthy corporate living." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwjA9-Ore9Je1LmiBj27ZUFUbT378IgfltnEO9RZnM3phqd7yfx1vkAusmmZJRqDbx4J-OdxkGmeniECEJsyhj8Y3m4Gv-DL7irwKgHnlB6pgK6o3B4KgrTpHGcOvk4TLOmqEiUqu4Bq4AMWsMM2Og2b7brUoJcbu8GU1-LKcI5n4OlGR0A1JTmO3gfP-nT91FKahEA7C4h3fCiGXXmOs1oL6fUTdfjDPWY3OQwTl-xF6ZFJ9ZMY2xzsUxzq4goDrdr4cdaNq47xk1"/>
+<span class="absolute top-2 left-2 bg-tertiary-fixed text-on-tertiary-fixed text-label-xs font-label-xs px-2 py-0.5 rounded font-bold">Festive Choice</span>
+<button class="absolute top-2 right-2 p-1.5 bg-surface-container-lowest/80 rounded-full hover:bg-surface-container-lowest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">bookmark_border</span>
+</button>
+</div>
+<div class="flex items-center gap-1.5 mb-1">
+<span class="text-tertiary font-label-xs text-label-xs font-bold uppercase tracking-wider">HSN 7418</span>
+<span class="text-outline-variant">•</span>
+<span class="text-outline text-label-xs font-label-xs">Lead Time: 2 Days</span>
+</div>
+<h3 class="font-title-sm text-title-sm text-primary line-clamp-1 group-hover:text-tertiary transition-colors">Pure Hammered Copper Carafe Set</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">1000ml bottle with 2 tumblers &amp; velvet carry pouch</p>
+<div class="mt-3 flex items-baseline justify-between">
+<div>
+<span class="font-price-lg text-price-lg text-primary">₹980</span>
+<span class="text-xs text-outline line-through ml-1">₹1,400</span>
+</div>
+<span class="font-label-xs text-label-xs bg-surface-container px-1.5 py-0.5 rounded text-on-surface-variant">MOQ: 50 pcs</span>
+</div>
+<p class="font-label-xs text-label-xs text-secondary mt-1">Tier: ₹820 for 250+ units</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant grid grid-cols-2 gap-2">
+<button class="px-2 py-1.5 border border-secondary text-primary font-label-md text-label-md rounded hover:bg-surface-container text-center transition-colors">
+              + Sample
+            </button>
+<button class="px-2 py-1.5 bg-primary hover:bg-primary-container text-surface-container-lowest font-label-md text-label-md rounded text-center transition-colors">
+              Request Quote
+            </button>
+</div>
+</div>
+<!-- Card 3: Rare Rabbit Polo -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3.5 flex flex-col justify-between hover:border-secondary transition-all group">
+<div>
+<div class="relative w-full aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A premium folded pique cotton polo t-shirt in deep olive and espresso brown, with customized corporate tonal embroidery on the sleeve. Placed cleanly on a linen-textured background with luxury brand tags visible, shot under soft studio lights for a high-end corporate casual merchandise aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCQuNYz9qAr-fl2mehOeWHQ5jVa1i3DrErHDfzxtuG3h_c6vbXf-t3TCc_h-0R8OloBLYVqacPxC3chbb3zDrfCK5qXpG22gKwD9_cpTp3zHLSaY96lJwLmH_71OsRKjl6MY-AWsmMjEH02YHlRMdpJR6R04iGdBIJVT_ZOzRaf97ecsSOgQRLqIbnGjEDUC9TQSjt9EH28-7TLXwfHIFVbgDlwKBitnMxp5jWitTpXww_etkES0RS1N0iWug5ohRfvRYQzR2ov3Nn"/>
+<span class="absolute top-2 left-2 bg-surface-container-lowest/95 text-primary text-label-xs font-label-xs px-2 py-0.5 rounded shadow-xs">Brand Authorized</span>
+<button class="absolute top-2 right-2 p-1.5 bg-surface-container-lowest/80 rounded-full hover:bg-surface-container-lowest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">bookmark_border</span>
+</button>
+</div>
+<div class="flex items-center gap-1.5 mb-1">
+<span class="text-tertiary font-label-xs text-label-xs font-bold uppercase tracking-wider">HSN 6105</span>
+<span class="text-outline-variant">•</span>
+<span class="text-outline text-label-xs font-label-xs">Lead Time: 5 Days</span>
+</div>
+<h3 class="font-title-sm text-title-sm text-primary line-clamp-1 group-hover:text-tertiary transition-colors">Rare Rabbit Pique Corporate Polo</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">240 GSM organic cotton with custom micro-embroidery</p>
+<div class="mt-3 flex items-baseline justify-between">
+<div>
+<span class="font-price-lg text-price-lg text-primary">₹1,250</span>
+<span class="text-xs text-outline line-through ml-1">₹1,999</span>
+</div>
+<span class="font-label-xs text-label-xs bg-surface-container px-1.5 py-0.5 rounded text-on-surface-variant">MOQ: 30 pcs</span>
+</div>
+<p class="font-label-xs text-label-xs text-secondary mt-1">Tier: ₹1,090 for 100+ units</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant grid grid-cols-2 gap-2">
+<button class="px-2 py-1.5 border border-secondary text-primary font-label-md text-label-md rounded hover:bg-surface-container text-center transition-colors">
+              + Sample
+            </button>
+<button class="px-2 py-1.5 bg-primary hover:bg-primary-container text-surface-container-lowest font-label-md text-label-md rounded text-center transition-colors">
+              Request Quote
+            </button>
+</div>
+</div>
+<!-- Card 4: Audio Tech Gift -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3.5 flex flex-col justify-between hover:border-secondary transition-all group">
+<div>
+<div class="relative w-full aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Sleek boAt wireless ANC noise-canceling headphones in matte graphite with customized laser etched silver company branding on the headband hinge. Set on an ivory pedestaled surface with soft warm directional rim lighting, celebrating modern Indian executive lifestyle gifting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDv6I24fP266jbxCLR-DkqP-WSL9PJs2cFDPcGT6cSXy9hCcNsuEsF0sod8GwHQAW-JOx9L6OQnssDXQ1H3FY7lAwVnOOZU89Z-K4tnjDQBd3KjTcgSJzRAAn8fNzYUdhM1e6TSsyxhL-usiCWLXjaeY9e4a7Ns2F8_hxYWTMIiBbcsWO3WMJoQGs2l-jUgJ_r0iMcfeg2DDsY_b3bTJ7VP0uZct3ZMkb7M2mnoBlVPN9Oyr3Z5TxcR9Tlkdb54S_OYTEyTPTq5dUPo"/>
+<span class="absolute top-2 left-2 bg-surface-container-lowest/95 text-primary text-label-xs font-label-xs px-2 py-0.5 rounded shadow-xs">Co-Branded boAt</span>
+<button class="absolute top-2 right-2 p-1.5 bg-surface-container-lowest/80 rounded-full hover:bg-surface-container-lowest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[16px]">bookmark_border</span>
+</button>
+</div>
+<div class="flex items-center gap-1.5 mb-1">
+<span class="text-tertiary font-label-xs text-label-xs font-bold uppercase tracking-wider">HSN 8518</span>
+<span class="text-outline-variant">•</span>
+<span class="text-outline text-label-xs font-label-xs">Lead Time: 3 Days</span>
+</div>
+<h3 class="font-title-sm text-title-sm text-primary line-clamp-1 group-hover:text-tertiary transition-colors">boAt Nirvana ANC Executive Headset</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1 mt-0.5">35-hour playtime, fast charge &amp; premium travel case</p>
+<div class="mt-3 flex items-baseline justify-between">
+<div>
+<span class="font-price-lg text-price-lg text-primary">₹2,199</span>
+<span class="text-xs text-outline line-through ml-1">₹3,990</span>
+</div>
+<span class="font-label-xs text-label-xs bg-surface-container px-1.5 py-0.5 rounded text-on-surface-variant">MOQ: 20 pcs</span>
+</div>
+<p class="font-label-xs text-label-xs text-secondary mt-1">Tier: ₹1,890 for 100+ units</p>
+</div>
+<div class="mt-4 pt-3 border-t border-outline-variant grid grid-cols-2 gap-2">
+<button class="px-2 py-1.5 border border-secondary text-primary font-label-md text-label-md rounded hover:bg-surface-container text-center transition-colors">
+              + Sample
+            </button>
+<button class="px-2 py-1.5 bg-primary hover:bg-primary-container text-surface-container-lowest font-label-md text-label-md rounded text-center transition-colors">
+              Request Quote
+            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Diwali & Bespoke Festive Showcase (Rich Amber/Dark Wood Theme) -->
+<section class="bg-primary-container text-surface-container-lowest rounded-2xl p-6 lg:p-8 border border-tertiary/40 relative overflow-hidden shadow-lg">
+<div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+<div class="lg:w-1/2">
+<div class="inline-flex items-center gap-1.5 bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded text-label-md font-label-md mb-4">
+<span class="material-symbols-outlined text-[18px]">workspace_premium</span>
+<span>Diwali &amp; Year-End Corporate Atelier</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-surface-container-lowest mb-3 font-semibold leading-tight">
+            Opulent Heritage Gifting: <br class="hidden sm:inline"/>Brass, Silver &amp; Royal Confections
+          </h2>
+<p class="font-body-md text-body-md text-surface-dim mb-6 leading-relaxed max-w-xl">
+            Elevate executive rapport with certified 999 pure silver medallions, carved Sheesham wood dry fruit trunks, artisanal roasted nuts, and traditional handcrafted brass diya sets, complete with bespoke gold foil hot-stamped company seals.
+          </p>
+<div class="flex flex-wrap items-center gap-4">
+<button class="bg-tertiary-fixed hover:bg-tertiary-container text-on-tertiary-fixed px-5 py-2.5 rounded font-title-md text-title-md flex items-center gap-2 transition-all shadow-md">
+<span class="material-symbols-outlined text-[20px]">menu_book</span>
+              Download Diwali 2024 Lookbook
+            </button>
+<button class="px-4 py-2.5 border border-surface-dim/40 hover:border-tertiary-fixed text-surface-bright rounded font-title-sm text-title-sm transition-colors">
+              Reserve Dedicated Account Manager
+            </button>
+</div>
+<div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-secondary/40 text-surface-dim">
+<div>
+<span class="block font-headline-sm text-headline-sm text-tertiary-fixed font-bold">19,000+</span>
+<span class="font-label-xs text-label-xs">Direct Doorstep Drops</span>
+</div>
+<div>
+<span class="block font-headline-sm text-headline-sm text-tertiary-fixed font-bold">999 Pure</span>
+<span class="font-label-xs text-label-xs">Govt Hallmarked Silver</span>
+</div>
+<div>
+<span class="block font-headline-sm text-headline-sm text-tertiary-fixed font-bold">100% Tax</span>
+<span class="font-label-xs text-label-xs">GST Input Credit Eligible</span>
+</div>
+</div>
+</div>
+<div class="lg:w-1/2 w-full grid grid-cols-2 gap-4">
+<div class="bg-inverse-surface/80 p-3.5 rounded-xl border border-secondary/40 flex flex-col justify-between">
+<div class="aspect-4/3 rounded overflow-hidden mb-2 bg-surface-container-low">
+<img class="w-full h-full object-cover" data-alt="A luxury Diwali gift hamper box in royal emerald and warm gold foil, featuring a hallmarked 999 pure silver coin, glass jars of Iranian pistachios and Kashmiri saffron, and handcrafted brass oil lamps with warm glowing wicks. Warm amber and deep espresso aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMBJOLY47p-m0nINTQm4ulXuPpLX9_fJbdBT2ZejKpdpUR3p4QRBQaEluLnB2-H6jmC5LxHEhdot1PvEop29AUmG98tnRdrIrsdScxJxeuolS8z_4b4udVBA7a8spWF6aD_R0rY4C7c1Tm118ZbgCHexZmNdYCrTGAVrQSptwsclG93H1qji5epK_vHH0OsDmmwAv9-xH7BHOYx92l3-JeHe00szbJRJHKlxN2cuChAUaU-hhPUAf3djU1jO6uf1Dw5lc1a3zr85qV"/>
+</div>
+<h4 class="font-title-sm text-title-sm text-surface-container-lowest">The Royal Avadh Hamper</h4>
+<span class="font-price-md text-price-md text-tertiary-fixed mt-1">₹3,450 <span class="text-xs text-surface-dim font-normal">| MOQ: 15</span></span>
+</div>
+<div class="bg-inverse-surface/80 p-3.5 rounded-xl border border-secondary/40 flex flex-col justify-between">
+<div class="aspect-4/3 rounded overflow-hidden mb-2 bg-surface-container-low">
+<img class="w-full h-full object-cover" data-alt="An ornate handcrafted dark Sheesham wood dry fruit chest with antique brass clasps and velvet compartments filled with roasted California almonds, cashews, and dates. Shot with warm ambient festival lighting and soft Indian motifs." src="https://lh3.googleusercontent.com/aida-public/AB6AXuARGwgvgk4m0Nx47YYUC3vlcK9xjpf3nm8G38_3JlMs4JfSXrpsViL0H0A5PHM9NZnd4eg80xO-hbUi04nuiwsBLVHf51dhqr5yd4NKSFDzJUVRR1LtQNRlg8HEL4cUes6AEDRLIgnHfSVlUsVYvE0TNFhxNc3cko5NiKnIel7aR1PBVYXipPmManfeap_Fotu7y5qiWjg6SeHSg0so2sit6aT9R5xI2M44Lft-T2rBI5_6fZ7wRAtTwlV5800VflYLMm9cIJXdNibN"/>
+</div>
+<h4 class="font-title-sm text-title-sm text-surface-container-lowest">Maharaja Sheesham Dry Fruit Trunk</h4>
+<span class="font-price-md text-price-md text-tertiary-fixed mt-1">₹2,150 <span class="text-xs text-surface-dim font-normal">| MOQ: 25</span></span>
+</div>
+</div>
+</div>
+</section>
+<!-- "Under ₹999 Budget Gifting Rail" (Dense E-Commerce Row) -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<div>
+<span class="text-tertiary font-label-xs text-label-xs uppercase font-bold tracking-wider">High Utility Corporate Tokens</span>
+<h2 class="font-headline-lg text-headline-lg text-primary">Budget Tokens Under ₹999</h2>
+</div>
+<a class="font-title-sm text-title-sm text-secondary hover:text-primary flex items-center gap-1" href="#catalog">
+          View 180+ Items Under ₹999 <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
+<!-- Budget Item 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:border-secondary transition-all">
+<div class="aspect-square bg-surface-container-low rounded overflow-hidden mb-2 relative">
+<img class="w-full h-full object-cover" data-alt="Minimalist handcrafted terracotta and ceramic coffee mug with cork base and personalized corporate logo print. Warm rustic beige background with clean natural sunlight and sharp shadow contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1dF1ejjEqbLqTpmHFllBqsqNXbsrJnl7gExmFMLxX5TwuN4R-h-QmFqXlH6xGDwtfZ1FedJLDzrH9vv98fc9QBRqWikW5VMgrcyRRbP3FLr641TbfTqtOLJI3QK6pCvItatWkTd0Trv3nE7HaOaZLEejUuecxkgkctubwdHGgNgEuXfOU-q3633CE6md43hPR3XR05JWXHCuGKHA5yV4iMoamIczBIVDVNqAizyFYXAGzGysqsTsCfB--3JbXpjc-QgMOb9DSW0Ff"/>
+<span class="absolute bottom-1.5 left-1.5 bg-surface-container-lowest px-1.5 py-0.5 rounded text-[10px] font-bold text-primary">₹340 / unit</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary truncate">Terracotta Artisan Coffee Mug (380ml)</h4>
+<p class="font-label-xs text-label-xs text-outline mt-0.5">MOQ: 100 pcs • Screen Brand Ready</p>
+<button class="w-full mt-2 py-1 bg-surface-container-low hover:bg-secondary-container text-primary font-label-md text-label-md rounded border border-outline-variant/60">Add to Quote</button>
+</div>
+<!-- Budget Item 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:border-secondary transition-all">
+<div class="aspect-square bg-surface-container-low rounded overflow-hidden mb-2 relative">
+<img class="w-full h-full object-cover" data-alt="Hardbound kraft paper notebook with elastic closure and matching bamboo barrel ballpoint pen. High detail on linen texture and embossed company emblem. Clean studio shot on warm ivory table." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNg7QSS7bcGPXwTeWT3z2oc3AO_jFPeGFLkvefRtx0gjqCQ4sSBYM5C87hrEAv2fHWan1F29Hhm5tiDcLydQh6hqYlozTIpwvkcj9uz3iVOzxb2x5OWlxhPMsRrZMWAjX1KkOIycZ0K0lI55tfB5kJp6tB_yFmyGtO3Ffy06O6psTWeB0wb9TYPi84ayp_r1DJdAm9qA49yquuxtOEKTghi7VJv2qce0xquDPNaDofWX28KBWOLy9Y7CBTaxJKNpY-7puUjTXEMtvc"/>
+<span class="absolute bottom-1.5 left-1.5 bg-surface-container-lowest px-1.5 py-0.5 rounded text-[10px] font-bold text-primary">₹285 / unit</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary truncate">Eco-Kraft Hardbound Journal &amp; Pen</h4>
+<p class="font-label-xs text-label-xs text-outline mt-0.5">MOQ: 75 pcs • Blind Debossing</p>
+<button class="w-full mt-2 py-1 bg-surface-container-low hover:bg-secondary-container text-primary font-label-md text-label-md rounded border border-outline-variant/60">Add to Quote</button>
+</div>
+<!-- Budget Item 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:border-secondary transition-all">
+<div class="aspect-square bg-surface-container-low rounded overflow-hidden mb-2 relative">
+<img class="w-full h-full object-cover" data-alt="High quality braided 65W fast charging 3-in-1 nylon cable in metallic gunmetal casing with leather organizer strap. Modern tech merchandise layout on soft cream surface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2G3icFhj73tEXUYDMgU9OumNtN1WWxxFLhf6Tn5tM7vlG1Yv4zJ4dWUas8YAh4RVnmR7gd-4wlU_haOLKZ1Q9Mya2WcQtxyfCnYnrIOsCQG_nUGnn9pXGRCDs-zodRiFfnHELhelPjck4BtyyKtetXCtghYB4gQGmJHpZIt60xYZaFj9d_EmZqcw_75Mkma20gfC7YvDer-qVXeNk09w7pnnYQTljFqnpocTk3vlCVPt9MR3QbE3RSUiEuRndAy660EklDdK1iV58"/>
+<span class="absolute bottom-1.5 left-1.5 bg-surface-container-lowest px-1.5 py-0.5 rounded text-[10px] font-bold text-primary">₹420 / unit</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary truncate">Tough-Braided 65W Rapid Cable Trio</h4>
+<p class="font-label-xs text-label-xs text-outline mt-0.5">MOQ: 100 pcs • Laser Logo on Plug</p>
+<button class="w-full mt-2 py-1 bg-surface-container-low hover:bg-secondary-container text-primary font-label-md text-label-md rounded border border-outline-variant/60">Add to Quote</button>
+</div>
+<!-- Budget Item 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:border-secondary transition-all">
+<div class="aspect-square bg-surface-container-low rounded overflow-hidden mb-2 relative">
+<img class="w-full h-full object-cover" data-alt="Double wall insulated stainless steel travel tumbler with leak-proof flip lid in matte stone white. Placed on warm wood table with soft morning lighting, highlighting corporate laser engraving." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXEpKUEh7ELD_mAey0CEeYPmCML-fLfVLz5hPL9cb9Mepo7Bpp6PXa4tkEvfslcUxHqccqKTzTLqBJ_5T0Gsv-BQ4FaLH-Lnhn-cBQVgGF7MqRt_wFbE5fnFfJxAWv8fAgAXij9mT78zWe7hUlhPcirV_j8WRr1NCrub0tNN7hVO_n426xOU2M6ajuZdJ-6YP6W9DMx5A9nSMEuwFc7FYUf6qCLCbG7i6cNa6Wb0R3CD7BlWw66_dbEdiMte8Uq1YPE_Rmh41T4c2n"/>
+<span class="absolute bottom-1.5 left-1.5 bg-surface-container-lowest px-1.5 py-0.5 rounded text-[10px] font-bold text-primary">₹680 / unit</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary truncate">Thermal Vacuum Desk Tumbler (500ml)</h4>
+<p class="font-label-xs text-label-xs text-outline mt-0.5">MOQ: 50 pcs • 12h Cold / 8h Hot</p>
+<button class="w-full mt-2 py-1 bg-surface-container-low hover:bg-secondary-container text-primary font-label-md text-label-md rounded border border-outline-variant/60">Add to Quote</button>
+</div>
+</div>
+</section>
+<!-- Extensive Catalog & Product Filtering (Left Sidebar + Right Dense Grid) -->
+<section class="pt-4" id="catalog">
+<div class="flex items-center justify-between pb-4 border-b border-outline-variant mb-6">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">Comprehensive Corporate Catalog</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Filter by budget bands, MOQ parameters, branding feasibility, and delivery timeline.</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-body-sm font-label-md text-on-surface-variant">Showing 420 active enterprise SKUs</span>
+<select class="text-title-sm font-title-sm bg-surface-container-lowest border border-outline-variant rounded py-1.5 px-3 text-primary focus:ring-secondary">
+<option>Sort: Popular Procurement Tiers</option>
+<option>Price: Low to High</option>
+<option>Price: High to Low</option>
+<option>Fastest Lead Time (&lt; 48h)</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-6 items-start">
+<!-- Left Filter Sidebar -->
+<aside class="col-span-12 lg:col-span-3 bg-surface-container-lowest p-5 rounded-xl border border-outline-variant space-y-6">
+<!-- Filter: Unit Budget -->
+<div>
+<h4 class="font-title-sm text-title-sm text-primary mb-3 flex items-center justify-between">
+              Unit Budget (INR)
+              <span class="text-label-xs text-secondary cursor-pointer hover:underline">Reset</span>
+</h4>
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>Under ₹500 (124)</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input checked="" class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>₹500 – ₹1,500 (210)</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>₹1,500 – ₹3,500 (98)</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>₹3,500+ Luxury Suites (46)</span>
+</label>
+</div>
+</div>
+<!-- Filter: Minimum Order Quantity (MOQ) -->
+<div class="pt-4 border-t border-outline-variant">
+<h4 class="font-title-sm text-title-sm text-primary mb-3">Minimum Order Quantity (MOQ)</h4>
+<div class="grid grid-cols-2 gap-2 text-label-md font-label-md">
+<button class="p-1.5 border border-secondary bg-surface-container text-primary rounded text-center">Any MOQ</button>
+<button class="p-1.5 border border-outline-variant text-on-surface-variant hover:border-secondary rounded text-center">≤ 25 units</button>
+<button class="p-1.5 border border-outline-variant text-on-surface-variant hover:border-secondary rounded text-center">50 – 100 units</button>
+<button class="p-1.5 border border-outline-variant text-on-surface-variant hover:border-secondary rounded text-center">250+ units</button>
+</div>
+</div>
+<!-- Filter: Occasions -->
+<div class="pt-4 border-t border-outline-variant">
+<h4 class="font-title-sm text-title-sm text-primary mb-3">Gifting Occasion</h4>
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input checked="" class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>Diwali &amp; New Year</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input checked="" class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>New Hire Onboarding</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>Annual Sales Summit</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>Executive &amp; VIP Clients</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>Long Service Awards</span>
+</label>
+</div>
+</div>
+<!-- Filter: Custom Branding Type -->
+<div class="pt-4 border-t border-outline-variant">
+<h4 class="font-title-sm text-title-sm text-primary mb-3">Customization Technique</h4>
+<div class="space-y-2">
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>Laser Engraving (Metal/Wood)</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>Screen / UV Multicolor Print</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>Gold/Silver Foil Hot Stamp</span>
+</label>
+<label class="flex items-center gap-2 text-body-sm text-on-surface cursor-pointer">
+<input class="rounded text-primary focus:ring-secondary border-outline-variant" type="checkbox"/>
+<span>Direct Embroidery</span>
+</label>
+</div>
+</div>
+<!-- Quick RFQ Assistance Box in Sidebar -->
+<div class="p-4 bg-surface-container rounded-lg border border-secondary/40">
+<span class="material-symbols-outlined text-secondary text-[24px]">support_agent</span>
+<h5 class="font-title-sm text-title-sm text-primary mt-1">Need a Tailored Quote?</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Share your headcount &amp; target budget for a 2-hour bespoke proposal.</p>
+<button class="w-full mt-3 bg-primary text-surface-container-lowest py-1.5 rounded font-label-md text-label-md hover:bg-primary-container transition-colors">
+              Submit Instant RFQ
+            </button>
+</div>
+</aside>
+<!-- Right Side Multi-Column Dense Product Cards -->
+<div class="col-span-12 lg:col-span-9 space-y-4">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Catalog Product 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:shadow-sm hover:border-secondary transition-all flex flex-col justify-between">
+<div>
+<div class="relative aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover" data-alt="A premium matte ceramic matte black coffee cup set with cork coasters and customized engraved company monogram. Warm soft studio light on beige background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGQSi0IFM9eYTX_Dmp6Dfl862UJGVPSeYkUqf1x8LIGb_OfIAXZUcNNmP-jdpVDmZ4N8BJIL2nxNOH1QUwi8YfixuX87xXDHz1b2Gr9fmBOk9dlp6VRadUSvmILHoAE3SBoPLdl4sF6aT-PCtK0Am7Xobry92iTACGeQAFpgCAPYtcs_B4zGQpKMBsMeQAKwwyVZ0IEMULcwC7Xtp4H_CXgGT_t1O59YPSbKLEcYQxig7GL8Te_EnHQYEN7Age3VoN2FesW_fqrKSl"/>
+<span class="absolute top-2 left-2 bg-surface-container-lowest text-primary text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">Top Rated</span>
+</div>
+<div class="flex items-center justify-between text-label-xs text-outline mb-1">
+<span>SKU: DRK-8812</span>
+<span class="flex items-center text-tertiary font-bold"><span class="material-symbols-outlined text-[13px] mr-0.5" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (84 orders)</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary">Nordic Matte Ceramic Mug with Cork Coaster</h4>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-price-md text-price-md text-primary">₹390 <span class="text-xs font-normal text-outline">/ pc</span></span>
+<span class="font-label-xs text-label-xs text-secondary font-semibold">MOQ: 50 pcs</span>
+</div>
+<p class="text-[11px] text-outline mt-1">Tier: ₹310 for 250+ units • 3 Days Lead</p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-outline-variant/60 flex items-center gap-2">
+<button class="flex-1 py-1 text-label-md font-label-md border border-secondary text-primary rounded hover:bg-surface-container">Sample</button>
+<button class="flex-1 py-1 text-label-md font-label-md bg-primary text-surface-container-lowest rounded hover:bg-primary-container">RFQ</button>
+</div>
+</div>
+<!-- Catalog Product 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:shadow-sm hover:border-secondary transition-all flex flex-col justify-between">
+<div>
+<div class="relative aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover" data-alt="Titan corporate quartz analog watch with silver dial and brown genuine leather strap, presented in an embossed dark gift box. Warm studio lighting highlighting metallic dial textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-8BWgGt_rY77uVaLt6E3klCJSPPUkm2ATenkgVez6j-SHN1lLpHswrbQurLU-U7IghBY1TPlQvUt3a5gutCIdAOSEPpPJOHH2ZGLJmuV2llNZpWxJ7B7lZnQpt_4yjs5NV4f5hAMWh8Xkz0HQ8BrhfRJnpJZSnwsTbAPUwIBCFM7eubnzU4eC_cNXCQaAjnQWLSTGKIANIaKQdvwHB96cS4Ue8KZBLRAqsM28G_cHfLwxBOyXg61Ft9ojEa3EPDamIyWP_BoQSkgz"/>
+<span class="absolute top-2 left-2 bg-surface-container-lowest text-primary text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">Brand Authorized</span>
+</div>
+<div class="flex items-center justify-between text-label-xs text-outline mb-1">
+<span>SKU: WAT-4402</span>
+<span class="flex items-center text-tertiary font-bold"><span class="material-symbols-outlined text-[13px] mr-0.5" style="font-variation-settings: 'FILL' 1;">star</span> 4.8 (120 orders)</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary">Titan Karishma Executive Analog Timepiece</h4>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-price-md text-price-md text-primary">₹1,895 <span class="text-xs font-normal text-outline">/ pc</span></span>
+<span class="font-label-xs text-label-xs text-secondary font-semibold">MOQ: 15 pcs</span>
+</div>
+<p class="text-[11px] text-outline mt-1">Tier: ₹1,690 for 50+ units • Dial Print</p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-outline-variant/60 flex items-center gap-2">
+<button class="flex-1 py-1 text-label-md font-label-md border border-secondary text-primary rounded hover:bg-surface-container">Sample</button>
+<button class="flex-1 py-1 text-label-md font-label-md bg-primary text-surface-container-lowest rounded hover:bg-primary-container">RFQ</button>
+</div>
+</div>
+<!-- Catalog Product 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:shadow-sm hover:border-secondary transition-all flex flex-col justify-between">
+<div>
+<div class="relative aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover" data-alt="Parker Jotter stainless steel ballpoint pen and leather card holder presented in luxury brown hinged gift box. Soft ambient light highlighting gold trims." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaWvyRL0jLg10Xrzk7kZo9vhjNmKGHYxtVnR4PtxJUa9LE1LAh4RRbHqHUNx_kvSumyuhmg8hJwmG5z00R3aTaoRL2_8SGoqmRGt1lNhYML4n5XPA-pzqxnYgdKbs__ivqiafK3S5Fd9ZBW1yz3-4NReyMOSrAN1sAi6xRIPHKMcha0iU05iglQ9LiF_6-GG9V63-6PR3y4vaEoj1Ejj_zsaU5jmOsGvA3I5fafWiLVHN44foht8J3RV0Ioj9L2Zrin-CaDl7Pu70I"/>
+<span class="absolute top-2 left-2 bg-surface-container-lowest text-primary text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">Executive Pick</span>
+</div>
+<div class="flex items-center justify-between text-label-xs text-outline mb-1">
+<span>SKU: PEN-1092</span>
+<span class="flex items-center text-tertiary font-bold"><span class="material-symbols-outlined text-[13px] mr-0.5" style="font-variation-settings: 'FILL' 1;">star</span> 5.0 (215 orders)</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary">Parker Jotter &amp; RFID Card Carrier Duo</h4>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-price-md text-price-md text-primary">₹740 <span class="text-xs font-normal text-outline">/ pc</span></span>
+<span class="font-label-xs text-label-xs text-secondary font-semibold">MOQ: 25 pcs</span>
+</div>
+<p class="text-[11px] text-outline mt-1">Tier: ₹620 for 100+ units • Laser Engraved</p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-outline-variant/60 flex items-center gap-2">
+<button class="flex-1 py-1 text-label-md font-label-md border border-secondary text-primary rounded hover:bg-surface-container">Sample</button>
+<button class="flex-1 py-1 text-label-md font-label-md bg-primary text-surface-container-lowest rounded hover:bg-primary-container">RFQ</button>
+</div>
+</div>
+<!-- Catalog Product 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:shadow-sm hover:border-secondary transition-all flex flex-col justify-between">
+<div>
+<div class="relative aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover" data-alt="A luxury grooming kit from Bombay Shaving Company with charcoal facial wash, precision razor, and post-shave balm in a canvas travel pouch. Warm morning light on beige tile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYoJ8FhDusxCZfVv0I5sPCxgjgFMTbt5ey_qWcEyyi82HP1NOx93msv_JchY6W0SnR5jyclNMTa8pZyI6JgNvtjlwkd1TCRWMWpLkR7U66q1S5p58ZI2EWob3ivj5OFm_4IBGjX7SdYkxfjdjTilJd-YcdZWeA9wnh9NQ4irw-XklvUaNOYy0Gdhhmx6wOLINoWsH9uwREX4mpdaGi23YoWosQI-lMJLfk0jxJF5p6QZjxKIFvyhcZFJGbpej1LOjxmXj60Nc1g1Jz"/>
+<span class="absolute top-2 left-2 bg-surface-container-lowest text-primary text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">Self Care</span>
+</div>
+<div class="flex items-center justify-between text-label-xs text-outline mb-1">
+<span>SKU: BSC-3021</span>
+<span class="flex items-center text-tertiary font-bold"><span class="material-symbols-outlined text-[13px] mr-0.5" style="font-variation-settings: 'FILL' 1;">star</span> 4.7 (65 orders)</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary">Bombay Shaving Co. Signature Grooming Kit</h4>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-price-md text-price-md text-primary">₹899 <span class="text-xs font-normal text-outline">/ pc</span></span>
+<span class="font-label-xs text-label-xs text-secondary font-semibold">MOQ: 30 pcs</span>
+</div>
+<p class="text-[11px] text-outline mt-1">Tier: ₹760 for 100+ units • Custom Outer Sleeve</p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-outline-variant/60 flex items-center gap-2">
+<button class="flex-1 py-1 text-label-md font-label-md border border-secondary text-primary rounded hover:bg-surface-container">Sample</button>
+<button class="flex-1 py-1 text-label-md font-label-md bg-primary text-surface-container-lowest rounded hover:bg-primary-container">RFQ</button>
+</div>
+</div>
+<!-- Catalog Product 5 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:shadow-sm hover:border-secondary transition-all flex flex-col justify-between">
+<div>
+<div class="relative aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover" data-alt="Customized high density canvas laptop backpack in graphite grey with genuine leather pullers and discreet metallic corporate branding badge. Shot on light ivory linen backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdaMN3ijQAwlKARyfH1ftGcQSuxEot1c297ljdskbGc8N58VYihSjRiqjOPrZsUC6cj8UuaZdFODVft8_kuSeWm_g1r-jKU2aHj5nGymimtiDZt3VVSjjQ9UPjnzRxz6DjsTXpxTBhonvLU5DZEu5eIj1czQDwOhC_6kWz2M4faPGBJkGIntJ2BSojPJkh2-jurZQgZqxx4LzVJQR5soDV9vw01_xU51UnZTXL8MQzWK3CRV3wVVdnmALRDAL4rLj5dkULSMiuYZta"/>
+<span class="absolute top-2 left-2 bg-surface-container-lowest text-primary text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">Daily Carry</span>
+</div>
+<div class="flex items-center justify-between text-label-xs text-outline mb-1">
+<span>SKU: BAG-9011</span>
+<span class="flex items-center text-tertiary font-bold"><span class="material-symbols-outlined text-[13px] mr-0.5" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (180 orders)</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary">AeroPro 15.6" Commuter Laptop Backpack</h4>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-price-md text-price-md text-primary">₹1,150 <span class="text-xs font-normal text-outline">/ pc</span></span>
+<span class="font-label-xs text-label-xs text-secondary font-semibold">MOQ: 50 pcs</span>
+</div>
+<p class="text-[11px] text-outline mt-1">Tier: ₹980 for 200+ units • Metal Badge Branding</p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-outline-variant/60 flex items-center gap-2">
+<button class="flex-1 py-1 text-label-md font-label-md border border-secondary text-primary rounded hover:bg-surface-container">Sample</button>
+<button class="flex-1 py-1 text-label-md font-label-md bg-primary text-surface-container-lowest rounded hover:bg-primary-container">RFQ</button>
+</div>
+</div>
+<!-- Catalog Product 6 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 hover:shadow-sm hover:border-secondary transition-all flex flex-col justify-between">
+<div>
+<div class="relative aspect-square bg-surface-container-low rounded overflow-hidden mb-3">
+<img class="w-full h-full object-cover" data-alt="A glass jar with brass lid containing premium California roasted almonds and another with salted cashews, tied with silk ribbon in a festive ivory gift box. Editorial Indian wedding and corporate celebration style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzPvYyqJIpllBYxumdrvQzhvYi6M-8_BzMwKyFlzlF2gSYCJAMTYFhvkLc8SF2s1Rgd8OxZ6exjnLlNDRRXTP4fdXYaTiyCowSOY7Wr-Ohu4xtW5qb1_uFTVRjVvSXgdK1gg9p-_vxhCuBSAwD12ta3g3mA0eGRbq0NsjXIYMunHsEIrznxL3XqujPbt7yO_4FhjhnLlkH0bCLNTp_z8FosZUTy6MFNisGNPjyR-NaKR-_fqaPi9D__y9w3eDm51s8uJCzuNoFZfh2"/>
+<span class="absolute top-2 left-2 bg-tertiary-fixed text-on-tertiary-fixed text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">Nut Artisan</span>
+</div>
+<div class="flex items-center justify-between text-label-xs text-outline mb-1">
+<span>SKU: FST-6510</span>
+<span class="flex items-center text-tertiary font-bold"><span class="material-symbols-outlined text-[13px] mr-0.5" style="font-variation-settings: 'FILL' 1;">star</span> 4.9 (310 orders)</span>
+</div>
+<h4 class="font-title-sm text-title-sm text-primary">Artisanal Nut Duo in Fluted Glass Carafes</h4>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-price-md text-price-md text-primary">₹850 <span class="text-xs font-normal text-outline">/ pc</span></span>
+<span class="font-label-xs text-label-xs text-secondary font-semibold">MOQ: 40 pcs</span>
+</div>
+<p class="text-[11px] text-outline mt-1">Tier: ₹710 for 150+ units • Foil Stamped Card</p>
+</div>
+<div class="mt-3 pt-2.5 border-t border-outline-variant/60 flex items-center gap-2">
+<button class="flex-1 py-1 text-label-md font-label-md border border-secondary text-primary rounded hover:bg-surface-container">Sample</button>
+<button class="flex-1 py-1 text-label-md font-label-md bg-primary text-surface-container-lowest rounded hover:bg-primary-container">RFQ</button>
+</div>
+</div>
+</div>
+<!-- Pagination Bar -->
+<div class="bg-surface-container-lowest p-3 rounded-lg border border-outline-variant flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant font-label-md">Page 1 of 14</span>
+<div class="flex items-center gap-1">
+<button class="px-3 py-1 border border-outline-variant rounded bg-surface-container text-primary font-bold">1</button>
+<button class="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface-variant">2</button>
+<button class="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface-variant">3</button>
+<span class="px-2 text-outline">...</span>
+<button class="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface-variant">14</button>
+<button class="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container text-on-surface-variant flex items-center">
+                Next <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Trust & Enterprise Logistics Strip -->
+<section class="bg-surface-container p-6 rounded-2xl border border-outline-variant">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center shrink-0 border border-outline-variant/60 text-primary">
+<span class="material-symbols-outlined text-[24px]">local_shipping</span>
+</div>
+<div>
+<h4 class="font-title-sm text-title-sm text-primary">19,000+ PIN Codes</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Reliable PAN-India individual employee and branch dispatch logistics.</p>
+</div>
+</div>
+<div class="flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center shrink-0 border border-outline-variant/60 text-primary">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+</div>
+<div>
+<h4 class="font-title-sm text-title-sm text-primary">100% Genuine Brands</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Official co-branding authorization letters with direct warranty support.</p>
+</div>
+</div>
+<div class="flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center shrink-0 border border-outline-variant/60 text-primary">
+<span class="material-symbols-outlined text-[24px]">receipt_long</span>
+</div>
+<div>
+<h4 class="font-title-sm text-title-sm text-primary">GST ITC Compliant</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">HSN codes validated for hassle-free corporate tax input credit claims.</p>
+</div>
+</div>
+<div class="flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center shrink-0 border border-outline-variant/60 text-primary">
+<span class="material-symbols-outlined text-[24px]">view_in_ar</span>
+</div>
+<div>
+<h4 class="font-title-sm text-title-sm text-primary">2-Hour Logo Mockup</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Upload your vector insignia and receive 3D realistic visuals prior to order.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating WhatsApp Concierge Button (Anchored bottom right) -->
+<div class="fixed bottom-6 right-6 z-50 flex items-center gap-2 group">
+<div class="bg-surface-container-lowest text-primary text-title-sm font-title-sm px-3.5 py-1.5 rounded-full shadow-lg border border-outline-variant flex items-center gap-1.5 group-hover:scale-105 transition-all">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span>Chat on WhatsApp</span>
+</div>
+<a aria-label="Chat on WhatsApp Corporate Desk" class="w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-transform" href="https://wa.me/#" rel="noopener noreferrer" target="_blank">
+<span class="material-symbols-outlined text-[30px]" style="font-variation-settings: 'FILL' 1;">chat</span>
+</a>
+</div>
+<!-- Footer (Shared Component Execution: Footer) -->
+<footer class="bg-primary-container text-on-primary-container border-t border-outline-variant mt-16">
+<div class="w-full max-w-[1440px] mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-start gap-8">
+<!-- Company Column -->
+<div class="max-w-md">
+<h3 class="font-headline-md text-headline-md font-bold text-surface-container-lowest">
+          Souvenir Gifting Solutions
+        </h3>
+<p class="font-body-sm text-body-sm text-surface-dim mt-2 leading-relaxed">
+          India's premier enterprise atelier for corporate onboarding swags, executive appreciation suites, and bespoke festive hampers. Seamless procurement, guaranteed tax compliance, and precision personalization.
+        </p>
+<p class="text-label-xs font-label-xs text-on-primary-container mt-4">
+          © 2024 Souvenir Gifting Solutions. All rights reserved. Registered GST Pan-India Corporate Gifting Partner.
+        </p>
+</div>
+<!-- Quick Procurement Links from Shared Components JSON -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 flex-1">
+<div>
+<h4 class="font-title-sm text-title-sm text-surface-container-lowest mb-3">Enterprise Solutions</h4>
+<ul class="space-y-2 text-body-sm font-body-sm">
+<li><a class="text-on-primary-container hover:text-tertiary-fixed transition-colors" href="#">Custom Co-Branding Catalog</a></li>
+<li><a class="text-on-primary-container hover:text-tertiary-fixed transition-colors" href="#">Bulk Sample Dispatch</a></li>
+<li><a class="text-on-primary-container hover:text-tertiary-fixed transition-colors" href="#">PAN-India Delivery Logistics</a></li>
+<li><a class="text-on-primary-container hover:text-tertiary-fixed transition-colors" href="#">Diwali Corporate Bookings</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-title-sm text-title-sm text-surface-container-lowest mb-3">Governance &amp; Tax</h4>
+<ul class="space-y-2 text-body-sm font-body-sm">
+<li><a class="text-on-primary-container hover:text-tertiary-fixed transition-colors" href="#">GST Invoice Verification</a></li>
+<li><a class="text-on-primary-container hover:text-tertiary-fixed transition-colors" href="#">Terms of Procurement</a></li>
+<li><a class="text-on-primary-container hover:text-tertiary-fixed transition-colors" href="#">Corporate ESG Standards</a></li>
+<li><a class="text-on-primary-container hover:text-tertiary-fixed transition-colors" href="#">HSN &amp; ITC Guidelines</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-title-sm text-title-sm text-surface-container-lowest mb-3">Digital Desk</h4>
+<p class="text-body-sm text-surface-dim mb-2">Direct Procurement Inquiries:</p>
+<a class="text-tertiary-fixed font-title-sm text-title-sm block hover:underline" href="mailto:contact@souvenirgifting.com">
+            contact@souvenirgifting.com
+          </a>
+<div class="mt-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary-fixed text-[18px]">lock</span>
+<span class="text-label-xs text-surface-dim">ISO 9001:2015 Certified Logistics Partner</span>
+</div>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

@@ -17,20 +17,22 @@ export function SiteFooter({
   const marketingHost = marketingHostLabel(marketingUrl)
   const whatsApp = phone ? whatsAppHref(phone) : null
   return (
-    <footer className="mt-0 border-t border-[#E8E4DE] bg-[#F6F4F1] text-[#1B2430]">
+    <footer className="mt-0 border-t border-[#715a3e] bg-[#382c1e] text-[#f4dfca]">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-14 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="md:col-span-2 lg:col-span-1">
-          <Image src="/logo.png" alt={appName()} width={196} height={85} className="h-[100px] w-auto" />
-          <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#5C6570]">
+          <div className="inline-block rounded bg-white px-2 py-1">
+            <Image src="/logo.png" alt={appName()} width={196} height={85} className="h-16 w-auto" />
+          </div>
+          <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#d7c3af]">
             Your destination for curated corporate gifts — catalogue, quotation and fulfilment in one place.
           </p>
           {phone ? (
-            <p className="mt-4 text-sm text-[#5C6570]">
-              <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="hover:text-[#1B2430]">{phone}</a>
+            <p className="mt-4 text-sm text-[#d7c3af]">
+              <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="hover:text-white">{phone}</a>
               {whatsApp ? (
                 <>
                   {' · '}
-                  <a href={whatsApp} className="hover:text-[#1B2430]">WhatsApp</a>
+                  <a href={whatsApp} className="hover:text-white">WhatsApp</a>
                 </>
               ) : null}
             </p>
@@ -38,38 +40,38 @@ export function SiteFooter({
         </div>
 
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#806A50]">Shop</p>
-          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
-            <Link href="/catalogue" className="hover:text-[#1B2430]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ffe088]">Shop</p>
+          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#d7c3af]">
+            <Link href="/catalogue" className="hover:text-white">
               Catalogue
             </Link>
-            <Link href="/collections" className="hover:text-[#1B2430]">
+            <Link href="/collections" className="hover:text-white">
               Collections
             </Link>
-            <Link href="/categories" className="hover:text-[#1B2430]">
+            <Link href="/categories" className="hover:text-white">
               Categories
             </Link>
-            <Link href="/collections#occasions" className="hover:text-[#1B2430]">
+            <Link href="/collections#occasions" className="hover:text-white">
               Shop by Occasion
             </Link>
-            <Link href="/request-quote" className="hover:text-[#1B2430]">
+            <Link href="/request-quote" className="hover:text-white">
               Request a Quote
             </Link>
           </div>
         </div>
 
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#806A50]">About us</p>
-          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
-            <Link href="/about" className="hover:text-[#1B2430]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ffe088]">About us</p>
+          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#d7c3af]">
+            <Link href="/about" className="hover:text-white">
               About
             </Link>
             {workspaceHref && workspaceLabel ? (
-              <Link href={workspaceHref} className="hover:text-[#1B2430]">
+              <Link href={workspaceHref} className="hover:text-white">
                 {workspaceLabel}
               </Link>
             ) : (
-              <Link href="/login" className="hover:text-[#1B2430]">
+              <Link href="/login" className="hover:text-white">
                 Team Login
               </Link>
             )}
@@ -77,10 +79,10 @@ export function SiteFooter({
         </div>
 
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#806A50]">Shop by price</p>
-          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#5C6570]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ffe088]">Shop by price</p>
+          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#d7c3af]">
             {BUDGET_BANDS.map((band) => (
-              <Link key={band.id} href={`/catalogue?budget=${encodeURIComponent(band.id)}`} className="hover:text-[#1B2430]">
+              <Link key={band.id} href={`/catalogue?budget=${encodeURIComponent(band.id)}`} className="hover:text-white">
                 {band.label}
               </Link>
             ))}
@@ -88,13 +90,13 @@ export function SiteFooter({
         </div>
       </div>
 
-      <div className="border-t border-[#E8E4DE] bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-[#5C6570] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div className="border-t border-[#715a3e]/60">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-[#d7c3af] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© {new Date().getFullYear()} {appName()}. All rights reserved.</p>
           <p className="flex flex-wrap gap-x-3">
             <span>Corporate gifting for teams, clients and brands.</span>
             {marketingUrl && marketingHost ? (
-              <a href={marketingUrl} className="hover:text-[#1B2430]">
+              <a href={marketingUrl} className="hover:text-white">
                 {marketingHost}
               </a>
             ) : null}

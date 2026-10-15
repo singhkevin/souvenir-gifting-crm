@@ -24,14 +24,14 @@ export function AudienceSwitch({
       href={href}
       aria-current={active ? 'page' : undefined}
       onClick={() => choose(mode)}
-      className={`rounded-sm px-2.5 py-1 ${active ? 'bg-[#241C12] text-white' : 'text-[#241C12]'}`}
+      className={`rounded-sm px-2.5 py-1 ${active ? 'bg-[#382c1e] text-white' : 'text-[#22180b]'}`}
     >
       {label}
     </Link>
   )
 
   return (
-    <div className="inline-flex items-center rounded-sm border border-[#241C12]/25 p-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]">
+    <div className="inline-flex items-center rounded-sm border border-[#d0c5bb] bg-[#fff1e5] p-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]">
       {item('/home', 'Retail', !corporate, 'retail')}
       {item(businessHref, 'Corporate/Business', corporate, 'corporate')}
     </div>

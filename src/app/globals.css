@@ -160,6 +160,18 @@
   }
 }
 
+.storefront {
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", "Outfit", sans-serif;
+  background: #fff8f4;
+  color: #221a10;
+  font-family: var(--font-sans);
+}
+
+.storefront :is(h1, h2, h3, h4) {
+  font-family: var(--font-serif);
+}
+
 @layer components {
   .card {
     @apply rounded-lg border border-[#E8E4DE] bg-white shadow-[0_1px_2px_rgba(27,36,48,0.04)];

@@ -5,8 +5,11 @@ import { landingPathForRole } from '@/lib/safe-next'
 import { resolveHost } from '@/lib/portal-host'
 import { SiteHeader } from '@/components/site/site-header'
 import { SiteFooter } from '@/components/site/site-footer'
+import { CategoryIconStrip } from '@/components/site/category-icon-strip'
+import { WhatsAppButton } from '@/components/site/whatsapp-button'
 import { getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
 import { homeCategoryTiles } from '@/lib/catalogue/curate'
+import { STORE_NAV_CATEGORIES, storeNavCategoryHref } from '@/lib/catalogue/store-nav'
 import { slugify } from '@/lib/utils'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolvePublicContactPhone } from '@/lib/contact/public-phone'
@@ -44,8 +47,18 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
     label: category.name,
   }))
 
+  const navCategories = STORE_NAV_CATEGORIES.map((item) => ({
+    href: storeNavCategoryHref(categories, item.name),
+    label: item.label,
+    icon: item.icon,
+  }))
+
   return (
-    <div className="min-h-screen bg-white text-[#1B2430]">
+    <div className="storefront min-h-screen bg-[#fff8f4] text-[#221a10]">
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      />
       <SiteHeader
         workspaceHref={workspaceHref}
         workspaceLabel={workspaceLabel}
@@ -53,9 +66,12 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         categoryLinks={categoryLinks}
         businessHref={isBusiness ? '/business/dashboard' : '/business'}
         hideAudience={hostKind === 'tenant'}
-      />
+      >
+        <CategoryIconStrip items={navCategories} />
+      </SiteHeader>
       <main>{children}</main>
       <SiteFooter workspaceHref={workspaceHref} workspaceLabel={workspaceLabel} phone={phone} />
+      <WhatsAppButton phone={phone} />
     </div>
   )
 }

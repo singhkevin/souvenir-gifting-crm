@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, Search, User, X } from 'lucide-react'
 import { appName } from '@/lib/brand'
-import { BrandName } from '@/components/brand/brand-name'
 import { PwaInstallButton } from '@/components/pwa/pwa-install-button'
 import { AudienceSwitch } from '@/components/site/audience-switch'
 import { CartDrawer } from '@/components/site/cart-drawer'
@@ -33,6 +32,7 @@ export function SiteHeader({
   categoryLinks = [],
   businessHref = '/business',
   hideAudience = false,
+  children,
 }: {
   workspaceHref?: string | null
   workspaceLabel?: string | null
@@ -40,6 +40,7 @@ export function SiteHeader({
   categoryLinks?: { href: string; label: string }[]
   businessHref?: string
   hideAudience?: boolean
+  children?: React.ReactNode
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -97,32 +98,35 @@ export function SiteHeader({
   }
 
   return (
-    <header className="sticky top-0 z-40">
-      {/* Desktop utility bar */}
-      <div className="hidden bg-[#FFD001] text-[#241C12] lg:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-2.5 lg:px-8">
-          <form onSubmit={submitSearch} className="relative flex min-w-0 flex-1 items-center gap-2 max-w-md">
-            <Search size={16} className="shrink-0 text-[#241C12]/70" />
+    <header className="sticky top-0 z-40 border-b border-[#d0c5bb] bg-[#fff8f4]">
+      <div className="bg-[#fff8f4]">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
+          <Link href="/home" className="flex shrink-0 items-center">
+            <Image src="/logo.png" alt={appName()} width={196} height={85} className="h-[52px] w-auto sm:h-[60px]" priority />
+          </Link>
+
+          <form onSubmit={submitSearch} className="relative hidden min-w-0 flex-1 items-center gap-2 lg:flex">
+            <Search size={16} className="shrink-0 text-[#715a3e]" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onFocus={() => setFocused(true)}
               onBlur={() => window.setTimeout(() => setFocused(false), 150)}
-              placeholder="Search our catalogue"
-              className="w-full bg-transparent text-sm text-[#241C12] outline-none placeholder:text-[#241C12]/60"
+              placeholder="Search gifts, kits, brands"
+              className="w-full rounded border border-[#d0c5bb] bg-white px-3 py-2 text-sm text-[#22180b] outline-none placeholder:text-[#7f756d] focus:border-[#715a3e]"
             />
             {focused && matches.length > 0 ? (
-              <div className="absolute left-0 top-full z-50 mt-2 w-full overflow-hidden rounded-md border border-[#E8E4DE] bg-white shadow-lg">
+              <div className="absolute left-0 top-full z-50 mt-2 w-full overflow-hidden rounded-md border border-[#d0c5bb] bg-white shadow-lg">
                 {matches.map((item) => (
                   <Link
                     key={item.id}
                     href={item.href}
-                    className="block px-4 py-2.5 text-sm text-[#1B2430] hover:bg-[#F6F4F1]"
+                    className="block px-4 py-2.5 text-sm text-[#22180b] hover:bg-[#fff1e5]"
                     onMouseDown={(event) => event.preventDefault()}
                   >
                     <span className="block font-medium">{item.name}</span>
                     {item.category_name ? (
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">
+                      <span className="mt-0.5 block text-[10px] uppercase tracking-[0.14em] text-[#715a3e]">
                         {item.category_name}
                       </span>
                     ) : null}
@@ -132,48 +136,28 @@ export function SiteHeader({
             ) : null}
           </form>
 
-          <div className="flex shrink-0 items-center gap-4">
-            <Link href="/home" className="font-serif text-lg tracking-[0.04em] text-[#241C12]">
-              <BrandName />
-            </Link>
+          <div className="hidden shrink-0 items-center gap-3 lg:flex">
             <AudienceSwitch businessHref={businessHref} hide={hideAudience} />
-            <PwaInstallButton variant="light" />
+            <PwaInstallButton />
             {workspaceHref && workspaceLabel ? (
-              <Link href={workspaceHref} className="inline-flex items-center gap-1.5 text-xs text-[#241C12]/85">
+              <Link href={workspaceHref} className="inline-flex items-center gap-1.5 text-xs text-[#22180b]">
                 <User size={14} />
                 {workspaceLabel}
               </Link>
             ) : (
-              <Link href="/login" className="inline-flex items-center gap-1.5 text-xs text-[#241C12]/85">
+              <Link href="/login" className="inline-flex items-center gap-1.5 text-xs text-[#22180b]">
                 <User size={14} />
                 Account
               </Link>
             )}
-            {corporate ? null : <CartDrawer iconClassName="text-[#241C12]" />}
+            {corporate ? null : <CartDrawer iconClassName="text-[#22180b]" />}
             <Link
               href="/request-quote"
-              className="rounded-sm bg-[#241C12] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
+              className="rounded-sm bg-[#382c1e] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
             >
               Quote
             </Link>
           </div>
-        </div>
-      </div>
-
-      {/* Main nav / mobile bar */}
-      <div className="border-b border-[#E8E4DE] bg-white">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
-          <Link href="/home" className="flex items-center">
-            <Image src="/logo.png" alt={appName()} width={196} height={85} className="h-[52px] w-auto sm:h-[60px]" priority />
-          </Link>
-
-          <nav className="hidden items-center gap-5 text-[13px] text-[#1B2430] lg:flex xl:gap-7">
-            {PRIMARY_NAV.map((item) => (
-              <Link key={item.href} href={item.href} className="hover:text-[#806A50]">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
 
           <div className="flex items-center gap-1 sm:gap-2 lg:hidden">
             <PwaInstallButton />
@@ -208,6 +192,10 @@ export function SiteHeader({
               {open ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
+        </div>
+
+        <div className="px-4 pb-2 lg:hidden">
+          <AudienceSwitch businessHref={businessHref} hide={hideAudience} />
         </div>
 
         {/* Mobile search panel */}
@@ -249,8 +237,9 @@ export function SiteHeader({
         ) : null}
 
         {/* Mobile drawer */}
+        {children}
         {open ? (
-          <div className="fixed inset-x-0 bottom-0 top-14 z-50 overflow-y-auto border-t border-[#E8E4DE] bg-white px-4 py-6 sm:top-16 lg:hidden">
+          <div className="absolute inset-x-0 top-full z-50 max-h-[calc(100dvh-8rem)] overflow-y-auto border-t border-[#d0c5bb] bg-[#fff8f4] px-4 py-6 lg:hidden">
             <nav className="mx-auto flex max-w-7xl flex-col gap-1">
               <div className="pb-3">
                 <AudienceSwitch businessHref={businessHref} hide={hideAudience} />

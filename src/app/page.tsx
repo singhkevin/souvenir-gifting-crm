@@ -87,7 +87,7 @@ export default async function RootPage({
 
   return (
     <SiteShell>
-      <PublicHome />
+      <PublicHome searchParams={params} basePath="/" />
     </SiteShell>
   )
 }
