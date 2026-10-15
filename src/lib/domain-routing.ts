@@ -108,6 +108,7 @@ function isStorePath(pathname: string) {
     pathname === '/' ||
     matches(pathname, '/home') ||
     matches(pathname, '/catalogue') ||
+    matches(pathname, '/brands') ||
     matches(pathname, '/categories') ||
     matches(pathname, '/collections') ||
     matches(pathname, '/request-quote') ||

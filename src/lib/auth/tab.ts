@@ -67,6 +67,7 @@ export function isPublicSitePath(pathname: string) {
   const prefixes = [
     '/home',
     '/catalogue',
+    '/brands',
     '/categories',
     '/collections',
     '/request-quote',

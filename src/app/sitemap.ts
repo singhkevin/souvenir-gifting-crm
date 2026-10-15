@@ -7,7 +7,7 @@ import { storePublicOrigin } from '@/lib/site/store-public-origin'
 
 export const dynamic = 'force-dynamic'
 
-const PUBLIC_PATHS = ['/', '/catalogue', '/categories', '/collections', '/about', '/request-quote']
+const PUBLIC_PATHS = ['/', '/catalogue', '/brands', '/categories', '/collections', '/about', '/request-quote']
 
 function entries(origin: string, paths: string[]): MetadataRoute.Sitemap {
   return paths.map((path) => ({ url: new URL(path, origin).toString() }))
