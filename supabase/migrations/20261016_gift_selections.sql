@@ -161,6 +161,12 @@ begin
   if prof.company_id is null then
     raise exception 'Employee is not linked to a company';
   end if;
+  if not exists (
+    select 1 from auth.users u
+    where u.id = auth.uid() and u.email_confirmed_at is not null
+  ) then
+    raise exception 'Confirm your email first';
+  end if;
 
   select * into sel from public.gift_selections where id = new.selection_id;
   if sel.id is null or sel.company_id is distinct from prof.company_id then

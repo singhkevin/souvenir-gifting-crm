@@ -9,6 +9,8 @@ import { getProfile } from '@/lib/auth'
 import { isGiftEmployeeRole } from '@/lib/roles'
 import { readTenantFromHeaders } from '@/lib/portal-host'
 import { withIdempotency } from '@/lib/idempotency'
+import { requestOrigin } from '@/lib/auth/request-origin'
+import { sendEmail } from '@/lib/email/resend'
 import {
   giftChoiceProblem,
   giftEmailProblem,
@@ -47,7 +49,7 @@ async function signUpGiftEmployeeOnce(formData: FormData) {
   const created = await admin.auth.admin.createUser({
     email,
     password,
-    email_confirm: true,
+    email_confirm: false,
     app_metadata: { role: 'gift_employee', company_id: company.id },
     user_metadata: { full_name: fullName },
   })
@@ -72,10 +74,33 @@ async function signUpGiftEmployeeOnce(formData: FormData) {
     return { error: 'Gift selection is not ready yet. Ask your admin to apply the latest database migration.' }
   }
 
-  const supabase = await createClient()
-  const signed = await supabase.auth.signInWithPassword({ email, password })
-  if (signed.error) return { error: 'Account created. Sign in with the same email.' }
-  redirect('/gift')
+  // Prove the employee owns this mailbox before the account can sign in or submit.
+  const origin = await requestOrigin()
+  const link = await admin.auth.admin.generateLink({ type: 'magiclink', email })
+  const tokenHash = link.data?.properties?.hashed_token
+  if (link.error || !tokenHash) {
+    console.error('[gift.signUp] generateLink', link.error?.message)
+    await admin.from('profiles').delete().eq('id', created.data.user.id)
+    await admin.auth.admin.deleteUser(created.data.user.id)
+    return { error: 'Could not send the confirmation email. Please try again shortly.' }
+  }
+  const confirmUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=magiclink&next=${encodeURIComponent('/gift')}`
+  const sent = await sendEmail({
+    to: email,
+    subject: 'Confirm your email to choose your gift',
+    html: giftConfirmEmailHtml(confirmUrl),
+  })
+  if (sent.error) {
+    await admin.from('profiles').delete().eq('id', created.data.user.id)
+    await admin.auth.admin.deleteUser(created.data.user.id)
+    return { error: 'Could not send the confirmation email. Please try again shortly.' }
+  }
+  return { success: true, message: 'Check your work email and open the confirmation link to choose your gift.' }
+}
+
+function giftConfirmEmailHtml(url: string) {
+  const safe = url.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+  return `<p>Confirm your work email to choose your gift.</p><p><a href="${safe}">Confirm email</a></p><p>If you did not sign up, ignore this email.</p>`
 }
 
 export async function signInGiftEmployee(formData: FormData) {
@@ -86,6 +111,10 @@ export async function signInGiftEmployee(formData: FormData) {
   const supabase = await createClient()
   const signed = await supabase.auth.signInWithPassword({ email, password })
   if (signed.error) return { error: 'Invalid email or password' }
+  if (!signed.data.user?.email_confirmed_at) {
+    await supabase.auth.signOut()
+    return { error: 'Confirm your email first. Open the link we sent to your work email.' }
+  }
 
   const profile = await getProfile()
   if (!profile || !profile.is_active || !isGiftEmployeeRole(profile.role) || !profile.company_id) {

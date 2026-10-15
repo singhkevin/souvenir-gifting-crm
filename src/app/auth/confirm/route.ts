@@ -3,6 +3,7 @@ import { type EmailOtpType } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { authCookieOptions, localCookieWriteOptions } from '@/lib/auth/cookie-options'
 import { RECOVERY_COOKIE_NAME } from '@/lib/auth/tab'
+import { isSafeNext } from '@/lib/safe-next'
 
 type PendingCookie = {
   name: string
@@ -78,7 +79,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL(type === 'recovery' ? '/reset-password?error=invalid' : '/login?error=confirm', incoming.origin))
     }
     if (type !== 'recovery') {
-      return redirectWithCookies(request, '/login?confirmed=1&next=/business/dashboard', clearedRecoveryCookies(request, pendingCookies))
+      const next = incoming.searchParams.get('next')
+      if (next === '/gift') {
+        return redirectWithCookies(request, next, clearedRecoveryCookies(request, pendingCookies))
+      }
+      return redirectWithCookies(request, `/login?confirmed=1&next=${isSafeNext(next) ? encodeURIComponent(next) : '/business/dashboard'}`, clearedRecoveryCookies(request, pendingCookies))
     }
     return redirectWithCookies(request, '/reset-password', cookiesForRedirect(request, pendingCookies))
   }

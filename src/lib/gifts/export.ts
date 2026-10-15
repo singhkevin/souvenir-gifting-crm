@@ -37,6 +37,8 @@ function cells(row: GiftExportRow): string[] {
 }
 
 function csvCell(value: string) {
+  // Neutralise spreadsheet formulas typed into free-text fields.
+  if (/^[=+\-@\t\r]/.test(value)) value = `'${value}`
   if (/[",\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
   return value
 }
