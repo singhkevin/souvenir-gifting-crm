@@ -1,11 +1,14 @@
-import { randomBytes } from 'node:crypto'
-
 export type ExpiryChoice = '30' | 'date' | 'none'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
+/** 18 random bytes as base64url (24 chars). Web Crypto keeps this file safe for client bundles. */
 export function newShareToken() {
-  return randomBytes(18).toString('base64url')
+  const bytes = new Uint8Array(18)
+  globalThis.crypto.getRandomValues(bytes)
+  let binary = ''
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 export function expiryFromChoice(
