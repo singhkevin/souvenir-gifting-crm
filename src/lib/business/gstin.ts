@@ -29,12 +29,7 @@ export function gstinCheckDigit(body: string) {
   return CHARSET[(mod - (sum % mod)) % mod]
 }
 
-/** Registration requires a GSTIN. A blank value is still valid for optional CRM fields. */
-export function gstinRequiredError(value: string | null | undefined): string | null {
-  if (!normaliseGstin(value)) return 'GSTIN is required'
-  return gstinError(value)
-}
-
+/** Blank is allowed. A provided value must match the format, state code, and check digit. */
 export function gstinError(value: string | null | undefined): string | null {
   const gstin = normaliseGstin(value)
   if (!gstin) return null

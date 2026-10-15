@@ -17,7 +17,7 @@ export function RegisterForm() {
       <StoreTitle
         eyebrow="Business"
         title="Create an account"
-        lede="India only. Use a work email and a valid GSTIN. Sales approves the account before prices and quotes open."
+        lede="India only. Use a work email. GSTIN is optional, and a number you enter must pass the format and check digit. Sales approves the account before prices and quotes open."
       />
       <input name="fax" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
       <label className="block text-sm">Your name<input name="full_name" required className={storeFieldClass} /></label>
@@ -39,7 +39,7 @@ export function RegisterForm() {
         <label className="block text-sm">City<input name="city" required className={storeFieldClass} /></label>
       </div>
       <label className="block text-sm">Website<input name="website" className={storeFieldClass} /></label>
-      <label className="block text-sm">GSTIN<input name="gst_number" required className={storeFieldClass} /></label>
+      <label className="block text-sm">GSTIN (optional)<input name="gst_number" className={storeFieldClass} placeholder="15-character GSTIN" /></label>
       <TurnstileWidget />
       <SubmitButton pendingLabel="Registering…" className="bg-[#22180b] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#382c1e]">
         Create business account
