@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { workEmailBlock } from '../src/lib/business/email-domain.ts'
-import { gstinRequiredError } from '../src/lib/business/gstin.ts'
+import { readFileSync } from 'node:fs'
+import { gstinError } from '../src/lib/business/gstin.ts'
 import { businessConfirmUrl, confirmLandingPath } from '../src/lib/auth/confirm-landing.ts'
 import { companyHint, companyListLabel, dedupeById } from '../src/lib/catalogs/company-option.ts'
 
@@ -14,11 +15,20 @@ test('business sign-up blocks free email unless the domain is allowlisted', () =
   assert.match(workEmailBlock('buyer@mailinator.com', []) || '', /work email/i)
 })
 
-test('business sign-up requires a GSTIN and still checks the format', () => {
-  assert.match(gstinRequiredError('') || '', /required/i)
-  assert.match(gstinRequiredError('   ') || '', /required/i)
-  assert.equal(gstinRequiredError('27AAACR5055K1Z7'), null)
-  assert.match(gstinRequiredError('27AAACR5055K1Z8') || '', /check digit/)
+test('business sign-up checks GSTIN format only when one is provided', () => {
+  assert.equal(gstinError(''), null)
+  assert.equal(gstinError('   '), null)
+  assert.equal(gstinError('27AAACR5055K1Z7'), null)
+  assert.match(gstinError('27AAACR5055K1Z8') || '', /check digit/)
+  assert.match(gstinError('NOT-A-GSTIN') || '', /15-character/)
+
+  const next = readFileSync(new URL('../supabase/migrations/20261019_optional_registration_gstin.sql', import.meta.url), 'utf8')
+  assert.match(next, /if v_gst is not null then/)
+  assert.doesNotMatch(next, /if v_gst is null or/)
+  assert.match(next, /work email required/)
+  assert.match(next, /email_domain_allowlist/)
+  const applied = readFileSync(new URL('../supabase/migrations/20261018_registration_pricing_samples.sql', import.meta.url), 'utf8')
+  assert.match(applied, /if v_gst is null or v_gst !~/)
 })
 
 test('confirmation link stays on the store host and logs into the business dashboard', () => {

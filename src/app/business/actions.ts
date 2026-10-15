@@ -9,7 +9,7 @@ import { validateNewPassword } from '@/lib/auth/password'
 import { getProfile } from '@/lib/auth'
 import { isBusinessRole } from '@/lib/roles'
 import { classifyBusinessEmail, registrationNotes, workEmailBlock } from '@/lib/business/email-domain'
-import { gstinRequiredError, normaliseGstin } from '@/lib/business/gstin'
+import { gstinError, normaliseGstin } from '@/lib/business/gstin'
 import { businessConfirmUrl } from '@/lib/auth/confirm-landing'
 import {
   mapRegistrationFailure,
@@ -89,7 +89,7 @@ async function registerBusinessOnce(formData: FormData) {
   if (!legalName) return { error: 'Legal name is required' }
   if (!city) return { error: 'City is required' }
   if (country.toLowerCase() !== 'india') return { error: 'Business registration is available in India only' }
-  const gstError = gstinRequiredError(gstin)
+  const gstError = gstinError(gstin)
   if (gstError) return { error: gstError }
 
   const admin = createAdminClient()

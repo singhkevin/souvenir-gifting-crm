@@ -16,7 +16,7 @@ export function RegisterForm() {
       <div>
         <h1 className="font-serif text-3xl">Register a business</h1>
         <p className="mt-2 text-sm text-[#5C6570]">
-          India only. Use a work email and a valid GSTIN. Sales approves the account before prices and quotes open.
+          India only. Use a work email. GSTIN is optional, and a number you enter must pass the format and check digit. Sales approves the account before prices and quotes open.
         </p>
       </div>
       <input name="fax" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
@@ -39,7 +39,7 @@ export function RegisterForm() {
         <label className="block text-sm">City<input name="city" required className="mt-1 w-full rounded-md border border-[#E5DFD5] px-3 py-2" /></label>
       </div>
       <label className="block text-sm">Website<input name="website" className="mt-1 w-full rounded-md border border-[#E5DFD5] px-3 py-2" /></label>
-      <label className="block text-sm">GSTIN<input name="gst_number" required className="mt-1 w-full rounded-md border border-[#E5DFD5] px-3 py-2" /></label>
+      <label className="block text-sm">GSTIN (optional)<input name="gst_number" className="mt-1 w-full rounded-md border border-[#E5DFD5] px-3 py-2" placeholder="15-character GSTIN" /></label>
       <TurnstileWidget />
       <SubmitButton pendingLabel="Registering…" className="bg-[#806A50] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
         Create business account
