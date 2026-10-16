@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
-import { StorePageHeader } from '@/components/site/store-ui'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
 import { getPublicCatalogueProducts } from '@/lib/catalogue/products'
 import { PRODUCT_CATEGORY_ORDER } from '@/lib/products/categories'
@@ -31,7 +30,12 @@ export default async function CategoryDetailPage({ params }: Props) {
 
   return (
     <SiteShell>
-      <StorePageHeader eyebrow="Category" title={name} lede="Gifts in this category, ready to add to your cart." />
+      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <p className="store-eyebrow">Category</p>
+          <h1 className="store-section-title mt-2">{name}</h1>
+        </div>
+      </div>
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <CatalogueBrowser products={filtered} />
       </div>

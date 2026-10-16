@@ -7,7 +7,7 @@ import { SiteProductCard } from '@/components/site/site-product-card'
 import { formatCurrency } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
 import type { PublicProduct } from '@/lib/catalogue/products'
-import { retailStatusLabel } from '@/lib/catalogue/storefront'
+import { purchaseCaption } from '@/lib/catalogue/purchase-path'
 
 const VIEW_KEY = 'giffter.public-catalogue.view'
 
@@ -63,13 +63,13 @@ export function CatalogueBrowser({
   return (
     <div className="space-y-8">
       <div className="flex justify-end">
-        <div className="inline-flex overflow-hidden rounded-md border border-[#eadfd4]">
+        <div className="inline-flex overflow-hidden rounded-md border border-[#E8E4DE]">
           <button
             type="button"
             onClick={() => choose('grid')}
             aria-pressed={view === 'grid'}
             className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-              view === 'grid' ? 'bg-[#22180b] text-white' : 'bg-white text-[#4d453e]'
+              view === 'grid' ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-white text-[#5C6570]'
             }`}
           >
             <LayoutGrid size={13} /> Grid
@@ -79,7 +79,7 @@ export function CatalogueBrowser({
             onClick={() => choose('list')}
             aria-pressed={view === 'list'}
             className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-              view === 'list' ? 'bg-[#22180b] text-white' : 'bg-white text-[#4d453e]'
+              view === 'list' ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-white text-[#5C6570]'
             }`}
           >
             <List size={13} /> List
@@ -125,8 +125,8 @@ export function CatalogueBrowser({
                 <p className="mt-1 font-mono text-[10px] text-[#5C6570]">{product.sku}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-[#806A50]">{priceLabel?.(product) || (product.price == null ? '—' : formatCurrency(product.price))}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">{captionFor?.(product) || retailStatusLabel(product.purchase)}</p>
+                <p className="text-sm font-semibold text-[#806A50]">{priceLabel?.(product) || (product.price == null ? 'Request quotation' : formatCurrency(product.price))}</p>
+                <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">{captionFor?.(product) || purchaseCaption(product.purchase)}</p>
               </div>
             </Link>
           ))}

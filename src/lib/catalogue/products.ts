@@ -255,7 +255,7 @@ function previewPublicProduct(id: string): PublicProduct | null {
     id,
     name: stock ? 'Steel bottle' : 'Desk diary',
     sku: stock ? 'BTL-1' : 'DRY-1',
-    description: 'A gift from the catalogue, ready to order.',
+    description: 'One sample from what is on hand. Larger quantities are quoted.',
     image_url: '/site/home-welcome-kit.webp',
     price: 450,
     moq: 25,

@@ -21,8 +21,8 @@ function firstParam(value: string | string[] | undefined) {
 
 export async function generateMetadata(): Promise<Metadata> {
   const catalogue = {
-    title: `${appName()} — Gifts for every occasion`,
-    description: "Curated gifts, designed to be remembered.",
+    title: `${appName()} — Corporate Gifting, Refined`,
+    description: "A premium corporate gifting catalogue for teams, clients and brands.",
   }
   if (!domainSplitEnabled()) return catalogue
   const h = await headers()
@@ -88,7 +88,7 @@ export default async function RootPage({
   }
 
   return (
-    <SiteShell>
+    <SiteShell categoryVariant="compact">
       <Suspense fallback={<RetailHomeSkeleton />}>
         <PublicHome searchParams={params} basePath="/" />
       </Suspense>

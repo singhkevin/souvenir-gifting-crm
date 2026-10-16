@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { RetailHero } from '@/components/site/retail-hero'
 import { BrandLogoRow, ProductSection, RetailOccasionBento } from '@/components/site/stitch-sections'
@@ -59,8 +60,8 @@ export async function PublicHome({
       <RetailOccasionBento products={products} priceOf={storePrice} />
 
       <ProductSection
-        eyebrow="Most loved"
-        title="Bestsellers"
+        eyebrow="Most requested"
+        title="Corporate bestsellers"
         actionHref="/catalogue?sort=newest"
         action="View all"
         products={bestsellers}
@@ -69,11 +70,11 @@ export async function PublicHome({
         tone="retail"
       />
 
-      <BrandLogoRow brands={brands} eyebrow="Shop by brand" title="Brands" tone="retail" />
+      <BrandLogoRow brands={brands} eyebrow="Merchandise partners" title="Authorised brand alliances" tone="retail" />
 
       <ProductSection
         eyebrow="Everyday"
-        title="Gifts under ₹999"
+        title="Merchandise under ₹999"
         actionHref="/catalogue?priceMax=998"
         action="View all"
         products={underRail}
@@ -84,7 +85,7 @@ export async function PublicHome({
 
       <ProductSection
         eyebrow="Seasonal"
-        title="Festive hampers"
+        title="Diwali & bespoke festive hampers"
         actionHref="/collections/festival-gifting"
         action="View all"
         products={festive}
@@ -100,8 +101,8 @@ export async function PublicHome({
         brands={brands}
         filters={filters}
         basePath={basePath}
-        heading="Shop the catalogue"
-        intro="Filter by category, brand, price and occasion."
+        heading="Live procurement catalogue"
+        intro="Filter the live catalogue by category, brand, price and occasion."
         priceOf={storePrice}
         limit={8}
         tone="retail"
@@ -112,11 +113,14 @@ export async function PublicHome({
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 sm:px-6 lg:px-8">
             <p className="text-sm text-[#4d453e]">In stock</p>
             <AddToCartButton
-              maxQuantity={4}
-              label="Add to cart"
+              maxQuantity={1}
+              label="Buy 1 sample"
               product={{ id: '33333333-3333-4333-8333-333333333333', sku: 'BTL-1', name: 'Steel bottle', price: 450, image_url: '/site/home-festive-cane.webp' }}
               className="inline-flex bg-[#382c1e] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
             />
+            <Link href="/request-quote" className="inline-flex border border-[#d0c5bb] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#22180b]">
+              Request a Quote
+            </Link>
           </div>
         </section>
       ) : null}
