@@ -6,10 +6,10 @@ import { SiteShell } from '@/components/site/site-shell'
 import { ProductImage } from '@/components/ui/product-image'
 import { QuoteModal } from '@/components/site/quote-modal'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
-import { RetailBuyActions } from '@/components/site/retail-buy'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { getPublicProduct } from '@/lib/catalogue/products'
-import { shopModeFromCookie, SHOP_MODE_COOKIE, retailStatusLabel } from '@/lib/catalogue/storefront'
+import { purchaseCaption } from '@/lib/catalogue/purchase-path'
+import { shopModeFromCookie, SHOP_MODE_COOKIE } from '@/lib/catalogue/storefront'
 import { appName } from '@/lib/brand'
 
 type Props = { params: Promise<{ id: string }> }
@@ -21,10 +21,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return { title: 'Product' }
   return {
     title: product.name,
-    description: product.description || `${product.name} from the ${appName()} gift catalogue.`,
+    description: product.description || `${product.name} — ${appName()} corporate gifting catalogue.`,
     openGraph: {
       title: `${product.name} · ${appName()}`,
-      description: product.description || `${product.name} from ${appName()}.`,
+      description: product.description || `Corporate gifting from ${appName()}.`,
       siteName: appName(),
       images: product.image_url ? [{ url: product.image_url }] : undefined,
     },
@@ -40,8 +40,8 @@ export default async function PublicProductPage({ params }: Props) {
   const corporate = shopModeFromCookie(jar.get(SHOP_MODE_COOKIE)?.value) === 'corporate'
   const buy = product.purchase.buy ? (
     <AddToCartButton
-      maxQuantity={product.purchase.maxBuyQty}
-      label="Add to cart"
+      maxQuantity={1}
+      label="Buy 1 sample"
       product={{
         id: product.id,
         sku: product.sku,
@@ -49,7 +49,11 @@ export default async function PublicProductPage({ params }: Props) {
         price: product.price,
         image_url: product.image_url,
       }}
-      className="inline-flex justify-center border border-[#E5DFD5] px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#806A50] hover:bg-[#FAF7F2] sm:py-3"
+      className={`inline-flex justify-center px-7 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] sm:py-3 ${
+        corporate
+          ? 'border border-[#E5DFD5] text-[#806A50] hover:bg-[#FAF7F2]'
+          : 'bg-[#806A50] text-white hover:bg-[#9C8567]'
+      }`}
     />
   ) : null
   const quote = product.purchase.rfq ? (
@@ -68,7 +72,7 @@ export default async function PublicProductPage({ params }: Props) {
 
   return (
     <SiteShell>
-      <article className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:gap-10 sm:px-6 sm:py-14 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:py-16">
+      <article className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:gap-10 sm:px-6 sm:py-12 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:py-16">
         <div className="overflow-hidden rounded-md catalogue-studio-field">
           <ProductImage
             src={product.image_url}
@@ -82,69 +86,40 @@ export default async function PublicProductPage({ params }: Props) {
         </div>
         <div className="lg:py-4">
           {product.category_name ? (
-            <p className="store-eyebrow">{product.category_name}</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-[#5C6570]">{product.category_name}</p>
           ) : null}
-          <h1 className="store-section-title mt-3">{product.name}</h1>
-          {product.brand_name ? <p className="mt-3 text-sm text-[#4d453e]">{product.brand_name}</p> : null}
-          <p className="mt-6 text-2xl font-semibold text-[#22180b]">
-            {product.price == null ? (corporate ? 'Price on quote' : '—') : formatCurrency(product.price)}
+          <h1 className="mt-3 font-serif text-3xl tracking-tight sm:text-4xl lg:text-5xl">{product.name}</h1>
+          {product.brand_name ? <p className="mt-3 text-sm text-[#5C6570]">{product.brand_name}</p> : null}
+          <p className="mt-6 text-2xl font-semibold text-[#806A50]">
+            {product.price == null ? 'Request a quote' : formatCurrency(product.price)}
           </p>
-          <p className="mt-2 text-xs text-[#4d453e]">
-            {corporate
-              ? product.purchase.rfq
-                ? `Quote from ${product.moq || 1} units`
-                : retailStatusLabel(product.purchase)
-              : retailStatusLabel(product.purchase)}
-          </p>
+          <p className="mt-2 text-xs text-[#5C6570]">{purchaseCaption(product.purchase)}</p>
+          {product.purchase.rfq ? (
+            <p className="mt-1 text-xs text-[#5C6570]">Quote minimum {product.moq || 1} units</p>
+          ) : null}
 
-          <p className="mt-8 max-w-md text-sm leading-7 text-[#4d453e]">
+          <p className="mt-8 max-w-md text-sm leading-relaxed text-[#5C6570]">
             {product.description ||
-              (corporate
-                ? 'Add this gift to a quote, or buy what is in stock.'
-                : 'A gift from the catalogue, ready to order.')}
+              'Share a requirement and we will prepare a quotation with branding and packaging options.'}
           </p>
 
           <dl className="mt-10 space-y-3 text-sm">
-            <div className="flex justify-between border-b border-[#eadfd4] py-2">
-              <dt className="text-[#4d453e]">SKU</dt>
+            <div className="flex justify-between border-b border-[#E8E4DE] py-2">
+              <dt className="text-[#5C6570]">SKU</dt>
               <dd className="font-mono text-xs">{product.sku}</dd>
             </div>
-            <div className="flex justify-between border-b border-[#eadfd4] py-2">
-              <dt className="text-[#4d453e]">Availability</dt>
-              <dd>
-                {corporate
-                  ? product.purchase.buy
-                    ? 'Available to buy'
-                    : product.purchase.rfq
-                      ? 'Available to quote'
-                      : retailStatusLabel(product.purchase)
-                  : retailStatusLabel(product.purchase)}
-              </dd>
+            <div className="flex justify-between border-b border-[#E8E4DE] py-2">
+              <dt className="text-[#5C6570]">Availability</dt>
+              <dd>{product.purchase.buy ? 'Available to buy' : 'Available to quote'}</dd>
             </div>
           </dl>
 
           <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:gap-4">
-            {corporate ? (
-              <>
-                {quote}
-                {buy}
-              </>
-            ) : (
-              <RetailBuyActions
-                layout="row"
-                product={{
-                  id: product.id,
-                  sku: product.sku,
-                  name: product.name,
-                  price: product.price,
-                  image_url: product.image_url,
-                  purchase: product.purchase,
-                }}
-              />
-            )}
+            {corporate ? quote : buy}
+            {corporate ? buy : quote}
             <Link
               href="/catalogue"
-              className="inline-flex justify-center py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#735c00]"
+              className="inline-flex justify-center py-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#806A50]"
             >
               Back to catalogue
             </Link>

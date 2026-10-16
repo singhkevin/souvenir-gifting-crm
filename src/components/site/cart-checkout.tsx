@@ -7,7 +7,6 @@ import { checkoutPortalCart } from '@/app/portal/catalogue/actions'
 import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import type { CartItem } from '@/lib/catalogue/cart'
-import { storeFieldClass } from '@/components/site/store-ui'
 
 export function CartCheckout({
   items,
@@ -99,28 +98,28 @@ export function CartCheckout({
             onChange={(event) => setForm({ ...form, full_name: event.target.value })}
             placeholder="Your name"
             autoComplete="name"
-            className={storeFieldClass}
+            className="w-full rounded-md border border-[#E5DFD5] px-3 py-2 text-sm"
           />
           <input
             value={form.email}
             onChange={(event) => setForm({ ...form, email: event.target.value })}
             placeholder="Email"
             autoComplete="email"
-            className={storeFieldClass}
+            className="w-full rounded-md border border-[#E5DFD5] px-3 py-2 text-sm"
           />
           <input
             value={form.company_name}
             onChange={(event) => setForm({ ...form, company_name: event.target.value })}
             placeholder="Company"
             autoComplete="organization"
-            className={storeFieldClass}
+            className="w-full rounded-md border border-[#E5DFD5] px-3 py-2 text-sm"
           />
           <input
             value={form.phone}
             onChange={(event) => setForm({ ...form, phone: event.target.value })}
             placeholder="Phone (optional)"
             autoComplete="tel"
-            className={storeFieldClass}
+            className="w-full rounded-md border border-[#E5DFD5] px-3 py-2 text-sm"
           />
           <input
             value={form.fax}
@@ -138,7 +137,7 @@ export function CartCheckout({
         disabled={pending}
         aria-busy={pending || undefined}
         onClick={submit}
-        className="flex w-full items-center justify-center bg-[#22180b] px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#382c1e] disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center bg-[#806A50] px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? (
           <span className="inline-flex items-center justify-center gap-2">

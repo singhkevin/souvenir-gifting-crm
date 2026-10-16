@@ -21,7 +21,6 @@ export function AddToCartButton({
   surface = 'store',
   catalogId = null,
   label = 'Add to cart',
-  openCart = false,
 }: {
   product: CartDraft
   className: string
@@ -32,8 +31,6 @@ export function AddToCartButton({
   surface?: CartSurface
   catalogId?: string | null
   label?: string
-  /** After a successful add, open the cart so the shopper can check out. */
-  openCart?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [qty, setQty] = useState(1)
@@ -82,7 +79,6 @@ export function AddToCartButton({
     setOpen(false)
     setQtyValue(1)
     setAdded(true)
-    if (openCart) window.dispatchEvent(new Event('giffter-cart-open'))
     window.setTimeout(() => setAdded(false), 1600)
   }
 
@@ -90,7 +86,7 @@ export function AddToCartButton({
     <>
       <button
         type="button"
-        aria-label={compact ? (added ? 'Added to cart' : label) : undefined}
+        aria-label={compact ? (added ? 'Added to cart' : 'Add to cart') : undefined}
         onClick={(event) => {
           event.preventDefault()
           event.stopPropagation()
@@ -226,7 +222,7 @@ export function AddToCartButton({
                   }}
                   className="mt-5 flex w-full items-center justify-center gap-2 bg-[#806A50] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#9C8567]"
                 >
-                  <ShoppingBag size={14} /> {openCart ? `Buy ${qty} now` : `Add ${qty} to cart`}
+                  <ShoppingBag size={14} /> Add {qty} to cart
                 </button>
               </div>
             </div>,

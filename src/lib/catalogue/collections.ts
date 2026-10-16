@@ -40,7 +40,7 @@ export const CATALOGUE_COLLECTIONS: CatalogueCollection[] = [
   },
   {
     slug: 'festival-gifting',
-    title: 'Festive gifts',
+    title: 'Festive Corporate',
     kicker: 'Collection',
     description: 'Premium seasonal gifting for celebrations and festivals.',
     match: (product) =>
@@ -71,7 +71,7 @@ export const CATALOGUE_COLLECTIONS: CatalogueCollection[] = [
   },
   {
     slug: 'premium-corporate-gifts',
-    title: 'Premium gifts',
+    title: 'Premium Corporate Gifts',
     kicker: 'Collection',
     description: 'Higher-value catalogue pieces, selected from existing prices.',
     match: (product) => (product.price || 0) >= 2000,
