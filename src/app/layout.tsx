@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { DM_Serif_Display, JetBrains_Mono, Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { appName, appShortName, publicSiteUrl } from '@/lib/brand'
 import { Toaster } from 'sonner'
@@ -7,11 +8,37 @@ import { TabSessionProvider } from '@/components/auth/tab-session-provider'
 import { RecoveryHashRedirect } from '@/components/auth/recovery-hash-redirect'
 import { PwaInstallProvider } from '@/components/pwa/pwa-install-provider'
 
-const FONT_STYLESHEET =
-  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap'
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['700', '900'],
+  variable: '--font-playfair',
+  display: 'swap',
+})
+
+const dmSerif = DM_Serif_Display({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-dm-serif',
+  display: 'swap',
+})
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-jakarta',
+  display: 'swap',
+})
+
+const jetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+})
 
 export const viewport: Viewport = {
-  themeColor: '#806A50',
+  themeColor: '#151515',
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
@@ -56,11 +83,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${playfair.variable} ${dmSerif.variable} ${jakarta.variable} ${jetbrains.variable}`}
+      suppressHydrationWarning
+    >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link rel="stylesheet" href={FONT_STYLESHEET} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.add('js-ready')`,
+          }}
+        />
       </head>
       <body className="h-full antialiased">
         <RecoveryHashRedirect />

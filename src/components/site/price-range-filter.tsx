@@ -50,14 +50,14 @@ export function PriceRangeFilter({
 
   return (
     <div>
-      <div className="flex items-center justify-between text-xs text-[#5C6570]">
+      <div className="flex items-center justify-between font-mono text-xs text-ink-secondary">
         <span>{formatCurrency(range.min)}</span>
         <span>{formatCurrency(range.max)}</span>
       </div>
       <div className="relative mt-3 h-5">
-        <div className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[#E8E4DE]" />
+        <div className="absolute top-1/2 right-0 left-0 h-1 -translate-y-1/2 rounded-full bg-cream-border" />
         <div
-          className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-[#806A50]"
+          className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-charcoal"
           style={{ left: `${leftPct}%`, right: `${100 - rightPct}%` }}
         />
         <input

@@ -225,13 +225,14 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
                       href={item.href}
                       ref={isActive ? activeRef : undefined}
                       onClick={onNavigate}
-                      className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all ${
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors ${
                         isActive
-                          ? 'bg-[#FFD001] font-semibold text-[#241C12] shadow-sm'
-                          : 'text-[#BEAE92] hover:bg-[#2F2313] hover:text-[#FAF7F2]'
+                          ? 'bg-sidebar-active font-semibold text-sidebar-active-fg'
+                          : 'text-sidebar-text hover:bg-charcoal-elevated hover:text-cream'
                       }`}
                     >
-                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#241C12]' : 'text-[#9C8A70]'}`} />
+                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-current' : 'text-[#9C8A70]'}`} />
                       <span>{item.label}</span>
                     </Link>
                   );

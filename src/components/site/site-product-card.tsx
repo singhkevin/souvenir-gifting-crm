@@ -5,9 +5,12 @@ import { formatCurrency } from '@/lib/utils'
 import type { PublicProduct } from '@/lib/catalogue/products'
 import { cn } from '@/lib/utils'
 
+function fallbackLabel(product: PublicProduct) {
+  return product.purchase.reason === 'zero-stock' ? 'Notify me' : 'Enquire for custom'
+}
+
 /**
- * Retail product tile inspired by craft storefronts:
- * clean white card, studio image, name + price.
+ * Retail catalogue tile: cream image well, INR price, one Add to cart.
  */
 export function SiteProductCard({
   product,
@@ -25,57 +28,66 @@ export function SiteProductCard({
   caption?: string
   hideQuickAdd?: boolean
 }) {
-  return (
-    <Link
-      href={href || `/catalogue/${product.id}`}
-      className="group block text-inherit hover:text-inherit"
-    >
-      <div
-        className={cn(
-          'relative overflow-hidden rounded-md catalogue-studio-field',
-          'transition-transform duration-300 group-hover:-translate-y-0.5 motion-reduce:transition-none',
-          featured ? 'aspect-[4/5]' : 'aspect-square',
-        )}
-      >
-        <ProductImage
-          src={product.image_url}
-          alt={product.name}
-          size="md"
-          fit="contain"
-          fadeEdges
-          className="absolute inset-0 h-full w-full bg-transparent"
-          imgClassName="catalogue-product-img scale-[1.03]"
-        />
-        {product.purchase.buy && !hideQuickAdd ? (
-          <AddToCartButton
-            compact
-            maxQuantity={product.purchase.maxBuyQty}
-            product={{
-              id: product.id,
-              sku: product.sku,
-              name: product.name,
-              price: product.price,
-              image_url: product.image_url,
-            }}
-            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#806A50] opacity-100 shadow-sm transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-          />
-        ) : null}
-      </div>
+  const priced = product.price != null && product.price > 0
+  const destination = href || `/catalogue/${product.id}`
 
-      <div className="mt-3 space-y-1 px-0.5 text-center">
-        <h3
+  return (
+    <article className="group flex h-full flex-col overflow-hidden rounded border border-cream-border bg-cream-card shadow-sm transition-[transform,border-color,box-shadow] duration-150 ease-out hover:-translate-y-0.5 hover:border-saffron-border hover:shadow-md">
+      <Link href={destination} className="block text-inherit">
+        <div
           className={cn(
-            'line-clamp-2 text-[#1B2430]',
-            featured ? 'font-serif text-xl leading-snug' : 'text-[13px] leading-snug sm:text-sm',
+            'relative overflow-hidden bg-cream-surface',
+            featured ? 'aspect-[4/5]' : 'aspect-square',
           )}
         >
-          {product.name}
-        </h3>
-        <p className="text-[15px] font-semibold text-[#806A50]">{priceText || (product.price == null ? 'Request quotation' : formatCurrency(product.price))}</p>
-        <p className="text-[10px] uppercase tracking-[0.12em] text-[#5C6570]">
-          {caption || (product.purchase.buy ? 'Add to cart' : 'Request quote')}
-        </p>
-      </div>
-    </Link>
+          <ProductImage
+            src={product.image_url}
+            alt={product.name}
+            size="md"
+            fit="contain"
+            className="absolute inset-0 h-full w-full bg-transparent transition-transform duration-150 ease-out group-hover:scale-[1.03]"
+          />
+          {product.purchase.buy && !hideQuickAdd ? (
+            <span className="absolute top-2 left-2 border border-success bg-success-bg px-2 py-0.5 font-mono text-[11px] font-medium tracking-[0.04em] text-success uppercase">
+              In stock
+            </span>
+          ) : null}
+        </div>
+        <div className="px-3 pt-3">
+          {product.sku ? (
+            <p className="truncate font-mono text-[11px] font-medium tracking-[0.06em] text-ink-tertiary uppercase">{product.sku}</p>
+          ) : null}
+          <h3 className={cn('store-product-title mt-1 line-clamp-2', featured ? 'text-lg' : 'text-base')}>{product.name}</h3>
+          <p className="store-price mt-2">{priceText || (priced ? formatCurrency(product.price) : null)}</p>
+          {caption ? <p className="mt-1 text-xs text-ink-secondary">{caption}</p> : null}
+        </div>
+      </Link>
+      {hideQuickAdd ? null : (
+        <div className="mt-auto px-3 pt-3 pb-3">
+          {product.purchase.buy ? (
+            <AddToCartButton
+              instant
+              maxQuantity={product.purchase.maxBuyQty}
+              label="Add to cart"
+              product={{
+                id: product.id,
+                sku: product.sku,
+                name: product.name,
+                price: product.price,
+                image_url: product.image_url,
+              }}
+              className="inline-flex min-h-11 w-full items-center justify-center bg-saffron px-3 text-sm font-bold text-charcoal hover:bg-saffron-hover"
+            />
+          ) : (
+            <Link
+              href={`/request-quote?product=${product.id}`}
+              className="inline-flex min-h-11 w-full items-center justify-center border border-ink text-sm font-semibold text-ink hover:bg-cream-surface"
+            >
+              {fallbackLabel(product)}
+            </Link>
+          )}
+        </div>
+      )}
+    </article>
   )
 }

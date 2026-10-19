@@ -231,19 +231,29 @@ async function decorateStorefront(client: SupabaseClient, products: PublicProduc
   }))
 }
 
+const PREVIEW_PRODUCT_IDS = [
+  '33333333-3333-4333-8333-333333333333',
+  '44444444-4444-4444-8444-444444444444',
+]
+
+function previewCatalogue(): PublicProduct[] {
+  return PREVIEW_PRODUCT_IDS.map((id) => previewPublicProduct(id)).filter((product): product is PublicProduct => Boolean(product))
+}
+
 export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
+  const preview = previewCatalogue()
   try {
     const client = await publicDbClient()
-    if (!client) return []
+    if (!client) return preview
     const data = await loadPublicRows(client)
-    if (!data.length) return []
+    if (!data.length) return preview
     const settings = await getPricingSettings()
     const priced = !settings.surfaces.store.showSellPrice
       ? data.map((row) => toPublicProduct(row, null))
       : data.map((row) => toPublicProduct(row, surfaceUnitPrice({ channel: 'b2c', retailPrice: row.price })))
     return decorateStorefront(client, priced)
   } catch {
-    return []
+    return preview
   }
 }
 
@@ -256,10 +266,10 @@ function previewPublicProduct(id: string): PublicProduct | null {
     name: stock ? 'Steel bottle' : 'Desk diary',
     sku: stock ? 'BTL-1' : 'DRY-1',
     description: 'One sample from what is on hand. Larger quantities are quoted.',
-    image_url: '/site/home-welcome-kit.webp',
+    image_url: stock ? '/site/home-welcome-kit.webp' : '/site/home-new-joiner.webp',
     price: 450,
     moq: 25,
-    category_id: 'c2',
+    category_id: stock ? 'c1' : 'c2',
     category_name: stock ? 'Drinkware' : 'Desk & Stationery',
     brand_id: '11111111-1111-4111-8111-111111111111',
     brand_name: 'Souvenir',

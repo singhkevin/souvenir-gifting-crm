@@ -21,6 +21,7 @@ export function AddToCartButton({
   surface = 'store',
   catalogId = null,
   label = 'Add to cart',
+  instant = false,
 }: {
   product: CartDraft
   className: string
@@ -31,6 +32,8 @@ export function AddToCartButton({
   surface?: CartSurface
   catalogId?: string | null
   label?: string
+  /** Adds one unit immediately. Retail cards use this. */
+  instant?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [qty, setQty] = useState(1)
@@ -91,6 +94,26 @@ export function AddToCartButton({
           event.preventDefault()
           event.stopPropagation()
           setError(null)
+          if (instant) {
+            const result = addToCart(
+              {
+                ...product,
+                maxQuantity: cap,
+                surface: product.surface || surface,
+                catalogId: product.catalogId || catalogId,
+              },
+              1,
+              cartKey,
+            )
+            if (result.error) {
+              setError(result.error)
+              return
+            }
+            setAdded(true)
+            window.setTimeout(() => setAdded(false), 1600)
+            window.dispatchEvent(new Event('giffter-cart-open'))
+            return
+          }
           setQtyValue(1)
           setOpen(true)
         }}
@@ -112,6 +135,11 @@ export function AddToCartButton({
           </span>
         )}
       </button>
+      {instant && error ? (
+        <span className="mt-1 block text-center text-[11px] text-error" role="alert">
+          {error}
+        </span>
+      ) : null}
 
       {open
         ? createPortal(
@@ -132,7 +160,7 @@ export function AddToCartButton({
               <div
                 role="dialog"
                 aria-modal="true"
-                className="relative z-10 w-full max-w-xs rounded-md bg-white p-5 shadow-[0_20px_60px_rgba(0,0,0,0.25)]"
+                className="relative z-10 w-full max-w-xs rounded-lg border border-cream-border bg-cream-card p-5 shadow-lg"
               >
                 <button
                   type="button"
@@ -142,7 +170,7 @@ export function AddToCartButton({
                     event.stopPropagation()
                     setOpen(false)
                   }}
-                  className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-[#F6F4F1] text-[#5C6570] hover:bg-[#EFE9E0]"
+                  className="absolute top-3 right-3 flex h-11 w-11 items-center justify-center rounded-full bg-cream-surface text-ink-secondary hover:bg-cream"
                 >
                   <X size={14} />
                 </button>
@@ -158,14 +186,14 @@ export function AddToCartButton({
                     />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-[#1B2430]">{product.name}</p>
+                    <p className="truncate text-sm text-ink">{product.name}</p>
                     {product.price != null ? (
-                      <p className="mt-0.5 text-xs font-semibold text-[#806A50]">{formatCurrency(product.price)}</p>
+                      <p className="store-price mt-0.5 text-sm">{formatCurrency(product.price)}</p>
                     ) : null}
                   </div>
                 </div>
 
-                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#5C6570]">Quantity</p>
+                <p className="store-eyebrow mt-4">Quantity</p>
                 <div className="mt-2 flex items-center justify-center gap-4">
                   <button
                     type="button"
@@ -175,7 +203,7 @@ export function AddToCartButton({
                       event.stopPropagation()
                       setQtyValue(qty - 1)
                     }}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-ink-tertiary text-ink-secondary hover:bg-cream-surface"
                   >
                     <Minus size={14} />
                   </button>
@@ -193,7 +221,7 @@ export function AddToCartButton({
                       if (digits) setQty(Math.max(1, parseInt(digits, 10)))
                     }}
                     onBlur={() => setQtyValue(Number(qtyDraft) || 1)}
-                    className="w-16 shrink-0 rounded-md border border-[#E5DFD5] bg-white py-1.5 text-center text-lg text-[#1B2430] outline-none focus:border-[#806A50] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="h-11 w-16 shrink-0 rounded border border-ink-tertiary bg-cream-card text-center font-mono text-lg text-ink outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <button
                     type="button"
@@ -203,15 +231,15 @@ export function AddToCartButton({
                       event.stopPropagation()
                       setQtyValue(qty + 1)
                     }}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-ink-tertiary text-ink-secondary hover:bg-cream-surface"
                   >
                     <Plus size={14} />
                   </button>
                 </div>
-                <p className="mt-2 text-center text-[11px] text-[#8A929C]">
+                <p className="mt-2 text-center text-[11px] text-cream-muted">
                   {cap != null ? `Up to ${cap} available to buy now.` : 'Type the quantity you need.'}
                 </p>
-                {error ? <p className="mt-2 text-center text-[11px] text-red-700">{error}</p> : null}
+                {error && !instant ? <p className="mt-2 text-center text-[11px] text-error">{error}</p> : null}
 
                 <button
                   type="button"
@@ -220,7 +248,7 @@ export function AddToCartButton({
                     event.stopPropagation()
                     confirmAdd()
                   }}
-                  className="mt-5 flex w-full items-center justify-center gap-2 bg-[#806A50] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#9C8567]"
+                  className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 bg-saffron px-4 text-sm font-bold text-charcoal hover:bg-saffron-hover"
                 >
                   <ShoppingBag size={14} /> Add {qty} to cart
                 </button>

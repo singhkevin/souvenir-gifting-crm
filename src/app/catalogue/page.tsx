@@ -119,39 +119,39 @@ export default async function CataloguePage({
   const filterLinkClass = (active: boolean) =>
     `flex items-center justify-between gap-3 border-l-2 py-2 pl-3 text-sm transition-colors ${
       active
-        ? 'border-[#806A50] font-medium text-[#806A50]'
-        : 'border-transparent text-[#5C6570] hover:border-[#C9C3BA] hover:text-[#1B2430]'
+        ? 'border-saffron font-medium text-charcoal'
+        : 'border-transparent text-ink-secondary hover:border-cream-border hover:text-ink'
     }`
 
   return (
     <SiteShell>
-      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <p className="text-sm text-[#5C6570]">
-            <Link href="/home" className="hover:text-[#806A50]">
+      <div className="border-b border-cream-border bg-cream-surface">
+        <div className="store-container py-10 sm:py-14">
+          <p className="text-sm text-ink-secondary">
+            <Link href="/home" className="hover:text-ink">
               Home
             </Link>
-            <span className="mx-2 text-[#C9C3BA]">/</span>
-            <span className="text-[#1B2430]">Catalogue</span>
+            <span className="mx-2 text-cream-muted">/</span>
+            <span className="text-ink">Catalogue</span>
           </p>
           <h1 className="store-section-title mt-3">Catalogue</h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">
-            Browse live <BrandName /> gifts — filter by category, brand and price, then request a quote.
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-secondary">
+            Browse live <BrandName /> gifts — filter by category, brand and price.
           </p>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="store-container py-10 sm:py-14">
         <div className="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[16.5rem_minmax(0,1fr)]">
           {/* Sidebar filters — desktop only; mobile uses sheet filters below */}
           <aside className="hidden lg:sticky lg:top-28 lg:flex lg:max-h-[calc(100vh-8rem)] lg:flex-col lg:self-start lg:overflow-hidden lg:pr-1">
             <div className="min-h-0 flex-1 space-y-8 overflow-y-auto pr-2 [scrollbar-width:thin]">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Category</p>
-                <nav className="mt-3 space-y-0.5 border-t border-[#E8E4DE] pt-2">
+                <p className="store-eyebrow">Category</p>
+                <nav className="mt-3 space-y-0.5 border-t border-cream-border pt-2">
                   <Link href={hrefFor({ category: '' })} className={filterLinkClass(!categoryFilter)}>
                     <span>All gifts</span>
-                    <span className="text-xs text-[#8A929C]">{products.length}</span>
+                    <span className="font-mono text-xs text-cream-muted">{products.length}</span>
                   </Link>
                   {categories.map((item) => (
                     <Link
@@ -160,7 +160,7 @@ export default async function CataloguePage({
                       className={filterLinkClass(categoryFilter === item.id)}
                     >
                       <span className="truncate">{item.name}</span>
-                      <span className="shrink-0 text-xs text-[#8A929C]">{categoryCounts.get(item.id) || 0}</span>
+                      <span className="shrink-0 font-mono text-xs text-cream-muted">{categoryCounts.get(item.id) || 0}</span>
                     </Link>
                   ))}
                 </nav>
@@ -168,8 +168,8 @@ export default async function CataloguePage({
 
               {brands.length ? (
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Brand</p>
-                  <nav className="mt-3 space-y-0.5 border-t border-[#E8E4DE] pt-2">
+                  <p className="store-eyebrow">Brand</p>
+                  <nav className="mt-3 space-y-0.5 border-t border-cream-border pt-2">
                     <Link href={hrefFor({ brand: '' })} className={filterLinkClass(!brandFilter)}>
                       <span>All brands</span>
                     </Link>
@@ -180,7 +180,7 @@ export default async function CataloguePage({
                         className={filterLinkClass(brandFilter === item.id)}
                       >
                         <span className="truncate">{item.name}</span>
-                        <span className="shrink-0 text-xs text-[#8A929C]">{brandCounts.get(item.id) || 0}</span>
+                        <span className="shrink-0 font-mono text-xs text-cream-muted">{brandCounts.get(item.id) || 0}</span>
                       </Link>
                     ))}
                   </nav>
@@ -188,8 +188,8 @@ export default async function CataloguePage({
               ) : null}
 
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1B2430]">Price</p>
-                <div className="mt-3 border-t border-[#E8E4DE] pt-4">
+                <p className="store-eyebrow">Price</p>
+                <div className="mt-3 border-t border-cream-border pt-4">
                   <PriceRangeFilter
                     key={`${priceMinFilter}-${priceMaxFilter}`}
                     bounds={priceBounds}
@@ -207,13 +207,13 @@ export default async function CataloguePage({
               </div>
             </div>
 
-            <div className="shrink-0 border-t border-[#E8E4DE] bg-white pt-4">
+            <div className="shrink-0 border-t border-cream-border bg-cream-card pt-4">
               <Link
                 href="/catalogue"
-                className={`inline-flex min-h-10 w-full items-center text-[12px] font-bold uppercase tracking-[0.14em] transition-colors ${
+                className={`inline-flex min-h-11 w-full items-center font-mono text-[12px] font-medium tracking-[0.08em] uppercase transition-colors ${
                   hasFilters
-                    ? 'text-[#806A50] hover:text-[#9C8567]'
-                    : 'pointer-events-none text-[#C4BDB3]'
+                    ? 'text-gold-deep hover:text-ink'
+                    : 'pointer-events-none text-cream-muted'
                 }`}
                 aria-disabled={!hasFilters}
               >
@@ -224,7 +224,7 @@ export default async function CataloguePage({
 
           {/* Results */}
           <div className="min-w-0">
-            <form className="flex flex-col gap-3 border border-[#E8E4DE] bg-white p-3 sm:flex-row sm:items-center sm:gap-6 sm:p-4">
+            <form className="flex flex-col gap-3 rounded border border-cream-border bg-cream-card p-3 sm:flex-row sm:items-center sm:gap-6 sm:p-4">
               {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
               {brandFilter ? <input type="hidden" name="brand" value={brandFilter} /> : null}
               {occasionFilter ? <input type="hidden" name="occasion" value={occasionFilter} /> : null}
@@ -240,16 +240,16 @@ export default async function CataloguePage({
                   name="q"
                   defaultValue={search}
                   placeholder="Search products"
-                  className="w-full bg-transparent py-1 text-base text-[#1B2430] outline-none placeholder:text-[#8A929C] sm:text-sm"
+                  className="h-11 w-full bg-transparent py-1 text-base text-ink outline-none placeholder:text-ink-tertiary sm:text-sm"
                 />
               </label>
-              <div className="hidden items-center gap-6 border-l border-[#E8E4DE] pl-6 lg:flex">
-                <label className="flex items-center gap-2 text-sm text-[#5C6570]">
+              <div className="hidden items-center gap-6 border-l border-cream-border pl-6 lg:flex">
+                <label className="flex items-center gap-2 text-sm text-ink-secondary">
                   <span className="whitespace-nowrap">Sort by</span>
                   <select
                     name="sort"
                     defaultValue={sort}
-                    className="bg-transparent py-1 text-sm text-[#1B2430] outline-none"
+                    className="bg-transparent py-1 text-sm text-ink outline-none"
                   >
                     <option value="name">A–Z</option>
                     <option value="newest">Newest</option>
@@ -259,7 +259,7 @@ export default async function CataloguePage({
                 </label>
                 <button
                   type="submit"
-                  className="bg-[#806A50] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white"
+                  className="min-h-11 bg-saffron px-4 text-sm font-bold text-charcoal hover:bg-saffron-hover"
                 >
                   Apply
                 </button>
@@ -267,21 +267,21 @@ export default async function CataloguePage({
               {sort && sort !== 'name' ? <input type="hidden" name="sort" value={sort} className="lg:hidden" /> : null}
               <button
                 type="submit"
-                className="bg-[#806A50] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white lg:hidden"
+                className="min-h-12 bg-saffron px-4 text-sm font-bold text-charcoal hover:bg-saffron-hover lg:hidden"
               >
                 Apply
               </button>
             </form>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <Link href={hrefFor({ occasion: '' })} className={`rounded-full border px-3 py-1 text-xs ${occasionFilter ? 'border-[#E8E4DE]' : 'border-[#241C12] bg-[#241C12] text-white'}`}>
+              <Link href={hrefFor({ occasion: '' })} className={`inline-flex min-h-11 items-center rounded-full border px-3 text-xs ${occasionFilter ? 'border-cream-border' : 'border-charcoal bg-charcoal text-cream'}`}>
                 Any occasion
               </Link>
               {STORE_OCCASIONS.map((item) => (
                 <Link
                   key={item.id}
                   href={hrefFor({ occasion: item.id })}
-                  className={`rounded-full border px-3 py-1 text-xs ${occasionFilter === item.id ? 'border-[#241C12] bg-[#241C12] text-white' : 'border-[#E8E4DE]'}`}
+                  className={`inline-flex min-h-11 items-center rounded-full border px-3 text-xs ${occasionFilter === item.id ? 'border-charcoal bg-charcoal text-cream' : 'border-cream-border'}`}
                 >
                   {item.label}
                 </Link>
@@ -289,20 +289,20 @@ export default async function CataloguePage({
             </div>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-[#806A50]">
+              <p className="font-mono text-sm text-gold-deep">
                 <span className="font-semibold">{filtered.length}</span>
-                <span className="text-[#5C6570]"> {filtered.length === 1 ? 'product' : 'products'}</span>
+                <span className="text-ink-secondary"> {filtered.length === 1 ? 'product' : 'products'}</span>
                 {activeCategoryName ? (
-                  <span className="text-[#5C6570]"> in {activeCategoryName}</span>
+                  <span className="text-ink-secondary"> in {activeCategoryName}</span>
                 ) : null}
-                {activeBrandName ? <span className="text-[#5C6570]"> · {activeBrandName}</span> : null}
+                {activeBrandName ? <span className="text-ink-secondary"> · {activeBrandName}</span> : null}
                 {priceIsFiltered ? (
-                  <span className="text-[#5C6570]">
+                  <span className="text-ink-secondary">
                     {' '}
                     · {formatCurrency(priceMinFilter)} – {formatCurrency(priceMaxFilter)}
                   </span>
                 ) : null}
-                {search ? <span className="text-[#5C6570]"> · “{search}”</span> : null}
+                {search ? <span className="text-ink-secondary"> · “{search}”</span> : null}
               </p>
             </div>
 

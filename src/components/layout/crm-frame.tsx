@@ -42,7 +42,7 @@ export function CrmFrame({
   }, [open])
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-[#F4EFE6]">
+    <div className="crm flex h-[100dvh] overflow-hidden bg-background">
       <div className="hidden h-full min-h-0 lg:flex">
         <Sidebar role={role} user={user} />
       </div>
@@ -79,7 +79,7 @@ export function CrmFrame({
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar user={user} notifications={notifications} onMenuClick={() => setOpen(true)} />
-        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#F4EFE6] overscroll-y-contain">
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-background overscroll-y-contain">
           <div className="mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
             {children}
           </div>
