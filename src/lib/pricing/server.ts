@@ -2,15 +2,12 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { withProductCost } from '@/lib/pricing/product-costs'
-import {
-  resolveSellPrice,
-  type MarginSettings,
-  type PriceChannel,
-  type ResolvedPrice,
-} from '@/lib/pricing/resolve'
-import { surfaceUnitPrice } from '@/lib/pricing/listed'
+import { resolvePortalPrice, type PricingPortal, type ResolvedPortalPrice } from '@/lib/pricing/engine'
+import type { MarginSettings } from '@/lib/pricing/resolve'
 import { pickBestOffer, type SupplierOffer } from '@/lib/pricing/offers'
 import {
+  portalForSurface,
+  PORTAL_SETTING_COLUMNS,
   pricingSettingsFromRow,
   SURFACE_SETTING_COLUMNS,
   type PriceSurface,
@@ -79,18 +76,27 @@ function asOffer(row: {
   }
 }
 
+const PRICING_SETTING_COLUMNS = [...new Set([...SURFACE_SETTING_COLUMNS, ...PORTAL_SETTING_COLUMNS])]
+
 export async function getPricingSettings(): Promise<PricingSettings> {
   const margins = await loadMarginSettings()
   try {
     const admin = createAdminClient()
     const client = admin || (await createClient())
-    const { data, error } = await client
+    let result = await client
       .from('org_settings')
-      .select(SURFACE_SETTING_COLUMNS.join(', '))
+      .select(PRICING_SETTING_COLUMNS.join(', '))
       .limit(1)
       .maybeSingle()
-    if (error || !data) return pricingSettingsFromRow(null, margins)
-    return pricingSettingsFromRow(data as unknown as Record<string, unknown>, margins)
+    if (result.error && /store_price_base|corporate_|column/i.test(result.error.message)) {
+      result = await client
+        .from('org_settings')
+        .select(SURFACE_SETTING_COLUMNS.join(', '))
+        .limit(1)
+        .maybeSingle()
+    }
+    if (result.error || !result.data) return pricingSettingsFromRow(null, margins)
+    return pricingSettingsFromRow(result.data as unknown as Record<string, unknown>, margins)
   } catch {
     return pricingSettingsFromRow(null, margins)
   }
@@ -145,6 +151,73 @@ export async function specialPricesForCompany(
   return prices
 }
 
+type ListedTarget = {
+  id: string
+  /** Product the special price and portal fixed price belong to. Defaults to id. */
+  productId?: string
+  retailPrice: number | null
+  costPrice?: number | null
+  catalogManualPrice?: number | null
+}
+
+export async function resolveListedPrices(
+  targets: ListedTarget[],
+  portal: PricingPortal,
+  companyMarginPercent: number | null,
+  companyId?: string | null,
+  settings?: PricingSettings,
+): Promise<Map<string, ResolvedPortalPrice> | null> {
+  if (!targets.length) return new Map()
+  const admin = createAdminClient()
+  if (!admin) return null
+  const rules = settings || (await getPricingSettings())
+  const rule = rules.portals[portal]
+  const productIds = [...new Set(targets.map((target) => target.productId || target.id))]
+  const needCost = targets.some((target) => target.costPrice === undefined)
+  const [specials, fixedRows, costRows] = await Promise.all([
+    portal === 'store' ? Promise.resolve(new Map()) : specialPricesForCompany(admin, companyId, productIds),
+    admin
+      .from('portal_product_prices')
+      .select('product_id, price, valid_until')
+      .eq('portal', portal)
+      .in('product_id', productIds),
+    needCost
+      ? admin.from('product_costs').select('product_id, supplier_cost').in('product_id', productIds)
+      : Promise.resolve({ data: [] as { product_id: string; supplier_cost: number | null }[], error: null }),
+  ])
+  const fixed = new Map<string, { price: number; validUntil: string | null }>()
+  if (!fixedRows.error) {
+    for (const row of (fixedRows.data || []) as { product_id: string; price: number; valid_until: string | null }[]) {
+      fixed.set(row.product_id, { price: Number(row.price), validUntil: row.valid_until })
+    }
+  }
+  const costs = new Map<string, number | null>()
+  if (!costRows.error) {
+    for (const row of costRows.data || []) {
+      costs.set(row.product_id, row.supplier_cost == null ? null : Number(row.supplier_cost))
+    }
+  }
+  const prices = new Map<string, ResolvedPortalPrice>()
+  for (const target of targets) {
+    const productId = target.productId || target.id
+    const special = specials.get(productId)
+    const portalFixed = fixed.get(productId)
+    prices.set(target.id, resolvePortalPrice({
+      portal,
+      rule,
+      retailPrice: target.retailPrice,
+      costPrice: target.costPrice !== undefined ? target.costPrice : costs.get(productId) ?? null,
+      companyMarginPercent,
+      specialPrice: special?.price,
+      specialValidUntil: special?.validUntil,
+      catalogManualPrice: target.catalogManualPrice,
+      portalFixedPrice: portalFixed?.price,
+      portalFixedValidUntil: portalFixed?.validUntil,
+    }))
+  }
+  return prices
+}
+
 export async function sellPricesForSurface(
   productIds: string[],
   surface: PriceSurface,
@@ -161,34 +234,27 @@ export async function sellPricesForSurface(
   }
   const embedded = await admin
     .from('products')
-    .select('id, price, moq, product_costs(supplier_cost, internal_margin)')
+    .select('id, price, product_costs(supplier_cost)')
     .in('id', productIds)
   const fallback = embedded.error && /product_costs/i.test(embedded.error.message)
-    ? await admin.from('products').select('id, price, moq').in('id', productIds)
+    ? await admin.from('products').select('id, price').in('id', productIds)
     : null
   const products = fallback ? fallback.data : embedded.data
   const error = fallback ? fallback.error : embedded.error
   if (error || !products) return null
-  const prices = new Map<string, number | null>()
-  if (surface !== 'store') {
-    const specials = await specialPricesForCompany(admin, companyId, productIds)
-    for (const row of products) {
+  const resolved = await resolveListedPrices(
+    products.map((row) => {
       const product = withProductCost(row)
-      const special = specials.get(product.id)
-      prices.set(product.id, surfaceUnitPrice({
-        channel: 'b2b',
-        retailPrice: product.price,
-        specialPrice: special?.price,
-        specialValidUntil: special?.validUntil,
-        companyMarginPercent,
-      }))
-    }
-    return prices
-  }
-  for (const row of products) {
-    const product = withProductCost(row)
-    prices.set(product.id, surfaceUnitPrice({ channel: 'b2c', retailPrice: product.price }))
-  }
+      return { id: product.id as string, retailPrice: product.price == null ? null : Number(product.price), costPrice: product.supplier_cost }
+    }),
+    portalForSurface(surface),
+    companyMarginPercent,
+    companyId,
+    settings,
+  )
+  if (!resolved) return null
+  const prices = new Map<string, number | null>()
+  for (const [id, price] of resolved) prices.set(id, price.price)
   return prices
 }
 
@@ -204,27 +270,3 @@ export async function getCompanyMarginPercent(companyId: string): Promise<number
   return Number.isFinite(n) ? n : null
 }
 
-export async function resolveProductSellPrice(
-  product: ProductPriceRow,
-  options: {
-    channel: PriceChannel
-    companyId?: string | null
-    companyMarginPercent?: number | null
-    settings?: MarginSettings | null
-  }
-): Promise<ResolvedPrice> {
-  const settings = options.settings === undefined ? await loadMarginSettings() : options.settings
-  let companyMargin = options.companyMarginPercent
-  if (companyMargin === undefined && options.companyId && options.channel === 'b2b') {
-    companyMargin = await getCompanyMarginPercent(options.companyId)
-  }
-
-  return resolveSellPrice({
-    supplierCost: product.supplier_cost,
-    listPrice: product.price,
-    productMarginPercent: product.internal_margin,
-    companyMarginPercent: options.channel === 'b2b' ? companyMargin : null,
-    channel: options.channel,
-    settings,
-  })
-}

@@ -9,7 +9,8 @@ import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 import { CatalogueShortlistButton } from '@/components/portal/catalogue-shortlist-button'
 import { headers } from 'next/headers'
 import { readTenantFromHeaders } from '@/lib/portal-host'
-import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
+import { getCompanyMarginPercent, getPricingSettings, sellPricesForSurface } from '@/lib/pricing/server'
+import { gstPriceNote } from '@/lib/pricing/engine'
 import { listCompanyCatalogs } from '@/lib/catalogs/company-catalogs'
 import { catalogStatusLabel } from '@/lib/catalogs/status'
 
@@ -139,11 +140,16 @@ async function AllGifts({
   )
 
   let products = productRows || []
+  let gstNote = 'excl. GST'
   const tenant = readTenantFromHeaders(await headers())
   if (products.length) {
     const companyMargin = companyId ? await getCompanyMarginPercent(companyId) : null
     const surface = tenant ? 'microsite' : 'portal'
-    const listedPrices = await sellPricesForSurface(products.map((product) => product.id), surface, companyMargin, companyId)
+    const [listedPrices, settings] = await Promise.all([
+      sellPricesForSurface(products.map((product) => product.id), surface, companyMargin, companyId),
+      getPricingSettings(),
+    ])
+    gstNote = gstPriceNote(settings.portals.corporate.gstMode)
     if (listedPrices) {
       products = products.map((product) => ({
         ...product,
@@ -258,6 +264,7 @@ async function AllGifts({
                       <div>
                         <p className="text-base font-semibold text-gray-900">
                           {product.price == null ? 'Price on request' : formatCurrency(product.price)}
+                          {product.price != null ? <span className="ml-1 text-[10px] font-medium uppercase tracking-wide text-gray-400">{gstNote}</span> : null}
                         </p>
                         <p className="text-[10px] text-gray-400">Per person · MOQ {product.moq || 1}</p>
                       </div>

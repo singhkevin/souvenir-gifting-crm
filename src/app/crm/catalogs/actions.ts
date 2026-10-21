@@ -7,8 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
 import { shareLinkOrigin } from '@/lib/auth/request-origin'
 import { sendEmail } from '@/lib/email/resend'
-import { listedUnitPrice } from '@/lib/pricing/listed'
-import { getCompanyMarginPercent, specialPricesForCompany } from '@/lib/pricing/server'
+import { getCompanyMarginPercent, resolveListedPrices } from '@/lib/pricing/server'
 import { sharePath } from '@/lib/catalogs/share'
 import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
 import { appName } from '@/lib/brand'
@@ -268,19 +267,6 @@ export async function unassignCatalogCompany(formData: FormData) {
   return { success: true }
 }
 
-function priceForCompany(
-  product: { price?: number | null },
-  companyMargin: number | null,
-  special?: { price: number; validUntil: string | null },
-) {
-  return listedUnitPrice({
-    specialPrice: special?.price,
-    specialValidUntil: special?.validUntil,
-    basePrice: product.price,
-    companyMarginPercent: companyMargin,
-  })
-}
-
 export async function addCatalogProducts(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -301,7 +287,7 @@ export async function addCatalogProducts(formData: FormData) {
     quantities = {}
   }
 
-  const [{ data: existing }, { data: products }, companyMargin, specials] = await Promise.all([
+  const [{ data: existing }, { data: products }, companyMargin] = await Promise.all([
     supabase.from('campaign_products').select('product_id').eq('campaign_id', campaignId),
     supabase
       .from('products')
@@ -309,11 +295,19 @@ export async function addCatalogProducts(formData: FormData) {
       .in('id', productIds)
       .eq('status', 'active'),
     catalog.company_id ? getCompanyMarginPercent(catalog.company_id) : Promise.resolve(null),
-    specialPricesForCompany(supabase, catalog.company_id, productIds),
   ])
 
   const taken = new Set((existing || []).map((row) => row.product_id))
   const byId = new Map((products || []).map((product) => [product.id, product]))
+  const resolved = await resolveListedPrices(
+    (products || []).map((product) => ({
+      id: product.id,
+      retailPrice: product.price == null ? null : Number(product.price),
+    })),
+    'corporate',
+    companyMargin,
+    catalog.company_id,
+  )
   let added = 0
   let skipped = 0
 
@@ -329,7 +323,7 @@ export async function addCatalogProducts(formData: FormData) {
     }
     const requested = Math.round(Number(quantities[productId]))
     const moq = Number.isInteger(requested) && requested > 0 ? requested : (product.moq || 1)
-    const sellingPrice = priceForCompany(product, companyMargin, specials.get(productId))
+    const sellingPrice = resolved?.get(productId)?.price ?? (Number(product.price) || 0)
     const { error } = await supabase.from('campaign_products').insert({
       campaign_id: campaignId,
       product_id: productId,

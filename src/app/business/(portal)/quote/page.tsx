@@ -1,11 +1,14 @@
 import { QuoteBasket } from '@/components/business/quote-basket'
 import { requireBusiness } from '@/lib/business/session'
+import { gstPriceNote } from '@/lib/pricing/engine'
+import { getPricingSettings } from '@/lib/pricing/server'
 
 export const dynamic = 'force-dynamic'
 
 export default async function BusinessQuotePage() {
   const { company } = await requireBusiness()
   const pendingApproval = company?.business_verification !== 'verified'
+  const priceNote = gstPriceNote((await getPricingSettings()).portals.business.gstMode)
   return (
     <div className="space-y-6">
       <div>
@@ -16,7 +19,7 @@ export default async function BusinessQuotePage() {
             : 'Submit these lines as a request. Nothing is purchased from this page.'}
         </p>
       </div>
-      <QuoteBasket pendingApproval={pendingApproval} />
+      <QuoteBasket pendingApproval={pendingApproval} priceNote={priceNote} />
     </div>
   )
 }

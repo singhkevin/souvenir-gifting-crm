@@ -13,7 +13,7 @@ import { CategoryField } from '@/components/products/category-field'
 import { readProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, loadSupplierOffers } from '@/lib/pricing/server'
 import { pickBestOffer } from '@/lib/pricing/offers'
-import { surfaceUnitPrice } from '@/lib/pricing/listed'
+import { resolvePortalPrice } from '@/lib/pricing/engine'
 import { NameCreateField } from '@/components/products/name-create-field'
 import { createBrand, createSupplier } from '../actions'
 import { SupplierOffersEditor } from './SupplierOffersEditor'
@@ -45,7 +45,7 @@ export default async function ProductDetailPage({
     { data: accessRecords },
     pricing,
   ] = await Promise.all([
-    supabase.from('products').select('*, product_costs(supplier_cost, internal_margin, internal_notes), category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
+    supabase.from('products').select('*, product_costs(supplier_cost, internal_notes), category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
     supabase.from('categories').select('id, name'),
     supabase.from('brands').select('id, name').order('name'),
     supabase.from('suppliers').select('id, name').order('name'),
@@ -59,7 +59,12 @@ export default async function ProductDetailPage({
   if (!product) notFound()
   Object.assign(product, readProductCost(product))
 
-  const storePrice = surfaceUnitPrice({ channel: 'b2c', retailPrice: product.price })
+  const storePrice = resolvePortalPrice({
+    portal: 'store',
+    rule: pricing.portals.store,
+    retailPrice: product.price,
+    costPrice: product.supplier_cost,
+  }).price
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
 
@@ -149,15 +154,15 @@ export default async function ProductDetailPage({
             <div>
               <p className="text-[10px] text-gray-400 uppercase font-semibold">Store price</p>
               <p className="text-xl font-bold text-[#806A50]">{formatCurrency(storePrice)}</p>
-              <p className="text-[10px] text-gray-400">Retail price on the store</p>
+              <p className="text-[10px] text-gray-400">Resolved store price. Edit prices in Pricing.</p>
             </div>
             <div>
               <p className="text-[10px] text-gray-400 uppercase font-semibold">Company price</p>
-              <p className="text-sm font-semibold text-gray-700">Special, then catalog line, then this price plus the company margin</p>
+              <p className="text-sm font-semibold text-gray-700">Set on the Pricing page: company special, then catalog line, then the portal rule</p>
             </div>
             {showCost && (
             <div>
-              <p className="text-[10px] text-gray-400 uppercase font-semibold">Supplier Cost</p>
+              <p className="text-[10px] text-gray-400 uppercase font-semibold">Cost price</p>
               <p className="text-lg font-semibold text-gray-700">{formatCurrency(product.supplier_cost)}</p>
             </div>
             )}
@@ -228,7 +233,7 @@ export default async function ProductDetailPage({
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Base price</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Retail price</label>
                 <input
                   type="number"
                   step="0.01"
@@ -238,7 +243,7 @@ export default async function ProductDetailPage({
                   className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
                 />
                 <p className="mt-1 text-[10px] text-gray-500">
-                  Used when no company special price and no catalog line price apply. Company margin is added on top for that company.
+                  Retail price on the store unless Pricing sets a store rule or a fixed price. Company prices are on the Pricing page.
                 </p>
               </div>
               <div>

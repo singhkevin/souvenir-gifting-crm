@@ -20,7 +20,7 @@ export default async function BusinessCataloguePage() {
         hrefFor={(product) => `/business/catalogue/${product.id}`}
         priceLabel={(product) => {
           const price = 'indicativePrice' in product ? product.indicativePrice : null
-          return price == null ? 'Price on quote' : formatCurrency(Number(price))
+          return price == null ? 'Price on quote' : `${formatCurrency(Number(price))} ${'priceNote' in product && product.priceNote ? product.priceNote : 'excl. GST'}`
         }}
         captionFor={(product) => {
           const moq = 'moqUnits' in product ? product.moqUnits : product.moq || 1

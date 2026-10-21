@@ -200,7 +200,6 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     status: string
     stock_qty: number
     fulfillment_mode: 'auto' | 'buy' | 'rfq'
-    internal_margin: number | null
     internal_notes: string | null
   }
 
@@ -299,21 +298,14 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       return
     }
     let supplier_cost: number | null = null
-    let internal_margin: number | null = null
     let internal_notes: string | null = null
     if (allowCosts) {
       const supplierCost = parseOptionalNumber(cell(row, 'supplier_cost'))
       if (!supplierCost.ok) {
-        failures.push({ row: rowNumber, sku, reason: 'Supplier cost must be a number' })
-        return
-      }
-      const margin = parseOptionalNumber(cell(row, 'internal_margin'))
-      if (!margin.ok || (margin.value != null && margin.value < 0)) {
-        failures.push({ row: rowNumber, sku, reason: 'Product margin must be a number 0 or greater' })
+        failures.push({ row: rowNumber, sku, reason: 'Cost price must be a number' })
         return
       }
       supplier_cost = supplierCost.value
-      internal_margin = margin.value
       internal_notes = cell(row, 'internal_notes') || null
     }
 
@@ -342,7 +334,6 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       status: statusResult.status,
       stock_qty,
       fulfillment_mode,
-      internal_margin,
       internal_notes,
     })
   })
@@ -390,9 +381,8 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       continue
     }
 
-    const costPayload: { supplier_cost?: number | null; internal_margin?: number | null; internal_notes?: string | null } = {}
+    const costPayload: { supplier_cost?: number | null; internal_notes?: string | null } = {}
     if (item.supplier_cost != null) costPayload.supplier_cost = item.supplier_cost
-    if (item.internal_margin != null) costPayload.internal_margin = item.internal_margin
     if (item.internal_notes) costPayload.internal_notes = item.internal_notes
     if (Object.keys(costPayload).length > 0) {
       const { error: costError } = await upsertProductCost(supabase, product.id, costPayload)

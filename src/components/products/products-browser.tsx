@@ -139,7 +139,7 @@ export function ProductsBrowser({
                     <div className="mt-auto pt-2 space-y-2 border-t border-gray-100">
                       <p className="text-sm font-bold text-gray-900">{formatCurrency(p.price)}</p>
                       {showCost && (
-                        <p className="text-[11px] text-gray-500">Cost {formatCurrency(p.supplier_cost)}</p>
+                        <p className="text-[11px] text-gray-500">Cost price {formatCurrency(p.supplier_cost)}</p>
                       )}
                       <div className="flex flex-wrap items-center gap-1.5">
                         <StatusBadge status={p.status} />
@@ -161,7 +161,7 @@ export function ProductsBrowser({
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Product</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Brand</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Category</th>
-                {showCost && <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Cost</th>}
+                {showCost && <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Cost price</th>}
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Price</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">MOQ</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Visibility</th>

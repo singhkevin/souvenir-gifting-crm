@@ -398,7 +398,9 @@ export async function addQuotationProduct(quotationId: string, productId: string
     const surface = company?.account_type === 'business' ? 'business' : 'portal'
     const margin = company?.margin_percent == null ? await getCompanyMarginPercent(quote.company_id) : Number(company.margin_percent)
     const prices = await sellPricesForSurface([productId], surface, Number.isFinite(margin) ? margin : null, quote.company_id)
-    const unit = prices?.get(productId) ?? (Number(product.price) || 0)
+    const listed = prices?.has(productId) ? prices.get(productId) : undefined
+    if (listed === null) return { error: 'This product is price on quote. Set a fixed price or a company special before adding it.' }
+    const unit = listed ?? (Number(product.price) || 0)
     const quantityToSave = addQty
     const { error } = await supabase.from('quotation_items').insert({
       quotation_id: quotationId,

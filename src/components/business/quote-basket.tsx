@@ -45,7 +45,7 @@ function loadMeta(): Meta {
   }
 }
 
-export function QuoteBasket({ pendingApproval = false }: { pendingApproval?: boolean }) {
+export function QuoteBasket({ pendingApproval = false, priceNote = 'excl. GST' }: { pendingApproval?: boolean; priceNote?: string }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [meta, setMeta] = useState<Meta>(EMPTY_META)
   const [ready, setReady] = useState(false)
@@ -100,7 +100,7 @@ export function QuoteBasket({ pendingApproval = false }: { pendingApproval?: boo
                 <p className="font-medium">{item.name}</p>
                 <p className="text-xs text-[#5C6570]">{item.sku}</p>
                 <p className="mt-1 text-sm text-[#806A50]">
-                  {item.price == null ? 'Price on quote' : `${formatCurrency(item.price)} indicative`}
+                  {item.price == null ? 'Price on quote' : `${formatCurrency(item.price)} indicative · ${priceNote}`}
                 </p>
               </div>
               <button

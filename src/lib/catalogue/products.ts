@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
-import { surfaceUnitPrice } from '@/lib/pricing/listed'
+import { gstPriceNote, resolvePortalPrice } from '@/lib/pricing/engine'
 import { readProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings } from '@/lib/pricing/server'
 import { type PurchaseOffer } from '@/lib/catalogue/purchase-path'
@@ -13,7 +13,7 @@ const PUBLIC_PRODUCT_SELECT =
   'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)' as const
 const PUBLIC_PRODUCT_SELECT_WITH_PURCHASE =
   'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, sample_only, category:categories(id, name), brand:brands(id, name)' as const
-const PUBLIC_COST_EMBED = 'product_costs(supplier_cost, internal_margin)'
+const PUBLIC_COST_EMBED = 'product_costs(supplier_cost)'
 
 export type PublicProduct = {
   id: string
@@ -32,6 +32,7 @@ export type PublicProduct = {
   status: string
   created_at: string | null
   purchase: PurchaseOffer
+  priceNote?: string | null
 }
 
 type Named = { id: string; name: string }
@@ -55,7 +56,8 @@ function toPublicProduct(
     category?: Named | Named[] | null
     brand?: Named | Named[] | null
   },
-  sellPrice: number | null
+  sellPrice: number | null,
+  priceNote?: string | null,
 ): PublicProduct {
   return {
     id: row.id,
@@ -79,6 +81,7 @@ function toPublicProduct(
       hasSellPrice: sellPrice != null && Number.isFinite(Number(sellPrice)),
       sampleOnly: Boolean(row.sample_only),
     }),
+    priceNote: priceNote || null,
   }
 }
 
@@ -88,7 +91,6 @@ function missingPurchaseColumn(message: string | undefined) {
 
 type PublicRow = Parameters<typeof toPublicProduct>[0] & {
   supplier_cost?: number | null
-  internal_margin?: number | null
 }
 
 function attachCosts(rows: unknown[]): PublicRow[] {
@@ -238,9 +240,16 @@ export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
     const data = await loadPublicRows(client)
     if (!data.length) return []
     const settings = await getPricingSettings()
+    const rule = settings.portals.store
+    const note = settings.surfaces.store.showSellPrice ? gstPriceNote(rule.gstMode) : null
     const priced = !settings.surfaces.store.showSellPrice
       ? data.map((row) => toPublicProduct(row, null))
-      : data.map((row) => toPublicProduct(row, surfaceUnitPrice({ channel: 'b2c', retailPrice: row.price })))
+      : data.map((row) => toPublicProduct(row, resolvePortalPrice({
+        portal: 'store',
+        rule,
+        retailPrice: row.price,
+        costPrice: row.supplier_cost,
+      }).price, note))
     return decorateStorefront(client, priced)
   } catch {
     return []
@@ -287,7 +296,13 @@ export async function getPublicProduct(id: string): Promise<PublicProduct | null
     if (!settings.surfaces.store.showSellPrice) {
       return (await decorateStorefront(client, [toPublicProduct(data, null)]))[0] || null
     }
-    return (await decorateStorefront(client, [toPublicProduct(data, surfaceUnitPrice({ channel: 'b2c', retailPrice: data.price }))]))[0] || null
+    const price = resolvePortalPrice({
+      portal: 'store',
+      rule: settings.portals.store,
+      retailPrice: data.price,
+      costPrice: data.supplier_cost,
+    }).price
+    return (await decorateStorefront(client, [toPublicProduct(data, price, gstPriceNote(settings.portals.store.gstMode))]))[0] || null
   } catch {
     return null
   }

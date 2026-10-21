@@ -2,7 +2,8 @@ import 'server-only'
 
 import { getPublicCatalogueProducts, type PublicProduct } from '@/lib/catalogue/products'
 import { minimumOrderQty } from '@/lib/business/lines'
-import { sellPricesForSurface } from '@/lib/pricing/server'
+import { gstPriceNote } from '@/lib/pricing/engine'
+import { getPricingSettings, sellPricesForSurface } from '@/lib/pricing/server'
 import { createClient } from '@/lib/supabase/server'
 
 export type BusinessProduct = PublicProduct & {
@@ -27,6 +28,7 @@ async function approvedBusinessMargin(companyId: string | null) {
 export async function getBusinessCatalogue(companyId: string | null): Promise<BusinessProduct[]> {
   const products = await getPublicCatalogueProducts()
   const pricing = await approvedBusinessMargin(companyId)
+  const settings = await getPricingSettings()
   const prices = pricing.show
     ? await sellPricesForSurface(
       products.map((product) => product.id),
@@ -35,11 +37,13 @@ export async function getBusinessCatalogue(companyId: string | null): Promise<Bu
       companyId,
     )
     : null
+  const note = gstPriceNote(settings.portals.business.gstMode)
   return products.map((product) => {
     const indicativePrice = prices?.get(product.id) ?? null
     return {
       ...product,
       price: indicativePrice,
+      priceNote: indicativePrice == null ? null : note,
       indicativePrice,
       moqUnits: minimumOrderQty(product.moq),
     }

@@ -60,85 +60,12 @@ export default async function SettingsPage() {
           </span>
         </label>
 
-        <div className="border-t pt-4 space-y-4">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900">Sell-price margins (%)</h2>
-            <p className="text-xs text-gray-500 mt-1">
-              The store shows the product retail price. A company sees its special price, then a catalog line price, then the retail price plus that company’s margin.
-              These percentages remain for internal costing. They are not the customer price.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <label className="block">
-              <span className="text-gray-500 text-xs">Global fallback %</span>
-              <input
-                name="default_margin_percent"
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={settings?.default_margin_percent ?? 35}
-                className="w-full border rounded-lg px-3 py-2 mt-1"
-              />
-            </label>
-            <label className="block">
-              <span className="text-gray-500 text-xs">Public / B2C %</span>
-              <input
-                name="b2c_margin_percent"
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={settings?.b2c_margin_percent ?? 40}
-                className="w-full border rounded-lg px-3 py-2 mt-1"
-              />
-            </label>
-            <label className="block">
-              <span className="text-gray-500 text-xs">Corporate / B2B default %</span>
-              <input
-                name="b2b_margin_percent"
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={settings?.b2b_margin_percent ?? 35}
-                className="w-full border rounded-lg px-3 py-2 mt-1"
-              />
-            </label>
-          </div>
-        </div>
-
         <div className="border-t pt-4 space-y-3">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900">Best supplier cost</h2>
-            <p className="text-xs text-gray-500 mt-1">
-              When a surface uses best cost, its sell price starts from the lowest eligible supplier offer
-              (in stock when required, MOQ within the quantity, unless a preferred offer is pinned).
-              Clients only see the sell price, or a request for quotation when the price is hidden.
-            </p>
-          </div>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="best_cost_require_in_stock" defaultChecked={settings?.best_cost_require_in_stock !== false} />
-            Require the offer to be in stock
-          </label>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {[
-              ['crm', 'CRM quotations'],
-              ['portal', 'B2B portal'],
-              ['microsite', 'Company microsite'],
-              ['store', 'Public store'],
-              ['business', 'Business portal'],
-            ].map(([key, label]) => (
-              <div key={key} className="rounded-lg border border-gray-200 p-3 space-y-2">
-                <p className="text-xs font-semibold text-gray-900">{label}</p>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" name={`${key}_use_best_cost`} defaultChecked={Boolean(settings?.[`${key}_use_best_cost`])} />
-                  Use best cost for margin
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" name={`${key}_show_sell_price`} defaultChecked={settings?.[`${key}_show_sell_price`] !== false} />
-                  Show derived sell price
-                </label>
-              </div>
-            ))}
-          </div>
+          <h2 className="text-sm font-semibold text-gray-900">Prices</h2>
+          <p className="text-xs text-gray-500">
+            Cost, portal rules, fixed prices and company prices are managed in Pricing. This page keeps the organisation name, tax default and business registration settings.
+          </p>
+          <a href="/crm/pricing" className="inline-flex text-sm font-medium text-[#806A50] underline">Open Pricing</a>
         </div>
 
         <div className="border-t pt-4 space-y-3">

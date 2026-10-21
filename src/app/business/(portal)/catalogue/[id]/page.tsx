@@ -25,7 +25,7 @@ export default async function BusinessProductPage({ params }: { params: Promise<
         <h1 className="font-serif text-3xl">{product.name}</h1>
         <p className="font-mono text-xs text-[#5C6570]">{product.sku}</p>
         <p className="text-lg font-semibold text-[#806A50]">
-          {product.indicativePrice == null ? 'Price on quote' : formatCurrency(product.indicativePrice)}
+          {product.indicativePrice == null ? 'Price on quote' : `${formatCurrency(product.indicativePrice)}${product.priceNote ? ` ${product.priceNote}` : ''}`}
         </p>
         <p className="text-xs uppercase tracking-[0.12em] text-[#5C6570]">Indicative · MOQ {product.moqUnits} · final price in your quote</p>
         {product.description ? <p className="text-sm leading-6 text-[#5C6570]">{product.description}</p> : null}

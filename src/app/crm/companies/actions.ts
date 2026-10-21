@@ -9,6 +9,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generateTemporaryPassword, SERVICE_ROLE_MISSING, validateNewPassword } from '@/lib/auth/password'
 import { findReusableLogo } from '@/lib/companies/identity'
 import { parseAllowedEmailDomains, isEmailAllowedForDomains } from '@/lib/pricing/domains'
+import { recordPriceChange } from '@/lib/pricing/audit'
 import { domainSplitEnabled } from '@/lib/domain-flag'
 import { parsePortalSlug, isSlugReservedInHistory, clearTenantCache, portalLoginUrl } from '@/lib/portal-host'
 import { schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
@@ -260,7 +261,7 @@ export async function updateCompany(companyId: string, formData: FormData) {
   const supabase = await createClient()
   const { data: existing } = await supabase
     .from('companies')
-    .select('portal_slug, portal_status')
+    .select('portal_slug, portal_status, margin_percent')
     .eq('id', companyId)
     .maybeSingle()
   if (portalSlug.slug && portalSlug.slug !== existing?.portal_slug) {
@@ -288,6 +289,17 @@ export async function updateCompany(companyId: string, formData: FormData) {
   if (error) {
     console.error('[updateCompany]', error.code, error.message)
     return { error: portalSlugError(error.message) }
+  }
+
+  const previousMargin = existing?.margin_percent == null ? null : Number(existing.margin_percent)
+  if (previousMargin !== marginPercent) {
+    await recordPriceChange(supabase, {
+      actorId: access.profile.id,
+      companyId,
+      field: 'company_margin',
+      oldValue: previousMargin == null ? null : String(previousMargin),
+      newValue: marginPercent == null ? null : String(marginPercent),
+    })
   }
 
   const { data: current } = await supabase

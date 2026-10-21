@@ -8,7 +8,8 @@ import { CatalogueShortlistButton } from '@/components/portal/catalogue-shortlis
 import { offeringPricesForCompany } from '@/lib/catalogs/pricing'
 import { headers } from 'next/headers'
 import { readTenantFromHeaders } from '@/lib/portal-host'
-import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
+import { getCompanyMarginPercent, getPricingSettings, sellPricesForSurface } from '@/lib/pricing/server'
+import { gstPriceNote } from '@/lib/pricing/engine'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { toggleOfferingSelectionForm } from '@/app/portal/catalogue/actions'
@@ -23,6 +24,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+  const gstNote = gstPriceNote((await getPricingSettings()).portals.corporate.gstMode)
 
   const withPurchase = 'id, name, sku, description, image_url, price, moq, category_name, brand_name, stock_qty, fulfillment_mode'
   const withoutPurchase = 'id, name, sku, description, image_url, price, moq, category_name, brand_name'
@@ -57,7 +59,10 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
                 {product.description || 'Ask your account manager for samples and branding options.'}
               </p>
               <div className="border-t border-gray-100 pt-4">
-                <p className="text-xl font-semibold text-gray-900">{product.price == null ? 'Price on request' : formatCurrency(product.price)}</p>
+                <p className="text-xl font-semibold text-gray-900">
+                  {product.price == null ? 'Price on request' : formatCurrency(product.price)}
+                  {product.price != null ? <span className="ml-1 text-[10px] font-medium uppercase tracking-wide text-gray-400">{gstNote}</span> : null}
+                </p>
                 <p className="mt-0.5 text-xs text-gray-400">Per person · MOQ {product.moq || 1}</p>
               </div>
               <CatalogueShortlistButton
@@ -132,7 +137,10 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
             <p className="text-xs font-semibold uppercase text-[#806A50]">{campaign?.name}</p>
             <h1 className="text-2xl font-bold text-gray-900">{offering.display_name}</h1>
             <div className="border-t border-gray-100 pt-3">
-              <p className="text-3xl font-bold text-gray-900">{price == null ? 'Price on request' : formatCurrency(price)}</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {price == null ? 'Price on request' : formatCurrency(price)}
+                {price != null ? <span className="ml-2 text-xs font-medium uppercase tracking-wide text-gray-400">{gstNote}</span> : null}
+              </p>
               <p className="mt-1 text-xs text-gray-500">
                 {kitMembers.length > 1 ? 'Combined price per person' : `Per person · MOQ ${offering.moq || 1}`}
               </p>

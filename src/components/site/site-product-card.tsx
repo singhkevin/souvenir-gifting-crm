@@ -71,7 +71,12 @@ export function SiteProductCard({
         >
           {product.name}
         </h3>
-        <p className="text-[15px] font-semibold text-[#806A50]">{priceText || (product.price == null ? 'Request quotation' : formatCurrency(product.price))}</p>
+        <p className="text-[15px] font-semibold text-[#806A50]">
+          {priceText || (product.price == null ? 'Request quotation' : formatCurrency(product.price))}
+          {!priceText && product.price != null && product.priceNote ? (
+            <span className="ml-1 text-[10px] font-medium uppercase tracking-wide text-[#5C6570]">{product.priceNote}</span>
+          ) : null}
+        </p>
         <p className="text-[10px] uppercase tracking-[0.12em] text-[#5C6570]">
           {caption || (product.purchase.buy ? 'Add to cart' : 'Request quote')}
         </p>

@@ -50,7 +50,6 @@ async function createProductOnce(formData: FormData) {
   const description = (formData.get('description') as string) || null
   const price = parseFloat(formData.get('price') as string) || 0
   const supplier_cost = formData.get('supplier_cost') ? parseFloat(formData.get('supplier_cost') as string) : null
-  const internal_margin = formData.get('internal_margin') ? parseFloat(formData.get('internal_margin') as string) : null
   const moq = parseInt(formData.get('moq') as string, 10) || 1
   const fulfillment_mode = parseFulfillmentMode(formData.get('fulfillment_mode'))
   const stockRaw = String(formData.get('stock_qty') ?? '').trim()
@@ -129,10 +128,9 @@ async function createProductOnce(formData: FormData) {
     return { error: directOrderSchemaHint(error?.message || 'Product was not saved') }
   }
 
-  if (supplier_cost != null || internal_margin != null) {
+  if (supplier_cost != null) {
     const { error: costError } = await upsertProductCost(supabase, product.id, {
       supplier_cost,
-      internal_margin,
     })
     if (costError) {
       await supabase.from('products').delete().eq('id', product.id)
@@ -264,8 +262,8 @@ export async function updateProduct(productId: string, formData: FormData) {
   text('hsn_code')
   number('price', 'price', 0)
   number('moq', 'moq', 1)
-  const costPatch: { supplier_cost?: number | null; internal_margin?: number | null } = {}
-  const readCost = (key: 'supplier_cost' | 'internal_margin', label: string) => {
+  const costPatch: { supplier_cost?: number | null } = {}
+  const readCost = (key: 'supplier_cost', label: string) => {
     if (!formData.has(key)) return null
     const raw = String(formData.get(key) ?? '').trim()
     if (!raw) {
@@ -277,10 +275,8 @@ export async function updateProduct(productId: string, formData: FormData) {
     costPatch[key] = parsed
     return null
   }
-  const supplierCostError = readCost('supplier_cost', 'Supplier cost')
+  const supplierCostError = readCost('supplier_cost', 'Cost price')
   if (supplierCostError) return { error: supplierCostError }
-  const marginError = readCost('internal_margin', 'Product margin')
-  if (marginError) return { error: marginError }
   if (formData.has('stock_qty')) {
     const raw = String(formData.get('stock_qty') ?? '').trim()
     const stock = raw ? Number(raw) : 0
@@ -335,7 +331,7 @@ export async function updateProduct(productId: string, formData: FormData) {
     return { error: directOrderSchemaHint(error.message) }
   }
 
-  if (formData.has('supplier_cost') || formData.has('internal_margin')) {
+  if (formData.has('supplier_cost')) {
     const { error: costError } = await upsertProductCost(supabase, productId, costPatch)
     if (costError) return { error: supplierSchemaHint(costError.message) }
   }
