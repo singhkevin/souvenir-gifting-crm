@@ -13,6 +13,7 @@ import {
   normalizeCheckout,
   type CheckoutLineInput,
 } from '@/lib/catalogue/purchase-path'
+import { storeGuestContact } from '@/lib/catalogue/store-guest'
 import { storeSampleQuantityError } from '@/lib/catalogue/storefront'
 import { notifyOrderPlaced } from '@/lib/email/order-emails'
 import type { OrderSource } from '@/lib/orders/source'
@@ -169,13 +170,9 @@ export async function placeStoreDirectOrder(input: {
     return placeSignedInBusinessOrder(profile, input)
   }
 
-  const fullName = clean(input.fullName)
-  const email = clean(input.email).toLowerCase()
-  const companyName = clean(input.companyName)
-  const phone = clean(input.phone)
-  if (!fullName) return { error: 'Please share your name.' }
-  if (!email || !email.includes('@')) return { error: 'Please share a valid email.' }
-  if (!companyName) return { error: 'Please share your company name.' }
+  const guest = storeGuestContact(input)
+  if ('error' in guest) return guest
+  const { fullName, email, companyName, phone } = guest
 
   const normalized = normalizeCheckout(input.lines.map((line) => ({ ...line, catalogId: null })))
   if ('error' in normalized) return { error: normalized.error }

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { checkoutStoreCart, checkoutQuotedOrder } from '@/app/catalogue/actions'
 import { checkoutPortalCart } from '@/app/portal/catalogue/actions'
+import { storeCartCheckoutInput } from '@/lib/catalogue/store-guest'
 import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import type { CartItem } from '@/lib/catalogue/cart'
@@ -56,7 +57,7 @@ export function CartCheckout({
                 phone: form.phone,
                 idempotencyKey: key,
               })
-            : checkoutStoreCart({ ...form, lines, idempotencyKey: key })
+            : checkoutStoreCart(storeCartCheckoutInput(form, lines, key))
           : checkoutPortalCart({ lines, idempotencyKey: key }),
       {
         successMessage: 'Order placed',
@@ -110,7 +111,7 @@ export function CartCheckout({
           <input
             value={form.company_name}
             onChange={(event) => setForm({ ...form, company_name: event.target.value })}
-            placeholder="Company"
+            placeholder="Company (optional)"
             autoComplete="organization"
             className="w-full rounded-md border border-[#E5DFD5] px-3 py-2 text-sm"
           />
