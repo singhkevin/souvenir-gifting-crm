@@ -230,3 +230,7 @@ Cleanup pass on the uncommitted retail restyle:
 - New key: `retail.directDispatchNote` = '[Direct-to-recipient dispatch details]' (TODO(client)).
 - Fixed 390px overflow on /catalogue/checkout progress strip (flex-wrap).
 - typecheck ✓, tests 101/101 ✓, build ✓. Screenshots 1440/390: home, category, product, checkout, about, catalogue — no horizontal overflow.
+
+### Status 14:20 IST (executor)
+- Commits: 9c4fe31 corporate home, 985004f retail restyle, 0c4d34b retail claim fixes (new keys retail.paymentMethods, retail.directDispatchNote; removed UPI/VISA badges — no payment gateway in code).
+- NEXT: business portal (src/app/business/(portal)/** + src/components/business/*). Prompt saved at /tmp/sv2-business-prompt.txt. Blocked: agy Claude Sonnet/Opus quota exhausted until ~17:10 IST. Then corporate /portal, then /crm.
