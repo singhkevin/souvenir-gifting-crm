@@ -3,11 +3,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, Search, User, X } from 'lucide-react'
+import { Menu, Search, X } from 'lucide-react'
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { PwaInstallButton } from '@/components/pwa/pwa-install-button'
 import { AudienceSwitch } from '@/components/site/audience-switch'
 import { CartDrawer } from '@/components/site/cart-drawer'
+import {
+  HEADER_ICON_CLASS,
+  HEADER_SEARCH_PLACEHOLDER,
+  HeaderAccountLink,
+  HeaderSampleCartLink,
+  HeaderSearchSubmit,
+} from '@/components/sv2/header-actions'
 
 const PRIMARY_NAV = [
   { href: '/about', label: 'About' },
@@ -48,6 +55,9 @@ export function SiteHeader({
   const [focused, setFocused] = useState(false)
   const [corporate, setCorporate] = useState(false)
   const pathname = usePathname()
+  const signedIn = Boolean(workspaceHref && workspaceLabel)
+  const accountHref = signedIn ? (workspaceHref as string) : '/login'
+  const accountLabel = signedIn ? (workspaceLabel as string) : 'Sign in or register'
 
   useEffect(() => {
     const mode = document.cookie.split('; ').find((part) => part.startsWith('gf-shop='))
@@ -109,22 +119,17 @@ export function SiteHeader({
 
           {/* Desktop Search */}
           <form onSubmit={submitSearch} className="relative hidden min-w-0 flex-1 max-w-lg items-center lg:flex" role="search">
-            <Search size={16} className="absolute left-3 shrink-0 text-[#7C766F]" aria-hidden="true" />
             <input
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onFocus={() => setFocused(true)}
               onBlur={() => window.setTimeout(() => setFocused(false), 150)}
-              placeholder="Search keepsakes, hampers, brassware, leather..."
-              className="w-full bg-[#F6F3EC] border border-[#CCC5BD] pl-10 pr-20 py-2 sv2-body-sm text-[#1C1C18] focus:outline-none focus:border-[#000000] placeholder:text-[#7C766F]"
+              placeholder={HEADER_SEARCH_PLACEHOLDER}
+              aria-label="Search the catalogue"
+              className="w-full bg-[#F6F3EC] border border-[#CCC5BD] pl-3 pr-10 py-2 sv2-body-sm text-[#1C1C18] focus:outline-none focus:border-[#000000] placeholder:text-[#7C766F]"
             />
-            <span
-              className="absolute right-3 sv2-label text-[#7C766F] border border-[#CCC5BD] px-1.5 py-0.5 bg-[#FCF9F2] text-[10px]"
-              aria-hidden="true"
-            >
-              SEARCH
-            </span>
+            <HeaderSearchSubmit />
             {focused && matches.length > 0 ? (
               <div className="absolute left-0 top-full z-50 mt-1 w-full border border-[#CCC5BD] bg-[#FCF9F2] shadow-none">
                 {matches.map((item) => (
@@ -147,30 +152,11 @@ export function SiteHeader({
           </form>
 
           {/* Desktop Actions */}
-          <div className="hidden shrink-0 items-center gap-3 lg:flex">
+          <div className="hidden shrink-0 items-center gap-2 lg:flex">
             <AudienceSwitch businessHref={businessHref} hide={hideAudience} />
-            <PwaInstallButton />
-            {workspaceHref && workspaceLabel ? (
-              <Link
-                href={workspaceHref}
-                className="sv2-label text-[11px] text-[#4A4640] hover:text-[#1C1C18] transition-colors flex items-center gap-1.5"
-              >
-                <User size={14} />
-                {workspaceLabel}
-              </Link>
-            ) : (
-              <div className="flex items-center gap-2 sv2-label text-[11px] text-[#4A4640]">
-                <Link href="/signup" className="hover:text-[#1C1C18] transition-colors">
-                  Register
-                </Link>
-                <span className="text-[#CCC5BD]" aria-hidden="true">|</span>
-                <Link href="/login" className="hover:text-[#1C1C18] transition-colors flex items-center gap-1">
-                  <User size={13} />
-                  Sign in
-                </Link>
-              </div>
-            )}
-            {corporate ? null : <CartDrawer iconClassName="text-[#1C1C18]" />}
+            <PwaInstallButton iconOnly />
+            <HeaderAccountLink href={accountHref} label={accountLabel} />
+            {corporate ? <HeaderSampleCartLink /> : <CartDrawer iconClassName="text-[#1C1C18]" />}
             <Link
               href="/request-quote"
               className="bg-[#000000] hover:bg-[#9E4300] text-white px-3.5 py-2 sv2-label text-[10px] tracking-wider transition-colors duration-150 active:scale-[0.99] text-center"
@@ -182,30 +168,27 @@ export function SiteHeader({
           {/* Mobile Action Cluster */}
           <div className="flex items-center gap-1.5 sm:gap-2 lg:hidden">
             <div className="hidden sm:block">
-              <PwaInstallButton />
+              <PwaInstallButton iconOnly />
             </div>
             <button
               type="button"
               aria-label="Search catalogue"
-              className="flex h-9 w-9 items-center justify-center border border-[#CCC5BD] text-[#1C1C18] bg-[#F6F3EC]"
+              title="Search"
+              className={HEADER_ICON_CLASS}
               onClick={() => {
                 setSearchOpen(true)
                 setOpen(false)
               }}
             >
-              <Search size={18} />
+              <Search size={17} strokeWidth={1.8} aria-hidden="true" />
             </button>
-            {corporate ? null : <CartDrawer iconClassName="text-[#1C1C18]" />}
-            <Link
-              href="/login"
-              className="flex h-9 items-center whitespace-nowrap bg-[#000000] px-2.5 sv2-label text-[10px] text-white"
-            >
-              Sign in
-            </Link>
+            <HeaderAccountLink href={accountHref} label={accountLabel} />
+            {corporate ? <HeaderSampleCartLink /> : <CartDrawer iconClassName="text-[#1C1C18]" />}
             <button
               type="button"
-              className="flex h-9 w-9 items-center justify-center border border-[#CCC5BD] text-[#1C1C18] bg-[#F6F3EC]"
+              className={HEADER_ICON_CLASS}
               aria-label={open ? 'Close menu' : 'Open menu'}
+              title={open ? 'Close menu' : 'Menu'}
               aria-expanded={open}
               onClick={() => {
                 setOpen((value) => !value)
@@ -226,10 +209,11 @@ export function SiteHeader({
                 autoFocus
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search keepsakes, hampers, brassware..."
+                placeholder={HEADER_SEARCH_PLACEHOLDER}
+                aria-label="Search the catalogue"
                 className="w-full bg-transparent py-2 sv2-body-sm text-[#1C1C18] outline-none placeholder:text-[#7C766F]"
               />
-              <button type="button" aria-label="Close search" onClick={() => setSearchOpen(false)} className="p-1.5 text-[#7C766F]">
+              <button type="button" aria-label="Close search" title="Close search" onClick={() => setSearchOpen(false)} className="p-1.5 text-[#7C766F]">
                 <X size={18} />
               </button>
             </form>

@@ -15,6 +15,7 @@ import { ProductImage } from '@/components/ui/product-image'
 import { formatCurrency } from '@/lib/utils'
 import { CartCheckout } from '@/components/site/cart-checkout'
 import { siteContent } from '@/config/siteContent'
+import { HEADER_ICON_CLASS, HeaderCountBadge } from '@/components/sv2/header-actions'
 
 export function CartDrawer({
   iconClassName = 'text-[#1C1C18]',
@@ -70,14 +71,12 @@ export function CartDrawer({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={`Cart, ${count} item${count === 1 ? '' : 's'}`}
-        className={`group relative flex h-9 items-center gap-1.5 border border-[#CCC5BD] px-2.5 sm:px-3 text-[#1C1C18] hover:border-[#000000] bg-[#F6F3EC] transition-colors ${iconClassName}`}
+        aria-label={`Bag, ${count} item${count === 1 ? '' : 's'}`}
+        title="Bag"
+        className={`${HEADER_ICON_CLASS} ${iconClassName}`}
       >
-        <ShoppingBag size={18} strokeWidth={1.8} />
-        <span className="whitespace-nowrap sv2-label text-[11px] font-semibold">
-          <span className="hidden sm:inline">Bag </span>
-          <span className="sv2-mono-sm text-[11px]">({count})</span>
-        </span>
+        <ShoppingBag size={17} strokeWidth={1.8} aria-hidden="true" />
+        <HeaderCountBadge count={count} />
       </button>
 
       {open ? (

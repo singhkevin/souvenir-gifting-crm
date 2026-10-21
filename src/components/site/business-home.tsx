@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getProfile } from '@/lib/auth'
-import { isBusinessRole } from '@/lib/roles'
+import { isBusinessRole, isClientRole } from '@/lib/roles'
+import { landingPathForRole } from '@/lib/safe-next'
 import { getBusinessCatalogue, type BusinessProduct } from '@/lib/business/catalogue'
 import { minimumOrderQty } from '@/lib/business/lines'
 import { getPublicBrands, getPublicCategories, type PublicProduct } from '@/lib/catalogue/products'
@@ -60,6 +61,18 @@ export async function BusinessHome({
   const filters = readCatalogueFilters(searchParams)
   const profile = await getProfile()
   const companyId = profile && isBusinessRole(profile.role) ? profile.company_id : null
+  const accountHref = profile
+    ? isClientRole(profile.role)
+      ? '/portal/gifts'
+      : landingPathForRole(profile.role)
+    : null
+  const accountLabel = profile
+    ? isClientRole(profile.role)
+      ? 'Client portal'
+      : isBusinessRole(profile.role)
+        ? 'Business portal'
+        : 'Workspace'
+    : null
 
   const [products, categories, brands, phone] = await Promise.all([
     getBusinessCatalogue(companyId).catch(() => [] as BusinessProduct[]),
@@ -215,7 +228,7 @@ export async function BusinessHome({
       <UtilityBar phone={phone} showMinimumOrder />
 
       {/* Primary Header */}
-      <SV2Header categories={navCategories} />
+      <SV2Header categories={navCategories} accountHref={accountHref} accountLabel={accountLabel} />
 
       <main id="main-content" className="w-full max-w-full min-w-0">
         {/* Indicative pricing notice & account access bar */}

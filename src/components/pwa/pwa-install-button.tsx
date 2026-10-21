@@ -33,9 +33,12 @@ function waitForDeferredPrompt(timeoutMs = 2500) {
 export function PwaInstallButton({
   className,
   variant = 'light',
+  iconOnly = false,
 }: {
   className?: string
   variant?: 'light' | 'dark'
+  /** Square icon-only control for crowded headers; label moves to aria-label/title. */
+  iconOnly?: boolean
 }) {
   const { canPrompt, installed, isIos, ready, install } = usePwaInstall()
   const [hintOpen, setHintOpen] = useState(false)
@@ -46,6 +49,7 @@ export function PwaInstallButton({
   }
 
   const isDark = variant === 'dark'
+  const label = busy ? 'Installing…' : canPrompt ? 'Install app' : isIos ? 'Add to Home' : 'Install app'
 
   const onInstall = async () => {
     if (busy) return
@@ -66,21 +70,37 @@ export function PwaInstallButton({
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={onInstall}
-        disabled={busy}
-        className={cn(
-          'inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-90 disabled:opacity-60',
-          isDark
-            ? 'border border-white/35 px-2.5 py-1.5 text-white/95'
-            : 'border border-[#D9D3C9] px-2.5 py-1.5 text-[#806A50]',
-          className,
-        )}
-      >
-        <Download size={13} strokeWidth={2} />
-        {busy ? 'Installing…' : canPrompt ? 'Install app' : isIos ? 'Add to Home' : 'Install app'}
-      </button>
+      {iconOnly ? (
+        <button
+          type="button"
+          onClick={onInstall}
+          disabled={busy}
+          aria-label={label}
+          title={label}
+          className={cn(
+            'flex h-9 w-9 shrink-0 items-center justify-center border border-[#CCC5BD] bg-[#F6F3EC] text-[#1C1C18] transition-colors hover:border-[#1C1B1A] disabled:opacity-60',
+            className,
+          )}
+        >
+          <Download size={16} strokeWidth={1.8} aria-hidden="true" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onInstall}
+          disabled={busy}
+          className={cn(
+            'inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-90 disabled:opacity-60',
+            isDark
+              ? 'border border-white/35 px-2.5 py-1.5 text-white/95'
+              : 'border border-[#D9D3C9] px-2.5 py-1.5 text-[#806A50]',
+            className,
+          )}
+        >
+          <Download size={13} strokeWidth={2} />
+          {label}
+        </button>
+      )}
 
       {hintOpen ? (
         <div className="absolute right-0 top-full z-50 mt-2 w-72 border border-[#E8E4DE] bg-white p-3 text-left text-xs leading-relaxed text-[#1B2430]">
