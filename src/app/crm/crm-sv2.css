@@ -1,0 +1,246 @@
+/*
+ * Souvenir v2 — admin CRM theme.
+ * Scoped to `.sv2-crm` (set by CrmFrame). Remaps the CRM's existing theme
+ * variables and legacy brown/beige utility colours to the Stitch v2 tokens:
+ * cream #FCF9F2, linen #F6F3EC, charcoal #1C1B1A, saffron #9E4300,
+ * peach #FFB690, hairline #CCC5BD. Square corners, no shadows.
+ */
+
+.sv2-crm {
+  /* project theme variables */
+  --color-primary: #1C1B1A;
+  --color-primary-light: #9E4300;
+  --color-primary-fg: #FCF9F2;
+  --color-accent: #9E4300;
+  --color-accent-hover: #7A3400;
+  --color-accent-fg: #FCF9F2;
+  --color-sidebar: #1C1B1A;
+  --color-sidebar-active: #9E4300;
+  --color-sidebar-active-fg: #FCF9F2;
+  --color-sidebar-text: rgba(252, 249, 242, 0.7);
+  --color-gold: #FFB690;
+  --color-gold-fg: #1C1B1A;
+  --color-gold-deep: #9E4300;
+  --color-background: #FCF9F2;
+  --color-surface: #FCF9F2;
+  --color-surface-subtle: #F6F3EC;
+  --color-border: #CCC5BD;
+  --color-border-subtle: #E3DED5;
+  --color-muted: #F1EEE7;
+  --color-muted-fg: #4A4640;
+  --color-text: #1C1C18;
+  --color-text-secondary: #4A4640;
+  --color-success: #3A4537;
+  --color-success-bg: #DAE6D3;
+  --color-warning: #9E4300;
+  --color-warning-bg: #FFE9DC;
+  --color-error: #BA1A1A;
+  --color-error-bg: #FBEDEB;
+  --color-info: #1C1B1A;
+  --color-info-bg: #EBE8E1;
+
+  /* Tailwind default palette, warmed to the v2 tokens */
+  --color-white: #FCF9F2;
+  --color-gray-50: #F6F3EC;
+  --color-gray-100: #F1EEE7;
+  --color-gray-200: #CCC5BD;
+  --color-gray-300: #B8B0A6;
+  --color-gray-400: #7C766F;
+  --color-gray-500: #625C55;
+  --color-gray-600: #4A4640;
+  --color-gray-700: #36332F;
+  --color-gray-800: #262421;
+  --color-gray-900: #1C1C18;
+  --color-green-50: #EEF3EA;
+  --color-green-100: #DAE6D3;
+  --color-green-200: #C3D3BA;
+  --color-green-600: #3A4537;
+  --color-green-700: #3A4537;
+  --color-green-800: #2E372C;
+  --color-emerald-50: #EEF3EA;
+  --color-emerald-100: #DAE6D3;
+  --color-emerald-600: #3A4537;
+  --color-emerald-700: #3A4537;
+  --color-emerald-800: #2E372C;
+  --color-teal-100: #DAE6D3;
+  --color-teal-800: #2E372C;
+  --color-red-50: #FBEDEB;
+  --color-red-100: #F6DAD6;
+  --color-red-200: #E9B5AE;
+  --color-red-600: #BA1A1A;
+  --color-red-700: #A01717;
+  --color-red-800: #8A1414;
+  --color-amber-50: #FFF4EC;
+  --color-amber-100: #FFE4D3;
+  --color-amber-200: #FFC9A8;
+  --color-amber-600: #9E4300;
+  --color-amber-700: #9E4300;
+  --color-amber-800: #8A3A00;
+  --color-amber-900: #7A3400;
+  --color-orange-50: #FFF4EC;
+  --color-orange-100: #FFE4D3;
+  --color-orange-600: #9E4300;
+  --color-orange-700: #9E4300;
+  --color-orange-800: #8A3A00;
+  --color-yellow-100: #FFE4D3;
+  --color-yellow-800: #8A3A00;
+  --color-blue-50: #F1EEE7;
+  --color-blue-100: #EBE8E1;
+  --color-blue-200: #CCC5BD;
+  --color-blue-600: #1C1B1A;
+  --color-blue-700: #1C1B1A;
+  --color-blue-800: #1C1B1A;
+  --color-indigo-100: #EBE8E1;
+  --color-indigo-800: #1C1B1A;
+  --color-purple-50: #F1EEE7;
+  --color-purple-100: #EBE8E1;
+  --color-purple-200: #CCC5BD;
+  --color-purple-800: #31312C;
+
+  /* square corners everywhere (rounded-full is left for dots/avatars) */
+  --radius: 0;
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+
+  background-color: #F6F3EC;
+  color: #1C1C18;
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* no drop shadows */
+.sv2-crm [class*='shadow'] {
+  box-shadow: none !important;
+}
+.sv2-crm .rounded {
+  border-radius: 0;
+}
+
+/* Newsreader for page and panel titles only */
+.sv2-crm :is(h1, h2) {
+  font-family: var(--font-newsreader), 'Newsreader', serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.sv2-crm main h1 {
+  font-size: clamp(26px, 2.4vw, 32px);
+  line-height: 1.25;
+}
+
+/* tables: dense, hairline, small uppercase headers */
+.sv2-crm table th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7C766F;
+}
+.sv2-crm table thead tr {
+  background-color: #F6F3EC;
+}
+
+/* form controls: square, linen fill, charcoal focus, no glow */
+.sv2-crm :is(input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']), select, textarea) {
+  border-radius: 0;
+}
+.sv2-crm :is(input, select, textarea):focus {
+  border-color: #1C1B1A;
+}
+.sv2-crm input[type='checkbox'],
+.sv2-crm input[type='radio'] {
+  accent-color: #9E4300;
+}
+
+/* legacy brown/beige utility colours → v2 tokens.
+ * Same specificity as the utilities they replace, so hover/focus variants still apply. */
+@layer utilities {
+  :where(.sv2-crm) .bg-\[\#806A50\] { background-color: #1C1B1A; }
+  :where(.sv2-crm) .hover\:bg-\[\#9C8567\]:hover { background-color: #9E4300; }
+  :where(.sv2-crm) .hover\:bg-\[\#624b32\]:hover { background-color: #9E4300; }
+  :where(.sv2-crm) .hover\:bg-\[\#624B32\]:hover { background-color: #9E4300; }
+  :where(.sv2-crm) .bg-\[\#624B32\] { background-color: #1C1B1A; }
+  :where(.sv2-crm) .bg-\[\#9C8567\] { background-color: #4A4640; }
+  :where(.sv2-crm) .bg-\[\#241C12\] { background-color: #1C1B1A; }
+  :where(.sv2-crm) .bg-\[\#1C1917\] { background-color: #1C1B1A; }
+  :where(.sv2-crm) .bg-\[\#1A130B\] { background-color: #1C1B1A; }
+  :where(.sv2-crm) .hover\:bg-\[\#704812\]:hover { background-color: #9E4300; }
+  :where(.sv2-crm) .hover\:bg-\[\#2F2313\]:hover { background-color: #31312C; }
+  :where(.sv2-crm) .active\:bg-\[\#1A130B\]:active { background-color: #31312C; }
+  :where(.sv2-crm) .active\:bg-\[\#1a130b\]:active { background-color: #31312C; }
+  :where(.sv2-crm) .bg-\[\#806A50\]\/10 { background-color: rgba(158,67,0,0.08); }
+  :where(.sv2-crm) .bg-\[\#806A50\]\/45 { background-color: rgba(28,27,26,0.45); }
+  :where(.sv2-crm) .bg-\[\#624B32\]\/10 { background-color: rgba(158,67,0,0.08); }
+  :where(.sv2-crm) .bg-\[\#624B32\]\/5 { background-color: rgba(158,67,0,0.05); }
+  :where(.sv2-crm) .bg-\[\#624B32\]\/50 { background-color: rgba(28,27,26,0.5); }
+  :where(.sv2-crm) .hover\:bg-\[\#806A50\]\/5:hover { background-color: rgba(158,67,0,0.05); }
+  :where(.sv2-crm) .hover\:bg-\[\#806A50\]\/10:hover { background-color: rgba(158,67,0,0.08); }
+  :where(.sv2-crm) .hover\:bg-\[\#806A50\]\/15:hover { background-color: rgba(158,67,0,0.12); }
+  :where(.sv2-crm) .text-\[\#806A50\] { color: #9E4300; }
+  :where(.sv2-crm) .hover\:text-\[\#806A50\]:hover { color: #9E4300; }
+  :where(.sv2-crm) .text-\[\#624B32\] { color: #1C1B1A; }
+  :where(.sv2-crm) .hover\:text-\[\#624B32\]:hover { color: #7A3400; }
+  :where(.sv2-crm) .border-\[\#806A50\] { border-color: #1C1B1A; }
+  :where(.sv2-crm) .hover\:border-\[\#806A50\]:hover { border-color: #1C1B1A; }
+  :where(.sv2-crm) .border-\[\#624B32\] { border-color: #1C1B1A; }
+  :where(.sv2-crm) .hover\:border-\[\#624B32\]:hover { border-color: #9E4300; }
+  :where(.sv2-crm) .focus\:border-\[\#806A50\]:focus { border-color: #1C1B1A; }
+  :where(.sv2-crm) .border-\[\#806A50\]\/20 { border-color: rgba(158,67,0,0.25); }
+  :where(.sv2-crm) .border-\[\#806A50\]\/25 { border-color: rgba(158,67,0,0.3); }
+  :where(.sv2-crm) .border-\[\#806A50\]\/30 { border-color: rgba(158,67,0,0.35); }
+  :where(.sv2-crm) .border-\[\#806A50\]\/35 { border-color: rgba(158,67,0,0.4); }
+  :where(.sv2-crm) .focus\:ring-\[\#806A50\]:focus { --tw-ring-color: #1C1B1A; }
+  :where(.sv2-crm) .focus\:ring-\[\#806A50\]\/30:focus { --tw-ring-color: rgba(28,27,26,0.3); }
+  :where(.sv2-crm) .focus\:ring-\[\#624B32\]:focus { --tw-ring-color: #1C1B1A; }
+  :where(.sv2-crm) .focus-visible\:ring-\[\#806A50\]:focus-visible { --tw-ring-color: #1C1B1A; }
+  :where(.sv2-crm) .bg-\[\#FFD001\] { background-color: #FFB690; }
+  :where(.sv2-crm) .bg-\[\#FAF7F2\] { background-color: #FCF9F2; }
+  :where(.sv2-crm) .hover\:bg-\[\#FAF7F2\]:hover { background-color: #F6F3EC; }
+  :where(.sv2-crm) .bg-\[\#F4EFE6\] { background-color: #F6F3EC; }
+  :where(.sv2-crm) .hover\:bg-\[\#F4EFE6\]:hover { background-color: #F1EEE7; }
+  :where(.sv2-crm) .bg-\[\#F6F4F1\] { background-color: #F6F3EC; }
+  :where(.sv2-crm) .hover\:bg-\[\#F6F4F1\]:hover { background-color: #F1EEE7; }
+  :where(.sv2-crm) .bg-\[\#E5DFD5\] { background-color: #EBE8E1; }
+  :where(.sv2-crm) .bg-\[\#EBE5DB\] { background-color: #EBE8E1; }
+  :where(.sv2-crm) .bg-\[\#D6CEBE\] { background-color: #CCC5BD; }
+  :where(.sv2-crm) .hover\:bg-\[\#DDD6CB\]:hover { background-color: #EBE8E1; }
+  :where(.sv2-crm) .active\:bg-\[\#d0c8bb\]:active { background-color: #CCC5BD; }
+  :where(.sv2-crm) .bg-\[\#FEE2E2\] { background-color: #FBEDEB; }
+  :where(.sv2-crm) .bg-\[\#E1EFFE\] { background-color: #EBE8E1; }
+  :where(.sv2-crm) .border-\[\#E5DFD5\] { border-color: #CCC5BD; }
+  :where(.sv2-crm) .border-\[\#E8E4DE\] { border-color: #CCC5BD; }
+  :where(.sv2-crm) .border-\[\#EFE9E0\] { border-color: #E3DED5; }
+  :where(.sv2-crm) .border-\[\#E8DFD3\] { border-color: #CCC5BD; }
+  :where(.sv2-crm) .border-\[\#F4EFE6\] { border-color: #EBE8E1; }
+  :where(.sv2-crm) .border-\[\#3A2C1B\] { border-color: rgba(252,249,242,0.12); }
+  :where(.sv2-crm) .border-\[\#33261A\] { border-color: rgba(252,249,242,0.12); }
+  :where(.sv2-crm) .text-\[\#7A7267\] { color: #625C55; }
+  :where(.sv2-crm) .text-\[\#1C1917\] { color: #1C1C18; }
+  :where(.sv2-crm) .text-\[\#1B2430\] { color: #1C1C18; }
+  :where(.sv2-crm) .text-\[\#5A5248\] { color: #4A4640; }
+  :where(.sv2-crm) .text-\[\#8A929C\] { color: #7C766F; }
+  :where(.sv2-crm) .text-\[\#6B6358\] { color: #4A4640; }
+  :where(.sv2-crm) .text-\[\#9A9288\] { color: #7C766F; }
+  :where(.sv2-crm) .text-\[\#C4BDB3\] { color: #B8B0A6; }
+  :where(.sv2-crm) .text-\[\#C9BFAE\] { color: rgba(252,249,242,0.7); }
+  :where(.sv2-crm) .text-\[\#9C8A70\] { color: #7C766F; }
+  :where(.sv2-crm) .text-\[\#8A7860\] { color: #7C766F; }
+  :where(.sv2-crm) .text-\[\#A8967A\] { color: #7C766F; }
+  :where(.sv2-crm) .text-\[\#BEAE92\] { color: #B8B0A6; }
+  :where(.sv2-crm) .text-\[\#C4B8A8\] { color: #B8B0A6; }
+  :where(.sv2-crm) .text-\[\#FFFFFF\] { color: #FCF9F2; }
+  :where(.sv2-crm) .hover\:text-\[\#FFFFFF\]:hover { color: #FCF9F2; }
+  :where(.sv2-crm) .text-\[\#FAF7F2\] { color: #FCF9F2; }
+  :where(.sv2-crm) .hover\:text-\[\#FAF7F2\]:hover { color: #FCF9F2; }
+  :where(.sv2-crm) .text-\[\#241C12\] { color: #1C1B1A; }
+  :where(.sv2-crm) .text-\[\#991B1B\] { color: #BA1A1A; }
+  :where(.sv2-crm) .text-\[\#1E429F\] { color: #1C1B1A; }
+  :where(.sv2-crm) .placeholder\:text-\[\#8A929C\]::placeholder { color: #7C766F; }
+  :where(.sv2-crm) .text-\[var\(--color-primary\)\] { color: #9E4300; }
+}
