@@ -39,20 +39,20 @@ export function CatalogueShortlistButton({
       }}
       className={
         variant === 'detail'
-          ? `inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors ${
+          ? `inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-none px-4 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
               active
-                ? 'border border-green-200 bg-green-50 text-green-800'
-                : 'bg-[#806A50] text-[#FFFFFF] hover:bg-[#9C8567]'
+                ? 'border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537]'
+                : 'border border-[#1C1B1A] bg-[#1C1B1A] text-white hover:bg-[#9E4300] hover:border-[#9E4300]'
             }`
-          : `inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors ${
+          : `inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-none px-3 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
               active
-                ? 'border border-green-200 bg-green-50 text-green-800'
-                : 'border border-[#E5DFD5] bg-white text-[#806A50] hover:bg-[#FAF7F2]'
+                ? 'border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537]'
+                : 'border border-[#1C1B1A] bg-[#1C1B1A] text-white hover:bg-[#9E4300] hover:border-[#9E4300]'
             }`
       }
       aria-pressed={active}
     >
-      <Heart size={14} className={active ? 'fill-current' : ''} />
+      <Heart size={13} className={active ? 'fill-current text-[#3A4537]' : ''} />
       {active ? 'Added' : 'Add to quote'}
     </button>
   )

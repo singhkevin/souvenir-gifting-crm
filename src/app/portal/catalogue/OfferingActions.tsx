@@ -25,10 +25,10 @@ export function OfferingActions({
         {shortlisted && !selected ? <input type="hidden" name="remove" value="1" /> : null}
         <SubmitButton
           pendingLabel="Saving…"
-          className={`inline-flex min-h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-semibold ${
+          className={`inline-flex min-h-10 w-full items-center justify-center rounded-none px-3 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
             shortlisted && !selected
-              ? 'border border-green-200 bg-green-50 text-green-700'
-              : 'border border-gray-300 bg-white text-gray-700'
+              ? 'border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537]'
+              : 'border border-[#CCC5BD] bg-[#FCF9F2] text-[#1C1C18] hover:bg-[#F6F3EC]'
           }`}
         >
           {shortlisted && !selected ? 'Shortlisted' : 'Shortlist'}
@@ -41,8 +41,10 @@ export function OfferingActions({
         {selected ? <input type="hidden" name="remove" value="1" /> : null}
         <SubmitButton
           pendingLabel="Saving…"
-          className={`inline-flex min-h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-semibold text-white ${
-            selected ? 'bg-[#806A50]' : 'bg-[#806A50] hover:bg-[#9C8567]'
+          className={`inline-flex min-h-10 w-full items-center justify-center rounded-none px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-white transition-colors ${
+            selected
+              ? 'border border-[#9E4300] bg-[#9E4300] hover:bg-[#783100]'
+              : 'border border-[#1C1B1A] bg-[#1C1B1A] hover:bg-[#9E4300]'
           }`}
         >
           {selected ? 'Selected' : 'Select'}
