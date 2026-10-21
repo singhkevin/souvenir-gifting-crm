@@ -77,7 +77,7 @@ export function SV2ProductCard({
           <Chip>MOQ: {moq}</Chip>
         </div>
         <Link
-          href="/request-quote"
+          href={`/request-quote?product=${encodeURIComponent(id)}`}
           className="block w-full text-center bg-[#000000] hover:bg-[#9E4300] text-white py-1.5 sm:py-2 sv2-label text-[10px] sm:text-[11px] tracking-wider transition-colors duration-150"
         >
           Request Quote

@@ -131,6 +131,9 @@ export default async function RequirementDetailPage({
             {req.source === 'business_portal' ? (
               <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">Business portal</p>
             ) : null}
+            {req.source === 'website' ? (
+              <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#3A4537]">Website quote request</p>
+            ) : null}
             <p className="text-xs text-[#4A4640] mt-1.5">
               Company:{' '}
               <Link

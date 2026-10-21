@@ -3,26 +3,31 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getProfile } from '@/lib/auth'
 import { requestOrigin } from '@/lib/auth/request-origin'
-import { isUuid } from '@/lib/utils'
 import { shouldAttachNamedCompany } from '@/lib/business/email-domain'
 import { appName } from '@/lib/brand'
 import { resolveAlertOwnerId } from '@/lib/alerts/owner'
 import { publicQuoteOwnerEmailHtml } from '@/lib/email/business'
 import { sendEmail } from '@/lib/email/resend'
 import { withIdempotency } from '@/lib/idempotency'
+import {
+  buildPublicQuoteRecord,
+  parseQuoteItems,
+  quoteProductIds,
+  resolvePublicQuoteLines,
+} from '@/lib/catalogue/public-quote'
 
 function clean(value: FormDataEntryValue | null) {
   return String(value || '').trim()
 }
 
-export async function submitPublicQuote(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+export async function submitPublicQuote(formData: FormData): Promise<{ error?: string; success?: boolean; productName?: string | null }> {
   if (clean(formData.get('fax'))) {
     return { success: true }
   }
   return withIdempotency('public.submitQuote', formData, () => submitPublicQuoteOnce(formData))
 }
 
-async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: string; success?: boolean }> {
+async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: string; success?: boolean; productName?: string | null }> {
 
   const fullName = clean(formData.get('full_name'))
   const email = clean(formData.get('email')).toLowerCase()
@@ -48,64 +53,25 @@ async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: stri
     // We still record a website-sourced note on a lead so sales can see the catalogue context.
   }
 
-  let productLine = ''
-  let cartItems: { id: string; name: string; quantity: number }[] = []
-  if (itemsRaw) {
-    try {
-      const parsed = JSON.parse(itemsRaw)
-      if (Array.isArray(parsed)) {
-        cartItems = parsed
-          .filter((row) => row && typeof row === 'object' && row.id && row.name)
-          .map((row) => ({
-            id: String(row.id),
-            name: String(row.name),
-            quantity: Math.max(1, Math.round(Number(row.quantity) || 1)),
-          }))
-      }
-    } catch {
-      cartItems = []
-    }
-  }
-
-  if (cartItems.length) {
-    const ids = cartItems.map((item) => item.id).filter((id) => isUuid(id))
-    const { data: products } = ids.length
-      ? await admin.from('products').select('id, name, sku').in('id', ids).eq('status', 'active').eq('catalogue_access', 'all')
-      : { data: null }
-    const bySku = new Map((products || []).map((p) => [p.id, p]))
-    productLine =
-      'Products:\n' +
-      cartItems
-        .map((item) => {
-          const match = bySku.get(item.id)
-          const label = match ? `${match.name} (${match.sku})` : item.name
-          return `  - ${label} x ${item.quantity}`
-        })
-        .join('\n') +
-      '\n'
-  } else if (productId && isUuid(productId)) {
-    const { data: product } = await admin
+  const items = parseQuoteItems(itemsRaw)
+  const lookupIds = quoteProductIds({ items, productId })
+  const { data: products } = lookupIds.length
+    ? await admin
       .from('products')
       .select('id, name, sku')
-      .eq('id', productId)
+      .in('id', lookupIds)
       .eq('status', 'active')
       .eq('catalogue_access', 'all')
-      .maybeSingle()
-    if (product) {
-      productLine = `Product: ${product.name} (${product.sku})\n`
-    }
-  } else if (productName) {
-    productLine = `Product: ${productName}\n`
-  }
-
-  const notes = [
-    'Website catalogue enquiry',
-    productLine.trim(),
-    !cartItems.length && quantity ? `Quantity: ${quantity}` : '',
-    message,
-  ]
-    .filter(Boolean)
-    .join('\n')
+    : { data: null }
+  const lines = resolvePublicQuoteLines({
+    items,
+    productId,
+    productName,
+    quantity,
+    products: (products || []).map((p) => ({ id: p.id as string, name: p.name as string, sku: (p.sku as string | null) ?? null })),
+  })
+  const record = buildPublicQuoteRecord({ companyName, contactName: fullName, lines, quantity, message, phone })
+  const notes = record.leadNotes
 
   const { data: owner } = await admin
     .from('profiles')
@@ -177,15 +143,46 @@ async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: stri
   if (leadError || !lead) return { error: 'Unable to save this enquiry. Please try again.' }
 
   const attachedOwner = existingCompany && companyId === existingCompany.id ? existingCompany.owner_id : null
-  const alertOwnerId = await resolveAlertOwnerId(admin, attachedOwner || owner?.id || null)
+  const requirementOwnerId = attachedOwner || owner?.id || null
+
+  // Same shape as business_submit_rfq: a requirement with product lines, so staff can quote it.
+  let requirementId: string | null = null
+  const { data: requirement, error: requirementError } = await admin
+    .from('requirements')
+    .insert({
+      name: record.requirementName,
+      company_id: companyId,
+      contact_id: contact.id,
+      lead_id: lead.id,
+      owner_id: requirementOwnerId,
+      quantity: record.requirementQuantity,
+      description: record.requirementDescription,
+      status: 'active',
+      source: 'website',
+    })
+    .select('id')
+    .single()
+  if (requirementError || !requirement) {
+    console.error('Website quote: requirement not created', requirementError?.message)
+  } else {
+    requirementId = requirement.id as string
+    if (record.requirementProducts.length) {
+      const { error: lineError } = await admin
+        .from('requirement_products')
+        .insert(record.requirementProducts.map((line) => ({ ...line, requirement_id: requirementId })))
+      if (lineError) console.error('Website quote: requirement products not saved', lineError.message)
+    }
+  }
+
+  const alertOwnerId = await resolveAlertOwnerId(admin, requirementOwnerId)
   if (alertOwnerId) {
-    const leadPath = `/crm/leads/${lead.id}`
+    const alertPath = requirementId ? `/crm/requirements/${requirementId}` : `/crm/leads/${lead.id}`
     const note = {
       user_id: alertOwnerId,
       audience: 'internal',
       title: 'New website quote request',
-      body: `${companyName} asked for a quote.`,
-      link: leadPath,
+      body: record.notificationBody,
+      link: alertPath,
     }
     const inserted = await admin.from('notifications').insert(note)
     if (inserted.error) {
@@ -206,11 +203,16 @@ async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: stri
       const origin = await requestOrigin()
       await sendEmail({
         to: alertOwner.email,
-        subject: 'New website quote request',
-        html: publicQuoteOwnerEmailHtml({ company: companyName, leadUrl: `${origin}${leadPath}` }),
+        subject: record.productSummary ? `New website quote request: ${record.productSummary}` : 'New website quote request',
+        html: publicQuoteOwnerEmailHtml({
+          company: companyName,
+          leadUrl: `${origin}/crm/leads/${lead.id}`,
+          requirementUrl: requirementId ? `${origin}/crm/requirements/${requirementId}` : null,
+          detail: record.notificationBody,
+        }),
       })
     }
   }
 
-  return { success: true }
+  return { success: true, productName: record.productSummary }
 }

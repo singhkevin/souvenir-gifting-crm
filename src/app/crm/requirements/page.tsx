@@ -182,6 +182,11 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
                       Business
                     </span>
                   ) : null}
+                  {req.source === 'website' ? (
+                    <span className="ml-2 inline-block rounded-none border border-[#3A4537]/30 bg-[#DAE6D3] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#3A4537]">
+                      Website
+                    </span>
+                  ) : null}
                 </div>
                 <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] rounded-none ${STATUS_COLORS[req.status || ''] || 'border border-[#CCC5BD] text-[#4A4640]'}`}>
                   {req.status || 'unknown'}
@@ -266,6 +271,11 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
                     {req.source === 'business_portal' ? (
                       <span className="ml-2 inline-block rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9E4300]">
                         Business
+                      </span>
+                    ) : null}
+                    {req.source === 'website' ? (
+                      <span className="ml-2 inline-block rounded-none border border-[#3A4537]/30 bg-[#DAE6D3] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#3A4537]">
+                        Website
                       </span>
                     ) : null}
                     {(linesByRequirement.get(req.id) || []).slice(0, 3).map((line, index) => (

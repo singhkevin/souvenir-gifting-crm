@@ -23,13 +23,22 @@ export function QuoteForm({
   onSuccess?: () => void
 }) {
   const [success, setSuccess] = useState(false)
+  const [quotedName, setQuotedName] = useState<string | null>(null)
 
   if (success) {
+    const subject = quotedName || productName || null
     return (
       <div className="px-2 py-8 text-center space-y-3">
         <p className="font-serif text-2xl text-[#1C1C18]">Thank you.</p>
         <p className="mx-auto max-w-md sv2-body-sm text-[#4A4640]">
-          We have received your enquiry. A <BrandName /> representative will follow up with your quotation.
+          {subject ? (
+            <>
+              We have received your quote request for <strong className="font-medium text-[#1C1C18]">{subject}</strong>.
+            </>
+          ) : (
+            'We have received your enquiry.'
+          )}{' '}
+          A <BrandName /> representative will follow up with your quotation.
         </p>
       </div>
     )
@@ -45,7 +54,9 @@ export function QuoteForm({
       className="space-y-4"
       successMessage="Enquiry sent"
       refresh={false}
-      onSuccess={() => {
+      onSuccess={(result) => {
+        const name = (result as { productName?: string | null } | null)?.productName
+        if (name) setQuotedName(name)
         setSuccess(true)
         onSuccess?.()
       }}
