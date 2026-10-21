@@ -234,3 +234,47 @@ Cleanup pass on the uncommitted retail restyle:
 ### Status 14:20 IST (executor)
 - Commits: 9c4fe31 corporate home, 985004f retail restyle, 0c4d34b retail claim fixes (new keys retail.paymentMethods, retail.directDispatchNote; removed UPI/VISA badges — no payment gateway in code).
 - NEXT: business portal (src/app/business/(portal)/** + src/components/business/*). Prompt saved at /tmp/sv2-business-prompt.txt. Blocked: agy Claude Sonnet/Opus quota exhausted until ~17:10 IST. Then corporate /portal, then /crm.
+
+---
+
+## Business portal
+
+Restyle of the Business Portal (`/business/*` authenticated surfaces) to the contemporary Indian Stitch v2 design language.
+
+### Files Changed
+- `src/app/business/(portal)/layout.tsx`: Scoped with `.sv2` class wrapper and font variables (`newsreader`, `plusJakarta`, `jetbrainsMono`), importing `sv2.css`.
+- `src/components/business/business-frame.tsx`: Warm cream `#FCF9F2` header, hairline `#CCC5BD` borders, square corners, square tab navigation, plain sans uppercase labels, pulse dot for pending approval notice.
+- `src/components/business/add-to-quote.tsx`: Square corner inputs on linen `#F6F3EC`, sans uppercase labels, JetBrains Mono for MOQ/numbers, saffron `#9E4300` submit CTA, hairline break inputs.
+- `src/components/business/quote-basket.tsx`: Square cards with `#CCC5BD` borders, serif item titles, JetBrains Mono prices (showing "Price on quote" when unpriced), square form controls, saffron submit button.
+- `src/components/business/quote-response.tsx`: Square segmented buttons (`Accept quote` / `Reject quote` / `Request revision`), hairline-bordered checkbox list, square comment textarea, saffron save button.
+- `src/components/business/requote-button.tsx`: Square outlined saffron button with plain sans uppercase label.
+- `src/app/business/(portal)/dashboard/page.tsx`: Newsreader heading, square stat cards with large mono numerals and hairline borders, black square action button with saffron hover.
+- `src/app/business/(portal)/catalogue/page.tsx`: Newsreader heading, linen notice bar with pulse indicator, `CatalogueBrowser` integration.
+- `src/app/business/(portal)/catalogue/[id]/page.tsx`: Square image container on linen `#F1EEE7`, Newsreader product title, mono SKU, hairline price and MOQ spec strip, `AddToQuote` integration.
+- `src/app/business/(portal)/quote/page.tsx`: Newsreader heading, plain sans uppercase eyebrow, `QuoteBasket` integration.
+- `src/app/business/(portal)/quotes/page.tsx`: Hairline table wrapped in `overflow-x-auto` (works at 390px with no horizontal overflow), right-aligned mono prices, rectangular status chips (olive for accepted, saffron tint for sent/viewed, neutral for expired/rejected).
+- `src/app/business/(portal)/quotes/[id]/page.tsx`: Newsreader heading, rectangular status chip, hairline items table with right-aligned mono numbers, linen totals breakdown card.
+- `src/app/business/(portal)/requests/page.tsx`: Hairline requests ledger table wrapped in `overflow-x-auto`, mono timestamps, rectangular status tags.
+- `src/app/business/(portal)/requests/[id]/page.tsx`: Hairline 4-column metadata grid (`Deadline`, `Delivery City`, `Budget`, `Purpose`), hairline requirements items table with mono numbers.
+- `src/app/business/(portal)/orders/page.tsx`: Hairline orders table wrapped in `overflow-x-auto`, mono numbers, rectangular status chips.
+- `src/app/business/(portal)/orders/[id]/page.tsx`: Newsreader heading, rectangular status chip, 4-column metadata strip, hairline order items table with right-aligned mono numbers.
+- `src/app/business/(portal)/account/page.tsx`: Hairline-bordered credentials grid, mono GSTIN, rectangular verification status chip.
+
+### New siteContent Keys
+- None required (existing verified fields, company attributes, and neutral placeholders were used without inventing any facts).
+
+### Verification
+- `npm run typecheck`: Passed (0 errors)
+- `npm test`: Passed (101 / 101 tests pass)
+- `npm run build`: Passed (all business portal dynamic routes compiled cleanly)
+- Verified square corners, hairline borders `#CCC5BD`, cream `#FCF9F2` / linen `#F6F3EC` fills, saffron `#9E4300` CTAs, Newsreader headlines, and JetBrains Mono restricted to numbers, SKUs, MOQs, dates, and prices.
+
+
+### Claim check (business portal)
+- Strict grep + manual review of added lines. Only hits: "incl. GST" on quote detail (pre-existing at HEAD, backed by quote.total/tax_amount). Removed a new "Total (incl. GST)" list header (now "Total").
+- Removed Gemini's `// BUSINESS DESK //` mono section tags (plain sans eyebrows now), "Verified ... credentials" copy, and a blanket "All catalogue items are available for bulk quotation" claim. Hardcoded "SOUVENIR" wordmark replaced with /logo.png + appName().
+- No hardcoded ₹ amounts, names, emails or phones added. No changes to src/lib, supabase, actions, shared sv2 files or siteContent.
+- Screenshots: all business routes redirect to /login without a session (no business demo user documented; passwords not available), so only the login page was captured.
+
+## Progress
+- Corporate homepage: done (9c4fe31). Retail: done (985004f, 0c4d34b). Business portal: done. Client portal (/portal) and CRM (/crm): in progress in separate worktrees.
