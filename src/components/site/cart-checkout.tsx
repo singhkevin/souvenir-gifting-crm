@@ -56,7 +56,15 @@ export function CartCheckout({
                 phone: form.phone,
                 idempotencyKey: key,
               })
-            : checkoutStoreCart({ ...form, lines, idempotencyKey: key })
+            : checkoutStoreCart({
+                fullName: form.full_name,
+                email: form.email,
+                companyName: form.company_name,
+                phone: form.phone,
+                fax: form.fax,
+                lines,
+                idempotencyKey: key,
+              })
           : checkoutPortalCart({ lines, idempotencyKey: key }),
       {
         successMessage: 'Order placed',

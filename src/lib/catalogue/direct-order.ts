@@ -172,7 +172,7 @@ export async function placeStoreDirectOrder(input: {
 
   const fullName = clean(input.fullName)
   const email = clean(input.email).toLowerCase()
-  const companyName = clean(input.companyName)
+  const companyName = clean(input.companyName) || clean(input.fullName)
   const phone = clean(input.phone)
   if (!fullName) return { error: 'Please share your name.' }
   if (!email || !email.includes('@')) return { error: 'Please share a valid email.' }
