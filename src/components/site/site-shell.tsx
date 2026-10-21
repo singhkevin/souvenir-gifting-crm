@@ -7,12 +7,15 @@ import { SiteHeader } from '@/components/site/site-header'
 import { SiteFooter } from '@/components/site/site-footer'
 import { CategoryIconStrip } from '@/components/site/category-icon-strip'
 import { WhatsAppButton } from '@/components/site/whatsapp-button'
+import { UtilityBar } from '@/components/sv2/utility-bar'
 import { getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
 import { homeCategoryTiles } from '@/lib/catalogue/curate'
 import { STORE_NAV_CATEGORIES, storeNavCategoryHref } from '@/lib/catalogue/store-nav'
 import { slugify } from '@/lib/utils'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolvePublicContactPhone } from '@/lib/contact/public-phone'
+import { newsreader, plusJakarta, jetbrainsMono } from '@/lib/fonts'
+import '@/app/sv2.css'
 
 async function publicContactPhone() {
   const fromEnv = process.env.PUBLIC_CONTACT_PHONE
@@ -60,11 +63,10 @@ export async function SiteShell({
   }))
 
   return (
-    <div className="storefront min-h-screen bg-[#fff8f4] text-[#221a10]">
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      />
+    <div
+      className={`sv2 ${newsreader.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} min-h-screen bg-[#FCF9F2] text-[#1C1C18]`}
+    >
+      <UtilityBar phone={phone} />
       <SiteHeader
         workspaceHref={workspaceHref}
         workspaceLabel={workspaceLabel}

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
@@ -30,13 +31,35 @@ export default async function CategoryDetailPage({ params }: Props) {
 
   return (
     <SiteShell>
-      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
+      <div className="border-b border-[#3A3835] bg-[#1C1B1A] text-[#FCF9F2]">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <p className="store-eyebrow">Category</p>
-          <h1 className="store-section-title mt-2">{name}</h1>
+          <p className="font-sans text-xs uppercase tracking-wider text-[#FFB690]">
+            <Link href="/home" className="hover:underline">
+              Home
+            </Link>
+            <span className="mx-2 text-[#7C766F]">/</span>
+            <Link href="/categories" className="hover:underline">
+              Categories
+            </Link>
+            <span className="mx-2 text-[#7C766F]">/</span>
+            <span className="text-[#FCF9F2]">{name}</span>
+          </p>
+          <div className="mt-4 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <h1 className="font-serif text-3xl font-normal tracking-tight text-[#FCF9F2] sm:text-4xl lg:text-5xl">
+                {name}
+              </h1>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#CCC5BD]">
+                Showing {filtered.length} {filtered.length === 1 ? 'gift' : 'gifts'} in this category.
+              </p>
+            </div>
+            <div className="font-sans text-xs uppercase tracking-wider text-[#CCC5BD] shrink-0 border border-[#3A3835] bg-[#242220] px-3.5 py-2">
+              CATEGORY VIEW
+            </div>
+          </div>
         </div>
       </div>
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <CatalogueBrowser products={filtered} />
       </div>
     </SiteShell>

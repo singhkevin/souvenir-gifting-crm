@@ -98,35 +98,56 @@ export function SiteHeader({
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#d0c5bb] bg-[#fff8f4]">
-      <div className="bg-[#fff8f4]">
+    <header className="sticky top-0 z-40 w-full border-b border-[#CCC5BD] bg-[#FCF9F2]">
+      <div className="bg-[#FCF9F2]">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
-          <Link href="/home" className="flex shrink-0 items-center">
-            <Image src="/logo.png" alt={appName()} width={196} height={85} className="h-[52px] w-auto sm:h-[60px]" priority />
-          </Link>
+          {/* Logo + Tagline */}
+          <div className="flex shrink-0 items-center gap-4 sm:gap-6">
+            <Link href="/home" className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt={appName()}
+                width={140}
+                height={44}
+                className="h-7 sm:h-9 w-auto object-contain"
+                priority
+              />
+            </Link>
+            <span className="hidden xl:inline-block border-l border-[#CCC5BD] pl-4 sv2-label text-[10px] text-[#4A4640]">
+              RETAIL GIFTING // IN
+            </span>
+          </div>
 
-          <form onSubmit={submitSearch} className="relative hidden min-w-0 flex-1 items-center gap-2 lg:flex">
-            <Search size={16} className="shrink-0 text-[#715a3e]" />
+          {/* Desktop Search */}
+          <form onSubmit={submitSearch} className="relative hidden min-w-0 flex-1 max-w-lg items-center lg:flex" role="search">
+            <Search size={16} className="absolute left-3 shrink-0 text-[#7C766F]" aria-hidden="true" />
             <input
+              type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onFocus={() => setFocused(true)}
               onBlur={() => window.setTimeout(() => setFocused(false), 150)}
-              placeholder="Search gifts, kits, brands"
-              className="w-full rounded border border-[#d0c5bb] bg-white px-3 py-2 text-sm text-[#22180b] outline-none placeholder:text-[#7f756d] focus:border-[#715a3e]"
+              placeholder="Search keepsakes, hampers, brassware, leather..."
+              className="w-full bg-[#F6F3EC] border border-[#CCC5BD] pl-10 pr-20 py-2 sv2-body-sm text-[#1C1C18] focus:outline-none focus:border-[#000000] placeholder:text-[#7C766F]"
             />
+            <span
+              className="absolute right-3 sv2-label text-[#7C766F] border border-[#CCC5BD] px-1.5 py-0.5 bg-[#FCF9F2] text-[10px]"
+              aria-hidden="true"
+            >
+              SEARCH
+            </span>
             {focused && matches.length > 0 ? (
-              <div className="absolute left-0 top-full z-50 mt-2 w-full overflow-hidden rounded-md border border-[#d0c5bb] bg-white shadow-lg">
+              <div className="absolute left-0 top-full z-50 mt-1 w-full border border-[#CCC5BD] bg-[#FCF9F2] shadow-none">
                 {matches.map((item) => (
                   <Link
                     key={item.id}
                     href={item.href}
-                    className="block px-4 py-2.5 text-sm text-[#22180b] hover:bg-[#fff1e5]"
+                    className="block px-4 py-2.5 text-sm text-[#1C1C18] hover:bg-[#F6F3EC] border-b border-[#CCC5BD]/40 last:border-0"
                     onMouseDown={(event) => event.preventDefault()}
                   >
                     <span className="block font-medium">{item.name}</span>
                     {item.category_name ? (
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-[0.14em] text-[#715a3e]">
+                      <span className="mt-0.5 block sv2-mono-sm text-[10px] text-[#9E4300] uppercase">
                         {item.category_name}
                       </span>
                     ) : null}
@@ -136,52 +157,63 @@ export function SiteHeader({
             ) : null}
           </form>
 
+          {/* Desktop Actions */}
           <div className="hidden shrink-0 items-center gap-3 lg:flex">
             <AudienceSwitch businessHref={businessHref} hide={hideAudience} />
             <PwaInstallButton />
             {workspaceHref && workspaceLabel ? (
-              <Link href={workspaceHref} className="inline-flex items-center gap-1.5 text-xs text-[#22180b]">
+              <Link
+                href={workspaceHref}
+                className="sv2-label text-[11px] text-[#4A4640] hover:text-[#1C1C18] transition-colors flex items-center gap-1.5"
+              >
                 <User size={14} />
                 {workspaceLabel}
               </Link>
             ) : (
-              <Link href="/login" className="inline-flex items-center gap-1.5 text-xs text-[#22180b]">
-                <User size={14} />
-                Account
-              </Link>
+              <div className="flex items-center gap-2 sv2-label text-[11px] text-[#4A4640]">
+                <Link href="/signup" className="hover:text-[#1C1C18] transition-colors">
+                  Register
+                </Link>
+                <span className="text-[#CCC5BD]" aria-hidden="true">|</span>
+                <Link href="/login" className="hover:text-[#1C1C18] transition-colors flex items-center gap-1">
+                  <User size={13} />
+                  Sign in
+                </Link>
+              </div>
             )}
-            {corporate ? null : <CartDrawer iconClassName="text-[#22180b]" />}
+            {corporate ? null : <CartDrawer iconClassName="text-[#1C1C18]" />}
             <Link
               href="/request-quote"
-              className="rounded-sm bg-[#382c1e] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
+              className="bg-[#000000] hover:bg-[#9E4300] text-white px-3.5 py-2 sv2-label text-[10px] tracking-wider transition-colors duration-150 active:scale-[0.99] text-center"
             >
-              Quote
+              Request a Quote
             </Link>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 lg:hidden">
+          {/* Mobile Action Cluster */}
+          <div className="flex items-center gap-1.5 sm:gap-2 lg:hidden">
             <PwaInstallButton />
             <button
               type="button"
               aria-label="Search catalogue"
-              className="flex h-11 w-11 items-center justify-center text-[#806A50]"
+              className="flex h-9 w-9 items-center justify-center border border-[#CCC5BD] text-[#1C1C18] bg-[#F6F3EC]"
               onClick={() => {
                 setSearchOpen(true)
                 setOpen(false)
               }}
             >
-              <Search size={20} />
+              <Search size={18} />
             </button>
-            {corporate ? null : <CartDrawer iconClassName="text-[#806A50]" />}
+            {corporate ? null : <CartDrawer iconClassName="text-[#1C1C18]" />}
             <Link
               href="/login"
-              className="rounded-sm bg-[#806A50] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white"
+              className="bg-[#000000] px-2.5 py-1.5 sv2-label text-[10px] text-white"
             >
               Sign in
             </Link>
             <button
               type="button"
-              className="flex h-11 w-11 items-center justify-center text-[#806A50]"
+              className="flex h-9 w-9 items-center justify-center border border-[#CCC5BD] text-[#1C1C18] bg-[#F6F3EC]"
               aria-label={open ? 'Close menu' : 'Open menu'}
               aria-expanded={open}
               onClick={() => {
@@ -189,43 +221,39 @@ export function SiteHeader({
                 setSearchOpen(false)
               }}
             >
-              {open ? <X size={22} /> : <Menu size={22} />}
+              {open ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
 
-        <div className="px-4 pb-2 lg:hidden">
-          <AudienceSwitch businessHref={businessHref} hide={hideAudience} />
-        </div>
-
         {/* Mobile search panel */}
         {searchOpen ? (
-          <div className="border-t border-[#E8E4DE] bg-white px-4 py-3 lg:hidden">
+          <div className="border-t border-[#CCC5BD] bg-[#FCF9F2] px-4 py-3 lg:hidden">
             <form onSubmit={submitSearch} className="flex items-center gap-2">
-              <Search size={18} className="shrink-0 text-[#5C6570]" />
+              <Search size={18} className="shrink-0 text-[#7C766F]" />
               <input
                 autoFocus
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search gifts, categories, SKUs"
-                className="w-full bg-transparent py-2 text-base text-[#1B2430] outline-none placeholder:text-[#8A929C]"
+                placeholder="Search keepsakes, hampers, brassware..."
+                className="w-full bg-transparent py-2 sv2-body-sm text-[#1C1C18] outline-none placeholder:text-[#7C766F]"
               />
-              <button type="button" aria-label="Close search" onClick={() => setSearchOpen(false)} className="p-2">
-                <X size={18} className="text-[#5C6570]" />
+              <button type="button" aria-label="Close search" onClick={() => setSearchOpen(false)} className="p-1.5 text-[#7C766F]">
+                <X size={18} />
               </button>
             </form>
             {matches.length > 0 ? (
-              <div className="mt-2 max-h-56 overflow-y-auto border-t border-[#E8E4DE]">
+              <div className="mt-2 max-h-56 overflow-y-auto border-t border-[#CCC5BD]">
                 {matches.map((item) => (
                   <Link
                     key={item.id}
                     href={item.href}
                     onClick={() => setSearchOpen(false)}
-                    className="block py-3 text-sm text-[#1B2430]"
+                    className="block py-2.5 sv2-body-sm text-[#1C1C18] border-b border-[#CCC5BD]/40 last:border-0"
                   >
                     <span className="block font-medium">{item.name}</span>
                     {item.category_name ? (
-                      <span className="mt-0.5 block text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">
+                      <span className="mt-0.5 block sv2-mono-sm text-[10px] text-[#9E4300] uppercase">
                         {item.category_name}
                       </span>
                     ) : null}
@@ -236,12 +264,14 @@ export function SiteHeader({
           </div>
         ) : null}
 
-        {/* Mobile drawer */}
+        {/* Category bar or subnav children */}
         {children}
+
+        {/* Mobile drawer */}
         {open ? (
-          <div className="absolute inset-x-0 top-full z-50 max-h-[calc(100dvh-8rem)] overflow-y-auto border-t border-[#d0c5bb] bg-[#fff8f4] px-4 py-6 lg:hidden">
+          <div className="absolute inset-x-0 top-full z-50 max-h-[calc(100dvh-8rem)] overflow-y-auto border-t border-[#CCC5BD] bg-[#FCF9F2] px-4 py-6 lg:hidden">
             <nav className="mx-auto flex max-w-7xl flex-col gap-1">
-              <div className="pb-3">
+              <div className="pb-3 border-b border-[#CCC5BD]">
                 <AudienceSwitch businessHref={businessHref} hide={hideAudience} />
               </div>
               {PRIMARY_NAV.map((item) => (
@@ -249,12 +279,12 @@ export function SiteHeader({
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="border-b border-[#F0EDE8] py-3.5 text-base text-[#1B2430]"
+                  className="border-b border-[#CCC5BD]/50 py-3 sv2-body-md text-[#1C1C18] hover:text-[#9E4300] transition-colors"
                 >
                   {item.label}
                 </Link>
               ))}
-              <p className="pb-2 pt-5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#8A929C]">
+              <p className="pb-2 pt-4 sv2-label text-[#7C766F]">
                 Categories
               </p>
               {categoryLinks.map((item) => (
@@ -262,7 +292,7 @@ export function SiteHeader({
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="border-b border-[#F0EDE8] py-3.5 text-base text-[#5C6570]"
+                  className="border-b border-[#CCC5BD]/30 py-2.5 sv2-body-sm text-[#4A4640] hover:text-[#1C1C18] transition-colors"
                 >
                   {item.label}
                 </Link>
@@ -270,7 +300,7 @@ export function SiteHeader({
               <Link
                 href="/request-quote"
                 onClick={() => setOpen(false)}
-                className="mt-6 inline-flex items-center justify-center bg-[#806A50] px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+                className="mt-6 inline-flex items-center justify-center bg-[#000000] hover:bg-[#9E4300] px-5 py-3 sv2-label text-white tracking-wider transition-colors"
               >
                 Request a Quote
               </Link>
@@ -278,14 +308,20 @@ export function SiteHeader({
                 <Link
                   href={workspaceHref}
                   onClick={() => setOpen(false)}
-                  className="mt-3 py-3 text-center text-sm text-[#5C6570]"
+                  className="mt-3 py-2.5 text-center sv2-body-sm text-[#4A4640]"
                 >
                   {workspaceLabel}
                 </Link>
               ) : (
-                <Link href="/login" onClick={() => setOpen(false)} className="mt-3 py-3 text-center text-sm text-[#5C6570]">
-                  Account / Team login
-                </Link>
+                <div className="mt-3 flex items-center justify-center gap-3 py-2 sv2-label text-[#4A4640]">
+                  <Link href="/signup" onClick={() => setOpen(false)} className="hover:text-[#1C1C18]">
+                    Register
+                  </Link>
+                  <span className="text-[#CCC5BD]" aria-hidden="true">|</span>
+                  <Link href="/login" onClick={() => setOpen(false)} className="hover:text-[#1C1C18]">
+                    Sign in
+                  </Link>
+                </div>
               )}
             </nav>
           </div>

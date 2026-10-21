@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
 import { StorefrontCatalog } from '@/components/site/storefront-catalog'
@@ -38,17 +39,41 @@ export default async function BrandPage({ params, searchParams }: Props) {
 
   return (
     <SiteShell>
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 pt-8 sm:px-6 lg:px-8">
-        {brand.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={brand.logo_url} alt="" className="h-12 w-auto object-contain" />
-        ) : null}
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#715a3e]">Brand</p>
-          <h1 className="font-serif text-3xl text-[#22180b]">{brand.name}</h1>
-          <p className="mt-1 text-sm text-[#4d453e]">
-            {owned.length} {owned.length === 1 ? 'product' : 'products'} in this brand.
+      <div className="border-b border-[#3A3835] bg-[#1C1B1A] text-[#FCF9F2]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <p className="font-sans text-xs uppercase tracking-wider text-[#FFB690]">
+            <Link href="/home" className="hover:underline">
+              Home
+            </Link>
+            <span className="mx-2 text-[#7C766F]">/</span>
+            <Link href="/catalogue" className="hover:underline">
+              Brands
+            </Link>
+            <span className="mx-2 text-[#7C766F]">/</span>
+            <span className="text-[#FCF9F2]">{brand.name}</span>
           </p>
+          <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              {brand.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <div className="flex h-16 w-16 items-center justify-center border border-[#3A3835] bg-[#FCF9F2] p-2">
+                  <img src={brand.logo_url} alt={brand.name} className="max-h-full max-w-full object-contain" />
+                </div>
+              ) : null}
+              <div>
+                <p className="font-sans text-xs font-semibold uppercase tracking-wider text-[#FFB690]">PARTNER BRAND</p>
+                <h1 className="mt-1 font-serif text-3xl font-normal tracking-tight text-[#FCF9F2] sm:text-4xl lg:text-5xl">
+                  {brand.name}
+                </h1>
+                <p className="mt-2 font-sans text-xs text-[#CCC5BD]">
+                  {owned.length} {owned.length === 1 ? 'gift' : 'gifts'} from this brand
+                </p>
+              </div>
+            </div>
+            <div className="font-sans text-xs uppercase tracking-wider text-[#CCC5BD] shrink-0 border border-[#3A3835] bg-[#242220] px-3.5 py-2">
+              VERIFIED BRAND ALLIANCE
+            </div>
+          </div>
         </div>
       </div>
       <StorefrontCatalog

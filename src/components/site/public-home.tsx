@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { siteContent } from '@/config/siteContent'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { RetailHero } from '@/components/site/retail-hero'
 import { BrandLogoRow, ProductSection, RetailOccasionBento } from '@/components/site/stitch-sections'
@@ -54,40 +55,46 @@ export async function PublicHome({
   const festive = withImage(festivePool).slice(0, 4)
 
   return (
-    <div className="bg-[#fff8f4] text-[#221a10]">
+    <div className="bg-[#FCF9F2] text-[#1C1C18]">
+      {/* 1. Charcoal Hero Band */}
       <RetailHero slides={heroSlides} />
 
+      {/* 2. Procure by Occasion & Milestone Grid */}
       <RetailOccasionBento products={products} priceOf={storePrice} />
 
+      {/* 3. Retail Bestsellers */}
       <ProductSection
-        eyebrow="Most requested"
-        title="Corporate bestsellers"
+        eyebrow="Most Requested"
+        title="Retail Bestsellers — Ready to Ship"
         actionHref="/catalogue?sort=newest"
-        action="View all"
+        action="View All"
         products={bestsellers}
         priceOf={storePrice}
         columns="lg:grid-cols-5"
         tone="retail"
       />
 
-      <BrandLogoRow brands={brands} eyebrow="Merchandise partners" title="Authorised brand alliances" tone="retail" />
+      {/* 4. Brand Alliances */}
+      <BrandLogoRow brands={brands} eyebrow="Partner Alliances" title="Authorised Brand Alliances" tone="retail" />
 
+      {/* 5. Merchandise Under ₹999 */}
       <ProductSection
         eyebrow="Everyday"
         title="Merchandise under ₹999"
         actionHref="/catalogue?priceMax=998"
-        action="View all"
+        action="View All"
         products={underRail}
         priceOf={storePrice}
         columns="lg:grid-cols-6"
         tone="retail"
       />
 
+      {/* 6. Seasonal Hampers (Dark Charcoal Band) */}
       <ProductSection
-        eyebrow="Seasonal"
-        title="Diwali & bespoke festive hampers"
+        eyebrow="Seasonal Editions"
+        title="Festive Gift Hampers"
         actionHref="/collections/festival-gifting"
-        action="View all"
+        action="View All"
         products={festive}
         priceOf={storePrice}
         dark
@@ -95,13 +102,52 @@ export async function PublicHome({
         tone="retail"
       />
 
+      {/* 7. Unboxing Experience Strip */}
+      <section className="border-b border-[#CCC5BD] bg-[#F6F3EC] py-12 sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 border-b border-[#CCC5BD] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+            <div>
+              <span className="font-sans text-xs uppercase tracking-wider font-semibold text-[#9E4300] block mb-1">Packaging &amp; delivery</span>
+              <h2 className="font-serif sv2-headline-md font-normal text-[#1C1C18]">
+                Every Gift, an Unforgettable <span className="italic text-[#9E4300]">Unboxing Experience</span>.
+              </h2>
+            </div>
+            <span className="font-sans text-xs uppercase tracking-wider font-semibold text-[#7C766F]">Packaging &amp; Delivery</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-2">
+              <span className="border border-[#9E4300] px-2 py-0.5 font-sans text-xs text-[#9E4300] font-semibold">01</span>
+              <h4 className="font-serif text-lg text-[#1C1C18] font-normal pt-2">Gift packaging</h4>
+              <p className="sv2-body-sm text-[#4A4640]">
+                {siteContent.retail.packagingNote}
+              </p>
+            </div>
+            <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-2">
+              <span className="border border-[#9E4300] px-2 py-0.5 font-sans text-xs text-[#9E4300] font-semibold">02</span>
+              <h4 className="font-serif text-lg text-[#1C1C18] font-normal pt-2">Direct-to-recipient dispatch</h4>
+              <p className="sv2-body-sm text-[#4A4640]">
+                {siteContent.retail.directDispatchNote}
+              </p>
+            </div>
+            <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-2">
+              <span className="border border-[#9E4300] px-2 py-0.5 font-sans text-xs text-[#9E4300] font-semibold">03</span>
+              <h4 className="font-serif text-lg text-[#1C1C18] font-normal pt-2">Delivery</h4>
+              <p className="sv2-body-sm text-[#4A4640]">
+                {siteContent.retail.dispatchCities}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. Filterable Live Catalogue */}
       <StorefrontCatalog
         products={products}
         categories={categories}
         brands={brands}
         filters={filters}
         basePath={basePath}
-        heading="Live procurement catalogue"
+        heading="Live Procurement Catalogue"
         intro="Filter the live catalogue by category, brand, price and occasion."
         priceOf={storePrice}
         limit={8}
@@ -109,16 +155,16 @@ export async function PublicHome({
       />
 
       {preview ? (
-        <section className="bg-[#fff8f4] py-8">
+        <section className="bg-[#FCF9F2] py-8 border-t border-[#CCC5BD]">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 sm:px-6 lg:px-8">
-            <p className="text-sm text-[#4d453e]">In stock</p>
+            <p className="sv2-body-sm text-[#4A4640]">In stock</p>
             <AddToCartButton
               maxQuantity={1}
               label="Buy 1 sample"
               product={{ id: '33333333-3333-4333-8333-333333333333', sku: 'BTL-1', name: 'Steel bottle', price: 450, image_url: '/site/home-festive-cane.webp' }}
-              className="inline-flex bg-[#382c1e] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+              className="inline-flex bg-[#000000] px-5 py-2.5 sv2-label text-white uppercase tracking-wider"
             />
-            <Link href="/request-quote" className="inline-flex border border-[#d0c5bb] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#22180b]">
+            <Link href="/request-quote" className="inline-flex border border-[#CCC5BD] px-5 py-2.5 sv2-label text-[#1C1C18] uppercase tracking-wider hover:border-[#000000]">
               Request a Quote
             </Link>
           </div>

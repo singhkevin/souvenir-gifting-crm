@@ -57,19 +57,19 @@ export function CatalogueBrowser({
   }
 
   if (products.length === 0) {
-    return <p className="py-20 text-center text-sm text-[#5C6570]">No gifts match these filters.</p>
+    return <p className="py-20 text-center sv2-body-md text-[#4A4640]">No gifts match these filters.</p>
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex justify-end">
-        <div className="inline-flex overflow-hidden rounded-md border border-[#E8E4DE]">
+        <div className="inline-flex border border-[#CCC5BD] bg-[#F6F3EC] p-0.5">
           <button
             type="button"
             onClick={() => choose('grid')}
             aria-pressed={view === 'grid'}
-            className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-              view === 'grid' ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-white text-[#5C6570]'
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 sv2-label text-[10px] tracking-wider transition-colors ${
+              view === 'grid' ? 'bg-[#000000] text-white' : 'text-[#4A4640] hover:text-[#1C1C18]'
             }`}
           >
             <LayoutGrid size={13} /> Grid
@@ -78,8 +78,8 @@ export function CatalogueBrowser({
             type="button"
             onClick={() => choose('list')}
             aria-pressed={view === 'list'}
-            className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-              view === 'list' ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-white text-[#5C6570]'
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 sv2-label text-[10px] tracking-wider transition-colors ${
+              view === 'list' ? 'bg-[#000000] text-white' : 'text-[#4A4640] hover:text-[#1C1C18]'
             }`}
           >
             <List size={13} /> List
@@ -88,7 +88,7 @@ export function CatalogueBrowser({
       </div>
 
       {view === 'grid' ? (
-        <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-6 sm:gap-y-8 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {products.map((product) => (
             <SiteProductCard
               key={product.id}
@@ -101,32 +101,36 @@ export function CatalogueBrowser({
           ))}
         </div>
       ) : (
-        <div className="divide-y divide-[#E8E4DE] border-y border-[#E8E4DE]">
+        <div className="divide-y divide-[#CCC5BD] border-y border-[#CCC5BD] bg-[#FCF9F2]">
           {products.map((product) => (
             <Link
               key={product.id}
               href={hrefFor?.(product) || `/catalogue/${product.id}`}
-              className="grid grid-cols-[5rem_1fr_auto] items-center gap-4 py-4 text-inherit hover:text-inherit sm:grid-cols-[6.5rem_1fr_auto] sm:gap-5"
+              className="grid grid-cols-[5rem_1fr_auto] items-center gap-4 p-4 text-inherit hover:bg-[#F6F3EC] transition-colors sm:grid-cols-[6.5rem_1fr_auto] sm:gap-6"
             >
-              <div className="aspect-square overflow-hidden rounded-md catalogue-studio-field">
+              <div className="aspect-square overflow-hidden border border-[#CCC5BD] bg-[#F1EEE7]">
                 <ProductImage
                   src={product.image_url}
                   alt={product.name}
                   size="sm"
                   fit="contain"
-                  fadeEdges
                   className="h-full w-full min-h-0 bg-transparent"
-                  imgClassName="catalogue-product-img"
                 />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">{product.category_name}</p>
-                <p className="mt-1 truncate font-medium text-[#1B2430]">{product.name}</p>
-                <p className="mt-1 font-mono text-[10px] text-[#5C6570]">{product.sku}</p>
+                {product.category_name ? (
+                  <p className="font-sans text-[11px] font-semibold uppercase text-[#9E4300] tracking-wider">{product.category_name}</p>
+                ) : null}
+                <p className="mt-1 font-serif text-lg text-[#1C1C18] truncate font-normal">{product.name}</p>
+                <p className="mt-0.5 sv2-mono-sm text-xs text-[#7C766F]">{product.sku}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-[#806A50]">{priceLabel?.(product) || (product.price == null ? 'Request quotation' : formatCurrency(product.price))}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">{captionFor?.(product) || purchaseCaption(product.purchase)}</p>
+                <p className="sv2-mono-md font-bold text-[#1C1C18]">
+                  {priceLabel?.(product) || (product.price == null ? 'Price on quote' : formatCurrency(product.price))}
+                </p>
+                <p className="mt-0.5 sv2-mono-sm text-[10px] uppercase text-[#7C766F]">
+                  {captionFor?.(product) || purchaseCaption(product.purchase)}
+                </p>
               </div>
             </Link>
           ))}

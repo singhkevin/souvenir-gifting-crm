@@ -99,6 +99,25 @@ export const siteContent = {
     // TODO(client): Replace with verified GST note
     gstNote: '[GST ITC Compliant]',
   },
+
+  retail: {
+    // TODO(client): Replace with verified packaging note
+    packagingNote: '[Gift packaging on all orders]',
+    // TODO(client): Replace with verified studio 1 title
+    studio1: '[Studio 1]',
+    // TODO(client): Replace with verified studio 1 address
+    studio1Address: '[Studio 1 address]',
+    // TODO(client): Replace with verified studio 2 title
+    studio2: '[Studio 2]',
+    // TODO(client): Replace with verified studio 2 address
+    studio2Address: '[Studio 2 address]',
+    // TODO(client): Replace with verified studio opening hours
+    openingHours: '[Opening hours]',
+    // TODO(client): Replace with verified dispatch locations
+    dispatchCities: '[Dispatch locations]',
+    // TODO(client): Confirm whether gifts can ship directly to recipients, and how
+    directDispatchNote: '[Direct-to-recipient dispatch details]',
+  },
 } as const
 
 export type SiteContent = typeof siteContent

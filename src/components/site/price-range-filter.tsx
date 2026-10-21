@@ -19,8 +19,6 @@ export function PriceRangeFilter({
   preserveParams: Record<string, string>
 }) {
   const router = useRouter()
-  // Mount fresh whenever `value` changes (parent passes a key derived from it),
-  // so this local copy never needs to re-sync from an effect.
   const [range, setRange] = useState(value)
   const timeoutRef = useRef<number | null>(null)
 
@@ -50,14 +48,14 @@ export function PriceRangeFilter({
 
   return (
     <div>
-      <div className="flex items-center justify-between text-xs text-[#5C6570]">
+      <div className="flex items-center justify-between sv2-mono-sm text-xs text-[#1C1C18]">
         <span>{formatCurrency(range.min)}</span>
         <span>{formatCurrency(range.max)}</span>
       </div>
       <div className="relative mt-3 h-5">
-        <div className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-[#E8E4DE]" />
+        <div className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 bg-[#CCC5BD]" />
         <div
-          className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-[#806A50]"
+          className="absolute top-1/2 h-1 -translate-y-1/2 bg-[#9E4300]"
           style={{ left: `${leftPct}%`, right: `${100 - rightPct}%` }}
         />
         <input
@@ -70,7 +68,7 @@ export function PriceRangeFilter({
             const next = Math.min(Number(event.target.value), range.max - 1)
             commit({ min: next, max: range.max })
           }}
-          className="range-thumb pointer-events-none absolute inset-x-0 top-1/2 h-5 w-full -translate-y-1/2 appearance-none bg-transparent"
+          className="range-thumb pointer-events-none absolute inset-x-0 top-1/2 h-5 w-full -translate-y-1/2 appearance-none bg-transparent accent-[#9E4300]"
           aria-label="Minimum price"
         />
         <input
@@ -83,7 +81,7 @@ export function PriceRangeFilter({
             const next = Math.max(Number(event.target.value), range.min + 1)
             commit({ min: range.min, max: next })
           }}
-          className="range-thumb pointer-events-none absolute inset-x-0 top-1/2 h-5 w-full -translate-y-1/2 appearance-none bg-transparent"
+          className="range-thumb pointer-events-none absolute inset-x-0 top-1/2 h-5 w-full -translate-y-1/2 appearance-none bg-transparent accent-[#9E4300]"
           aria-label="Maximum price"
         />
       </div>
