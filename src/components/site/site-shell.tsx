@@ -60,11 +60,13 @@ export async function SiteShell({
   }))
 
   return (
-    <div className="storefront min-h-screen bg-[#fff8f4] text-[#221a10]">
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      />
+    <div className="storefront min-h-screen bg-cream text-ink">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[80] focus:bg-cream-card focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-ink"
+      >
+        Skip to content
+      </a>
       <SiteHeader
         workspaceHref={workspaceHref}
         workspaceLabel={workspaceLabel}
@@ -72,10 +74,11 @@ export async function SiteShell({
         categoryLinks={categoryLinks}
         businessHref={isBusiness ? '/business/dashboard' : '/business'}
         hideAudience={hostKind === 'tenant'}
+        phone={phone}
       >
         <CategoryIconStrip items={navCategories} variant={categoryVariant} />
       </SiteHeader>
-      <main>{children}</main>
+      <main id="main">{children}</main>
       <SiteFooter workspaceHref={workspaceHref} workspaceLabel={workspaceLabel} phone={phone} />
       <WhatsAppButton phone={phone} />
     </div>

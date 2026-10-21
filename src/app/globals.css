@@ -1,31 +1,39 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #806A50;
-  --color-primary-light: #9C8567;
-  --color-primary-fg: #FFFFFF;
-  --color-accent: #806A50;
-  --color-accent-hover: #624B32;
-  --color-accent-fg: #FFFFFF;
-  --color-sidebar: #241C12;
-  --color-sidebar-active: #FFD001;
-  --color-sidebar-active-fg: #241C12;
+  /* Primary remapped from legacy brown (#806A50) to Charcoal (#151515) */
+  --color-primary: #151515;
+  --color-primary-light: #282623;
+  --color-primary-fg: #FAF6EF;
+
+  /* Accent remapped to Saffron (#E39B2D) with Charcoal foreground (7.82:1) */
+  --color-accent: #E39B2D;
+  --color-accent-hover: #CF8719;
+  --color-accent-fg: #151515;
+
+  --color-sidebar: #151515;
+  --color-sidebar-active: #E39B2D;
+  --color-sidebar-active-fg: #151515;
   --color-sidebar-text: #C9BFAE;
-  /* Secondary brand accent — the old site's gold, used sparingly for highlights (active states, hero/CTA captions), not as the main color. */
-  --color-gold: #FFD001;
-  --color-gold-fg: #241C12;
+
+  --color-gold: #E39B2D;
+  --color-gold-fg: #151515;
   --color-gold-deep: #8B6508;
+
+  /* Neutral surfaces. Global default stays white; .storefront switches to cream. */
   --color-background: #FFFFFF;
   --color-surface: #FFFFFF;
-  --color-surface-subtle: #F6F4F1;
-  --color-border: #E8E4DE;
-  --color-border-subtle: #F0EDE8;
-  --color-muted: #F0EDE8;
-  --color-muted-fg: #5C6570;
-  --color-text: #1B2430;
-  --color-text-secondary: #5C6570;
-  --color-success: #166534;
-  --color-success-bg: #DCFCE7;
+  --color-surface-subtle: #FAF6EF;
+  --color-border: #E2D7C5;
+  --color-border-subtle: #EFE7DA;
+  --color-muted: #FAF6EF;
+  --color-muted-fg: #6B6459;
+
+  --color-text: #11100E;
+  --color-text-secondary: #4A463F;
+
+  --color-success: #2E6B4F;
+  --color-success-bg: #EDF7F1;
   --color-warning: #92400E;
   --color-warning-bg: #FEF3C7;
   --color-error: #991B1B;
@@ -33,14 +41,46 @@
   --color-info: #1E40AF;
   --color-info-bg: #DBEAFE;
 
-  --font-sans: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-serif: "Cormorant Garamond", "Georgia", serif;
+  --color-charcoal: #151515;
+  --color-charcoal-surface: #1F1E1C;
+  --color-charcoal-elevated: #282623;
+  --color-charcoal-border: #33302B;
+  --color-charcoal-muted: #9E988F;
 
-  --radius-sm: 0.25rem;
-  --radius: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
+  --color-cream: #F3EDE2;
+  --color-cream-surface: #FAF6EF;
+  --color-cream-card: #FFFFFF;
+  --color-cream-border: #E2D7C5;
+  --color-cream-muted: #6B6459;
+
+  --color-saffron: #E39B2D;
+  --color-saffron-hover: #CF8719;
+  --color-saffron-deep: #A76508;
+  --color-saffron-tint: #FDF4E7;
+  --color-saffron-border: #F3C47C;
+
+  --color-ink: #11100E;
+  --color-ink-secondary: #4A463F;
+  --color-ink-tertiary: #7D766A;
+
+  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-dm-serif), "DM Serif Display", Georgia, serif;
+  --font-display: var(--font-playfair), "Playfair Display", Georgia, serif;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --radius-sm: 2px;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-pill: 9999px;
+
+  --shadow-sm: 0 1px 2px 0 rgba(17, 16, 14, 0.04);
+  --shadow-md: 0 8px 24px -6px rgba(17, 16, 14, 0.08);
+  --shadow-lg: 0 16px 36px -8px rgba(17, 16, 14, 0.12);
+  --shadow-drawer: -12px 0 36px -4px rgba(17, 16, 14, 0.16);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   --animate-giffter-drift: giffter-drift 18s ease-in-out infinite;
   --animate-giffter-float: giffter-float 12s ease-in-out infinite;
@@ -98,7 +138,7 @@
   h6 {
     color: inherit;
     font-family: var(--font-serif);
-    font-weight: 500;
+    font-weight: 400;
   }
 
   ::-webkit-scrollbar {
@@ -137,13 +177,17 @@
 
   button,
   a[role='button'] {
-    transition-property: background-color, color, border-color, box-shadow, opacity;
-    transition-duration: 180ms;
-    transition-timing-function: ease;
+    transition-property: background-color, color, border-color, box-shadow, opacity, transform;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out-expo);
   }
 
   button:focus-visible,
-  a:focus-visible {
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
@@ -160,41 +204,165 @@
   }
 }
 
-.storefront {
-  --font-serif: "Playfair Display", Georgia, serif;
-  --font-sans: "Plus Jakarta Sans", "Outfit", sans-serif;
-  background: #fff8f4;
-  color: #221a10;
-  font-family: var(--font-sans);
-}
-
-.storefront :is(h1, h2, h3, h4) {
-  font-family: var(--font-serif);
-}
-
 @layer components {
   .card {
-    @apply rounded-lg border border-[#E8E4DE] bg-white shadow-[0_1px_2px_rgba(27,36,48,0.04)];
+    background-color: var(--color-cream-card);
+    border: 1px solid var(--color-cream-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition: border-color 150ms var(--ease-out-expo), box-shadow 150ms var(--ease-out-expo);
+  }
+
+  .card:hover {
+    border-color: var(--color-saffron-border);
+    box-shadow: var(--shadow-md);
+  }
+
+  .store-container {
+    width: 100%;
+    max-width: 1380px;
+    margin-inline: auto;
+    padding-inline: 16px;
+  }
+
+  @media (min-width: 768px) {
+    .store-container {
+      padding-inline: 24px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .store-container {
+      padding-inline: 32px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .store-container {
+      padding-inline: 48px;
+    }
   }
 
   .store-section-title {
-    @apply font-serif text-[1.75rem] tracking-tight text-[#1B2430] sm:text-3xl lg:text-4xl;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 3.6vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: var(--color-text);
   }
 
   .store-eyebrow {
-    @apply text-[11px] font-medium uppercase tracking-[0.22em] text-[#8B6508];
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-gold-deep);
+  }
+
+  .store-product-title {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 1.125rem;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
+
+  .store-price {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 1.125rem;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+  }
+
+  .store-price-lg {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: clamp(1.35rem, 2vw, 1.75rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2.75rem, 5.2vw, 5.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+  }
+
+  .section-numeral {
+    font-family: var(--font-serif);
+    font-size: clamp(3rem, 6vw, 5rem);
+    line-height: 0.85;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-saffron-deep);
+  }
+
+  .price-on-quote {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-gold-deep);
+    background: var(--color-saffron-tint);
+    border: 1px solid var(--color-saffron-border);
+    border-radius: var(--radius-sm);
+    padding: 2px 8px;
   }
 
   .crm-table-wrap {
-    @apply -mx-1 overflow-x-auto overscroll-x-contain sm:mx-0;
+    width: 100%;
+    overflow-x: auto;
+    background-color: var(--color-cream-card);
+    border: 1px solid var(--color-cream-border);
+    border-radius: var(--radius);
   }
 
+  .crm-table-wrap table,
   .crm-table-wrap > table {
-    @apply min-w-[640px];
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .crm-table-wrap th {
+    height: 40px;
+    background-color: var(--color-cream-surface);
+    border-bottom: 1px solid var(--color-cream-border);
+    padding: 0 16px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .crm-table-wrap td {
+    height: 40px;
+    border-bottom: 1px solid var(--color-cream-border);
+    padding: 0 16px;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+
+  .crm-table-wrap tr:hover td {
+    background-color: var(--color-saffron-tint);
   }
 
   .catalogue-studio-field {
-    background-color: #ebe4d8;
+    background-color: var(--color-cream-surface);
   }
 
   .catalogue-product-img {
@@ -217,6 +385,7 @@
       transparent 100%
     );
   }
+
   @media (prefers-reduced-motion: reduce) {
     .catalogue-product-img {
       transform: none;
@@ -227,16 +396,201 @@
   a.bg-\[\#806A50\]:hover,
   button.bg-\[\#9C8567\]:hover,
   a.bg-\[\#9C8567\]:hover,
-  button.bg-\[\#806A50\]:hover,
-  a.bg-\[\#806A50\]:hover,
   button.bg-\[\#624b32\]:hover,
   a.bg-\[\#624b32\]:hover,
   button.bg-primary:hover,
-  a.bg-primary:hover,
-  button.bg-accent:hover,
-  a.bg-accent:hover {
+  a.bg-primary:hover {
     color: var(--color-primary-fg);
   }
+
+  button.bg-accent:hover,
+  a.bg-accent:hover,
+  button.bg-saffron:hover,
+  a.bg-saffron:hover {
+    color: var(--color-accent-fg);
+  }
+}
+
+/* Content stays visible without JS. The html.js-ready class is set by a tiny inline script. */
+.store-reveal {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.js-ready .store-reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 400ms var(--ease-out-expo), transform 400ms var(--ease-out-expo);
+  }
+
+  html.js-ready .store-reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .section-numeral {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+}
+
+.bg-charcoal .section-numeral {
+  color: var(--color-saffron);
+}
+
+.bg-charcoal .store-eyebrow {
+  color: var(--color-saffron);
+}
+
+.bg-charcoal .store-section-title,
+.bg-charcoal .hero-title {
+  color: var(--color-cream);
+}
+
+.bg-charcoal :focus-visible {
+  outline-color: var(--color-saffron);
+}
+
+.storefront button:active,
+.storefront a[role='button']:active {
+  transform: scale(0.98);
+}
+
+/* Retail storefront */
+.storefront {
+  --font-serif: var(--font-dm-serif), "DM Serif Display", Georgia, serif;
+  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
+  --color-background: #F3EDE2;
+  --color-surface: #FAF6EF;
+  --color-text: #11100E;
+  --color-border: #E2D7C5;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+.storefront :is(h1, h2) {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.storefront .hero-title {
+  font-weight: 900;
+}
+
+.storefront :is(h3, h4) {
+  font-family: var(--font-serif);
+  font-weight: 400;
+}
+
+.storefront .store-product-title,
+.storefront .store-ui-title {
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+
+.storefront .store-ui-title {
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.storefront input,
+.storefront select,
+.storefront textarea {
+  border-color: var(--color-ink-tertiary);
+}
+
+.storefront input:hover,
+.storefront select:hover,
+.storefront textarea:hover {
+  border-color: var(--color-ink-secondary);
+}
+
+.storefront input:focus-visible,
+.storefront select:focus-visible,
+.storefront textarea:focus-visible {
+  border-color: var(--color-charcoal);
+  box-shadow: 0 0 0 3px var(--color-saffron-tint);
+  outline-color: var(--color-charcoal);
+}
+
+/* Business portal */
+.portal-business {
+  --color-background: #FAF6EF;
+  --color-surface: #FFFFFF;
+  --color-text: #11100E;
+  --color-border: #E2D7C5;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.portal-business .badge-moq {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  background-color: var(--color-saffron-tint);
+  color: var(--color-gold-deep);
+  border: 1px solid var(--color-saffron-border);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+}
+
+/* Corporate client portal */
+.portal-client {
+  --color-background: #F8F5EE;
+  --color-surface: #FFFFFF;
+  --color-text: #11100E;
+  --color-border: #E5DCCE;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.portal-client .header-co-brand {
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.portal-client .status-stepper-active {
+  background-color: var(--color-saffron);
+  color: var(--color-charcoal);
+  font-weight: 700;
+}
+
+/* Admin CRM — calm workspace. Marketing type stays off this scope. */
+.crm {
+  --color-background: #FAF6EF;
+  --color-surface: #FFFFFF;
+  --color-text: #11100E;
+  --color-border: #E2D7C5;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.crm aside {
+  background-color: var(--color-sidebar);
+  color: var(--color-sidebar-text);
+}
+
+.crm :is(h1, h2, h3) {
+  font-family: var(--font-serif);
+  font-weight: 400;
+}
+
+.crm aside a[data-active='true'],
+.crm aside a[aria-current='page'] {
+  background-color: var(--color-sidebar-active);
+  color: var(--color-sidebar-active-fg);
+  font-weight: 700;
+  border-radius: var(--radius);
+}
+
+.crm .numeric-data {
+  font-family: var(--font-mono);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* CRM: wide tables scroll inside their card on small screens */
@@ -252,16 +606,16 @@
   }
 }
 
-/* Dual-handle price slider: two overlapping <input type="range"> with only the thumb clickable. */
+/* Dual-handle price slider: two overlapping range inputs with only the thumb clickable. */
 .range-thumb::-webkit-slider-thumb {
   pointer-events: auto;
   appearance: none;
   width: 16px;
   height: 16px;
   border-radius: 9999px;
-  background: #806a50;
+  background: var(--color-charcoal);
   border: 2px solid #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(17, 16, 14, 0.3);
   cursor: pointer;
 }
 .range-thumb::-moz-range-thumb {
@@ -269,9 +623,9 @@
   width: 16px;
   height: 16px;
   border-radius: 9999px;
-  background: #806a50;
+  background: var(--color-charcoal);
   border: 2px solid #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(17, 16, 14, 0.3);
   cursor: pointer;
 }
 .range-thumb::-moz-range-track {

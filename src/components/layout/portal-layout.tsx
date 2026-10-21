@@ -122,7 +122,7 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
   }, [])
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#F4EFE6]">
+    <div className="portal-client flex min-h-[100dvh] flex-col bg-background">
       <header className="sticky top-0 z-50 border-b border-[#E5DFD5] bg-white">
         <div className="grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 px-3 sm:h-16 sm:gap-x-3 sm:px-4 lg:px-6">
           <div className="flex min-w-0 items-center gap-2">

@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura &amp; Ash | Box &amp; Bouquet Luxury Gifting</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary-fixed": "#291800",
+            "primary-fixed": "#e5e2e1",
+            "on-secondary": "#ffffff",
+            "on-tertiary-container": "#88837c",
+            "secondary": "#7c5722",
+            "secondary-container": "#fdcc8b",
+            "on-primary-fixed": "#1c1b1b",
+            "error": "#ba1a1a",
+            "on-primary-fixed-variant": "#474746",
+            "tertiary": "#000000",
+            "surface-bright": "#f9f9f9",
+            "outline-variant": "#c4c7c7",
+            "surface-container-high": "#e8e8e8",
+            "tertiary-container": "#1e1b17",
+            "on-secondary-fixed-variant": "#61400c",
+            "background": "#f9f9f9",
+            "on-surface-variant": "#444748",
+            "surface-dim": "#dadada",
+            "surface": "#f9f9f9",
+            "on-surface": "#1a1c1c",
+            "on-primary": "#ffffff",
+            "primary": "#000000",
+            "on-primary-container": "#858383",
+            "error-container": "#ffdad6",
+            "surface-container-low": "#f3f3f4",
+            "inverse-surface": "#2f3131",
+            "on-error-container": "#93000a",
+            "surface-variant": "#e2e2e2",
+            "on-error": "#ffffff",
+            "inverse-on-surface": "#f0f1f1",
+            "secondary-fixed": "#ffddb4",
+            "inverse-primary": "#c8c6c5",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed-dim": "#eebe7f",
+            "surface-container-highest": "#e2e2e2",
+            "tertiary-fixed-dim": "#ccc5be",
+            "on-tertiary-fixed-variant": "#4a4641",
+            "on-background": "#1a1c1c",
+            "outline": "#747878",
+            "surface-container": "#eeeeee",
+            "tertiary-fixed": "#e8e1d9",
+            "primary-fixed-dim": "#c8c6c5",
+            "on-secondary-container": "#78551f",
+            "primary-container": "#1c1b1b",
+            "on-tertiary-fixed": "#1e1b17",
+            "surface-tint": "#5f5e5e",
+            "surface-container-lowest": "#ffffff",
+            "cashmere": "#EFE8E0",
+            "charcoal": "#181818",
+            "bronze": "#A67D44"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-sm": "1rem",
+            "space-md": "2rem",
+            "space-lg": "4rem",
+            "margin": "4rem",
+            "gutter": "2rem",
+            "space-xs": "0.5rem",
+            "space-xl": "8rem"
+          },
+          "fontFamily": {
+            "headline-md": ["Playfair Display"],
+            "headline-xl": ["Playfair Display"],
+            "body-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-lg": ["Playfair Display"],
+            "label-md": ["Plus Jakarta Sans"],
+            "headline-sm": ["Playfair Display"]
+          },
+          "fontSize": {
+            "headline-md": ["28px", { "lineHeight": "36px", "fontWeight": "400" }],
+            "headline-xl": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "300" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "letterSpacing": "0.01em", "fontWeight": "300" }],
+            "label-sm": ["10px", { "lineHeight": "14px", "letterSpacing": "0.15em", "fontWeight": "500" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "300" }],
+            "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+            "label-md": ["11px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "500" }],
+            "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- Announcement Bar -->
+<div class="bg-charcoal text-white text-center py-2 px-4 text-xs tracking-widest font-body-sm flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-bronze" style="font-size: 16px;">local_shipping</span>
+<span>Same-Day Delivery in Mumbai, Delhi &amp; Bangalore | Order before 2 PM</span>
+</div>
+<!-- Top App Bar -->
+<header class="sticky top-0 z-50 bg-surface/95 backdrop-blur-md border-b border-outline-variant">
+<div class="max-w-7xl mx-auto px-space-md py-space-sm flex justify-between items-center w-full">
+<!-- Brand Logo -->
+<div class="flex flex-col">
+<a class="font-headline-md text-headline-md text-primary tracking-tight" href="#">BOX &amp; BOUQUET</a>
+<span class="text-label-sm uppercase tracking-widest text-bronze">LUXURY GIFTING</span>
+</div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex items-center space-x-8">
+<a class="text-secondary font-bold hover:text-primary transition-colors font-body-md" href="#">Curated Collections</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Occasions</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Bespoque</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Journal</a>
+</nav>
+<!-- Right Actions: Search, Portal Switcher, Wishlist, Cart, Concierge -->
+<div class="flex items-center space-x-6">
+<!-- Pincode Modal Trigger -->
+<button class="hidden lg:flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-primary border border-outline-variant px-3 py-1.5 rounded-full transition-all">
+<span class="material-symbols-outlined text-bronze" style="font-size: 16px;">location_on</span>
+<span>Deliver to: <strong>South Mumbai 400001</strong></span>
+</button>
+<!-- Corporate Portal Switcher -->
+<div class="hidden xl:flex bg-surface-container p-0.5 rounded-full border border-outline-variant text-xs">
+<button class="px-3 py-1 rounded-full bg-primary text-white font-medium shadow-sm">Personal</button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-primary transition-colors">Corporate Bulk</button>
+</div>
+<div class="flex items-center space-x-4">
+<a aria-label="Wishlist" class="relative text-on-surface hover:text-secondary transition-colors" href="#">
+<span class="material-symbols-outlined">favorite</span>
+<span class="absolute -top-1 -right-1 bg-bronze text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">2</span>
+</a>
+<a aria-label="Shopping Bag" class="relative text-on-surface hover:text-secondary transition-colors" href="#">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="absolute -top-1 -right-1 bg-bronze text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">4</span>
+</a>
+<a class="hidden md:inline-flex items-center gap-1.5 px-4 py-2 border border-bronze text-bronze hover:bg-bronze hover:text-white transition-all text-xs tracking-wider uppercase font-medium rounded-DEFAULT" href="#">
+            Concierge
+          </a>
+</div>
+</div>
+</div>
+<!-- Secondary Sub-Bar: Search & Trending Tags -->
+<div class="bg-surface-container-low border-t border-outline-variant/40 py-2 px-space-md">
+<div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+<div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto py-1 scrollbar-none">
+<span class="text-xs uppercase tracking-widest text-on-surface-variant whitespace-nowrap">Trending:</span>
+<a class="text-xs bg-surface border border-outline-variant px-2.5 py-1 rounded-full hover:border-bronze transition-colors whitespace-nowrap" href="#">Diwali Hampers</a>
+<a class="text-xs bg-surface border border-outline-variant px-2.5 py-1 rounded-full hover:border-bronze transition-colors whitespace-nowrap" href="#">Lindt Collection</a>
+<a class="text-xs bg-surface border border-outline-variant px-2.5 py-1 rounded-full hover:border-bronze transition-colors whitespace-nowrap" href="#">Silk Scarves</a>
+</div>
+<div class="relative w-full sm:w-72">
+<input class="w-full bg-surface border border-outline-variant rounded-full py-1.5 pl-4 pr-10 text-xs text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-bronze" placeholder="Search luxury gifts, brands, hampers..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-1.5 text-on-surface-variant" style="font-size: 18px;">search</span>
+</div>
+</div>
+</div>
+</header>
+<!-- FNP-Style Visual Category Strip -->
+<section class="bg-cashmere/30 py-8 border-b border-outline-variant/60">
+<div class="max-w-7xl mx-auto px-space-md">
+<div class="flex gap-6 overflow-x-auto pb-4 scrollbar-none items-center justify-between">
+<!-- Category Item -->
+<a class="flex flex-col items-center group min-w-[90px]" href="#">
+<div class="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-bronze to-secondary-container group-hover:scale-105 transition-transform shadow-md">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface">
+<div class="w-full h-full bg-cover bg-center" data-alt="An exquisite high-end flat lay of artisanal gourmet hampers featuring truffle oils, imported cheeses, artisan crackers, and vintage preserves arranged elegantly on cashmere sand background with soft editorial lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDsev5S_nqoNRE8T9EXj_r1fu8QuWEWFrny_PdTr8ldRgprGGFYvTVrlIo5XCtRhywTU72thBhRZafkYap9VmhKu7DnEjJERnJxbiepF0rN8HHaf-weQqjngdXeGHMg43vdmey0aB_0uR6RQDd2Xrjnzu_V-AlyDm7mMZRBI4jYR8JQO4ACQyLRCEYvNSdMhyZPU7MYZVlMawmXVcWEd08-iJ1kkftOOBgl1p-X1zyXjimBKuV0dpMIppx7m4UM0UX7ZSIUuMUU02Jw')"></div>
+</div>
+</div>
+<span class="text-xs text-center mt-2 font-medium text-on-surface group-hover:text-secondary transition-colors">Gourmet Hampers</span>
+</a>
+<a class="flex flex-col items-center group min-w-[90px]" href="#">
+<div class="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-bronze to-secondary-container group-hover:scale-105 transition-transform shadow-md">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface">
+<div class="w-full h-full bg-cover bg-center" data-alt="A breathtaking bouquet of exotic imported roses, white orchids, and eucalyptus leaves wrapped in textured linen paper with a bronze satin ribbon, styled in warm luxury aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDmgFE10vos4pXcRNtcLVFuM2jUrbWMIZaOld32pdMfgFFGB1XS9xvPk5a2eH2mSjUHvWXbCKx-VEF7oViauYn4o7QXW-NoHHCG-d0iZGmWETK247LPepjeevx6yt8Z50uMfez--psEg9tVNHX_3x_OjonNVYZebmSQOZZiy3sGXKE_2MnjZumpdu3uTydQvKClMdPDtnx9t1KOAJp5K3-OZ5bArXhjfXwjY2Ym7S-VBkxdTmjeB_yo7dkLJMOFFt6d33CemY5yhFdw')"></div>
+</div>
+</div>
+<span class="text-xs text-center mt-2 font-medium text-on-surface group-hover:text-secondary transition-colors">Exotic Florals</span>
+</a>
+<a class="flex flex-col items-center group min-w-[90px]" href="#">
+<div class="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-bronze to-secondary-container group-hover:scale-105 transition-transform shadow-md">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface">
+<div class="w-full h-full bg-cover bg-center" data-alt="A delicate selection of French macarons, gold-leaf dark chocolate truffles, and artisanal confections presented in a pristine white minimal gift box." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCDC3yfzgH-eQeKCF_g6H01UmJL2vVjWJq03jNwhKUli2VpAC6lCK0mqOrFuGJGVC6OnMPilXppPrLYQRbMli8DHjApIjA1HgTFwiUPBOANxgV_L2rVvx9Wa26AS3uoW2M1XbGQzlJ0yZNPBTf71d4rREcY0P8bpXdcTBUGGkWctrnQNzNXIt0fa0VKugx0RrIFHhA8JbKLmsR_jZOgFoh39uuCnjeU1sS8HVR-pNVXH3whvEzjgY88qulR8lj2O8p70tkFc2wwQlCd')"></div>
+</div>
+</div>
+<span class="text-xs text-center mt-2 font-medium text-on-surface group-hover:text-secondary transition-colors">Artisanal Sweets</span>
+</a>
+<a class="flex flex-col items-center group min-w-[90px]" href="#">
+<div class="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-bronze to-secondary-container group-hover:scale-105 transition-transform shadow-md">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface">
+<div class="w-full h-full bg-cover bg-center" data-alt="Custom engraved leather journals and monogrammed metallic fountain pens resting on a warm cashmere textured surface with gentle morning illumination." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBujA7zDwRBFK9VBXrvTlGD28_hKwrc2PBr7yy7ia6AlfbZcGV_zcIsraZw6xa1t7u8gnCcqG-mi8goowmS90K8aQ9cM38379T8z0r0uza8tai3qmXzfN68vuZ3q7UgO3q9JRCjltqPskCiCsYyTJnVweQU7g1hAcdjYejv76Ex4Oz92wividKsUs1vfzIyV3R1FFTrZ78M16nl-rb10YhU0wVIGMGCkdYSsts-gw_aAusdcVgMRXpzWKhBwxzpM8egDdjfCnJthzXZ')"></div>
+</div>
+</div>
+<span class="text-xs text-center mt-2 font-medium text-on-surface group-hover:text-secondary transition-colors">Personalised Keepsakes</span>
+</a>
+<a class="flex flex-col items-center group min-w-[90px]" href="#">
+<div class="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-bronze to-secondary-container group-hover:scale-105 transition-transform shadow-md">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface">
+<div class="w-full h-full bg-cover bg-center" data-alt="Luxury brand boutique display featuring high-end perfume bottles and scented candles in minimalist glass packaging against a warm neutral background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBbU_bF7IOxFZk9IswQpf_v4QA3t895jVEfR6oJ3jIlTSn2qS-pWWpNL_fSVccf0eTBg-8hfnwhgwJrz19Kb75nqvTNRnn8ILpgbsbQKA7nu6apl6qJih0TpjuzsqjjZT5KpABdBKZ1R4CTyDvD45rrWqBNVc-0Zh05cla-qCfzTi7E719rhtv1YcOf7yUEVunaEorsex8mtvGxBcbd8WTencUnldC5Bl76fUHPTYlmOftEN0vfiE4No9Me3LwQYZhWkGFl-t7fFMk_')"></div>
+</div>
+</div>
+<span class="text-xs text-center mt-2 font-medium text-on-surface group-hover:text-secondary transition-colors">Brand Boutiques</span>
+</a>
+<a class="flex flex-col items-center group min-w-[90px]" href="#">
+<div class="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-bronze to-secondary-container group-hover:scale-105 transition-transform shadow-md">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface">
+<div class="w-full h-full bg-cover bg-center" data-alt="An expansive celebration gift box tied with an oversized silk bow, revealing compartments of luxury treats and champagne flutes." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuARtOSE2NJNbstdSTkFyX2Bgt9A_2YulO-pjJ0n3dVmVG_oR16d2F4g2NACcRz4pS4VzeX6NJWZcDnOkktp9h_-ban4pHrXYb08SaNOBzCm5bdLcQi72KUlSPsI93ffuQyXK4y7oxB1tT4tBC-Gmx6-7zV6SNx7hxvUcW40vagrhqvEwfzFNGpHeKkrEXEhyN2kgs3riCpCXvT-n5bLFfSm9lZ7igwg_-lrUEURQJ79lWj2FyXFxyert_91AIWbWWFkQ5nt1rr48oTz')"></div>
+</div>
+</div>
+<span class="text-xs text-center mt-2 font-medium text-on-surface group-hover:text-secondary transition-colors">Celebration Boxes</span>
+</a>
+<a class="flex flex-col items-center group min-w-[90px]" href="#">
+<div class="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-bronze to-secondary-container group-hover:scale-105 transition-transform shadow-md">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface">
+<div class="w-full h-full bg-cover bg-center" data-alt="A professional corporate concierge desk setup with leather portfolios, gold business card holders, and elegant gift hamper arrangements." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB9mVwCuS9sRbezB_g1vA8nlUKe987qp0rNSLGNdiW3sWZa55hiXAV5B0C_4KlmNy76rY_NsDFlVla6xle3uddKuEBfxHSU18GxxfKVNwC_ZBE12nvxDG79Ve5yt88nFVc5WjezqYcLQcpvJevVkmx_-0eV52RlnAZtMdgcHIvLtdqn5nhTDBvqH-00mbZ8N3FL3o5aEUoRIdIlp-PHasToMc0GdMdDIT5DpSGnqBMPmMomPqpG_Ya2H3v24dJ1B2HqXwd1FUwNH3BI')"></div>
+</div>
+</div>
+<span class="text-xs text-center mt-2 font-medium text-on-surface group-hover:text-secondary transition-colors">Corporate Concierge</span>
+</a>
+<a class="flex flex-col items-center group min-w-[90px]" href="#">
+<div class="w-20 h-20 rounded-full p-0.5 bg-gradient-to-tr from-bronze to-secondary-container group-hover:scale-105 transition-transform shadow-md">
+<div class="w-full h-full rounded-full overflow-hidden bg-surface">
+<div class="w-full h-full bg-cover bg-center" data-alt="A sleek modern delivery scooter with insulated luxury gift packaging speeding through city streets at sunset with high fashion warm lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAr7JvOaNTyB_91GpkF6SeMbAE5Gu0b8OjFgJi-OJInmC2E7DAKQK8rzQVurbf2PKrufsLc_AQzsmJ8hy8SXulTlfdZ3L_RgJdY_A_Ng0bt4-vh66Cfom4FGfsuQAlG7qCVStg2cYX-QGNxUv9SUYMnKxxAu5d6UZHeVjaq5yt1QGgkYEQhbZdp1HBJcBsh6DjagL_QHbMxPGBkiKH5J0XgKOzkm7szXVHBC5X9iPswCKX9_pO6yH8GFrIFIWOjRWFdM5GgfF_5JozQ')"></div>
+</div>
+</div>
+<span class="text-xs text-center mt-2 font-medium text-on-surface group-hover:text-secondary transition-colors">Express 2-Hr Delivery</span>
+</a>
+</div>
+</div>
+</section>
+<!-- Asymmetrical Editorial Hero Section -->
+<section class="max-w-7xl mx-auto px-space-md py-space-lg grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<!-- Left Content -->
+<div class="lg:col-span-6 space-y-6">
+<div class="inline-flex items-center gap-2 bg-cashmere px-3 py-1 rounded-full text-xs font-medium text-charcoal">
+<span class="w-2 h-2 rounded-full bg-bronze"></span>
+<span>The Grand Occasion Collection</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-primary">The Art of Giving, Perfected</h1>
+<p class="font-body-lg text-on-surface-variant max-w-lg">
+        Curated hampers from premier global brands, packaged in handcrafted rigid keepsake boxes with bespoke calligraphy.
+      </p>
+<div class="flex flex-wrap gap-4 pt-4">
+<a class="bg-charcoal text-white hover:bg-bronze transition-colors px-8 py-4 text-xs uppercase tracking-widest font-medium rounded-DEFAULT shadow-lg flex items-center gap-2" href="#">
+<span>Shop Bestsellers</span>
+<span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+</a>
+<a class="border border-bronze text-bronze hover:bg-bronze hover:text-white transition-all px-8 py-4 text-xs uppercase tracking-widest font-medium rounded-DEFAULT" href="#">
+          Custom Hamper Studio
+        </a>
+</div>
+<!-- Trust Indicators -->
+<div class="grid grid-cols-3 gap-6 pt-8 border-t border-outline-variant/60 mt-8">
+<div>
+<h4 class="font-headline-sm text-headline-sm text-primary">100%</h4>
+<p class="text-xs text-on-surface-variant mt-1">Authentic Luxury Brands</p>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-primary">2 Hour</h4>
+<p class="text-xs text-on-surface-variant mt-1">Express Delivery Available</p>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-primary">Bespoke</h4>
+<p class="text-xs text-on-surface-variant mt-1">Handwritten Wax-Sealed Notes</p>
+</div>
+</div>
+</div>
+<!-- Right Interactive Gift Hamper Preview -->
+<div class="lg:col-span-6 relative">
+<div class="relative rounded-xl overflow-hidden shadow-2xl bg-cashmere p-4 border border-outline-variant">
+<div class="relative h-[480px] rounded-lg overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" data-alt="An open luxury rigid gift box revealing nested tiers of gold-foiled artisan chocolate boxes, a silk ribbon spool, a scented candle in dark glass, and a personalized ivory stationery card with a red wax seal, shot with dramatic editorial lighting against a warm cashmere background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADxPirtcaw5x3O26PAxxtqTLtZY4NglW_CvnAYVJv9wKNLzv-dGZrdDzWAhbdbshX27US7c-7QRnyCU5XYT5D6lBtUmFiKpzkuP6tPM9viM1_xs5sC5QZ5pjfYCikihb1MwXdhoL-BTryKC304O3TJwh_siSMV4lqgjVmI7s0aajIzxL50LPl1-4SEXKjl9Qr7KagDYk-Zr6R4ksZjJN4PXA331juWHpqJLvslEfDlz8Q0ZGJhfbn5PPWMMPzRr3J78BjjjY3CMfMm')"></div>
+<!-- Floating Interactive Hotspots -->
+<div class="absolute bottom-6 left-6 bg-white/90 backdrop-blur-md p-4 rounded-lg shadow-lg max-w-xs border border-outline-variant/50">
+<span class="text-xs uppercase tracking-wider text-bronze font-bold">Interactive Preview</span>
+<h5 class="font-headline-sm text-sm text-primary mt-1">The Royal Heritage Box</h5>
+<p class="text-xs text-on-surface-variant mt-1">Includes Lindt Master Selection, Forest Essentials Elixir &amp; Handmade Velvet Ribbon.</p>
+<div class="mt-3 flex justify-between items-center">
+<span class="font-bold text-primary text-sm">₹6,450</span>
+<button class="bg-charcoal text-white text-[11px] px-3 py-1.5 rounded uppercase tracking-wider hover:bg-bronze transition-colors">Inspect Layers</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Dedicated Brand Showcase Section -->
+<section class="bg-surface-container-low py-space-lg border-y border-outline-variant/60">
+<div class="max-w-7xl mx-auto px-space-md">
+<!-- Section Header -->
+<div class="text-center max-w-2xl mx-auto mb-12">
+<h2 class="font-headline-lg text-headline-lg text-primary">Official Brand Boutiques</h2>
+<p class="font-body-md text-on-surface-variant mt-3">
+          Discover curated creations from our world-class brand partners, or craft a hamper exclusively featuring their products.
+        </p>
+</div>
+<!-- Vertical Brand Selector / Tab Bar -->
+<div class="flex flex-wrap justify-center gap-2 mb-10">
+<button class="px-5 py-2.5 rounded-full text-xs font-medium bg-charcoal text-white shadow-md transition-all">Lindt Master Chocolatier</button>
+<button class="px-5 py-2.5 rounded-full text-xs font-medium bg-surface border border-outline-variant text-on-surface hover:border-bronze transition-all">Jo Malone London</button>
+<button class="px-5 py-2.5 rounded-full text-xs font-medium bg-surface border border-outline-variant text-on-surface hover:border-bronze transition-all">Forest Essentials</button>
+<button class="px-5 py-2.5 rounded-full text-xs font-medium bg-surface border border-outline-variant text-on-surface hover:border-bronze transition-all">Bateel Dates &amp; Confectionery</button>
+<button class="px-5 py-2.5 rounded-full text-xs font-medium bg-surface border border-outline-variant text-on-surface hover:border-bronze transition-all">Godiva Chocolates</button>
+</div>
+<!-- Active Brand Stage: Lindt Master Chocolatier -->
+<div class="space-y-8">
+<!-- Brand Hero Banner -->
+<div class="relative rounded-xl overflow-hidden bg-charcoal text-white p-8 md:p-12 flex flex-col md:flex-row justify-between items-center shadow-xl">
+<div class="absolute inset-0 opacity-40">
+<div class="w-full h-full bg-cover bg-center" data-alt="Dark moody editorial close-up of Swiss chocolate truffles dusted with cocoa powder and gold flakes against a luxury dark charcoal background with warm golden directional lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuABCCmcJ2Keri74jSxq469ZAntiOLLZmQalnXvHjkeRKB6WUkR-fEzGqgqbb05ynIbq9K3L6KFaEfemYetq5vDjs1peJB2IzASBqsVGDXav34D-i0BYIMN4Te9a7HZRTNL9Hx07Rdh9yJuG4u3neEZIny50YRFRUmcPqu6ywEgUb90dsQ00cIyILv3UFCm5whoLA16LiDQAlDRTT5xPXVYUH_98loVN8pGYWFisZlY3uXUHRqN2YDwBTyKvydJSVSHfKXNcwKYckJ5Y')"></div>
+</div>
+<div class="relative z-10 max-w-xl space-y-3">
+<span class="text-xs uppercase tracking-widest text-secondary-fixed">Partner Showcase</span>
+<h3 class="font-headline-md text-headline-md text-white">Lindt Switzerland - Crafted by Maîtres Chocolatiers since 1845</h3>
+<p class="text-xs text-inverse-primary">Experience the velvety smoothness and rich heritage of Swiss chocolate artistry, custom-curated for elite gifting.</p>
+</div>
+<div class="relative z-10 mt-6 md:mt-0">
+<a class="bg-white text-charcoal hover:bg-bronze hover:text-white transition-all px-6 py-3 text-xs uppercase tracking-widest font-medium rounded-DEFAULT shadow-lg inline-block" href="#">
+              View All 24 Brand Items
+            </a>
+</div>
+</div>
+<!-- Full Product Showcase Grid (4 Items) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Product Card 1 -->
+<div class="bg-surface rounded-xl overflow-hidden border border-outline-variant hover:border-bronze transition-all flex flex-col group">
+<div class="relative h-64 bg-surface-container overflow-hidden">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A pristine gold-embossed luxury dark green gift box of Lindt Swiss Luxury Selection chocolates displayed on cashmere surface with minimalist lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDcOHlxd7idQKJp8PsjGze5uk-qfHDAlMT172WQM3Xt6Rz4jOApckI8E-wT5pfVlZCqswJV0jpMr1h0ch-0GZpWpk8m5U56MSoM-2x8qeRHPh4blbw57VWu0ST2OKcZpjjcTWoF3qbvkNr1lFSI6Q0QD721MFbzGKPpW_R_QokEJIpxxYHsOHM6Z6crk-jhPE3wf-DAwlv1goVuoeOWvf4ZM-kx8EjtIzClUnOom4vYo5FM1oFddeChNtiGwAvCNF7Th18J-5D13RAF')"></div>
+<span class="absolute top-3 left-3 bg-charcoal text-white text-[10px] px-2 py-1 uppercase tracking-widest rounded">Bestseller</span>
+</div>
+<div class="p-5 flex flex-col flex-grow justify-between">
+<div>
+<span class="text-[11px] text-bronze uppercase tracking-widest">Lindt Chocolates</span>
+<h4 class="font-headline-sm text-sm font-medium text-primary mt-1 line-clamp-2">Lindt Swiss Luxury Selection Chocolate Box (230g)</h4>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/50 flex items-center justify-between">
+<span class="font-bold text-primary">₹2,850</span>
+<button class="bg-charcoal text-white hover:bg-bronze text-xs px-3 py-2 rounded uppercase tracking-wider transition-colors">Quick Add to Box</button>
+</div>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="bg-surface rounded-xl overflow-hidden border border-outline-variant hover:border-bronze transition-all flex flex-col group">
+<div class="relative h-64 bg-surface-container overflow-hidden">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="An ornate gold decorative tin filled with assorted Lindt Lindor milk and dark chocolate truffles with red ribbons against a neutral warm background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC86PasyNNA-WmPXWBnyWF_v2TYNJwgXo7PhGiK7CT1RS8xhAdmF6oI2pE5IhXS-ah_1rOptMCuHuz1248LTcaYt0LO0QZw3OlRdQXiRmG5myYHlvvzM54lA560o9uI4Wf0jU5mdZ2UiTV8TYK6eF2ahBIBiRQSSNljGkjfJvkPVwpbzv59Xsxjbk6eVKlHEODjAjhr4e1iOjr58oTh0CIyySKMCVTV-QKbjKv7v4FxXwUglinpCjw7ygjAKuL6a9pxsCyeVirTf1eF')"></div>
+</div>
+<div class="p-5 flex flex-col flex-grow justify-between">
+<div>
+<span class="text-[11px] text-bronze uppercase tracking-widest">Lindt Chocolates</span>
+<h4 class="font-headline-sm text-sm font-medium text-primary mt-1 line-clamp-2">Lindt Lindor Gold Assorted Truffles Gift Tin</h4>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/50 flex items-center justify-between">
+<span class="font-bold text-primary">₹1,950</span>
+<button class="bg-charcoal text-white hover:bg-bronze text-xs px-3 py-2 rounded uppercase tracking-wider transition-colors">Quick Add to Box</button>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="bg-surface rounded-xl overflow-hidden border border-outline-variant hover:border-bronze transition-all flex flex-col group">
+<div class="relative h-64 bg-surface-container overflow-hidden">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A curated dark wood hamper box containing Lindt Excellence 70% and 85% dark chocolate bars, cocoa nibs, and artisanal coffee beans." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD1hvCJyzrwQtzw2zC4U_mbsS9VwrEO-dnEMicL-ZVBb3H7q7DtOAqt-bYWx1u3VC4w_0MMsdpiqF9dX1xuwmOI51EZD75KAR1lPC0zFP2Qp10mOYsYozWK8JmnqQEDb9km119g-b-yCZt0v9vCm7UsGdkHBw4M2ubIWAPSWQVT4zhAoWk44s2H5UX1RxmWQmKnO_bUocZRCuAH3AYlIwd4slU_em8z5q0izbQPMhU8uDQ4TxHAuh0_NO2yH6-qwlSvVk-Rfv5jWLAb')"></div>
+<span class="absolute top-3 left-3 bg-secondary text-white text-[10px] px-2 py-1 uppercase tracking-widest rounded">Connoisseur</span>
+</div>
+<div class="p-5 flex flex-col flex-grow justify-between">
+<div>
+<span class="text-[11px] text-bronze uppercase tracking-widest">Lindt Chocolates</span>
+<h4 class="font-headline-sm text-sm font-medium text-primary mt-1 line-clamp-2">Lindt Excellence 70% &amp; 85% Dark Connoisseur Hamper</h4>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/50 flex items-center justify-between">
+<span class="font-bold text-primary">₹3,400</span>
+<button class="bg-charcoal text-white hover:bg-bronze text-xs px-3 py-2 rounded uppercase tracking-wider transition-colors">Quick Add to Box</button>
+</div>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="bg-surface rounded-xl overflow-hidden border border-outline-variant hover:border-bronze transition-all flex flex-col group">
+<div class="relative h-64 bg-surface-container overflow-hidden">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A luxurious square gift box displaying artistic dessert pralines with caramel and hazelnut fillings, styled in high-end editorial food photography." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAAt8I__zzjkr8dyliw94y3kocF1v5y0DjBcByxwSX4w6nGXYP5B_HI4hAxEstGnQz1KbQf1v10dKx1mf5b7rd9txtQm-56-tX5FvV8JHnRksvwRz8OzKqykwhMDoPAHnFJA5LUNyEUZvi2sBaY1-Hp4Sk3UV21hwE5fBhrnxwlKxiHz0XRwW-PNmm-ATktPWNrF6gq6LqpJA1pjFZvm3epwSKDpVRTMxzVq8OMG6p9F9Vhtj1YKfT4XVFUHhsgj6M434ubynw2eDOh')"></div>
+</div>
+<div class="p-5 flex flex-col flex-grow justify-between">
+<div>
+<span class="text-[11px] text-bronze uppercase tracking-widest">Lindt Chocolates</span>
+<h4 class="font-headline-sm text-sm font-medium text-primary mt-1 line-clamp-2">Lindt Creation Dessert Pralines Collection</h4>
+</div>
+<div class="mt-4 pt-4 border-t border-outline-variant/50 flex items-center justify-between">
+<span class="font-bold text-primary">₹2,600</span>
+<button class="bg-charcoal text-white hover:bg-bronze text-xs px-3 py-2 rounded uppercase tracking-wider transition-colors">Quick Add to Box</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 'Custom Hamper Builder' Interactive Banner -->
+<section class="max-w-7xl mx-auto px-space-md py-space-lg">
+<div class="bg-cashmere rounded-2xl p-8 md:p-16 border border-outline-variant shadow-xl relative overflow-hidden">
+<div class="absolute right-0 top-0 w-1/3 h-full opacity-10 pointer-events-none hidden lg:block">
+<div class="w-full h-full bg-cover bg-center" data-alt="Minimalist abstract vector pattern of luxury gift boxes and ribbons in warm gold and charcoal tones." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCaIddGhi16pCKGImfV5z9e-m4-kaQb21cSQ4cqc4UuYpv2EW_oRnb0QuAfMGyrCfaUweU5z25G1wUmPY2IJC5lVkOIQxv5V6pq8Qh_mwCUTNQ8JDvEjaXlztmKvHXqoFyP3jlFd85Ne2co4xjXAk-4mfNqNJ39koNArd7nAtli0XJG15k3840nODViVrVs0vIE4usLPs5F0i-ttFLr0N7THTJabeYdiF6pl9Xa8-4tbNR22SKc1M49fk8SJel1T3rWiIgfqFRnH3hh')"></div>
+</div>
+<div class="max-w-2xl relative z-10 space-y-6">
+<span class="text-xs uppercase tracking-widest text-bronze font-bold">Bespoke Studio</span>
+<h2 class="font-headline-lg text-headline-lg text-primary">Custom Hamper Builder</h2>
+<p class="font-body-lg text-on-surface-variant">
+          Craft a deeply personal gift in three effortless steps. Tailor every detail to create a lasting impression.
+        </p>
+<!-- 3-Step Visualization -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+<div class="bg-surface p-6 rounded-xl border border-outline-variant shadow-sm space-y-2">
+<span class="text-bronze font-bold text-lg">01</span>
+<h4 class="font-headline-sm text-sm font-medium text-primary">Choose Box Size &amp; Color</h4>
+<p class="text-xs text-on-surface-variant">Select from rigid velvet or matte keepsake boxes in cashmere, charcoal, or forest green.</p>
+</div>
+<div class="bg-surface p-6 rounded-xl border border-outline-variant shadow-sm space-y-2">
+<span class="text-bronze font-bold text-lg">02</span>
+<h4 class="font-headline-sm text-sm font-medium text-primary">Select Items by Brand</h4>
+<p class="text-xs text-on-surface-variant">Handpick chocolates, fragrances, organic dates, and rare teas from elite boutiques.</p>
+</div>
+<div class="bg-surface p-6 rounded-xl border border-outline-variant shadow-sm space-y-2">
+<span class="text-bronze font-bold text-lg">03</span>
+<h4 class="font-headline-sm text-sm font-medium text-primary">Add Wax Seal &amp; Note</h4>
+<p class="text-xs text-on-surface-variant">Finish with a custom wax seal stamp and handwritten calligraphy stationery message.</p>
+</div>
+</div>
+<div class="pt-6">
+<a class="bg-charcoal text-white hover:bg-bronze transition-colors px-8 py-4 text-xs uppercase tracking-widest font-medium rounded-DEFAULT shadow-lg inline-flex items-center gap-2" href="#">
+<span>Start Building Your Hamper</span>
+<span class="material-symbols-outlined" style="font-size: 16px;">edit_note</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- Occasion-based Gift Finder Cards -->
+<section class="max-w-7xl mx-auto px-space-md py-space-lg border-t border-outline-variant/60">
+<div class="flex flex-col md:flex-row justify-between items-end mb-12">
+<div>
+<span class="text-xs uppercase tracking-widest text-bronze font-bold">Curated For Every Milestone</span>
+<h2 class="font-headline-lg text-headline-lg text-primary mt-1">Occasion-Based Gift Finder</h2>
+</div>
+<a class="text-xs uppercase tracking-widest font-medium text-secondary hover:text-primary mt-4 md:mt-0 flex items-center gap-1" href="#">
+<span>Explore All Occasions</span>
+<span class="material-symbols-outlined" style="font-size: 16px;">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Card 1: Anniversary -->
+<a class="relative rounded-xl overflow-hidden h-96 group shadow-md block" href="#">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-700" data-alt="A romantic anniversary gift setup featuring red roses, champagne glasses, and a bespoke velvet gift box with warm golden ambient lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBHSUmqcye_3bGOkh4Od3CLX50MhHG27LKZOI4jnLZV2ytO1DJJnnym4S1qnQwCHIb0RKF2YsIKLLv4dWIqTovfla4fMGUllCVbqE4VEMJ1oth49Dx4CtKMxyqsQxB-s7jD7_TI6b00u3_xndVGAugbxrbmt9_yUijfqf_mY8QqiAN4-O3dCixdMSH4APdarYIEPpgmR0O41VItIvrSDvSJ-BB-QecvLNIFnaWpd3DodbCQP6MDECaDkgYRccdVTFBZLc7gcs5NmT5J')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/30 to-transparent flex flex-col justify-end p-6 text-white">
+<span class="text-[10px] uppercase tracking-widest text-secondary-fixed">Milestone</span>
+<h3 class="font-headline-md text-xl font-medium mt-1">Anniversary &amp; Romance</h3>
+<p class="text-xs text-inverse-primary mt-2 opacity-90">Timeless expressions of love crafted with exquisite floristry and vintage champagne.</p>
+<span class="mt-4 text-xs uppercase tracking-widest text-secondary-fixed flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+<span>Shop Collection</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_forward</span>
+</span>
+</div>
+</a>
+<!-- Card 2: Birthday -->
+<a class="relative rounded-xl overflow-hidden h-96 group shadow-md block" href="#">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-700" data-alt="A luxurious birthday celebration hamper with artisanal birthday cake, gold-foiled gift boxes, and colorful floral arrangements under soft glowing lights." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCdHO8b3VRsq6vEzKRHBf6rK3EI9h_0zzG9ssFsfkqjplPi8nbHGOJcR0YfBHSpL10ky8B6XCxq0vztT76pYtSmV2dZVI-iLQ5zdKibFKzie5IDMNm2r2HJaOryWPB4DTnFObRDBTNng2dX82HIxOUbHk9BN6SM02ZMUszEiZeQ3IFRxHZqh-oRDTBYmeuofdsCyMPBJ4S4nd_nx5vVGpxdpuJIGIWfk2GG1W4A8awgaKPzOiCMLcmM2_ewrL8pyx0ktm4kLtB1Hmw-')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/30 to-transparent flex flex-col justify-end p-6 text-white">
+<span class="text-[10px] uppercase tracking-widest text-secondary-fixed">Celebration</span>
+<h3 class="font-headline-md text-xl font-medium mt-1">Birthday Indulgence</h3>
+<p class="text-xs text-inverse-primary mt-2 opacity-90">Make their special day unforgettable with curated gourmet treats and bespoke keepsakes.</p>
+<span class="mt-4 text-xs uppercase tracking-widest text-secondary-fixed flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+<span>Shop Collection</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_forward</span>
+</span>
+</div>
+</a>
+<!-- Card 3: Corporate -->
+<a class="relative rounded-xl overflow-hidden h-96 group shadow-md block" href="#">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-700" data-alt="An executive corporate gifting hamper featuring premium leather accessories, fine teas, and personalized brass notebooks in a sophisticated office setting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB6s8B8p6MPbVXpCE31fYJdwKK557HFjcdWbqVSlxHLnNH3UNYUlpfGYVwKISGq12sK8l-FDdgXFznmoJYTSQWgYLycTnrSznA3mBcSWqzd8U8Kj5Hc-cduboci5X3jrg-aEgbLOuWEYXEB3UceKxKzzCvvjS7ZTkNlncGEYttMbkHXmSa1kkUaoNuXKHX8sEQugmS4OcQ-c3nZR7exT4-tblzoeJaa1KxO5Ke2NUBszEUO3fQ8b9m19nicMGdgZZpziYgRa0TrYWQE')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/30 to-transparent flex flex-col justify-end p-6 text-white">
+<span class="text-[10px] uppercase tracking-widest text-secondary-fixed">Executive</span>
+<h3 class="font-headline-md text-xl font-medium mt-1">Corporate &amp; Client Gifting</h3>
+<p class="text-xs text-inverse-primary mt-2 opacity-90">Strengthen business relationships with tailored bulk gifting and branded packaging solutions.</p>
+<span class="mt-4 text-xs uppercase tracking-widest text-secondary-fixed flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+<span>Shop Collection</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_forward</span>
+</span>
+</div>
+</a>
+<!-- Card 4: Housewarming -->
+<a class="relative rounded-xl overflow-hidden h-96 group shadow-md block" href="#">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-700" data-alt="A warm housewarming gift hamper containing luxury scented candles, cashmere throws, and artisanal honey jars arranged in a rustic modern living room." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAoYKxXYcSWQ7QXRNoGqMm8DFVkQNfM3burWT1MayEqPW3aQ2liTXW3Z57HKIHtcxx_pbMk0lR_KdEQKe5KM3Yoca0Je2j4LUtvtIKkew7XHIktCeLMsrnASwAXcM7l2k1rGjA69g1cj2bXznKtm-gaqvtkQ263jAaHqpGORrVlgADDlRV7AANg2fh_YGVX85utC-EOyXOi4aksADw0Vqq_sXSNS_f-Ah9Thu2ipVqNchrvnvGQGOoPVupaUsZPfyfydZ_4Fpjnu8LR')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/30 to-transparent flex flex-col justify-end p-6 text-white">
+<span class="text-[10px] uppercase tracking-widest text-secondary-fixed">Milestone</span>
+<h3 class="font-headline-md text-xl font-medium mt-1">Housewarming &amp; New Beginnings</h3>
+<p class="text-xs text-inverse-primary mt-2 opacity-90">Welcome loved ones into their new home with curated home fragrances and gourmet essentials.</p>
+<span class="mt-4 text-xs uppercase tracking-widest text-secondary-fixed flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+<span>Shop Collection</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_forward</span>
+</span>
+</div>
+</a>
+</div>
+</section>
+<!-- Customer Reviews & Brand Trust Banner -->
+<section class="bg-surface-container-low py-space-lg border-t border-outline-variant/60">
+<div class="max-w-7xl mx-auto px-space-md">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center text-center md:text-left pb-12 border-b border-outline-variant/60">
+<div class="flex flex-col items-center md:items-start space-y-2">
+<div class="flex text-bronze">
+<span class="material-symbols-outlined">star</span>
+<span class="material-symbols-outlined">star</span>
+<span class="material-symbols-outlined">star</span>
+<span class="material-symbols-outlined">star</span>
+<span class="material-symbols-outlined">star</span>
+</div>
+<h4 class="font-headline-sm text-sm font-medium text-primary">Rated 4.9 / 5.0 by 12,500+ Elite Patrons</h4>
+<p class="text-xs text-on-surface-variant">Recognized for flawless execution, punctuality, and uncompromising curation.</p>
+</div>
+<div class="flex flex-col items-center space-y-2">
+<span class="material-symbols-outlined text-bronze" style="font-size: 32px;">verified</span>
+<h4 class="font-headline-sm text-sm font-medium text-primary">Official Brand Authenticity Seal</h4>
+<p class="text-xs text-on-surface-variant">Direct partnerships with Lindt, Jo Malone, Forest Essentials &amp; Bateel.</p>
+</div>
+<div class="flex flex-col items-center md:items-end space-y-2 text-center md:text-right">
+<span class="material-symbols-outlined text-bronze" style="font-size: 32px;">local_shipping</span>
+<h4 class="font-headline-sm text-sm font-medium text-primary">Punctual &amp; Discreet Delivery</h4>
+<p class="text-xs text-on-surface-variant">White-glove courier service across Mumbai, Delhi &amp; Bangalore.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer JSON Mapped -->
+<footer class="bg-surface-container-low dark:bg-surface-container-low border-t border-outline-variant">
+<div class="flex flex-col justify-between items-center w-full px-space-lg py-space-md max-w-7xl mx-auto">
+<!-- Brand Logo in Footer -->
+<div class="mb-6 text-center">
+<span class="font-headline-sm text-headline-sm text-primary">BOX &amp; BOUQUET</span>
+<p class="text-xs uppercase tracking-widest text-bronze mt-1">Quiet Opulence in Gifting.</p>
+</div>
+<!-- Footer Links -->
+<div class="flex flex-wrap justify-center gap-8 mb-8">
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-sm" href="#">Private Client</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-sm" href="#">Concierge</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-sm" href="#">Shipping &amp; Returns</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-sm" href="#">Sustainability</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-sm" href="#">Legal</a>
+</div>
+<!-- Copyright & Disclaimer -->
+<div class="text-center font-body-sm text-on-surface-variant border-t border-outline-variant/40 pt-6 w-full">
+        © 2025 Aura &amp; Ash. All rights reserved. Quiet Opulence in Gifting.
+      </div>
+</div>
+</footer>
+</body></html>

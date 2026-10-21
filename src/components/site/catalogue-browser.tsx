@@ -7,7 +7,6 @@ import { SiteProductCard } from '@/components/site/site-product-card'
 import { formatCurrency } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
 import type { PublicProduct } from '@/lib/catalogue/products'
-import { purchaseCaption } from '@/lib/catalogue/purchase-path'
 
 const VIEW_KEY = 'giffter.public-catalogue.view'
 
@@ -57,19 +56,19 @@ export function CatalogueBrowser({
   }
 
   if (products.length === 0) {
-    return <p className="py-20 text-center text-sm text-[#5C6570]">No gifts match these filters.</p>
+    return <p className="py-20 text-center text-sm text-ink-secondary">No gifts match these filters.</p>
   }
 
   return (
     <div className="space-y-8">
       <div className="flex justify-end">
-        <div className="inline-flex overflow-hidden rounded-md border border-[#E8E4DE]">
+        <div className="inline-flex overflow-hidden rounded border border-cream-border">
           <button
             type="button"
             onClick={() => choose('grid')}
             aria-pressed={view === 'grid'}
-            className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-              view === 'grid' ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-white text-[#5C6570]'
+            className={`inline-flex min-h-11 items-center gap-2 px-3 font-mono text-[11px] tracking-[0.08em] uppercase ${
+              view === 'grid' ? 'bg-charcoal text-cream' : 'bg-cream-card text-ink-secondary'
             }`}
           >
             <LayoutGrid size={13} /> Grid
@@ -78,8 +77,8 @@ export function CatalogueBrowser({
             type="button"
             onClick={() => choose('list')}
             aria-pressed={view === 'list'}
-            className={`inline-flex items-center gap-2 px-3 py-2 text-[11px] uppercase tracking-[0.14em] ${
-              view === 'list' ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-white text-[#5C6570]'
+            className={`inline-flex min-h-11 items-center gap-2 px-3 font-mono text-[11px] tracking-[0.08em] uppercase ${
+              view === 'list' ? 'bg-charcoal text-cream' : 'bg-cream-card text-ink-secondary'
             }`}
           >
             <List size={13} /> List
@@ -101,7 +100,7 @@ export function CatalogueBrowser({
           ))}
         </div>
       ) : (
-        <div className="divide-y divide-[#E8E4DE] border-y border-[#E8E4DE]">
+        <div className="divide-y divide-cream-border border-y border-cream-border">
           {products.map((product) => (
             <Link
               key={product.id}
@@ -120,13 +119,13 @@ export function CatalogueBrowser({
                 />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">{product.category_name}</p>
-                <p className="mt-1 truncate font-medium text-[#1B2430]">{product.name}</p>
-                <p className="mt-1 font-mono text-[10px] text-[#5C6570]">{product.sku}</p>
+                <p className="font-mono text-[10px] tracking-[0.08em] text-gold-deep uppercase">{product.category_name}</p>
+                <p className="store-product-title mt-1 truncate text-base">{product.name}</p>
+                <p className="mt-1 font-mono text-[10px] tracking-[0.06em] text-ink-tertiary uppercase">{product.sku}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-[#806A50]">{priceLabel?.(product) || (product.price == null ? 'Request quotation' : formatCurrency(product.price))}</p>
-                <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#5C6570]">{captionFor?.(product) || purchaseCaption(product.purchase)}</p>
+                <p className="store-price text-base">{priceLabel?.(product) || (product.price != null && product.price > 0 ? formatCurrency(product.price) : '—')}</p>
+                <p className="mt-1 font-mono text-[10px] tracking-[0.06em] text-ink-secondary uppercase">{captionFor?.(product) || (product.purchase.buy ? 'In stock' : product.purchase.reason === 'zero-stock' ? 'Notify me' : 'Enquire for custom')}</p>
               </div>
             </Link>
           ))}

@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 export function Reveal({
   children,
   className,
-  delay = 0,
 }: {
   children: ReactNode
   className?: string
@@ -18,12 +17,7 @@ export function Reveal({
   useEffect(() => {
     const node = ref.current
     if (!node) return
-    const reduced =
-      typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduced) {
-      setVisible(true)
-      return
-    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -38,15 +32,7 @@ export function Reveal({
   }, [])
 
   return (
-    <div
-      ref={ref}
-      style={{ transitionDelay: visible ? `${delay}ms` : '0ms' }}
-      className={cn(
-        'transition-[opacity,transform] duration-700 ease-out motion-reduce:transition-none',
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0',
-        className,
-      )}
-    >
+    <div ref={ref} className={cn('store-reveal', visible && 'is-visible', className)}>
       {children}
     </div>
   )

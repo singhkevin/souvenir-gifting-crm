@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ShoppingBag, X, Minus, Plus, Trash2 } from 'lucide-react'
 import {
   readCart,
@@ -16,7 +16,7 @@ import { formatCurrency } from '@/lib/utils'
 import { CartCheckout } from '@/components/site/cart-checkout'
 
 export function CartDrawer({
-  iconClassName = 'text-[#241C12]',
+  iconClassName = 'text-charcoal',
   cartKey = STORE_CART_KEY,
   kind = 'store',
 }: {
@@ -27,6 +27,8 @@ export function CartDrawer({
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<CartItem[]>([])
   const [placed, setPlaced] = useState(false)
+  const [shown, setShown] = useState(false)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const sync = () => setItems(readCart(cartKey))
@@ -45,19 +47,50 @@ export function CartDrawer({
   const closeDrawer = () => {
     setOpen(false)
     setPlaced(false)
+    setShown(false)
   }
+
+  useEffect(() => {
+    if (!open) return
+    const id = window.requestAnimationFrame(() => setShown(true))
+    return () => window.cancelAnimationFrame(id)
+  }, [open])
 
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    const root = panelRef.current
+    const selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    const focusables = () =>
+      root ? [...root.querySelectorAll<HTMLElement>(selector)].filter((el) => !el.hasAttribute('disabled')) : []
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    focusables()[0]?.focus()
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeDrawer()
+      if (event.key === 'Escape') {
+        setOpen(false)
+        setPlaced(false)
+        setShown(false)
+        return
+      }
+      if (event.key !== 'Tab' || !root) return
+      const list = focusables()
+      if (!list.length) return
+      const first = list[0]
+      const last = list[list.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => {
       document.body.style.overflow = prev
       window.removeEventListener('keydown', onKey)
+      previouslyFocused?.focus()
     }
   }, [open])
 
@@ -74,7 +107,7 @@ export function CartDrawer({
       >
         <ShoppingBag size={21} strokeWidth={1.75} />
         {count > 0 ? (
-          <span className="absolute -right-1 -top-1 flex h-[19px] min-w-[19px] items-center justify-center rounded-full border-2 border-white bg-[#C0392B] px-1 text-[10px] font-bold leading-none text-white">
+          <span className="absolute -top-1 -right-1 flex h-[19px] min-w-[19px] items-center justify-center rounded-full bg-saffron px-1 text-[10px] leading-none font-bold text-charcoal">
             {count > 99 ? '99+' : count}
           </span>
         ) : null}
@@ -84,18 +117,25 @@ export function CartDrawer({
         <div className="fixed inset-0 z-[100] flex justify-end">
           <button
             type="button"
+            tabIndex={-1}
             aria-label="Close cart"
-            className="absolute inset-0 bg-black/45"
+            className="absolute inset-0 bg-charcoal/45"
             onClick={closeDrawer}
           />
-          <div className="relative z-10 flex h-full w-full max-w-md flex-col bg-white shadow-[0_0_60px_rgba(0,0,0,0.25)]">
-            <div className="flex items-center justify-between gap-3 border-b border-[#E8E4DE] px-5 py-4">
-              <h2 className="font-serif text-xl text-[#1B2430]">Your cart</h2>
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Your cart"
+            className={`relative z-10 flex h-full w-full max-w-md flex-col rounded-l-lg border-l border-cream-border bg-cream-card shadow-drawer transition-transform duration-300 ease-out ${shown ? 'translate-x-0' : 'translate-x-full'}`}
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-cream-border px-5 py-4">
+              <h2 className="store-ui-title text-ink">Your cart</h2>
               <button
                 type="button"
                 aria-label="Close"
                 onClick={closeDrawer}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F6F4F1] text-[#5C6570] hover:bg-[#EFE9E0]"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-cream-surface text-ink-secondary hover:bg-cream"
               >
                 <X size={16} />
               </button>
@@ -104,13 +144,13 @@ export function CartDrawer({
             <div className="flex-1 overflow-y-auto px-5 py-4">
               {items.length === 0 ? (
                 placed ? null : (
-                <div className="flex h-full flex-col items-center justify-center text-center">
-                  <ShoppingBag size={28} className="text-[#C4B8A8]" />
-                  <p className="mt-3 text-sm text-[#5C6570]">Your cart is empty.</p>
-                  <p className="mt-1 text-xs text-[#8A929C]">
+                <div className="flex h-full flex-col items-center justify-center border border-dashed border-cream-border bg-cream-surface px-6 py-10 text-center">
+                  <ShoppingBag size={28} className="text-ink-tertiary" />
+                  <p className="mt-3 font-serif text-xl text-ink">Your cart is empty.</p>
+                  <p className="mt-1 text-sm text-ink-secondary">
                     {kind === 'store'
-                      ? 'Add gifts that are ready to buy. Quote-only gifts use Request a quote.'
-                      : 'Add gifts that are ready to buy. Quote-only gifts use Request quote.'}
+                      ? 'Add an in-stock gift from the catalogue.'
+                      : 'Add gifts that are ready to buy.'}
                   </p>
                 </div>
                 )
@@ -118,7 +158,7 @@ export function CartDrawer({
                 <ul className="space-y-4">
                   {items.map((item) => (
                     <li key={item.id} className="flex gap-3">
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md catalogue-studio-field">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-sm border border-cream-border bg-cream-surface">
                         <ProductImage
                           src={item.image_url}
                           alt={item.name}
@@ -128,25 +168,25 @@ export function CartDrawer({
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-[#1B2430]">{item.name}</p>
-                        {item.price != null ? (
-                          <p className="mt-0.5 text-xs text-[#806A50]">{formatCurrency(item.price)}</p>
+                        <p className="truncate text-sm text-ink">{item.name}</p>
+                        {item.price != null && item.price > 0 ? (
+                          <p className="store-price mt-0.5 text-sm">{formatCurrency(item.price)}</p>
                         ) : null}
                         <div className="mt-2 flex items-center gap-2">
                           <button
                             type="button"
                             aria-label="Decrease quantity"
                             onClick={() => setItems(updateCartQuantity(item.id, item.quantity - 1, cartKey))}
-                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
+                            className="flex h-11 w-11 items-center justify-center rounded border border-ink-tertiary text-ink-secondary hover:bg-cream-surface"
                           >
                             <Minus size={12} />
                           </button>
-                          <span className="w-6 text-center text-sm">{item.quantity}</span>
+                          <span className="w-6 text-center font-mono text-sm">{item.quantity}</span>
                           <button
                             type="button"
                             aria-label="Increase quantity"
                             onClick={() => setItems(updateCartQuantity(item.id, item.quantity + 1, cartKey))}
-                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
+                            className="flex h-11 w-11 items-center justify-center rounded border border-ink-tertiary text-ink-secondary hover:bg-cream-surface"
                           >
                             <Plus size={12} />
                           </button>
@@ -154,7 +194,7 @@ export function CartDrawer({
                             type="button"
                             aria-label="Remove from cart"
                             onClick={() => setItems(removeFromCart(item.id, cartKey))}
-                            className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-[#8A929C] hover:bg-red-50 hover:text-red-700"
+                            className="ml-auto flex h-11 w-11 items-center justify-center rounded text-ink-tertiary hover:bg-error-bg hover:text-error"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -167,11 +207,11 @@ export function CartDrawer({
             </div>
 
             {items.length > 0 || placed ? (
-              <div className="space-y-3 border-t border-[#E8E4DE] px-5 py-4">
+              <div className="space-y-3 border-t border-cream-border px-5 py-4">
                 {items.length > 0 && subtotal > 0 ? (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#5C6570]">Estimated subtotal</span>
-                    <span className="font-semibold text-[#1B2430]">{formatCurrency(subtotal)}</span>
+                    <span className="text-ink-secondary">Estimated subtotal</span>
+                    <span className="store-price text-base">{formatCurrency(subtotal)}</span>
                   </div>
                 ) : null}
                 <CartCheckout

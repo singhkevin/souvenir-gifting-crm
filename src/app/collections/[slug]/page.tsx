@@ -25,14 +25,14 @@ export default async function CollectionDetailPage({ params }: Props) {
 
   return (
     <SiteShell>
-      <div className="border-b border-[#E8E4DE] bg-[#F6F4F1]">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="border-b border-cream-border bg-cream-surface">
+        <div className="store-container py-10 sm:py-14">
           <p className="store-eyebrow">{collection.kicker}</p>
           <h1 className="store-section-title mt-2">{collection.title}</h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#5C6570]">{collection.description}</p>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-secondary">{collection.description}</p>
         </div>
       </div>
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="store-container py-10 sm:py-14">
         <CatalogueBrowser products={products} />
       </div>
     </SiteShell>

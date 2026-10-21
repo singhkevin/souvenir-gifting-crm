@@ -1,0 +1,508 @@
+<html><head><meta charset="utf-8"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "tertiary": "#2d1a00",
+          "surface-dim": "#d0dbed",
+          "secondary-fixed-dim": "#e9c176",
+          "on-tertiary-fixed": "#291800",
+          "on-secondary-fixed": "#261900",
+          "error-container": "#ffdad6",
+          "on-tertiary-container": "#bf9358",
+          "on-primary": "#ffffff",
+          "outline-variant": "#c1c9c0",
+          "outline": "#717972",
+          "surface-bright": "#f8f9ff",
+          "primary-fixed-dim": "#a1d2b1",
+          "tertiary-fixed-dim": "#eebe7f",
+          "surface-variant": "#d9e3f6",
+          "inverse-surface": "#27313f",
+          "surface-container": "#e6eeff",
+          "secondary-fixed": "#ffdea5",
+          "on-tertiary-fixed-variant": "#61400c",
+          "surface-container-highest": "#d9e3f6",
+          "on-primary-container": "#77a688",
+          "tertiary-fixed": "#ffddb4",
+          "on-background": "#121c2a",
+          "on-surface-variant": "#414943",
+          "primary-fixed": "#bdeecc",
+          "on-primary-fixed-variant": "#224f36",
+          "background": "#f8f9ff",
+          "secondary": "#775a19",
+          "on-error": "#ffffff",
+          "on-tertiary": "#ffffff",
+          "primary-container": "#0b3b24",
+          "on-primary-fixed": "#002111",
+          "surface-container-high": "#dee9fc",
+          "surface": "#f8f9ff",
+          "primary": "#002413",
+          "surface-container-lowest": "#ffffff",
+          "on-surface": "#121c2a",
+          "surface-tint": "#3b674d",
+          "tertiary-container": "#492d00",
+          "on-secondary": "#ffffff",
+          "on-secondary-fixed-variant": "#5d4201",
+          "error": "#ba1a1a",
+          "secondary-container": "#fed488",
+          "inverse-on-surface": "#eaf1ff",
+          "on-error-container": "#93000a",
+          "on-secondary-container": "#785a1a",
+          "surface-container-low": "#eff4ff",
+          "inverse-primary": "#a1d2b1"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "gutter-mobile": "1rem",
+          "space-xs": "0.25rem",
+          "gutter": "2rem",
+          "margin": "4rem",
+          "space-2xl": "4rem",
+          "space-xl": "2.5rem",
+          "space-md": "1rem",
+          "space-lg": "1.5rem",
+          "margin-mobile": "1.25rem",
+          "space-sm": "0.5rem",
+          "space-3xl": "6rem"
+        },
+        "fontFamily": {
+          "headline-lg-mobile": ["Playfair Display"],
+          "body-lg": ["Plus Jakarta Sans"],
+          "headline-sm": ["Playfair Display"],
+          "display-hero": ["Playfair Display"],
+          "headline-md": ["Playfair Display"],
+          "headline-lg": ["Playfair Display"],
+          "label-md": ["Plus Jakarta Sans"],
+          "price-sm": ["Plus Jakarta Sans"],
+          "body-md": ["Plus Jakarta Sans"],
+          "label-caps": ["Plus Jakarta Sans"],
+          "price-lg": ["Plus Jakarta Sans"],
+          "title-editorial": ["Playfair Display"],
+          "display-hero-mobile": ["Playfair Display"],
+          "body-sm": ["Plus Jakarta Sans"]
+        },
+        "fontSize": {
+          "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+          "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+          "headline-sm": ["22px", {"lineHeight": "30px", "fontWeight": "600"}],
+          "display-hero": ["56px", {"lineHeight": "68px", "letterSpacing": "-0.02em", "fontWeight": "400"}],
+          "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "500"}],
+          "headline-lg": ["40px", {"lineHeight": "50px", "letterSpacing": "-0.015em", "fontWeight": "500"}],
+          "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+          "price-sm": ["15px", {"lineHeight": "20px", "fontWeight": "600"}],
+          "body-md": ["15px", {"lineHeight": "24px", "fontWeight": "400"}],
+          "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.14em", "fontWeight": "600"}],
+          "price-lg": ["20px", {"lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "title-editorial": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+          "display-hero-mobile": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+          "body-sm": ["13px", {"lineHeight": "20px", "fontWeight": "400"}]
+        }
+      }
+    }
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+</head><body class="bg-[#FAF8F5] text-on-background font-body-md antialiased selection:bg-[#0B3B24] selection:text-white">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-50 bg-[#FAF8F5]/95 backdrop-blur-md shadow-sm">
+<div class="flex justify-between items-center w-full px-gutter md:px-margin max-w-[1440px] mx-auto py-4">
+<div class="flex items-center gap-6">
+<button class="md:hidden text-[#0B3B24]"><span class="material-symbols-outlined">menu</span></button>
+<a class="font-headline-lg text-[#0B3B24] font-bold tracking-tight" href="#">Atelier Botanica</a>
+<div class="hidden md:flex items-center gap-2 text-xs text-[#414943] bg-white border border-[#EAE5DC] px-3 py-1.5 rounded">
+<span class="material-symbols-outlined text-sm text-[#775a19]">location_on</span>
+<span>Deliver to: <strong>Mumbai 400050</strong></span>
+</div>
+</div>
+<div class="hidden lg:flex items-center flex-1 max-w-md mx-8">
+<div class="relative w-full">
+<input class="w-full bg-white border border-[#EAE5DC] rounded px-4 py-2 pl-10 text-sm focus:outline-none focus:border-[#775a19] text-[#121c2a]" placeholder="Search bespoke hampers, flowers, fragrances..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-[#717972] text-sm">search</span>
+</div>
+</div>
+<div class="flex items-center gap-5">
+<a class="hidden md:inline-block text-xs font-semibold tracking-wider text-[#0B3B24] uppercase border-b border-[#775a19] pb-0.5" href="#">Corporate Gifting</a>
+<a class="relative p-2 text-[#0B3B24] hover:text-[#775a19] transition-colors" href="#"><span class="material-symbols-outlined">favorite</span></a>
+<a class="relative p-2 text-[#0B3B24] hover:text-[#775a19] transition-colors flex items-center" href="#">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="absolute top-0 right-0 bg-[#0B3B24] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">2</span>
+</a>
+</div>
+</div>
+</header>
+<!-- Category Strip -->
+<nav class="bg-white border-b border-[#EAE5DC] py-4 overflow-x-auto">
+<div class="max-w-[1440px] mx-auto px-gutter md:px-margin flex items-center justify-between gap-6 min-w-max">
+<a class="flex flex-col items-center gap-2 group" href="#">
+<div class="w-16 h-16 rounded-full overflow-hidden border border-[#C5A059] p-0.5 group-hover:scale-105 transition-transform">
+<div class="w-full h-full bg-cover bg-center rounded-full" data-alt="A meticulously arranged luxury gift hamper featuring artisanal chocolates, gold-foiled stationery, and fresh botanical sprigs inside a rich green keepsake box. The warm, inviting lighting highlights the premium textures of velvet and matte paper against an ivory linen background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA0Z7M6kHoIRg2taT9-01O70NWZoE_2OODybwXq9T2lDB-u9J5egyiyXR_3GEtzzxYXXMI7ldpZQ5zA_xsOFFGzl7I__Iq0kI76N-xi3fffMWhLgkSEa0Bp4rdkkE9GCnCtVvXZPeVHw3gwGxRkJ87YPbZ88hCeSvkEXat8pBaUjQSfZoIR74jrcoCDHCk97SaXwmUfBUgABzQ_uhU6MrndQy7nfSidbUnpkoXydlgLFhAS2bo1-uz7LzyeilZyC9qhkZCvtV2j1YyD')"></div>
+</div>
+<span class="text-xs font-medium text-[#0B3B24]">Curated Hampers</span>
+</a>
+<a class="flex flex-col items-center gap-2 group" href="#">
+<div class="w-16 h-16 rounded-full overflow-hidden border border-[#C5A059] p-0.5 group-hover:scale-105 transition-transform">
+<div class="w-full h-full bg-cover bg-center rounded-full" data-alt="An exquisite assortment of artisanal gourmet dark chocolates and handcrafted pralines displayed on a slate platter. The rich cocoa tones gleam under soft warm spotlights, accented by edible gold leaf flakes and roasted pistachio dust." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBeiCftnv7HPYYiiqmdLaARSyGRkbRXzN8sGAB_H8OeBvJB3cN4b1t-bXzO7b_IZyIHOO2Tqh9wxubbcFYK0cujdfy8XNPiM4dCWz8Rh98EvsX7z7B26NHyGmbZkP-WqHsHjEapwwosMBN8smyWYm-J3MGw3ZFBWG8chiEZElzkTi6DZByBNZN55dkZ3T9vuB7DHxx2r6DzxJuQYCqSNBZQWkZLJOL7xphwYth6eOc2_REhNlQOYw_fsaoDGxQUbadwYeYpf7TuIdGT')"></div>
+</div>
+<span class="text-xs font-medium text-[#0B3B24]">Gourmet Chocolates</span>
+</a>
+<a class="flex flex-col items-center gap-2 group" href="#">
+<div class="w-16 h-16 rounded-full overflow-hidden border border-[#C5A059] p-0.5 group-hover:scale-105 transition-transform">
+<div class="w-full h-full bg-cover bg-center rounded-full" data-alt="A lush, elegant floral bouquet featuring premium David Austin roses, cascading eucalyptus leaves, and delicate white ranunculus, tied together with a fine silk ribbon in a high-end florist studio." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBTPrXyAfR1B0LuurGcm5BuAooutMpp-U7ebob1OhOHBogPZ1Z-JxCXPmXUvsfYICLjK4fv219XsqrvM7K48JBGM21b-3qSJWmwj9rUBk9Fn0_rWjQXI0imvFqjStJKQ0TcVoMotZ6jAZezYSz8gV6DXcgY9iXfOFTB7FdMzOxw-wz9DW6qhMeWXRRB2dTdJJPjFBBipDoVLb0qxpnqoqaEBY-CCnlFNVRL1ySrQXL33Hv98Ma3Kp7l-hF7RKZz4qA1P55iYheraGoT')"></div>
+</div>
+<span class="text-xs font-medium text-[#0B3B24]">Fresh Flowers</span>
+</a>
+<a class="flex flex-col items-center gap-2 group" href="#">
+<div class="w-16 h-16 rounded-full overflow-hidden border border-[#C5A059] p-0.5 group-hover:scale-105 transition-transform">
+<div class="w-full h-full bg-cover bg-center rounded-full" data-alt="A bespoke leather-bound journal with custom embossed gold monogramming resting beside a polished brass fountain pen on a warm oak wooden desk with soft morning illumination." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBbVttxxqNHfoe1PbTJ_tPdAzaHVXJAgG03it4Tj0AZ2qjnDKqgG3d_LXa5WqZPxjE3059Qql19Bf3nOamzKucD0rPHxP1i2o0o982LR3s4yLU8-ZY2nPGRL_YVVAH6EGqP-epdyAbRAtU72sEFREuuG7kXHc9zmWd6HuXJNOJSLwqeXQlI_ipi5UPgToTt0WKlR56Zzm6cMSkkaUShDLZjL61pIYyOVHCQBL4aa3VCR72rbp6LNnNaUrbR1fwFrrKs_KT2lP2zEYZX')"></div>
+</div>
+<span class="text-xs font-medium text-[#0B3B24]">Personalised Gifts</span>
+</a>
+<a class="flex flex-col items-center gap-2 group" href="#">
+<div class="w-16 h-16 rounded-full overflow-hidden border border-[#C5A059] p-0.5 group-hover:scale-105 transition-transform">
+<div class="w-full h-full bg-cover bg-center rounded-full" data-alt="An opulent glass perfume bottle with a faceted golden cap resting on a veined marble countertop, surrounded by scattered white jasmine petals and subtle warm backlighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBPYwyeHUmJGh0TUULQ3LIUNIPEzsfVd13rJNjhyQCF7ai4kplHFaAhY-2ZS342OS2vAWc7G6gA6Y_y1Bkzdk4EpAHyW-1o0sQa1JB-QTITB0802EVU77RJDimSNvEQxgPcO8fqQjLG8VJSVprodG7fW3sXu6KhxUffKVkv5zNkgBGgASmPz577GsdOvTc9Tg1bsRDn8QNbMm_M8sE1AmI7TUzFK_wq2pwZfvRkriSUYQ3dO999Byqw2QML7W91X3jdKfyGvJDE661X')"></div>
+</div>
+<span class="text-xs font-medium text-[#0B3B24]">Luxury Perfumes</span>
+</a>
+<a class="flex flex-col items-center gap-2 group" href="#">
+<div class="w-16 h-16 rounded-full overflow-hidden border border-[#C5A059] p-0.5 group-hover:scale-105 transition-transform">
+<div class="w-full h-full bg-cover bg-center rounded-full" data-alt="A hand-poured soy wax candle in a heavy amber glass jar, casting a warm flickering glow with delicate wisps of smoke rising against a dark, moody botanical backdrop." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDgvJ0HaHBcqAkOnH4XowL-BISYOP3e8t9scGyf_SXFrwtmcsiC2dz41lrW2J5BVNevoTsDPMjLWN8L7HzmmsgQg_g9mXjuBUf5yMgt_AZcVimSVBTcLZlIHqAk07U_0nbIGo-kliSQ1NCtuM_p3SGMjlUlo7eylFtJFBQlFgT7I59p6HUET4DykM62E6hdLSItu8LaXD5L26Jsu714UtxpMJFgYLBRXpGqDo0JWqbYfB3-A2IsOr3jddGzVfE6h4xs_k6I627WSFxh')"></div>
+</div>
+<span class="text-xs font-medium text-[#0B3B24]">Scented Candles</span>
+</a>
+<a class="flex flex-col items-center gap-2 group" href="#">
+<div class="w-16 h-16 rounded-full overflow-hidden border border-[#C5A059] p-0.5 group-hover:scale-105 transition-transform">
+<div class="w-full h-full bg-cover bg-center rounded-full" data-alt="A sleek delivery vehicle interior showcasing pristine luxury gift boxes secured with velvet padding, conveying rapid and careful express courier service in a metropolitan city." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBOF7j-uHe0CmRGJYMuAk6rias2eRxkgWSEcms-x6NTSEwYQkRvhc-6GDDhqe8GZXQo4cGp-60hmYZIeLvgz5SDlaYNdoDnuBufH7mLOz7A6PqYgWP0bFe3cBgnwjM4H5SVqV_FFWXJRSuPdLJuO5DB9nHpmm5v99qFVEDu5Dnr_Wnx5BuhaWayRR6quGmWldgcd5IhWe_YWAzHkaXWPWi9yaBJwAdCGKo2kkjrzbUhp6Gm17JJomXsOGCziaQIkHHypIVWfjI3S_li')"></div>
+</div>
+<span class="text-xs font-medium text-[#0B3B24]">Same-Day Delivery</span>
+</a>
+</div>
+</nav>
+<!-- Hero Banner -->
+<section class="bg-[#0B3B24] text-[#FAF8F5] relative overflow-hidden py-20 md:py-32">
+<div class="absolute inset-0 opacity-10 bg-cover bg-center" data-alt="An expansive macro texture shot of heavy British botanical wallpaper featuring deep green fern fronds and gilded botanical illustrations, illuminated with soft ambient studio lighting." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB0dLy5qosDe_txrZiLcsGz2DtIHg_2f8f4tufnJwBh9_FNNh55pYgxlFv280XXV1d6x5xOGAwK5RFdm7ggALtcLfIkKzloiK3eUVAY361eexlnCfcqgDTyhJsv65hvMLj5L-ogwd2mtpIG58gSluLq5dfDGKIYMJdP4f9NqiG5ozpVYpBu9whrUYKAQdstRUymy_TFtgbU9FjZWyBInJwuSjLNJAu7mgVxBdmWi5LorPXTV6da0Ezg6Z9T-qeWkPbmgTuh-tqhJHEH')"></div>
+<div class="max-w-[1440px] mx-auto px-gutter md:px-margin relative z-10 grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+<div class="md:col-span-7 space-y-6">
+<div class="inline-flex items-center gap-2 bg-[#C5A059]/20 border border-[#C5A059] px-3 py-1 rounded-full text-xs tracking-widest text-[#E9C176] uppercase font-semibold">
+<span class="material-symbols-outlined text-sm">workspace_premium</span>
+          Bespoke Concierge Gifting
+        </div>
+<h1 class="font-display-hero text-4xl md:text-6xl text-[#FAF8F5] leading-tight">The Art of Thoughtful Gifting</h1>
+<p class="font-body-lg text-[#EAE5DC] max-w-xl font-light">Elevate moments of connection with heirloom-quality hampers, rare botanicals, and personalized curation tailored for the discerning recipient.</p>
+<div class="flex flex-wrap items-center gap-4 pt-4">
+<a class="bg-[#0B3B24] border border-[#C5A059] text-[#FAF8F5] hover:bg-[#072718] px-8 py-4 rounded font-medium transition-all shadow-lg flex items-center gap-2" href="#">
+            Explore Hampers
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+<a class="bg-transparent border border-[#C5A059] text-[#FAF8F5] hover:bg-[#C5A059]/10 px-8 py-4 rounded font-medium transition-all" href="#">
+            Build Your Own Box
+          </a>
+</div>
+</div>
+<div class="md:col-span-5 relative">
+<div class="relative rounded-lg overflow-hidden border-2 border-[#C5A059]/40 shadow-2xl aspect-[4/5]">
+<div class="w-full h-full bg-cover bg-center" data-alt="A magnificent luxury gift hamper staged on a dark walnut table, containing crystal glassware, organic honey jars, botanical soaps, and an elegant handwritten card. Soft directional lighting casts refined shadows across the warm cream packaging." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBni6bPUp_n6s7ck4A6kuEHXhS6l4AsymXHGJiwNDEeWGAym1P2GfgY7Se6rifHGvcu90ptWNAeAMv2ZxZTgyTbcr9DU-rZLbuyLDUGj4XPouLoqMLDtdu72MRDZELgk2y0_6mDZgI57StdCBjUAM_Tg6wKjQVVV4BJPBqZ8Z5SS4-AJLTwP78mAtTxkuviNNbYkf0m5n6j77NSeFYdjzd9HHkyOYoWSLZNU_iyL5Hu721Reov8h8-1LzFFF3k8c1h40LHrQau-wICE')"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Luxury Brands Section -->
+<section class="py-20 max-w-[1440px] mx-auto px-gutter md:px-margin">
+<div class="text-center max-w-2xl mx-auto mb-12 space-y-3">
+<span class="text-xs uppercase tracking-[0.2em] text-[#775a19] font-bold">Curated Partnerships</span>
+<h2 class="font-headline-lg text-[#0B3B24]">Featured Luxury Brands</h2>
+<p class="text-[#414943] text-sm">Hand-selected iconic houses known for exceptional craftsmanship and uncompromising purity.</p>
+</div>
+<!-- Brand Tabs -->
+<div class="flex justify-center items-center gap-4 md:gap-8 mb-12 border-b border-[#EAE5DC] pb-4 overflow-x-auto">
+<button class="font-headline-md text-[#0B3B24] border-b-2 border-[#0B3B24] pb-2 px-2 whitespace-nowrap">Forest Essentials</button>
+<button class="font-headline-md text-[#717972] hover:text-[#0B3B24] pb-2 px-2 whitespace-nowrap transition-colors">Lindt</button>
+<button class="font-headline-md text-[#717972] hover:text-[#0B3B24] pb-2 px-2 whitespace-nowrap transition-colors">Jo Malone</button>
+<button class="font-headline-md text-[#717972] hover:text-[#0B3B24] pb-2 px-2 whitespace-nowrap transition-colors">Bateel</button>
+</div>
+<!-- Brand Banner & Product Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+<!-- Product Card 1 -->
+<div class="bg-white rounded border border-[#EAE5DC] overflow-hidden group flex flex-col justify-between hover:shadow-xl transition-all duration-300">
+<div class="relative aspect-[4/5] overflow-hidden bg-[#FAF8F5]">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A pristine glass jar of Soundarya Radiance Cream with gold accents, set against a warm ivory background with scattered marigold petals and soft morning light." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAdijK5TlM17dHFBGxWjeGwD9uYbTE0omD9S5Z09FqfQ_An5x_Yuh9OrtqavlXCRzHJWFIYNqXAyuazMj0CQLPns_d-LHbNYG0oLl-P5Zml0_IjOuteq4vbo9AgE8lopmk7m6NOKgq_SUFF3f4LrNUrtwiCEezKdtu0tHd-y9KMCoEXsf5pxkfPXhWm2SNFWmZf8pzXvdF7T4rXK0e0pNEYgHcoEazRRYsSQ2xX0inTBp6Gz1zsa2U7OgfB5CumK0adz2X3i3rCgg6K')"></div>
+<span class="absolute top-3 left-3 bg-[#0B3B24] text-white text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">Bestseller</span>
+</div>
+<div class="p-5 space-y-3 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-1 text-[#775a19] text-xs mb-1">
+<span class="material-symbols-outlined text-sm font-variation-settings:'FILL'1">star</span>
+<span class="font-semibold">4.9</span> (128 reviews)
+            </div>
+<h3 class="font-headline-sm text-[#121c2a] text-lg">Soundarya Radiance Cream</h3>
+<p class="text-xs text-[#717972] mt-1">Infused with 24K gold and potent Ayurvedic herbs.</p>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-[#EAE5DC]">
+<span class="font-price-lg text-[#0B3B24]">₹4,850</span>
+<button class="bg-[#0B3B24] text-white text-xs font-semibold px-4 py-2 rounded hover:bg-[#072718] transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">add</span>
+              Add to Hamper
+            </button>
+</div>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="bg-white rounded border border-[#EAE5DC] overflow-hidden group flex flex-col justify-between hover:shadow-xl transition-all duration-300">
+<div class="relative aspect-[4/5] overflow-hidden bg-[#FAF8F5]">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="An ornate glass bottle of pure rosewater with a vintage spray atomizer nozzle, placed elegantly on a rustic stone ledge with fresh pink damask rose stems." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA0YeZj77NVCOU46wz3bojtV6R37m1YxnxjWhqpaXwMdy3D8BSbvsRTGLvbxTy819u0TP_GPGjUR7_ROxAXeubLcWo0JPxwRJcK_YZvr_Dnw19nLi3qa_ayNnzyzSi1y6qPKtwjqUv3SobMImyKO37dwR-wt1FLstwAjxcaeRPvK9b5XZpdZsfucVSB7H8A6Syyzi2VxiTbRkNAH7JOcJKsnQwAnyMw5i3PaFiDEmp2bBgnnkhM-De8q593ch-dx696RL2HeiZVoavW')"></div>
+<span class="absolute top-3 left-3 bg-[#775a19] text-white text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">Pure Floral</span>
+</div>
+<div class="p-5 space-y-3 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-1 text-[#775a19] text-xs mb-1">
+<span class="material-symbols-outlined text-sm font-variation-settings:'FILL'1">star</span>
+<span class="font-semibold">4.8</span> (94 reviews)
+            </div>
+<h3 class="font-headline-sm text-[#121c2a] text-lg">Pure Rosewater</h3>
+<p class="text-xs text-[#717972] mt-1">Steam-distilled from Kannauj roses for deep hydration.</p>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-[#EAE5DC]">
+<span class="font-price-lg text-[#0B3B24]">₹1,675</span>
+<button class="bg-[#0B3B24] text-white text-xs font-semibold px-4 py-2 rounded hover:bg-[#072718] transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">add</span>
+              Add to Hamper
+            </button>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="bg-white rounded border border-[#EAE5DC] overflow-hidden group flex flex-col justify-between hover:shadow-xl transition-all duration-300">
+<div class="relative aspect-[4/5] overflow-hidden bg-[#FAF8F5]">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A luxury gift set of botanical body wash and lotion bottles arranged inside a lined forest green box with gold debossed branding." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDhLXMQTtO92KwK4HgqNvmKdv0t5BA5jmIq0vTSPUQl6jFvPTMLDWKezsGHZNzxZZHuIfoKAYDbe3gsfI1kd95t5PdEbB7Ume61n4tpwfehtJwECkRvL6swwlOdjrBZ9H5dyteSDymsm7EjJmTS69ca7EDR7houTYSRT_MUE7KZolSIGg7WdA36qXTW4OMXZCcgsZv1UJXQm9ZRSodaC4eJJqFNuNx7rV1qRjyVxqlKn6dE8pWyB3rdOoKMCY8iJfcr3k60ToEnOz1d')"></div>
+<span class="absolute top-3 left-3 bg-[#0B3B24] text-white text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">Gift Edit</span>
+</div>
+<div class="p-5 space-y-3 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-1 text-[#775a19] text-xs mb-1">
+<span class="material-symbols-outlined text-sm font-variation-settings:'FILL'1">star</span>
+<span class="font-semibold">5.0</span> (62 reviews)
+            </div>
+<h3 class="font-headline-sm text-[#121c2a] text-lg">Body Care Set</h3>
+<p class="text-xs text-[#717972] mt-1">Sandalwood and orange peel nourishing ritual duo.</p>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-[#EAE5DC]">
+<span class="font-price-lg text-[#0B3B24]">₹3,450</span>
+<button class="bg-[#0B3B24] text-white text-xs font-semibold px-4 py-2 rounded hover:bg-[#072718] transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">add</span>
+              Add to Hamper
+            </button>
+</div>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="bg-white rounded border border-[#EAE5DC] overflow-hidden group flex flex-col justify-between hover:shadow-xl transition-all duration-300">
+<div class="relative aspect-[4/5] overflow-hidden bg-[#FAF8F5]">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A velvet-textured decorative scented candle in a brass-rimmed glass vessel, emitting a warm golden flame with subtle botanical smoke trails." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCvNnSmbYhlj82K_sYPM_Ny7Yj8cj6tjSIfrH6J_w4hJmDrjoYr44Xaev8ZRDnP5P-91_QFkNNhh8VIFnoXKWIkUdrX8L1GqRW23F9PTwkJzL5Xa3Najs4fzNl-PeBGfhThuT1Fped6ghdeBeFR-2def2tFKYrgY3cX21LZ9yKpCDzHVpecLr474QM6joDJmLprmiTa4eF2yDhaJCImX_mqEtUGRgqAtqGJztbHtAgUeUzOft0gMw0JkiTBBYDzdjhJ9Iiz36MV1iRb')"></div>
+<span class="absolute top-3 left-3 bg-[#775a19] text-white text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">Signature</span>
+</div>
+<div class="p-5 space-y-3 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-1 text-[#775a19] text-xs mb-1">
+<span class="material-symbols-outlined text-sm font-variation-settings:'FILL'1">star</span>
+<span class="font-semibold">4.9</span> (81 reviews)
+            </div>
+<h3 class="font-headline-sm text-[#121c2a] text-lg">Velvet Candle</h3>
+<p class="text-xs text-[#717972] mt-1">Hand-poured soy wax scented with smoky amber and jasmine.</p>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-[#EAE5DC]">
+<span class="font-price-lg text-[#0B3B24]">₹2,100</span>
+<button class="bg-[#0B3B24] text-white text-xs font-semibold px-4 py-2 rounded hover:bg-[#072718] transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">add</span>
+              Add to Hamper
+            </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Make Your Own Hamper 3-Step Banner -->
+<section class="bg-[#F5F1EB] border-y border-[#EAE5DC] py-20">
+<div class="max-w-[1440px] mx-auto px-gutter md:px-margin">
+<div class="text-center max-w-2xl mx-auto mb-16 space-y-3">
+<span class="text-xs uppercase tracking-[0.2em] text-[#775a19] font-bold">Bespoke Experience</span>
+<h2 class="font-headline-lg text-[#0B3B24]">Make Your Own Hamper</h2>
+<p class="text-[#414943] text-sm">Craft a personalized gesture in three effortless steps for your loved ones or corporate clients.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative mb-12">
+<!-- Step 1 -->
+<div class="bg-white p-8 rounded border border-[#EAE5DC] shadow-sm relative group hover:border-[#775a19] transition-all">
+<div class="absolute -top-4 left-8 bg-[#0B3B24] text-[#FAF8F5] w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">1</div>
+<h3 class="font-headline-sm text-[#0B3B24] text-xl mt-2 mb-3">Select Luxury Box</h3>
+<p class="text-sm text-[#414943] leading-relaxed">Choose from our signature forest green velvet trunks, embossed leatherette cases, or sustainable wooden keepsake chests.</p>
+</div>
+<!-- Step 2 -->
+<div class="bg-white p-8 rounded border border-[#EAE5DC] shadow-sm relative group hover:border-[#775a19] transition-all">
+<div class="absolute -top-4 left-8 bg-[#0B3B24] text-[#FAF8F5] w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">2</div>
+<h3 class="font-headline-sm text-[#0B3B24] text-xl mt-2 mb-3">Choose Curated Items</h3>
+<p class="text-sm text-[#414943] leading-relaxed">Handpick artisanal chocolates, rare teas, organic skincare, and bespoke keepsakes from our master catalog.</p>
+</div>
+<!-- Step 3 -->
+<div class="bg-white p-8 rounded border border-[#EAE5DC] shadow-sm relative group hover:border-[#775a19] transition-all">
+<div class="absolute -top-4 left-8 bg-[#0B3B24] text-[#FAF8F5] w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">3</div>
+<h3 class="font-headline-sm text-[#0B3B24] text-xl mt-2 mb-3">Add Personalised Message</h3>
+<p class="text-sm text-[#414943] leading-relaxed">Conclude with a handwritten calligraphy note on heavy deckle-edge stationery sealed with authentic molten wax.</p>
+</div>
+</div>
+<div class="text-center">
+<a class="inline-flex items-center gap-2 bg-[#0B3B24] text-[#FAF8F5] hover:bg-[#072718] px-10 py-4 rounded font-medium shadow-lg transition-all border border-[#C5A059]" href="#">
+          Start Building Your Hamper
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+</section>
+<!-- Trending Hampers Grid -->
+<section class="py-20 max-w-[1440px] mx-auto px-gutter md:px-margin">
+<div class="text-center max-w-2xl mx-auto mb-12 space-y-3">
+<span class="text-xs uppercase tracking-[0.2em] text-[#775a19] font-bold">Curated Collections</span>
+<h2 class="font-headline-lg text-[#0B3B24]">Trending Hampers</h2>
+<p class="text-[#414943] text-sm">Our most coveted gift boxes, meticulously prepared for celebrations and milestones.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Hamper Card 1 -->
+<div class="bg-white rounded border border-[#EAE5DC] overflow-hidden group flex flex-col justify-between hover:shadow-xl transition-all duration-300">
+<div class="relative aspect-[4/5] overflow-hidden bg-[#FAF8F5]">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A grand luxury hamper box filled with artisan tea caddies, gold-rimmed teacups, honey jars, and fresh orchids, staged against a warm cream backdrop with dramatic soft shadows." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC7U4rR9yvqVJ5w4qwAgycVyhGNqNjbmIk8py1XUvQxuAKfkrZrny13rw_lYYknZv655qxNDDFYXb4KRojiYGPYjA01YKsCoHT72_iyg6poy2HekyAfGQBeGg3erXIF-1o08QmTeaNr1IrqccnA3r3atHaLGirIJ1g4xcI7HYed9tyNlvAogW_uHlCF0UshAxpwSgnoNfqjatp-KETjpQaKVma0Wf1W9tb28kuh-wNeCMAIWtVwIbdtpw5Qbt6EsPq7gDUoS1--qn5z')"></div>
+<span class="absolute top-3 left-3 bg-[#775a19] text-white text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">Bestseller</span>
+</div>
+<div class="p-6 space-y-3 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-sm text-[#121c2a] text-xl">The Royal Heritage Hamper</h3>
+<p class="text-xs text-[#717972] mt-1">Includes silver-plated tea strainer, Darjeeling first flush tea, and artisanal shortbread cookies.</p>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-[#EAE5DC]">
+<span class="font-price-lg text-[#0B3B24]">₹6,950</span>
+<button class="bg-[#0B3B24] text-white text-xs font-semibold px-4 py-2 rounded hover:bg-[#072718] transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">shopping_bag</span>
+              Quick Add
+            </button>
+</div>
+</div>
+</div>
+<!-- Hamper Card 2 -->
+<div class="bg-white rounded border border-[#EAE5DC] overflow-hidden group flex flex-col justify-between hover:shadow-xl transition-all duration-300">
+<div class="relative aspect-[4/5] overflow-hidden bg-[#FAF8F5]">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="An opulent gift box containing dark chocolate truffles, a bottle of sparkling elderflower pressé, and hand-rolled beeswax candles on a dark emerald green silk runner." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDczSpQJHTsN_sr0rh9pHZKhY2d-ivMl01RdMahtiBvX_V33nL3hRLBNfUTSzvTkl4pOtnAKw5wGlLTCPpnFTLUSKFgjT8DSKmhSjm703nDkep889ULsqhY4HxGKXYY0TqpWJ0p1j2EmPlV84WZ7r3i4YfPEYJPqegXrMM4aBPgyDYu75CeTngoMxVff-pA9Od8-cKEJUreujme_pA0Xnerf9nXQev8ETYVyQxsrG5KoXJVUXm_mBra8dqmB908Db6PUYQT3rTY_6TM')"></div>
+<span class="absolute top-3 left-3 bg-[#0B3B24] text-white text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">Limited Edition</span>
+</div>
+<div class="p-6 space-y-3 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-sm text-[#121c2a] text-xl">Botanical Serenade Box</h3>
+<p class="text-xs text-[#717972] mt-1">Features organic botanical oils, jasmine soy candle, and single-origin chocolate bars.</p>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-[#EAE5DC]">
+<span class="font-price-lg text-[#0B3B24]">₹5,200</span>
+<button class="bg-[#0B3B24] text-white text-xs font-semibold px-4 py-2 rounded hover:bg-[#072718] transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">shopping_bag</span>
+              Quick Add
+            </button>
+</div>
+</div>
+</div>
+<!-- Hamper Card 3 -->
+<div class="bg-white rounded border border-[#EAE5DC] overflow-hidden group flex flex-col justify-between hover:shadow-xl transition-all duration-300">
+<div class="relative aspect-[4/5] overflow-hidden bg-[#FAF8F5]">
+<div class="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500" data-alt="A festive corporate luxury hamper featuring premium dry fruits in gold tins, a personalized leather diary, and an exquisite fountain pen set inside an emerald green presentation chest." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCfaip3aW-mH4DADJn0pRXbw4gEMYpREwo43oVcLw2Rpoebv-6AFb-a_NAk_yOfI1mKd00TODspG2D2-_YIuHcCmocrf9u9z0Bkf6LCNp8cle8ZmFtG29VT-nM57-9lSsHhDOHjbUe9AbmAli4z_7rDuDspHdn_b4bgzTIqZSE3Vck6wTErk0JlWoxnViqr75nhOTgwFqLF57g4vYi-ioX1fcV0meUUtAi42VSbuaP-RZ9NjXgagtjoUCYDbBJDZWtYXzIyHzoUrrKg')"></div>
+<span class="absolute top-3 left-3 bg-[#775a19] text-white text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">Corporate Favorite</span>
+</div>
+<div class="p-6 space-y-3 flex-1 flex flex-col justify-between">
+<div>
+<h3 class="font-headline-sm text-[#121c2a] text-xl">Executive Elegance Suite</h3>
+<p class="text-xs text-[#717972] mt-1">Curated specifically for distinguished corporate milestones and festive gifting.</p>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-[#EAE5DC]">
+<span class="font-price-lg text-[#0B3B24]">₹8,400</span>
+<button class="bg-[#0B3B24] text-white text-xs font-semibold px-4 py-2 rounded hover:bg-[#072718] transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">shopping_bag</span>
+              Quick Add
+            </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Trust Badges Section -->
+<section class="bg-white border-t border-[#EAE5DC] py-16">
+<div class="max-w-[1440px] mx-auto px-gutter md:px-margin grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+<div class="flex flex-col items-center space-y-3 p-4">
+<div class="w-12 h-12 rounded-full bg-[#0B3B24]/10 flex items-center justify-center text-[#0B3B24]">
+<span class="material-symbols-outlined text-2xl">local_shipping</span>
+</div>
+<h4 class="font-headline-sm text-[#0B3B24] text-lg">Pan-India Express Delivery</h4>
+<p class="text-xs text-[#717972]">Reliable temperature-controlled and timely doorstep delivery across 500+ cities.</p>
+</div>
+<div class="flex flex-col items-center space-y-3 p-4">
+<div class="w-12 h-12 rounded-full bg-[#0B3B24]/10 flex items-center justify-center text-[#0B3B24]">
+<span class="material-symbols-outlined text-2xl">verified</span>
+</div>
+<h4 class="font-headline-sm text-[#0B3B24] text-lg">100% Authentic Brands</h4>
+<p class="text-xs text-[#717972]">Direct partnerships with luxury heritage houses ensuring certified authenticity.</p>
+</div>
+<div class="flex flex-col items-center space-y-3 p-4">
+<div class="w-12 h-12 rounded-full bg-[#0B3B24]/10 flex items-center justify-center text-[#0B3B24]">
+<span class="material-symbols-outlined text-2xl">support_agent</span>
+</div>
+<h4 class="font-headline-sm text-[#0B3B24] text-lg">Bespoke Gift Concierge</h4>
+<p class="text-xs text-[#717972]">Dedicated gifting advisors available 24/7 to personalize every detail.</p>
+</div>
+<div class="flex flex-col items-center space-y-3 p-4">
+<div class="w-12 h-12 rounded-full bg-[#0B3B24]/10 flex items-center justify-center text-[#0B3B24]">
+<span class="material-symbols-outlined text-2xl">lock</span>
+</div>
+<h4 class="font-headline-sm text-[#0B3B24] text-lg">Secure Checkout</h4>
+<p class="text-xs text-[#717972]">Encrypted payment gateways supporting all major cards, UPI, and net banking.</p>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-[#0B3B24] text-white py-16">
+<div class="max-w-[1440px] mx-auto px-gutter md:px-margin space-y-12">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-12 pb-12 border-b border-white/10">
+<div class="md:col-span-5 space-y-4">
+<h3 class="font-headline-lg text-[#FAF8F5]">Atelier Botanica</h3>
+<p class="text-sm text-[#EAE5DC] max-w-sm font-light">Redefining luxury gifting through intentional craftsmanship, rare botanical selections, and unforgettable sensory ceremonies.</p>
+</div>
+<div class="md:col-span-3 space-y-4">
+<h4 class="font-headline-sm text-sm uppercase tracking-wider text-[#C5A059]">Explore</h4>
+<ul class="space-y-2 text-sm text-[#EAE5DC]">
+<li><a class="hover:text-white transition-colors" href="#">Bespoke Concierge</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Heritage</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Private Client</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Sustainability</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Contact</a></li>
+</ul>
+</div>
+<div class="md:col-span-4 space-y-4">
+<h4 class="font-headline-sm text-sm uppercase tracking-wider text-[#C5A059]">Newsletter Subscription</h4>
+<p class="text-xs text-[#EAE5DC]">Receive invitations to private collection releases and seasonal curation catalogs.</p>
+<div class="flex gap-2">
+<input class="bg-white/10 border border-white/20 rounded px-4 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-[#C5A059] flex-1" placeholder="Enter your email address" type="email"/>
+<button class="bg-[#C5A059] text-[#0B3B24] font-semibold px-5 py-2 rounded text-xs hover:bg-[#e9c176] transition-colors">Subscribe</button>
+</div>
+</div>
+</div>
+<div class="flex flex-col md:flex-row items-center justify-between text-xs text-[#EAE5DC] gap-4">
+<p>© 2024 Atelier Botanica. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-white transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-white transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-white transition-colors" href="#">Shipping &amp; Returns</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

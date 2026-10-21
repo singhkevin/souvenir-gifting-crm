@@ -54,23 +54,23 @@ export function StorefrontCatalog({
   const href = (patch: Parameters<typeof catalogueHref>[3] = {}) => catalogueHref(basePath, filters, bounds, patch)
   const linkClass = (on: boolean) =>
     `flex items-center justify-between gap-3 border-l-2 py-1.5 pl-3 text-sm ${
-      on ? 'border-[#715a3e] font-semibold text-[#22180b]' : 'border-transparent text-[#4d453e] hover:text-[#22180b]'
+      on ? 'border-saffron font-semibold text-ink' : 'border-transparent text-ink-secondary hover:text-ink'
     }`
 
   const brandHref = (brand: Brand) => (brandMode === 'page' ? brandPath(brand, brands) : href({ brand: brand.id }))
 
   return (
-    <section id="catalog" className={tone === 'retail' ? 'scroll-mt-28 border-t border-[#eadfd4] bg-[#fff8f4]' : 'scroll-mt-36 border-t border-[#d0c5bb] bg-[#fff8f4]'}>
-      <div className={tone === 'retail' ? 'mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8' : 'mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8'}>
+    <section id="catalog" className="scroll-mt-28 border-t border-cream-border bg-cream">
+      <div className={tone === 'retail' ? 'store-container py-12 sm:py-16 lg:py-20' : 'store-container py-8'}>
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className={tone === 'retail' ? 'font-serif text-[1.75rem] leading-tight tracking-tight text-[#22180b] sm:text-4xl' : 'font-serif text-[26px] leading-8 text-[#22180b] sm:text-[28px] sm:leading-9'}>{heading}</h2>
+            <h2 className={tone === 'retail' ? 'store-section-title' : 'font-serif text-[26px] leading-8 text-ink sm:text-[28px] sm:leading-9'}>{heading}</h2>
             {intro ? (
-              <p className={tone === 'retail' ? 'mt-2 max-w-xl text-sm leading-6 text-[#4d453e]' : 'mt-1 max-w-xl text-sm text-[#4d453e]'}>{intro}</p>
+              <p className={tone === 'retail' ? 'mt-2 max-w-xl text-sm leading-6 text-ink-secondary' : 'mt-1 max-w-xl text-sm text-ink-secondary'}>{intro}</p>
             ) : null}
           </div>
-          <p className="text-sm text-[#715a3e]">
-            <span className="font-semibold text-[#22180b]">{filtered.length}</span>{' '}
+          <p className="font-mono text-sm text-gold-deep">
+            <span className="font-semibold text-ink">{filtered.length}</span>{' '}
             {filtered.length === 1 ? 'product' : 'products'}
           </p>
         </div>
@@ -86,13 +86,15 @@ export function StorefrontCatalog({
             <input type="hidden" name="priceMax" value={filters.priceMax} />
           ) : null}
           {filters.sort !== 'name' ? <input type="hidden" name="sort" value={filters.sort} /> : null}
+          <label htmlFor="catalog-search" className="sr-only">Search gifts</label>
           <input
+            id="catalog-search"
             name="q"
             defaultValue={filters.q}
             placeholder="Search gifts, kits, brands"
-            className="min-w-0 flex-1 rounded border border-[#d0c5bb] bg-white px-3 py-2 text-sm text-[#22180b] outline-none focus:border-[#715a3e]"
+            className="h-11 min-w-0 flex-1 rounded border border-ink-tertiary bg-cream-card px-3 text-[15px] text-ink outline-none"
           />
-          <button type="submit" className="rounded bg-[#382c1e] px-4 py-2 text-sm font-semibold text-white">
+          <button type="submit" className="min-h-11 rounded bg-saffron px-4 text-sm font-bold text-charcoal hover:bg-saffron-hover">
             Search
           </button>
         </form>
@@ -100,8 +102,8 @@ export function StorefrontCatalog({
         <div className="grid gap-8 lg:grid-cols-[14rem_minmax(0,1fr)]">
           <aside className="space-y-6">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#22180b]">Category</p>
-              <nav className="mt-2 border-t border-[#d0c5bb] pt-2">
+              <p className="store-eyebrow">Category</p>
+              <nav className="mt-2 border-t border-cream-border pt-2">
                 <Link href={href({ category: '' })} className={linkClass(!filters.category)}>
                   All gifts
                 </Link>
@@ -115,8 +117,8 @@ export function StorefrontCatalog({
 
             {brands.length ? (
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#22180b]">Brand</p>
-                <nav className="mt-2 border-t border-[#d0c5bb] pt-2">
+                <p className="store-eyebrow">Brand</p>
+                <nav className="mt-2 border-t border-cream-border pt-2">
                   <Link href={brandMode === 'page' ? '/catalogue' : href({ brand: '' })} className={linkClass(!filters.brand)}>
                     All brands
                   </Link>
@@ -130,8 +132,8 @@ export function StorefrontCatalog({
             ) : null}
 
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#22180b]">Price</p>
-              <nav className="mt-2 border-t border-[#d0c5bb] pt-2">
+              <p className="store-eyebrow">Price</p>
+              <nav className="mt-2 border-t border-cream-border pt-2">
                 <Link href={href({ priceMin: null, priceMax: null })} className={linkClass(!window.active)}>
                   Any price
                 </Link>
@@ -152,8 +154,8 @@ export function StorefrontCatalog({
             </div>
 
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#22180b]">Occasion</p>
-              <nav className="mt-2 border-t border-[#d0c5bb] pt-2">
+              <p className="store-eyebrow">Occasion</p>
+              <nav className="mt-2 border-t border-cream-border pt-2">
                 <Link href={href({ occasion: '' })} className={linkClass(!filters.occasion)}>
                   Any occasion
                 </Link>
@@ -166,7 +168,7 @@ export function StorefrontCatalog({
             </div>
 
             {active ? (
-              <Link href={basePath} className="inline-flex text-xs font-bold uppercase tracking-[0.14em] text-[#715a3e]">
+              <Link href={basePath} className="inline-flex min-h-11 items-center font-mono text-xs font-medium tracking-[0.08em] text-gold-deep uppercase">
                 Clear filters
               </Link>
             ) : null}
@@ -174,7 +176,7 @@ export function StorefrontCatalog({
 
           <div>
             {visible.length === 0 ? (
-              <p className="py-16 text-center text-sm text-[#4d453e]">No gifts match these filters.</p>
+              <p className="py-16 text-center text-sm text-ink-secondary">No gifts match these filters.</p>
             ) : (
               <div className={tone === 'retail' ? 'grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4' : 'grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4'}>
                 {visible.map((product) => (
@@ -191,7 +193,7 @@ export function StorefrontCatalog({
             )}
             {!active && limit && filtered.length > visible.length ? (
               <div className="mt-6 text-center">
-                <Link href="/catalogue" className="text-sm font-semibold text-[#715a3e] hover:text-[#22180b]">
+                <Link href="/catalogue" className="text-sm font-semibold text-gold-deep hover:text-ink">
                   View all {filtered.length} products
                 </Link>
               </div>

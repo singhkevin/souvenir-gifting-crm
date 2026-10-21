@@ -1,6 +1,5 @@
-import Link from 'next/link'
-import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { RetailHero } from '@/components/site/retail-hero'
+import { Reveal } from '@/components/site/reveal'
 import { BrandLogoRow, ProductSection, RetailOccasionBento } from '@/components/site/stitch-sections'
 import { StorefrontCatalog } from '@/components/site/storefront-catalog'
 import { readCatalogueFilters } from '@/lib/catalogue/catalogue-query'
@@ -25,20 +24,18 @@ export async function PublicHome({
   basePath?: string
 }) {
   const filters = readCatalogueFilters(searchParams)
-  const loaded = await getPublicCatalogueProducts()
-  const preview = process.env.STOREFRONT_UI_PREVIEW === '1' && loaded.length === 0
-  const products = loaded
-  const loadedBrands = await getPublicBrands()
-  const brands = preview
-    ? [
-        { id: '11111111-1111-4111-8111-111111111111', name: 'Souvenir', logo_url: '/logo.png' },
-        { id: '22222222-2222-4222-8222-222222222222', name: 'Field', logo_url: null },
-      ]
-    : loadedBrands
+  const products = await getPublicCatalogueProducts()
+  const brands = await getPublicBrands()
   const categories = await getPublicCategories()
 
   const heroSlides = retailHeroSlides(products).map((slide) =>
-    slide.map((product) => ({ id: product.id, name: product.name, image_url: product.image_url })),
+    slide.map((product) => ({
+      id: product.id,
+      name: product.name,
+      image_url: product.image_url,
+      price: product.price,
+      sku: product.sku,
+    })),
   )
   const bestsellers = withImage(curateTrendingProducts(products, 5)).slice(0, 5)
   const under999 = [...products]
@@ -54,46 +51,58 @@ export async function PublicHome({
   const festive = withImage(festivePool).slice(0, 4)
 
   return (
-    <div className="bg-[#fff8f4] text-[#221a10]">
+    <div className="bg-cream text-ink">
       <RetailHero slides={heroSlides} />
 
-      <RetailOccasionBento products={products} priceOf={storePrice} />
+      <Reveal>
+        <RetailOccasionBento products={products} priceOf={storePrice} />
+      </Reveal>
 
-      <ProductSection
-        eyebrow="Most requested"
-        title="Corporate bestsellers"
-        actionHref="/catalogue?sort=newest"
-        action="View all"
-        products={bestsellers}
-        priceOf={storePrice}
-        columns="lg:grid-cols-5"
-        tone="retail"
-      />
+      <Reveal>
+        <ProductSection
+          numeral="02"
+          eyebrow="Most requested"
+          title="Corporate bestsellers"
+          actionHref="/catalogue?sort=newest"
+          action="View all"
+          products={bestsellers}
+          priceOf={storePrice}
+          columns="lg:grid-cols-4"
+          tone="retail"
+        />
+      </Reveal>
 
-      <BrandLogoRow brands={brands} eyebrow="Merchandise partners" title="Authorised brand alliances" tone="retail" />
+      <Reveal>
+        <BrandLogoRow numeral="03" brands={brands} eyebrow="Merchandise partners" title="Authorised brand alliances" tone="retail" />
+      </Reveal>
 
-      <ProductSection
-        eyebrow="Everyday"
-        title="Merchandise under ₹999"
-        actionHref="/catalogue?priceMax=998"
-        action="View all"
-        products={underRail}
-        priceOf={storePrice}
-        columns="lg:grid-cols-6"
-        tone="retail"
-      />
+      <Reveal>
+        <ProductSection
+          numeral="04"
+          eyebrow="Everyday"
+          title="Merchandise under ₹999"
+          actionHref="/catalogue?priceMax=998"
+          action="View all"
+          products={underRail}
+          priceOf={storePrice}
+          columns="lg:grid-cols-4"
+          tone="retail"
+        />
+      </Reveal>
 
-      <ProductSection
-        eyebrow="Seasonal"
-        title="Diwali & bespoke festive hampers"
-        actionHref="/collections/festival-gifting"
-        action="View all"
-        products={festive}
-        priceOf={storePrice}
-        dark
-        columns="lg:grid-cols-4"
-        tone="retail"
-      />
+      <Reveal>
+        <ProductSection
+          eyebrow="Seasonal"
+          title="Diwali & bespoke festive hampers"
+          actionHref="/collections/festival-gifting"
+          action="View all"
+          products={festive}
+          priceOf={storePrice}
+          dark
+          columns="lg:grid-cols-4"
+          tone="retail"
+        />
+      </Reveal>
 
       <StorefrontCatalog
         products={products}
@@ -107,23 +116,6 @@ export async function PublicHome({
         limit={8}
         tone="retail"
       />
-
-      {preview ? (
-        <section className="bg-[#fff8f4] py-8">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 sm:px-6 lg:px-8">
-            <p className="text-sm text-[#4d453e]">In stock</p>
-            <AddToCartButton
-              maxQuantity={1}
-              label="Buy 1 sample"
-              product={{ id: '33333333-3333-4333-8333-333333333333', sku: 'BTL-1', name: 'Steel bottle', price: 450, image_url: '/site/home-festive-cane.webp' }}
-              className="inline-flex bg-[#382c1e] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
-            />
-            <Link href="/request-quote" className="inline-flex border border-[#d0c5bb] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#22180b]">
-              Request a Quote
-            </Link>
-          </div>
-        </section>
-      ) : null}
     </div>
   )
 }
