@@ -51,16 +51,30 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-[var(--color-primary)]">Contacts</h1>
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 border-b border-[#CCC5BD] pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="flex items-baseline gap-3">
+            <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+              Contacts
+            </h1>
+            <span className="font-mono text-xs text-[#7C766F]">[ {contactRows.length} ]</span>
+          </div>
+        </div>
       </div>
 
       {error && (
-        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">{error}</div>
+        <div className="p-3 bg-[#BA1A1A]/10 text-[#BA1A1A] text-xs rounded-none border border-[#BA1A1A]/40">{error}</div>
       )}
 
-      <ActionForm action={createContact} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3" resetOnSuccess>
-        <input name="full_name" required placeholder="Full name" className="rounded-lg border px-2 py-2" />
+      {/* Add Contact Form */}
+      <ActionForm action={createContact} className="grid gap-3 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-4 text-xs md:grid-cols-3" resetOnSuccess>
+        <input
+          name="full_name"
+          required
+          placeholder="Full name"
+          className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-sm text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+        />
         <MobileSheetSelect
           name="company_id"
           label="Company"
@@ -71,9 +85,22 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
             ...companyRows.map((c: CompanyOption) => ({ value: c.id, label: c.name })),
           ]}
         />
-        <input name="designation" placeholder="Designation" className="rounded-lg border px-2 py-2" />
-        <input name="email" type="email" placeholder="Email" className="rounded-lg border px-2 py-2" />
-        <input name="phone" placeholder="Phone" className="rounded-lg border px-2 py-2" />
+        <input
+          name="designation"
+          placeholder="Designation"
+          className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-sm text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-sm text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+        />
+        <input
+          name="phone"
+          placeholder="Phone"
+          className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-sm text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+        />
         <MobileSheetSelect
           name="contact_type"
           label="Contact type"
@@ -85,45 +112,185 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
             { value: 'other', label: 'Other' },
           ]}
         />
-        <SubmitButton className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] hover:text-[#FFFFFF] md:col-span-3" pendingLabel="Adding…">Add contact</SubmitButton>
+        <SubmitButton
+          className="rounded-none bg-[#1C1B1A] py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] hover:text-[#FCF9F2] md:col-span-3 transition-colors"
+          pendingLabel="Adding…"
+        >
+          Add contact
+        </SubmitButton>
       </ActionForm>
 
-      <form className="flex-1 max-w-md flex gap-2">
-        <input type="text" name="search" defaultValue={search} placeholder="Search by name or email..." className="flex-1 px-3 py-2 border rounded-md text-sm" />
-        <button type="submit" className="bg-gray-100 px-4 py-2 border rounded-md text-sm">Search</button>
+      {/* Search Toolbar */}
+      <form className="max-w-md flex gap-2">
+        <input
+          type="text"
+          name="search"
+          defaultValue={search}
+          placeholder="Search by name or email..."
+          className="flex-1 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-sm text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+        />
+        <button
+          type="submit"
+          className="rounded-none border border-[#1C1B1A] bg-transparent px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#1C1B1A] hover:bg-[#F6F3EC] transition-colors"
+        >
+          Search
+        </button>
       </form>
 
-      <div className="bg-white rounded-lg border overflow-x-auto">
-        <table className="w-full text-left text-sm min-w-[640px]">
-          <thead className="bg-gray-50 text-xs text-gray-500">
+      {/* Mobile Card List */}
+      <div className="space-y-3 md:hidden">
+        {contactRows.map((c: ContactRow) => {
+          const company = oneRelation(c.company)
+          return (
+            <div key={c.id} className="bg-[#FCF9F2] border border-[#CCC5BD] p-4 rounded-none space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="font-semibold text-sm text-[#1C1B1A]">{c.full_name}</div>
+                  {c.designation ? <div className="text-xs text-[#7C766F]">{c.designation}</div> : null}
+                </div>
+                {c.contact_type ? (
+                  <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] rounded-none border border-[#CCC5BD] text-[#4A4640] bg-transparent">
+                    {c.contact_type}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="text-xs space-y-1.5 pt-2 border-t border-[#CCC5BD] text-[#4A4640]">
+                {company ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Company:</span>
+                    <Link href={`/crm/companies/${company.id}`} className="inline-flex items-center gap-1.5 text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
+                      <CompanyAvatar name={company.name} logoPath={company.logo_path} size="sm" />
+                      <span>{company.name}</span>
+                    </Link>
+                  </div>
+                ) : null}
+                {c.email ? (
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Email:</span>{' '}
+                    <span className="font-mono text-xs text-[#1C1B1A]">{c.email}</span>
+                  </div>
+                ) : null}
+                {c.phone ? (
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Phone:</span>{' '}
+                    <span className="font-mono text-xs text-[#1C1B1A]">{c.phone}</span>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="pt-2 border-t border-[#CCC5BD] space-y-2">
+                <ActionForm action={updateContact} className="grid gap-1.5">
+                  <input type="hidden" name="id" value={c.id} />
+                  <input
+                    name="full_name"
+                    defaultValue={c.full_name}
+                    required
+                    className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-1 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                  />
+                  <MobileSheetSelect
+                    name="company_id"
+                    label="Company"
+                    defaultValue={c.company_id || company?.id || ''}
+                    options={companyRows.map((companyOption: CompanyOption) => ({
+                      value: companyOption.id,
+                      label: companyOption.name,
+                    }))}
+                  />
+                  <input
+                    name="email"
+                    defaultValue={c.email || ''}
+                    className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-1 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                  />
+                  <input
+                    name="phone"
+                    defaultValue={c.phone || ''}
+                    className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-1 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                  />
+                  <input
+                    name="designation"
+                    defaultValue={c.designation || ''}
+                    placeholder="Designation"
+                    className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-1 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                  />
+                  <MobileSheetSelect
+                    name="contact_type"
+                    label="Contact type"
+                    defaultValue={c.contact_type || 'primary'}
+                    options={[
+                      { value: 'primary', label: 'Primary' },
+                      { value: 'billing', label: 'Billing' },
+                      { value: 'procurement', label: 'Procurement' },
+                      { value: 'other', label: 'Other' },
+                    ]}
+                  />
+                  <SubmitButton
+                    className="inline-flex min-h-8 items-center justify-center rounded-none bg-[#1C1B1A] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] hover:text-[#FCF9F2] transition-colors"
+                    pendingLabel="Saving…"
+                  >
+                    Save
+                  </SubmitButton>
+                </ActionForm>
+                <ConfirmAction
+                  title="Delete contact?"
+                  confirmLabel="Delete"
+                  action={removeContact}
+                  hiddenFields={{ id: c.id }}
+                  description={<p>Contact: <span className="font-semibold">{c.full_name}</span></p>}
+                >
+                  Delete
+                </ConfirmAction>
+              </div>
+            </div>
+          )
+        })}
+        {contactRows.length === 0 && (
+          <div className="p-8 text-center text-sm text-[#7C766F] bg-[#FCF9F2] border border-[#CCC5BD] rounded-none">
+            No contacts in your assigned companies.
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block bg-[#FCF9F2] border border-[#CCC5BD] rounded-none overflow-x-auto">
+        <table className="w-full text-left text-sm min-w-[640px] border-collapse">
+          <thead className="bg-[#F6F3EC] border-b border-[#CCC5BD] text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
             <tr>
-              <th className="p-3">Name</th>
-              <th className="p-3">Company</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Phone</th>
-              <th className="p-3">Actions</th>
+              <th className="py-3 px-4 font-bold text-left">Name</th>
+              <th className="py-3 px-4 font-bold text-left">Company</th>
+              <th className="py-3 px-4 font-bold text-left">Email</th>
+              <th className="py-3 px-4 font-bold text-left">Phone</th>
+              <th className="py-3 px-4 font-bold text-left">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#1B2430]/35">
+          <tbody className="divide-y divide-[#CCC5BD]">
             {contactRows.map((c: ContactRow) => {
               const company = oneRelation(c.company)
               return (
-                <tr key={c.id}>
-                  <td className="p-3 font-medium align-top">{c.full_name}</td>
-                  <td className="p-3 align-top">
+                <tr key={c.id} className="hover:bg-[#F6F3EC] transition-colors">
+                  <td className="py-2.5 px-4 font-semibold text-sm text-[#1C1B1A] align-top">
+                    {c.full_name}
+                    {c.designation ? <div className="text-xs font-normal text-[#7C766F] mt-0.5">{c.designation}</div> : null}
+                  </td>
+                  <td className="py-2.5 px-4 align-top">
                     {company ? (
-                      <Link href={`/crm/companies/${company.id}`} className="inline-flex items-center gap-2 hover:underline">
+                      <Link href={`/crm/companies/${company.id}`} className="inline-flex items-center gap-2 text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
                         <CompanyAvatar name={company.name} logoPath={company.logo_path} size="sm" />
-                        {company.name}
+                        <span className="font-medium text-sm">{company.name}</span>
                       </Link>
                     ) : '—'}
                   </td>
-                  <td className="p-3 align-top text-gray-600">{c.email || '—'}</td>
-                  <td className="p-3 align-top text-gray-600">{c.phone || '—'}</td>
-                  <td className="space-y-2 p-3 align-top text-xs">
-                    <ActionForm action={updateContact} className="grid gap-1 max-w-xs">
+                  <td className="py-2.5 px-4 align-top font-mono text-xs text-[#4A4640]">{c.email || '—'}</td>
+                  <td className="py-2.5 px-4 align-top font-mono text-xs text-[#4A4640]">{c.phone || '—'}</td>
+                  <td className="space-y-2 py-2.5 px-4 align-top text-xs">
+                    <ActionForm action={updateContact} className="grid gap-1.5 max-w-xs">
                       <input type="hidden" name="id" value={c.id} />
-                      <input name="full_name" defaultValue={c.full_name} required className="border rounded px-2 py-1" />
+                      <input
+                        name="full_name"
+                        defaultValue={c.full_name}
+                        required
+                        className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-1 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                      />
                       <MobileSheetSelect
                         name="company_id"
                         label="Company"
@@ -133,9 +300,22 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
                           label: companyOption.name,
                         }))}
                       />
-                      <input name="email" defaultValue={c.email || ''} className="border rounded px-2 py-1" />
-                      <input name="phone" defaultValue={c.phone || ''} className="border rounded px-2 py-1" />
-                      <input name="designation" defaultValue={c.designation || ''} placeholder="Designation" className="border rounded px-2 py-1" />
+                      <input
+                        name="email"
+                        defaultValue={c.email || ''}
+                        className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-1 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                      />
+                      <input
+                        name="phone"
+                        defaultValue={c.phone || ''}
+                        className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-1 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                      />
+                      <input
+                        name="designation"
+                        defaultValue={c.designation || ''}
+                        placeholder="Designation"
+                        className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-1 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                      />
                       <MobileSheetSelect
                         name="contact_type"
                         label="Contact type"
@@ -147,7 +327,12 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
                           { value: 'other', label: 'Other' },
                         ]}
                       />
-                      <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
+                      <SubmitButton
+                        className="inline-flex min-h-8 items-center justify-center rounded-none bg-[#1C1B1A] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] hover:text-[#FCF9F2] transition-colors"
+                        pendingLabel="Saving…"
+                      >
+                        Save
+                      </SubmitButton>
                     </ActionForm>
                     <ConfirmAction
                       title="Delete contact?"
@@ -163,7 +348,11 @@ export default async function ContactsPage(props: { searchParams: Promise<{ sear
               )
             })}
             {contactRows.length === 0 && (
-              <tr><td colSpan={5} className="p-8 text-center text-gray-500">No contacts in your assigned companies.</td></tr>
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-sm text-[#7C766F]">
+                  No contacts in your assigned companies.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

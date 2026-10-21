@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { createPartner, updatePartner, removePartner } from '@/app/crm/partners/actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
@@ -27,7 +28,7 @@ const STATUS_OPTIONS = [
 ]
 
 const fieldClass =
-  'min-h-10 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm'
+  'w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0'
 
 export function PartnerDirectory({
   title,
@@ -42,84 +43,140 @@ export function PartnerDirectory({
 }) {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[var(--color-primary)]">{title}</h1>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
+            <Link href="/crm/dashboard" className="hover:text-[#9E4300] transition-colors">CRM</Link>
+            <span>/</span>
+            <span>Partners</span>
+            <span>/</span>
+            <span className="text-[#9E4300] font-semibold">{title.toUpperCase()}</span>
+          </div>
+          <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+            {title}
+          </h1>
+          <p className="mt-1 text-xs text-[#4A4640]">
+            <span className="font-mono">{rows.length}</span> {rows.length === 1 ? 'partner' : 'partners'} in directory.
+          </p>
+        </div>
+      </div>
 
       {canManage && (
-        <ActionForm action={createPartner}
-          className="grid gap-3 rounded-2xl border border-[#E8E4DE] bg-white p-4 text-sm md:grid-cols-3"
-         resetOnSuccess>
-          <input type="hidden" name="table" value={table} />
-          <input name="name" required placeholder="Name" className={fieldClass} />
-          <input name="city" placeholder="City" className={fieldClass} />
-          <input name="contact_person" placeholder="Contact person" className={fieldClass} />
-          <input name="phone" placeholder="Phone" className={fieldClass} />
-          <input name="email" type="email" placeholder="Email" className={fieldClass} />
-          {table === 'suppliers' && (
-            <>
-              <input name="category" placeholder="Category" className={fieldClass} />
-              <input
-                name="credit_period_days"
-                type="number"
-                min="0"
-                defaultValue={0}
-                placeholder="Credit days"
-                className={fieldClass}
-              />
-            </>
-          )}
-          {table !== 'suppliers' && (
-            <input
-              name="service_type"
-              placeholder={table === 'printing_vendors' ? 'Printing methods' : 'Service type'}
-              className={fieldClass}
-            />
-          )}
-          {table === 'courier_partners' && (
-            <label className="flex min-h-10 items-center gap-2 text-xs text-gray-700">
-              <input type="checkbox" name="tracking_supported" value="true" />
-              Tracking supported
-            </label>
-          )}
-          <SubmitButton
-            className="min-h-10 rounded-lg bg-[#806A50] py-2 font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF] md:col-span-3"
-           pendingLabel="Adding…">
-            Add
-          </SubmitButton>
-        </ActionForm>
+        <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-4">
+          <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-6 py-3.5 -mx-6 -mt-6 mb-4">
+            <h2 className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1B1A]">
+              Add {title.replace(/s$/, '')}
+            </h2>
+          </div>
+          <ActionForm action={createPartner}
+            className="grid gap-3 text-xs md:grid-cols-3"
+            resetOnSuccess>
+            <input type="hidden" name="table" value={table} />
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Name</label>
+              <input name="name" required placeholder="Name" className={fieldClass} />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">City</label>
+              <input name="city" placeholder="City" className={fieldClass} />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Contact person</label>
+              <input name="contact_person" placeholder="Contact person" className={fieldClass} />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Phone</label>
+              <input name="phone" placeholder="Phone" className={fieldClass} />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Email</label>
+              <input name="email" type="email" placeholder="Email" className={fieldClass} />
+            </div>
+            {table === 'suppliers' && (
+              <>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Category</label>
+                  <input name="category" placeholder="Category" className={fieldClass} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Credit days</label>
+                  <input
+                    name="credit_period_days"
+                    type="number"
+                    min="0"
+                    defaultValue={0}
+                    placeholder="Credit days"
+                    className={fieldClass}
+                  />
+                </div>
+              </>
+            )}
+            {table !== 'suppliers' && (
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
+                  {table === 'printing_vendors' ? 'Printing methods' : 'Service type'}
+                </label>
+                <input
+                  name="service_type"
+                  placeholder={table === 'printing_vendors' ? 'Printing methods' : 'Service type'}
+                  className={fieldClass}
+                />
+              </div>
+            )}
+            {table === 'courier_partners' && (
+              <div className="flex items-end">
+                <label className="flex min-h-10 items-center gap-2 text-xs text-[#4A4640] cursor-pointer">
+                  <input type="checkbox" name="tracking_supported" value="true" className="rounded-none border-[#CCC5BD] text-[#1C1B1A] focus:ring-0" />
+                  Tracking supported
+                </label>
+              </div>
+            )}
+            <SubmitButton
+              className="min-h-10 rounded-none bg-[#1C1B1A] py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] transition-colors md:col-span-3"
+              pendingLabel="Adding…"
+            >
+              Add
+            </SubmitButton>
+          </ActionForm>
+        </div>
       )}
 
       {/* Mobile cards */}
       <div className="space-y-4 md:hidden">
         {rows.map((row) => (
-          <article key={row.id} className="space-y-3 rounded-xl border border-[#E8E4DE] bg-white p-4">
-            <div className="flex items-start justify-between gap-3">
+          <article key={row.id} className="space-y-3 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-4">
+            <div className="flex items-start justify-between gap-3 border-b border-[#CCC5BD] pb-3 -mx-4 px-4 -mt-4 pt-4 bg-[#F6F3EC]">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[#1C1917]">{row.name}</p>
-                <p className="mt-0.5 text-xs text-gray-500">{row.city || '—'}</p>
+                <p className="truncate text-sm font-semibold text-[#1C1B1A]">{row.name}</p>
+                <p className="mt-0.5 text-xs text-[#7C766F]">{row.city || '—'}</p>
               </div>
               {row.is_active ? (
-                <span className="shrink-0 rounded bg-green-100 px-2 py-1 text-[11px] font-medium text-green-800">
-                  Active
+                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> Active
                 </span>
               ) : (
-                <span className="shrink-0 rounded bg-red-100 px-2 py-1 text-[11px] font-medium text-red-800">
+                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 font-mono text-[11px] uppercase text-[#7C766F]">
                   Inactive
                 </span>
               )}
             </div>
 
-            <dl className="grid gap-1 text-xs text-gray-600">
+            <dl className="grid gap-1.5 text-xs text-[#4A4640]">
               <div>
-                <dt className="inline text-gray-400">Contact · </dt>
-                <dd className="inline">{row.contact_person || '—'}</dd>
+                <dt className="inline text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Contact · </dt>
+                <dd className="inline text-[#1C1B1A]">{row.contact_person || '—'}</dd>
               </div>
               <div>
-                <dt className="inline text-gray-400">Phone · </dt>
-                <dd className="inline">{row.phone || '—'}</dd>
+                <dt className="inline text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Phone · </dt>
+                <dd className="inline font-mono text-[#1C1B1A]">{row.phone || '—'}</dd>
               </div>
               <div>
-                <dt className="inline text-gray-400">Details · </dt>
-                <dd className="inline">
+                <dt className="inline text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Email · </dt>
+                <dd className="inline font-mono text-[#1C1B1A]">{row.email || '—'}</dd>
+              </div>
+              <div>
+                <dt className="inline text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Details · </dt>
+                <dd className="inline text-[#1C1B1A]">
                   {table === 'suppliers'
                     ? `${row.category || '—'} · ${row.credit_period_days ?? 0} days`
                     : table === 'printing_vendors'
@@ -132,45 +189,72 @@ export function PartnerDirectory({
             </dl>
 
             {canManage && (
-              <ActionForm action={updatePartner} className="grid gap-2 border-t border-[#EFE9E0] pt-3">
+              <ActionForm action={updatePartner} className="grid gap-2 border-t border-[#CCC5BD] pt-3">
                 <input type="hidden" name="table" value={table} />
                 <input type="hidden" name="id" value={row.id} />
-                <input name="name" defaultValue={row.name} required className={fieldClass} />
-                <input name="city" defaultValue={row.city || ''} placeholder="City" className={fieldClass} />
-                <input
-                  name="contact_person"
-                  defaultValue={row.contact_person || ''}
-                  placeholder="Contact"
-                  className={fieldClass}
-                />
-                <input name="phone" defaultValue={row.phone || ''} placeholder="Phone" className={fieldClass} />
-                <input name="email" defaultValue={row.email || ''} placeholder="Email" className={fieldClass} />
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Name</label>
+                  <input name="name" defaultValue={row.name} required className={fieldClass} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">City</label>
+                  <input name="city" defaultValue={row.city || ''} placeholder="City" className={fieldClass} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Contact</label>
+                  <input
+                    name="contact_person"
+                    defaultValue={row.contact_person || ''}
+                    placeholder="Contact"
+                    className={fieldClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Phone</label>
+                  <input name="phone" defaultValue={row.phone || ''} placeholder="Phone" className={fieldClass} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Email</label>
+                  <input name="email" defaultValue={row.email || ''} placeholder="Email" className={fieldClass} />
+                </div>
                 {table === 'suppliers' && (
                   <>
-                    <input
-                      name="category"
-                      defaultValue={row.category || ''}
-                      placeholder="Category"
-                      className={fieldClass}
-                    />
-                    <input
-                      name="credit_period_days"
-                      type="number"
-                      defaultValue={row.credit_period_days ?? 0}
-                      className={fieldClass}
-                    />
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Category</label>
+                      <input
+                        name="category"
+                        defaultValue={row.category || ''}
+                        placeholder="Category"
+                        className={fieldClass}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Credit days</label>
+                      <input
+                        name="credit_period_days"
+                        type="number"
+                        defaultValue={row.credit_period_days ?? 0}
+                        className={fieldClass}
+                      />
+                    </div>
                   </>
                 )}
                 {table !== 'suppliers' && (
-                  <input name="service_type" defaultValue={row.service_type || ''} className={fieldClass} />
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
+                      {table === 'printing_vendors' ? 'Printing methods' : 'Service type'}
+                    </label>
+                    <input name="service_type" defaultValue={row.service_type || ''} className={fieldClass} />
+                  </div>
                 )}
                 {table === 'courier_partners' && (
-                  <label className="flex min-h-10 items-center gap-2 text-xs">
+                  <label className="flex min-h-10 items-center gap-2 text-xs text-[#4A4640] cursor-pointer">
                     <input
                       type="checkbox"
                       name="tracking_supported"
                       value="true"
                       defaultChecked={Boolean(row.tracking_supported)}
+                      className="rounded-none border-[#CCC5BD] text-[#1C1B1A] focus:ring-0"
                     />
                     Tracking
                   </label>
@@ -182,8 +266,9 @@ export function PartnerDirectory({
                   options={STATUS_OPTIONS}
                 />
                 <SubmitButton
-                  className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
-                 pendingLabel="Saving…">
+                  className="inline-flex min-h-10 items-center justify-center rounded-none bg-[#1C1B1A] px-3 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] transition-colors"
+                  pendingLabel="Saving…"
+                >
                   Save
                 </SubmitButton>
                 <ConfirmAction
@@ -205,39 +290,39 @@ export function PartnerDirectory({
           </article>
         ))}
         {rows.length === 0 && (
-          <p className="rounded-xl border border-[#E8E4DE] bg-white p-4 text-center text-sm text-gray-500">
+          <p className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-4 text-center text-xs text-[#7C766F]">
             No records found.
           </p>
         )}
       </div>
 
       {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
+      <div className="hidden overflow-x-auto rounded-none border border-[#CCC5BD] bg-[#FCF9F2] md:block">
         <table className="w-full min-w-[720px] border-collapse text-left">
           <thead>
-            <tr className="border-b border-[var(--color-border)] bg-gray-50">
-              <th className="p-3 text-sm font-medium text-[var(--color-text-secondary)]">Name</th>
-              <th className="p-3 text-sm font-medium text-[var(--color-text-secondary)]">City</th>
-              <th className="p-3 text-sm font-medium text-[var(--color-text-secondary)]">Contact</th>
-              <th className="p-3 text-sm font-medium text-[var(--color-text-secondary)]">Phone</th>
-              <th className="p-3 text-sm font-medium text-[var(--color-text-secondary)]">Details</th>
-              <th className="p-3 text-sm font-medium text-[var(--color-text-secondary)]">Status</th>
+            <tr className="border-b border-[#CCC5BD] bg-[#F6F3EC]">
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Name</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">City</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Contact</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Phone</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Details</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Status</th>
               {canManage && (
-                <th className="p-3 text-sm font-medium text-[var(--color-text-secondary)]">Actions</th>
+                <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Actions</th>
               )}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-[#CCC5BD] text-xs text-[#1C1B1A]">
             {rows.map((row) => (
-              <tr key={row.id} className="align-top border-b border-[var(--color-border)]">
-                <td className="p-3 text-sm font-medium">{row.name}</td>
-                <td className="p-3 text-sm">{row.city || '-'}</td>
-                <td className="p-3 text-sm">{row.contact_person || '-'}</td>
-                <td className="p-3 text-sm">{row.phone || '-'}</td>
-                <td className="p-3 text-sm">
+              <tr key={row.id} className="align-top transition-colors hover:bg-[#F6F3EC]">
+                <td className="px-3.5 py-3 font-semibold text-[#1C1B1A]">{row.name}</td>
+                <td className="px-3.5 py-3 text-[#4A4640]">{row.city || '—'}</td>
+                <td className="px-3.5 py-3 text-[#4A4640]">{row.contact_person || '—'}</td>
+                <td className="px-3.5 py-3 font-mono text-[#1C1B1A]">{row.phone || '—'}</td>
+                <td className="px-3.5 py-3 text-[#4A4640]">
                   {table === 'suppliers' ? (
                     <>
-                      {row.category || '—'} · {row.credit_period_days ?? 0} days
+                      {row.category || '—'} · <span className="font-mono">{row.credit_period_days ?? 0}</span> days
                     </>
                   ) : table === 'printing_vendors' ? (
                     row.service_type || '—'
@@ -247,73 +332,104 @@ export function PartnerDirectory({
                     row.service_type || '—'
                   )}
                 </td>
-                <td className="p-3 text-sm">
+                <td className="px-3.5 py-3">
                   {row.is_active ? (
-                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-800">Active</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> Active
+                    </span>
                   ) : (
-                    <span className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-800">Inactive</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 font-mono text-[11px] uppercase text-[#7C766F]">
+                      Inactive
+                    </span>
                   )}
                 </td>
                 {canManage && (
-                  <td className="space-y-2 p-3 text-xs">
+                  <td className="px-3.5 py-3 space-y-2">
                     <ActionForm action={updatePartner} className="grid gap-2">
                       <input type="hidden" name="table" value={table} />
                       <input type="hidden" name="id" value={row.id} />
-                      <input name="name" defaultValue={row.name} required className="rounded border px-2 py-1" />
-                      <input
-                        name="city"
-                        defaultValue={row.city || ''}
-                        placeholder="City"
-                        className="rounded border px-2 py-1"
-                      />
-                      <input
-                        name="contact_person"
-                        defaultValue={row.contact_person || ''}
-                        placeholder="Contact"
-                        className="rounded border px-2 py-1"
-                      />
-                      <input
-                        name="phone"
-                        defaultValue={row.phone || ''}
-                        placeholder="Phone"
-                        className="rounded border px-2 py-1"
-                      />
-                      <input
-                        name="email"
-                        defaultValue={row.email || ''}
-                        placeholder="Email"
-                        className="rounded border px-2 py-1"
-                      />
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Name</label>
+                        <input name="name" defaultValue={row.name} required className={fieldClass} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">City</label>
+                        <input
+                          name="city"
+                          defaultValue={row.city || ''}
+                          placeholder="City"
+                          className={fieldClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Contact</label>
+                        <input
+                          name="contact_person"
+                          defaultValue={row.contact_person || ''}
+                          placeholder="Contact"
+                          className={fieldClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Phone</label>
+                        <input
+                          name="phone"
+                          defaultValue={row.phone || ''}
+                          placeholder="Phone"
+                          className={fieldClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Email</label>
+                        <input
+                          name="email"
+                          defaultValue={row.email || ''}
+                          placeholder="Email"
+                          className={fieldClass}
+                        />
+                      </div>
                       {table === 'suppliers' && (
                         <>
-                          <input
-                            name="category"
-                            defaultValue={row.category || ''}
-                            placeholder="Category"
-                            className="rounded border px-2 py-1"
-                          />
-                          <input
-                            name="credit_period_days"
-                            type="number"
-                            defaultValue={row.credit_period_days ?? 0}
-                            className="rounded border px-2 py-1"
-                          />
+                          <div>
+                            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Category</label>
+                            <input
+                              name="category"
+                              defaultValue={row.category || ''}
+                              placeholder="Category"
+                              className={fieldClass}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Credit days</label>
+                            <input
+                              name="credit_period_days"
+                              type="number"
+                              defaultValue={row.credit_period_days ?? 0}
+                              className={fieldClass}
+                            />
+                          </div>
                         </>
                       )}
                       {table !== 'suppliers' && (
-                        <input
-                          name="service_type"
-                          defaultValue={row.service_type || ''}
-                          className="rounded border px-2 py-1"
-                        />
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
+                            {table === 'printing_vendors' ? 'Printing methods' : 'Service type'}
+                          </label>
+                          <input
+                            name="service_type"
+                            defaultValue={row.service_type || ''}
+                            className={fieldClass}
+                          />
+                        </div>
                       )}
                       {table === 'courier_partners' && (
-                        <label className="flex items-center gap-1">
+                        <label className="flex items-center gap-1.5 text-xs text-[#4A4640] cursor-pointer">
                           <input
                             type="checkbox"
                             name="tracking_supported"
                             value="true"
                             defaultChecked={Boolean(row.tracking_supported)}
+                            className="rounded-none border-[#CCC5BD] text-[#1C1B1A] focus:ring-0"
                           />
                           Tracking
                         </label>
@@ -325,8 +441,8 @@ export function PartnerDirectory({
                         options={STATUS_OPTIONS}
                       />
                       <SubmitButton
-                        className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
-                       pendingLabel="Saving…">
+                        className="inline-flex min-h-9 items-center justify-center rounded-none bg-[#1C1B1A] px-3 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] transition-colors"
+                        pendingLabel="Saving…">
                         Save
                       </SubmitButton>
                     </ActionForm>
@@ -350,7 +466,7 @@ export function PartnerDirectory({
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={canManage ? 7 : 6} className="p-4 text-center text-[var(--color-text-secondary)]">
+                <td colSpan={canManage ? 7 : 6} className="px-3.5 py-6 text-center text-[#7C766F]">
                   No records found.
                 </td>
               </tr>

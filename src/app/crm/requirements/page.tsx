@@ -4,12 +4,12 @@ import { Plus } from 'lucide-react'
 import { formatCurrency, formatDate, asRows, oneRelation } from '@/lib/utils'
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-700',
-  active: 'bg-blue-100 text-blue-800',
-  quoted: 'bg-indigo-100 text-indigo-800',
-  closed: 'bg-gray-100 text-gray-800',
-  won: 'bg-green-100 text-green-800',
-  lost: 'bg-red-100 text-red-800',
+  draft: 'border border-[#CCC5BD] text-[#4A4640] bg-transparent',
+  active: 'bg-[#FFB690]/30 text-[#9E4300] border border-[#9E4300]/30',
+  quoted: 'bg-[#FFB690]/20 text-[#9E4300] border border-[#9E4300]/20',
+  closed: 'border border-[#CCC5BD] text-[#4A4640] bg-transparent',
+  won: 'bg-[#DAE6D3] text-[#3A4537] border border-[#3A4537]/20',
+  lost: 'bg-[#BA1A1A]/10 text-[#BA1A1A] border border-[#BA1A1A]/40',
 }
 
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
@@ -94,17 +94,25 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-[var(--color-primary)]">Requirements</h1>
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 border-b border-[#CCC5BD] pb-5 sm:flex-row sm:items-end sm:justify-between mb-6">
+        <div>
+          <div className="flex items-baseline gap-3">
+            <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+              Requirements
+            </h1>
+            <span className="font-mono text-xs text-[#7C766F]">[ {requirementRows.length} ]</span>
+          </div>
+        </div>
         <Link
           href="/crm/requirements/new"
-          className="inline-flex items-center gap-2 bg-[var(--color-primary)] text-white hover:text-white px-4 py-2 rounded-md hover:opacity-90"
+          className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-none bg-[#1C1B1A] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
         >
-          <Plus size={16} />
-          Add Requirement
+          <Plus size={14} /> Add Requirement
         </Link>
       </div>
 
+      {/* Mobile Filter Bar */}
       <div className="mb-6 md:hidden">
         <MobileFilterBar
           pathname="/crm/requirements"
@@ -122,90 +130,187 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
           ]}
         />
       </div>
-      <div className="mb-6 hidden gap-2 border-b md:flex">
-        {statuses.map(status => (
+
+      {/* Desktop Status Tabs */}
+      <div className="mb-4 hidden flex-wrap gap-2 border-b border-[#CCC5BD] pb-2 md:flex">
+        {statuses.map((status) => (
           <Link 
             key={status}
             href={`/crm/requirements?status=${status}${sourceFilter !== 'all' ? `&source=${sourceFilter}` : ''}`}
-            className={`px-4 py-2 text-sm font-medium capitalize ${statusFilter === status ? 'border-b-2 border-[var(--color-primary)] text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors rounded-none ${
+              statusFilter === status
+                ? 'bg-[#1C1B1A] text-[#FCF9F2]'
+                : 'text-[#4A4640] hover:bg-[#F6F3EC]'
+            }`}
           >
             {status}
           </Link>
         ))}
       </div>
-      <div className="mb-4 flex flex-wrap gap-2 text-xs">
+
+      {/* Source Filters */}
+      <div className="mb-6 flex flex-wrap gap-2 text-xs">
         {['all', 'business_portal', 'corporate_portal', 'website', 'staff'].map((source) => (
           <Link
             key={source}
             href={`/crm/requirements?status=${statusFilter}${source === 'all' ? '' : `&source=${source}`}`}
-            className={`rounded-full px-3 py-1 ${sourceFilter === source ? 'bg-[#806A50] text-white' : 'bg-gray-100 text-gray-600'}`}
+            className={`rounded-none px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] transition-colors ${
+              sourceFilter === source
+                ? 'bg-[#1C1B1A] text-[#FCF9F2]'
+                : 'border border-[#CCC5BD] bg-[#FCF9F2] text-[#4A4640] hover:bg-[#F6F3EC]'
+            }`}
           >
             {source === 'all' ? 'All sources' : source.replace('_', ' ')}
           </Link>
         ))}
       </div>
 
-      <div className="bg-white rounded-lg border overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-4 font-medium text-gray-500">Name</th>
-              <th className="p-4 font-medium text-gray-500">Company</th>
-              <th className="p-4 font-medium text-gray-500">Owner</th>
-              <th className="p-4 font-medium text-gray-500">Budget</th>
-              <th className="p-4 font-medium text-gray-500">Qty</th>
-              <th className="p-4 font-medium text-gray-500">Deadline</th>
-              <th className="p-4 font-medium text-gray-500">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {requirementRows.map((req: RequirementRow) => {
-              const company = oneRelation(req.company)
-              const owner = oneRelation(req.owner)
-              return (
-              <tr key={req.id} className="hover:bg-gray-50">
-                <td className="p-4">
-                  <Link href={`/crm/requirements/${req.id}`} className="text-blue-600 hover:underline font-medium">
+      {/* Mobile Card List */}
+      <div className="space-y-3 md:hidden">
+        {requirementRows.map((req: RequirementRow) => {
+          const company = oneRelation(req.company)
+          const owner = oneRelation(req.owner)
+          return (
+            <div key={req.id} className="bg-[#FCF9F2] border border-[#CCC5BD] p-4 rounded-none space-y-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <Link href={`/crm/requirements/${req.id}`} className="font-semibold text-sm text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
                     {req.title || req.name}
                   </Link>
                   {req.source === 'business_portal' ? (
-                    <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-900">Business</span>
+                    <span className="ml-2 inline-block rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9E4300]">
+                      Business
+                    </span>
                   ) : null}
-                  {(linesByRequirement.get(req.id) || []).slice(0, 3).map((line, index) => (
-                    <p key={`${req.id}-${index}`} className="mt-0.5 text-[11px] text-gray-500">
-                      {line.label} × {line.quantity}
-                    </p>
-                  ))}
-                  {(linesByRequirement.get(req.id) || []).length > 3 && (
-                    <p className="text-[11px] text-gray-400">
-                      +{(linesByRequirement.get(req.id) || []).length - 3} more
-                    </p>
-                  )}
-                </td>
-                <td className="p-4">
-                  {company?.name || '-'}
+                </div>
+                <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] rounded-none ${STATUS_COLORS[req.status || ''] || 'border border-[#CCC5BD] text-[#4A4640]'}`}>
+                  {req.status || 'unknown'}
+                </span>
+              </div>
+
+              {(linesByRequirement.get(req.id) || []).slice(0, 3).map((line, index) => (
+                <p key={`${req.id}-${index}`} className="text-[11px] text-[#7C766F] font-mono">
+                  {line.label} × {line.quantity}
+                </p>
+              ))}
+              {(linesByRequirement.get(req.id) || []).length > 3 && (
+                <p className="text-[11px] text-[#7C766F] font-mono">
+                  +{(linesByRequirement.get(req.id) || []).length - 3} more
+                </p>
+              )}
+
+              <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#CCC5BD] text-[#4A4640]">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Company</span>
+                  <span>{company?.name || '—'}</span>
                   {company?.account_type === 'business' ? (
-                    <span className="mt-1 block text-[10px] uppercase text-amber-800">
+                    <span className="mt-0.5 block text-[10px] uppercase text-[#9E4300] font-mono">
                       {company.business_verification || 'unverified'}
                       {company.gst_number ? ` · ${company.gst_number}` : ''}
                     </span>
                   ) : null}
-                </td>
-                <td className="p-4">{owner?.full_name || '-'}</td>
-                <td className="p-4">{req.budget ? formatCurrency(req.budget) : '-'}</td>
-                <td className="p-4">{req.quantity || '-'}</td>
-                <td className="p-4">{req.deadline ? formatDate(req.deadline) : '-'}</td>
-                <td className="p-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[req.status || ''] || 'bg-gray-100 text-gray-800'}`}>
-                    {req.status || 'unknown'}
-                  </span>
-                </td>
-              </tr>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Owner</span>
+                  <span>{owner?.full_name || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Budget</span>
+                  <span className="font-mono text-sm text-[#1C1B1A]">{req.budget ? formatCurrency(req.budget) : '—'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Qty</span>
+                  <span className="font-mono text-sm text-[#1C1B1A]">{req.quantity || '—'}</span>
+                </div>
+              </div>
+              {req.deadline ? (
+                <div className="pt-2 border-t border-[#CCC5BD] text-xs text-[#7C766F] flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em]">Deadline</span>
+                  <span className="font-mono text-xs text-[#4A4640]">{formatDate(req.deadline)}</span>
+                </div>
+              ) : null}
+            </div>
+          )
+        })}
+        {requirementRows.length === 0 && (
+          <div className="p-8 text-center text-sm text-[#7C766F] bg-[#FCF9F2] border border-[#CCC5BD] rounded-none">
+            No requirements found.
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block bg-[#FCF9F2] border border-[#CCC5BD] rounded-none overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead className="bg-[#F6F3EC] border-b border-[#CCC5BD] text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+            <tr>
+              <th className="py-3 px-4 font-bold text-left">Name</th>
+              <th className="py-3 px-4 font-bold text-left">Company</th>
+              <th className="py-3 px-4 font-bold text-left">Owner</th>
+              <th className="py-3 px-4 font-bold text-right">Budget</th>
+              <th className="py-3 px-4 font-bold text-right">Qty</th>
+              <th className="py-3 px-4 font-bold text-left">Deadline</th>
+              <th className="py-3 px-4 font-bold text-left">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#CCC5BD]">
+            {requirementRows.map((req: RequirementRow) => {
+              const company = oneRelation(req.company)
+              const owner = oneRelation(req.owner)
+              return (
+                <tr key={req.id} className="hover:bg-[#F6F3EC] transition-colors">
+                  <td className="py-2.5 px-4">
+                    <Link href={`/crm/requirements/${req.id}`} className="font-semibold text-sm text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
+                      {req.title || req.name}
+                    </Link>
+                    {req.source === 'business_portal' ? (
+                      <span className="ml-2 inline-block rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9E4300]">
+                        Business
+                      </span>
+                    ) : null}
+                    {(linesByRequirement.get(req.id) || []).slice(0, 3).map((line, index) => (
+                      <p key={`${req.id}-${index}`} className="mt-0.5 text-[11px] text-[#7C766F] font-mono">
+                        {line.label} × {line.quantity}
+                      </p>
+                    ))}
+                    {(linesByRequirement.get(req.id) || []).length > 3 && (
+                      <p className="text-[11px] text-[#7C766F] font-mono">
+                        +{(linesByRequirement.get(req.id) || []).length - 3} more
+                      </p>
+                    )}
+                  </td>
+                  <td className="py-2.5 px-4 text-sm text-[#4A4640]">
+                    {company?.name || '—'}
+                    {company?.account_type === 'business' ? (
+                      <span className="mt-0.5 block text-[10px] uppercase text-[#9E4300] font-mono">
+                        {company.business_verification || 'unverified'}
+                        {company.gst_number ? ` · ${company.gst_number}` : ''}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="py-2.5 px-4 text-sm text-[#4A4640]">{owner?.full_name || '—'}</td>
+                  <td className="py-2.5 px-4 text-right font-mono text-sm text-[#1C1B1A]">
+                    {req.budget ? formatCurrency(req.budget) : '—'}
+                  </td>
+                  <td className="py-2.5 px-4 text-right font-mono text-sm text-[#1C1B1A]">
+                    {req.quantity || '—'}
+                  </td>
+                  <td className="py-2.5 px-4 font-mono text-xs text-[#4A4640]">
+                    {req.deadline ? formatDate(req.deadline) : '—'}
+                  </td>
+                  <td className="py-2.5 px-4">
+                    <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] rounded-none ${STATUS_COLORS[req.status || ''] || 'border border-[#CCC5BD] text-[#4A4640]'}`}>
+                      {req.status || 'unknown'}
+                    </span>
+                  </td>
+                </tr>
               )
             })}
             {requirementRows.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-gray-500">No requirements found.</td>
+                <td colSpan={7} className="p-8 text-center text-sm text-[#7C766F]">
+                  No requirements found.
+                </td>
               </tr>
             )}
           </tbody>

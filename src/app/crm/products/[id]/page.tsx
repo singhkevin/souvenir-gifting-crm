@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, isUuid, oneRelation } from '@/lib/utils'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { updateProduct, removeProduct } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
@@ -68,149 +69,176 @@ export default async function ProductDetailPage({
       <BackButton href="/crm/products" label="Back to Products" />
 
       {removed === 'archived' && (
-        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
+        <div className="p-3 bg-[#FFB690]/30 text-[#9E4300] text-xs rounded-none border border-[#9E4300]/30">
           This product cannot be permanently deleted because it is used on orders or quotations. It was discontinued instead.
         </div>
       )}
       {error && (
-        <div className="p-3 bg-red-50 text-red-800 text-xs rounded-xl border border-red-200">{error}</div>
+        <div className="p-3 bg-[#FBEDEB] text-[#BA1A1A] text-xs rounded-none border border-[#BA1A1A]/40">{error}</div>
       )}
       {image === 'needed' && !product.image_url && (
-        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
+        <div className="p-3 bg-[#FFB690]/30 text-[#9E4300] text-xs rounded-none border border-[#9E4300]/30">
           This product was saved without a photo. Upload one below so it displays correctly in the catalogue.
         </div>
       )}
       {image === 'upload-failed' && (
-        <div className="p-3 bg-amber-50 text-amber-900 text-xs rounded-xl border border-amber-200">
+        <div className="p-3 bg-[#FFB690]/30 text-[#9E4300] text-xs rounded-none border border-[#9E4300]/30">
           The product was saved, but the image could not be uploaded. Try again with a JPG, PNG or WebP under 5 MB.
         </div>
       )}
 
-      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-6 items-start">
-        <ProductImageEditor productId={product.id} imageUrl={product.image_url} name={product.name} />
+      {/* Product Hero / Summary Panel */}
+      <div className="bg-[#FCF9F2] p-6 rounded-none border border-[#CCC5BD] shadow-none">
+        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7C766F] mb-4">
+          <Link href="/crm/dashboard" className="hover:text-[#9E4300] transition-colors">CRM</Link>
+          <span>/</span>
+          <Link href="/crm/products" className="hover:text-[#9E4300] transition-colors">Products</Link>
+          <span>/</span>
+          <span className="text-[#9E4300] font-semibold">{product.sku}</span>
+        </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="font-mono text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-              {product.sku}
-            </span>
-            {product.catalogue_access === 'all' && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full">
-                <Globe className="w-3 h-3" /> All companies
-              </span>
-            )}
-            {product.catalogue_access === 'selected' && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-purple-100 text-[#806A50] px-2.5 py-0.5 rounded-full">
-                <Lock className="w-3 h-3" /> {accessRecords?.length || 0} companies
-              </span>
-            )}
-            {product.catalogue_access === 'none' && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full">
-                <EyeOff className="w-3 h-3" /> Not in catalogues
-              </span>
-            )}
-            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize ${
-              product.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'
-            }`}>
-              {product.status}
-            </span>
+        <div className="flex flex-col md:flex-row gap-6 items-start">
+          <ProductImageEditor productId={product.id} imageUrl={product.image_url} name={product.name} />
+
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-xs font-semibold text-[#1C1B1A] bg-[#F6F3EC] border border-[#CCC5BD] px-2 py-0.5 rounded-none">
+                  {product.sku}
+                </span>
+                {product.catalogue_access === 'all' && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] border border-[#CCC5BD] bg-[#F6F3EC] text-[#4A4640] px-2 py-0.5 rounded-none">
+                    <Globe className="w-3 h-3 text-[#9E4300]" /> All companies
+                  </span>
+                )}
+                {product.catalogue_access === 'selected' && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] border border-[#9E4300]/30 bg-[#FFB690]/30 text-[#9E4300] px-2 py-0.5 rounded-none">
+                    <Lock className="w-3 h-3" /> {accessRecords?.length || 0} companies
+                  </span>
+                )}
+                {product.catalogue_access === 'none' && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] border border-[#CCC5BD] bg-[#F6F3EC] text-[#7C766F] px-2 py-0.5 rounded-none">
+                    <EyeOff className="w-3 h-3" /> Not in catalogues
+                  </span>
+                )}
+                {product.status === 'active' ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> active
+                  </span>
+                ) : product.status === 'discontinued' ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#FBEDEB] px-2 py-0.5 font-mono text-[11px] uppercase text-[#BA1A1A]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#BA1A1A]" /> discontinued
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 font-mono text-[11px] uppercase text-[#4A4640]">
+                    {product.status}
+                  </span>
+                )}
+              </div>
+
+              {profile.role === 'admin' && (
+                <div>
+                  <ConfirmAction
+                    title="Delete product?"
+                    confirmLabel="Delete"
+                    action={removeProduct}
+                    hiddenFields={{ product_id: product.id }}
+                    description={
+                      <>
+                        <p>
+                          Product: <span className="font-semibold text-[#1C1B1A]">{product.name}</span>
+                        </p>
+                        <p>
+                          If this product appears on orders, quotations, or sample history it will be discontinued instead of permanently deleted. Images shared with other products are kept.
+                        </p>
+                      </>
+                    }
+                  >
+                    Delete Product
+                  </ConfirmAction>
+                </div>
+              )}
+            </div>
+
+            <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+              {product.name}
+            </h1>
+            <p className="text-xs text-[#4A4640] mt-1.5">
+              Category: <span className="font-semibold text-[#1C1B1A]">{oneRelation(product.category)?.name || 'General'}</span>
+              {product.brand && <> · Brand: <span className="font-semibold text-[#1C1B1A]">{oneRelation(product.brand)?.name}</span></>}
+              {product.supplier && <> · Supplier: <span className="font-semibold text-[#1C1B1A]">{oneRelation(product.supplier)?.name}</span></>}
+            </p>
           </div>
+        </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{product.name}</h1>
-          <p className="text-xs text-gray-500 mt-1">
-            Category: <span className="font-semibold text-gray-700">{oneRelation(product.category)?.name || 'General'}</span>
-            {product.brand && <> ? Brand: <span className="font-semibold text-gray-700">{oneRelation(product.brand)?.name}</span></>}
-            {product.supplier && <> ? Supplier: <span className="font-semibold text-gray-700">{oneRelation(product.supplier)?.name}</span></>}
-          </p>
-          {profile.role === 'admin' && (
-            <div className="mt-3">
-              <ConfirmAction
-                title="Delete product?"
-                confirmLabel="Delete"
-                action={removeProduct}
-                hiddenFields={{ product_id: product.id }}
-                description={
-                  <>
-                    <p>
-                      Product: <span className="font-semibold text-gray-900">{product.name}</span>
-                    </p>
-                    <p>
-                      If this product appears on orders, quotations, or sample history it will be discontinued instead of permanently deleted. Images shared with other products are kept.
-                    </p>
-                  </>
-                }
-              >
-                Delete Product
-              </ConfirmAction>
+        {/* Dense Key/Value KPI Strip */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 mt-6 pt-5 border-t border-[#CCC5BD]">
+          <div>
+            <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Store price</span>
+            <span className="font-mono text-xl font-bold text-[#1C1B1A] mt-1 block">{formatCurrency(storePrice)}</span>
+            <span className="text-[11px] text-[#7C766F] mt-0.5 block">Retail price on the store</span>
+          </div>
+          <div>
+            <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Company price</span>
+            <span className="text-xs text-[#4A4640] mt-1 block">Special, then catalog line, then this price plus the company margin</span>
+          </div>
+          {showCost && (
+            <div>
+              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Supplier Cost</span>
+              <span className="font-mono text-lg font-semibold text-[#4A4640] mt-1 block">{formatCurrency(product.supplier_cost)}</span>
             </div>
           )}
-
-          <div className="flex items-center gap-6 mt-4 pt-4 border-t border-gray-100">
-            <div>
-              <p className="text-[10px] text-gray-400 uppercase font-semibold">Store price</p>
-              <p className="text-xl font-bold text-[#806A50]">{formatCurrency(storePrice)}</p>
-              <p className="text-[10px] text-gray-400">Retail price on the store</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-400 uppercase font-semibold">Company price</p>
-              <p className="text-sm font-semibold text-gray-700">Special, then catalog line, then this price plus the company margin</p>
-            </div>
-            {showCost && (
-            <div>
-              <p className="text-[10px] text-gray-400 uppercase font-semibold">Supplier Cost</p>
-              <p className="text-lg font-semibold text-gray-700">{formatCurrency(product.supplier_cost)}</p>
-            </div>
-            )}
-            <div>
-              <p className="text-[10px] text-gray-400 uppercase font-semibold">Min Order Qty</p>
-              <p className="text-lg font-semibold text-gray-900">{product.moq || 1} units</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-gray-400 uppercase font-semibold">Shopper action</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {purchaseCaption(purchaseOffer({
-                  fulfillmentMode: product.fulfillment_mode,
-                  stockQty: product.stock_qty,
-                  hasSellPrice: true,
-                }))}
-              </p>
-              <p className="text-[10px] text-gray-400">
-                Stock {product.stock_qty ?? 0} · {product.fulfillment_mode || 'auto'}
-              </p>
-            </div>
+          <div>
+            <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Min Order Qty</span>
+            <span className="font-mono text-lg font-semibold text-[#1C1B1A] mt-1 block">{product.moq || 1} units</span>
+          </div>
+          <div>
+            <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Shopper action</span>
+            <span className="text-sm font-semibold text-[#1C1B1A] mt-1 block">
+              {purchaseCaption(purchaseOffer({
+                fulfillmentMode: product.fulfillment_mode,
+                stockQty: product.stock_qty,
+                hasSellPrice: true,
+              }))}
+            </span>
+            <span className="text-[11px] text-[#7C766F] mt-0.5 block">
+              Stock <span className="font-mono">{product.stock_qty ?? 0}</span> · {product.fulfillment_mode || 'auto'}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-gray-900 pb-3 border-b border-gray-100">
-            Edit Product Information
-          </h2>
+        <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-4">
+          <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-6 py-3.5 -mx-6 -mt-6 mb-4">
+            <h2 className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1B1A]">
+              Edit Product Information
+            </h2>
+          </div>
 
           <ActionForm action={updateProduct.bind(null, product.id)} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Product Name</label>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Product Name</label>
               <input
                 type="text"
                 name="name"
                 defaultValue={product.name}
                 required
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50]"
+                className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">SKU</label>
+                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">SKU</label>
                 <input
                   type="text"
                   name="sku"
                   defaultValue={product.sku}
                   required
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg font-mono uppercase focus:ring-1 focus:ring-[#806A50]"
+                  className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono uppercase text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
                 />
-                <p className="text-[10px] text-gray-400 mt-1">Permanent identifier. Admin-only to change; changes are audited.</p>
+                <p className="text-[11px] text-[#7C766F] mt-1">Permanent identifier. Admin-only to change; changes are audited.</p>
               </div>
 
               <MobileSheetSelect
@@ -228,38 +256,38 @@ export default async function ProductDetailPage({
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Base price</label>
+                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Base price</label>
                 <input
                   type="number"
                   step="0.01"
                   name="price"
                   defaultValue={product.price}
                   required
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
+                  className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
                 />
-                <p className="mt-1 text-[10px] text-gray-500">
+                <p className="mt-1 text-[11px] text-[#7C766F]">
                   Used when no company special price and no catalog line price apply. Company margin is added on top for that company.
                 </p>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">MOQ</label>
+                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">MOQ</label>
                 <input
                   type="number"
                   name="moq"
                   defaultValue={product.moq || 1}
                   required
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
+                  className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Stock on hand</label>
+                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Stock on hand</label>
                 <input
                   type="number"
                   name="stock_qty"
                   min="0"
                   step="1"
                   defaultValue={product.stock_qty ?? 0}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
+                  className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
                 />
               </div>
             </div>
@@ -275,7 +303,7 @@ export default async function ProductDetailPage({
                 { value: 'rfq', label: 'Request quote' },
               ]}
             />
-            <p className="text-[11px] text-gray-500">
+            <p className="text-[11px] text-[#7C766F]">
               Auto with stock shows Add to cart up to that quantity, and Request quote for a larger run. Auto with zero stock shows Request quote.
               Buy with zero stock shows Add to cart for any quantity. Request quote hides Add to cart. Catalog kits stay on Request quote.
             </p>
@@ -304,31 +332,31 @@ export default async function ProductDetailPage({
               create={createSupplier}
             />
             <input type="hidden" name="sample_only_present" value="1" />
-            <label className="flex items-center gap-2 text-xs text-gray-700">
-              <input type="checkbox" name="sample_only" value="on" defaultChecked={Boolean(product.sample_only)} />
+            <label className="flex items-center gap-2 text-xs text-[#4A4640] cursor-pointer">
+              <input type="checkbox" name="sample_only" value="on" defaultChecked={Boolean(product.sample_only)} className="rounded-none border-[#CCC5BD] text-[#1C1B1A] focus:ring-0" />
               Sample only. This stock is not sellable and the product is not buyable. Request one sample instead.
             </label>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Description</label>
               <textarea
                 name="description"
                 rows={3}
                 defaultValue={product.description || ''}
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
+                className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
               />
             </div>
 
             <SubmitButton
-              className="w-full py-2.5 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] hover:text-white rounded-lg shadow-sm transition-colors"
-             pendingLabel="Saving…">
+              className="w-full py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] bg-[#1C1B1A] hover:bg-[#9E4300] rounded-none transition-colors"
+              pendingLabel="Saving…">
               Save Product Details
             </SubmitButton>
           </ActionForm>
         </div>
 
         {profile.role === 'admin' ? (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6">
           <CatalogueVisibilityEditor
             productId={product.id}
             initialMode={product.catalogue_access || 'all'}
@@ -337,9 +365,11 @@ export default async function ProductDetailPage({
           />
         </div>
         ) : (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-          <h2 className="text-base font-bold text-gray-900 mb-2">Catalogue visibility</h2>
-          <p className="text-xs text-gray-500">Only admin can change which companies see this product.</p>
+        <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-3">
+          <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-6 py-3.5 -mx-6 -mt-6 mb-4">
+            <h2 className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1B1A]">Catalogue visibility</h2>
+          </div>
+          <p className="text-xs text-[#7C766F]">Only admin can change which companies see this product.</p>
         </div>
         )}
       </div>

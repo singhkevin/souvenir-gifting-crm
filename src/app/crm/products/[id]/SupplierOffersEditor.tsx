@@ -64,49 +64,73 @@ export function SupplierOffersEditor({
   }
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-      <div>
-        <h2 className="text-base font-bold text-gray-900">Supplier offers</h2>
-        <p className="mt-1 text-xs text-gray-500">
-          Add each supplier&apos;s SKU, cost, MOQ, and lead time. Best is the lowest eligible cost. Pin one offer to override that.
-          Clients never see these costs.
-        </p>
+    <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-5">
+      <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-6 py-3.5 -mx-6 -mt-6">
+        <h2 className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1B1A]">Supplier offers</h2>
       </div>
+      <p className="text-xs text-[#4A4640]">
+        Add each supplier&apos;s SKU, cost, MOQ, and lead time. Best is the lowest eligible cost. Pin one offer to override that.
+        Clients never see these costs.
+      </p>
 
       {offers.length === 0 ? (
-        <p className="text-xs text-gray-500">No supplier offers yet. The product cost is still used until you add one.</p>
+        <p className="text-xs text-[#7C766F]">No supplier offers yet. The product cost is still used until you add one.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="text-gray-500">
+        <div className="overflow-x-auto rounded-none border border-[#CCC5BD] bg-[#FCF9F2]">
+          <table className="w-full border-collapse text-left text-xs">
+            <thead className="border-b border-[#CCC5BD] bg-[#F6F3EC]">
               <tr>
-                <th className="py-2 pr-3">Supplier</th>
-                <th className="py-2 pr-3">Their SKU</th>
-                <th className="py-2 pr-3 text-right">Cost</th>
-                <th className="py-2 pr-3 text-right">MOQ</th>
-                <th className="py-2 pr-3 text-right">Lead</th>
-                <th className="py-2 pr-3">Stock</th>
-                <th className="py-2"></th>
+                <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Supplier</th>
+                <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Their SKU</th>
+                <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Cost (₹)</th>
+                <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">MOQ</th>
+                <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Lead</th>
+                <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Stock</th>
+                <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#CCC5BD] text-xs text-[#1C1B1A]">
               {offers.map((offer) => (
-                <tr key={offer.id} className="border-t border-gray-100">
-                  <td className="py-2 pr-3">
-                    <div className="font-medium text-gray-900">{offer.supplier_name || 'Supplier'}</div>
-                    {offer.id === bestOfferId && <div className="text-[10px] font-semibold uppercase text-emerald-700">Best</div>}
-                    {offer.is_preferred && <div className="text-[10px] font-semibold uppercase text-[#806A50]">Pinned</div>}
-                    {!offer.is_active && <div className="text-[10px] uppercase text-gray-400">Inactive</div>}
+                <tr key={offer.id} className="transition-colors hover:bg-[#F6F3EC]">
+                  <td className="px-3.5 py-2.5">
+                    <div className="font-semibold text-[#1C1B1A]">{offer.supplier_name || 'Supplier'}</div>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {offer.id === bestOfferId && (
+                        <span className="inline-flex items-center gap-1 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[#3A4537]">
+                          <span className="h-1 w-1 rounded-full bg-[#3A4537]" /> Best
+                        </span>
+                      )}
+                      {offer.is_preferred && (
+                        <span className="inline-flex items-center rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 font-mono text-[10px] uppercase text-[#9E4300]">
+                          Pinned
+                        </span>
+                      )}
+                      {!offer.is_active && (
+                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[#7C766F]">
+                          Inactive
+                        </span>
+                      )}
+                    </div>
                   </td>
-                  <td className="py-2 pr-3 font-mono">{offer.supplier_sku || '—'}</td>
-                  <td className="py-2 pr-3 text-right">{formatCurrency(offer.cost)}</td>
-                  <td className="py-2 pr-3 text-right">{offer.moq}</td>
-                  <td className="py-2 pr-3 text-right">{offer.lead_time_days ?? '—'}</td>
-                  <td className="py-2 pr-3">{offer.in_stock ? 'In stock' : 'Out'}</td>
-                  <td className="py-2 text-right">
+                  <td className="px-3.5 py-2.5 font-mono text-[#1C1B1A]">{offer.supplier_sku || '—'}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono font-medium text-[#1C1B1A]">{formatCurrency(offer.cost)}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono text-[#1C1B1A]">{offer.moq}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono text-[#1C1B1A]">{offer.lead_time_days ?? '—'}</td>
+                  <td className="px-3.5 py-2.5">
+                    {offer.in_stock ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#3A4537]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> In stock
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-[#BA1A1A]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#BA1A1A]" /> Out
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3.5 py-2.5 text-right">
                     <button
                       type="button"
-                      className="mr-2 text-[#806A50]"
+                      className="mr-3 text-xs font-bold uppercase tracking-[0.12em] text-[#9E4300] hover:underline"
                       disabled={saving}
                       onClick={() => save({
                         offer_id: offer.id,
@@ -126,7 +150,7 @@ export function SupplierOffersEditor({
                     </button>
                     <button
                       type="button"
-                      className="text-red-600"
+                      className="text-xs font-bold uppercase tracking-[0.12em] text-[#BA1A1A] hover:underline"
                       disabled={saving}
                       onClick={() => remove(offer.id)}
                     >
@@ -142,10 +166,14 @@ export function SupplierOffersEditor({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 border-t border-gray-100 pt-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 border-t border-[#CCC5BD] pt-5 sm:grid-cols-4">
         <label className="block sm:col-span-2">
-          <span className="text-[10px] font-semibold uppercase text-gray-500">Supplier</span>
-          <select value={supplierId} onChange={(event) => setSupplierId(event.target.value)} className="mt-1 w-full rounded-lg border px-2 py-2 text-xs">
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Supplier</span>
+          <select
+            value={supplierId}
+            onChange={(event) => setSupplierId(event.target.value)}
+            className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+          >
             {supplierRows.map((supplier) => (
               <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
             ))}
@@ -155,11 +183,11 @@ export function SupplierOffersEditor({
               value={newSupplier}
               onChange={(event) => setNewSupplier(event.target.value)}
               placeholder="New supplier"
-              className="w-full rounded-lg border px-2 py-1.5 text-xs"
+              className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-1.5 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
             />
             <button
               type="button"
-              className="shrink-0 text-[#806A50]"
+              className="shrink-0 rounded-none border border-[#1C1B1A] bg-transparent px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#1C1B1A] hover:bg-[#F6F3EC] transition-colors disabled:opacity-50"
               disabled={saving || !newSupplier.trim()}
               onClick={() => {
                 setActiveId('supplier')
@@ -178,27 +206,62 @@ export function SupplierOffersEditor({
           </span>
         </label>
         <label className="block">
-          <span className="text-[10px] font-semibold uppercase text-gray-500">Supplier SKU</span>
-          <input value={sku} onChange={(event) => setSku(event.target.value)} className="mt-1 w-full rounded-lg border px-2 py-2 text-xs" />
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Supplier SKU</span>
+          <input
+            value={sku}
+            onChange={(event) => setSku(event.target.value)}
+            className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono uppercase text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+          />
         </label>
         <label className="block">
-          <span className="text-[10px] font-semibold uppercase text-gray-500">Cost</span>
-          <input type="number" min="0" step="0.01" value={cost} onChange={(event) => setCost(event.target.value)} className="mt-1 w-full rounded-lg border px-2 py-2 text-xs" />
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Cost</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={cost}
+            onChange={(event) => setCost(event.target.value)}
+            className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+          />
         </label>
         <label className="block">
-          <span className="text-[10px] font-semibold uppercase text-gray-500">MOQ</span>
-          <input type="number" min="1" step="1" value={moq} onChange={(event) => setMoq(event.target.value)} className="mt-1 w-full rounded-lg border px-2 py-2 text-xs" />
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">MOQ</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value={moq}
+            onChange={(event) => setMoq(event.target.value)}
+            className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+          />
         </label>
         <label className="block">
-          <span className="text-[10px] font-semibold uppercase text-gray-500">Lead time (days)</span>
-          <input type="number" min="0" step="1" value={lead} onChange={(event) => setLead(event.target.value)} className="mt-1 w-full rounded-lg border px-2 py-2 text-xs" />
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Lead time (days)</span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={lead}
+            onChange={(event) => setLead(event.target.value)}
+            className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+          />
         </label>
-        <label className="flex items-center gap-2 pt-5 text-xs">
-          <input type="checkbox" checked={inStock} onChange={(event) => setInStock(event.target.checked)} />
+        <label className="flex items-center gap-2 pt-6 text-xs text-[#4A4640] cursor-pointer">
+          <input
+            type="checkbox"
+            checked={inStock}
+            onChange={(event) => setInStock(event.target.checked)}
+            className="rounded-none border-[#CCC5BD] text-[#1C1B1A] focus:ring-0"
+          />
           In stock
         </label>
-        <label className="flex items-center gap-2 pt-5 text-xs">
-          <input type="checkbox" checked={preferred} onChange={(event) => setPreferred(event.target.checked)} />
+        <label className="flex items-center gap-2 pt-6 text-xs text-[#4A4640] cursor-pointer">
+          <input
+            type="checkbox"
+            checked={preferred}
+            onChange={(event) => setPreferred(event.target.checked)}
+            className="rounded-none border-[#CCC5BD] text-[#1C1B1A] focus:ring-0"
+          />
           Pin as preferred
         </label>
       </div>
@@ -215,7 +278,7 @@ export function SupplierOffersEditor({
           is_active: 'on',
           is_preferred: preferred ? 'on' : 'off',
         })}
-        className="rounded-lg bg-[#806A50] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+        className="rounded-none bg-[#1C1B1A] px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] transition-colors disabled:opacity-50"
       >
         {saving && activeId === null ? (
           <span className="inline-flex items-center gap-2"><Spinner />Saving…</span>
