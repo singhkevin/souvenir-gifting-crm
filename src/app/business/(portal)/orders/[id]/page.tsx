@@ -33,34 +33,90 @@ export default async function BusinessOrderPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
-      <Link href="/business/orders" className="text-xs uppercase tracking-[0.14em] text-[#806A50]">Orders</Link>
       <div>
-        <h1 className="font-serif text-3xl">{order.order_number}</h1>
-        <p className="mt-2 text-sm text-[#5C6570]">
-          {CLIENT_STATUS_LABELS[order.status] || order.status} · {formatDate(order.created_at)} · {formatCurrency(order.order_value)}
-        </p>
-        <p className="mt-1 text-sm text-[#5C6570]">
-          Invoice: {paymentLabel(invoice?.status)}
-          {' · '}
-          {order.dispatch_date ? `Dispatched ${formatDate(order.dispatch_date)}` : 'Not dispatched yet'}
-          {' · '}
-          {order.tracking_number ? `Tracking ${order.tracking_number}` : 'Tracking not available yet'}
-        </p>
+        <Link
+          href="/business/orders"
+          className="inline-flex items-center gap-1.5 sv2-label text-[10px] text-[#7C766F] hover:text-[#9E4300] transition-colors"
+        >
+          ← Back to orders
+        </Link>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="sv2-label text-[10px] text-[#7C766F] uppercase tracking-wider">Order</p>
+            <h1 className="mt-1 sv2-headline-md text-[#1C1C18]">{order.order_number}</h1>
+          </div>
+          <span className="inline-block px-3 py-1 sv2-label text-xs uppercase border border-[#CCC5BD] bg-[#F6F3EC] text-[#4A4640]">
+            {CLIENT_STATUS_LABELS[order.status] || order.status}
+          </span>
+        </div>
       </div>
-      <ul className="divide-y divide-[#E8E4DE] rounded-lg border border-[#E8E4DE] bg-white">
-        {(items || []).map((item) => {
-          const product = oneRelation(item.product as { name?: string; sku?: string } | null)
-          return (
-            <li key={item.id} className="flex justify-between px-4 py-3 text-sm">
-              <span>
-                <span className="block font-medium">{product?.name || 'Item'}</span>
-                <span className="text-xs text-[#5C6570]">{product?.sku} · {item.quantity} × {formatCurrency(item.unit_price)}</span>
-              </span>
-              <span>{formatCurrency(item.line_total)}</span>
-            </li>
-          )
-        })}
-      </ul>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 border border-[#CCC5BD] bg-[#F6F3EC] divide-x divide-y sm:divide-y-0 divide-[#CCC5BD]">
+        <div className="p-3.5">
+          <p className="sv2-label text-[10px] text-[#7C766F]">Order Date</p>
+          <p className="mt-1 sv2-mono-sm text-sm text-[#1C1C18]">
+            {formatDate(order.created_at)}
+          </p>
+        </div>
+        <div className="p-3.5">
+          <p className="sv2-label text-[10px] text-[#7C766F]">Order Value</p>
+          <p className="mt-1 sv2-mono-sm text-sm text-[#1C1C18]">
+            {formatCurrency(order.order_value)}
+          </p>
+        </div>
+        <div className="p-3.5">
+          <p className="sv2-label text-[10px] text-[#7C766F]">Invoice Status</p>
+          <p className="mt-1 text-sm text-[#1C1C18]">
+            {paymentLabel(invoice?.status)}
+          </p>
+        </div>
+        <div className="p-3.5">
+          <p className="sv2-label text-[10px] text-[#7C766F]">Fulfillment</p>
+          <p className="mt-1 sv2-mono-sm text-xs text-[#1C1C18]">
+            {order.dispatch_date ? `Dispatched ${formatDate(order.dispatch_date)}` : 'Not dispatched yet'}
+          </p>
+          <p className="sv2-mono-sm text-xs text-[#7C766F]">
+            {order.tracking_number ? `Tracking: ${order.tracking_number}` : 'Tracking not available'}
+          </p>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto border border-[#CCC5BD] bg-[#FCF9F2]">
+        <table className="w-full text-left text-sm border-collapse min-w-[540px]">
+          <thead>
+            <tr className="border-b border-[#CCC5BD] bg-[#F6F3EC]">
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F]">Item</th>
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F] text-right">Quantity</th>
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F] text-right">Unit Price</th>
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F] text-right">Line Total</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#CCC5BD]">
+            {(items || []).map((item) => {
+              const product = oneRelation(item.product as { name?: string; sku?: string } | null)
+              return (
+                <tr key={item.id} className="hover:bg-[#F6F3EC] transition-colors">
+                  <td className="p-3.5">
+                    <p className="font-medium text-[#1C1C18]">{product?.name || 'Item'}</p>
+                    {product?.sku ? (
+                      <p className="sv2-mono-sm text-xs text-[#7C766F]">SKU: {product.sku}</p>
+                    ) : null}
+                  </td>
+                  <td className="p-3.5 sv2-mono-sm text-right text-xs text-[#1C1C18]">
+                    {item.quantity}
+                  </td>
+                  <td className="p-3.5 sv2-mono-sm text-right text-xs text-[#1C1C18]">
+                    {formatCurrency(item.unit_price)}
+                  </td>
+                  <td className="p-3.5 sv2-mono-sm text-right font-medium text-[#1C1C18]">
+                    {formatCurrency(item.line_total)}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

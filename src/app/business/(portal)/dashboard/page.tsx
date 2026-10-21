@@ -16,28 +16,59 @@ export default async function BusinessDashboardPage() {
     : [null, null]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="font-serif text-3xl">Hello{profile.full_name ? `, ${profile.full_name}` : ''}</h1>
-        <p className="mt-2 text-sm text-[#5C6570]">
+        <p className="sv2-label text-[10px] text-[#7C766F] uppercase tracking-wider">Business account</p>
+        <h1 className="mt-1 sv2-headline-md text-[#1C1C18]">Hello{profile.full_name ? `, ${profile.full_name}` : ''}</h1>
+        <p className="mt-2 text-sm text-[#4A4640] max-w-2xl">
           {company?.business_verification === 'verified'
             ? 'Your account is approved. Indicative prices are not the final quote.'
             : 'Pending approval. You can browse the catalogue. Quote requests open after sales approves this account. Indicative prices are not the final quote.'}
         </p>
       </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <Link href="/business/requests" className="rounded-lg border border-[#E8E4DE] bg-white p-4">
-          <p className="text-xs uppercase tracking-[0.14em] text-[#5C6570]">Quote requests</p>
-          <p className="mt-2 text-2xl">{requests?.count ?? '—'}</p>
+        <Link
+          href="/business/requests"
+          className="border border-[#CCC5BD] bg-[#FCF9F2] p-5 rounded-none hover:border-[#1C1C18] hover:bg-[#F6F3EC] transition-colors group block"
+        >
+          <div className="flex items-center justify-between">
+            <p className="sv2-label text-[10px] text-[#7C766F]">Quote requests</p>
+            <span className="sv2-label text-[10px] text-[#9E4300] group-hover:underline">View all →</span>
+          </div>
+          <p className="mt-3 sv2-mono-lg text-3xl font-bold text-[#1C1C18]">
+            {requests?.count ?? '—'}
+          </p>
         </Link>
-        <Link href="/business/quotes" className="rounded-lg border border-[#E8E4DE] bg-white p-4">
-          <p className="text-xs uppercase tracking-[0.14em] text-[#5C6570]">Quotes to review</p>
-          <p className="mt-2 text-2xl">{quotes?.count ?? '—'}</p>
+        <Link
+          href="/business/quotes"
+          className="border border-[#CCC5BD] bg-[#FCF9F2] p-5 rounded-none hover:border-[#1C1C18] hover:bg-[#F6F3EC] transition-colors group block"
+        >
+          <div className="flex items-center justify-between">
+            <p className="sv2-label text-[10px] text-[#7C766F]">Quotes to review</p>
+            <span className="sv2-label text-[10px] text-[#9E4300] group-hover:underline">View all →</span>
+          </div>
+          <p className="mt-3 sv2-mono-lg text-3xl font-bold text-[#1C1C18]">
+            {quotes?.count ?? '—'}
+          </p>
         </Link>
       </div>
-      <Link href="/business/catalogue" className="inline-block bg-[#806A50] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
-        Browse catalogue
-      </Link>
+
+      <div className="flex flex-wrap items-center gap-3 pt-2">
+        <Link
+          href="/business/catalogue"
+          className="inline-block bg-[#000000] px-5 py-3 sv2-label text-xs text-white hover:bg-[#9E4300] transition-colors rounded-none"
+        >
+          Browse catalogue
+        </Link>
+        <Link
+          href="/business/quote"
+          className="inline-block border border-[#CCC5BD] bg-[#FCF9F2] px-5 py-3 sv2-label text-xs text-[#1C1C18] hover:border-[#1C1C18] hover:bg-[#F6F3EC] transition-colors rounded-none"
+        >
+          Quote basket
+        </Link>
+      </div>
     </div>
   )
 }
+

@@ -11,8 +11,16 @@ export default async function BusinessCataloguePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-serif text-3xl">Catalogue</h1>
-        <p className="mt-2 text-sm text-[#5C6570]">Prices are indicative. The final price is the quotation we send.</p>
+        <p className="sv2-label text-[10px] text-[#7C766F] uppercase tracking-wider">Business catalogue</p>
+        <h1 className="mt-1 sv2-headline-md text-[#1C1C18]">Catalogue</h1>
+        <p className="mt-1 text-sm text-[#4A4640]">Prices are indicative. The final price is the quotation we send.</p>
+      </div>
+      <div className="border border-[#CCC5BD] bg-[#F6F3EC] px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-[#4A4640]">
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#9E4300]" />
+          <span>Add products to your quote basket to request a quotation</span>
+        </div>
+        <span className="sv2-label text-[10px] text-[#7C766F]">Final price is in your quotation</span>
       </div>
       <CatalogueBrowser
         products={products}

@@ -19,23 +19,67 @@ export default async function BusinessRequestsPage() {
     : { data: [], error: null }
 
   return (
-    <div className="space-y-4">
-      <h1 className="font-serif text-3xl">Requests</h1>
-      {error ? <p className="text-sm text-[#5C6570]">Quote requests appear after the business portal migrations are applied.</p> : null}
-      <ul className="divide-y divide-[#E8E4DE] rounded-lg border border-[#E8E4DE] bg-white">
-        {(data || []).map((row) => (
-          <li key={row.id}>
-            <Link href={`/business/requests/${row.id}`} className="flex items-center justify-between gap-3 px-4 py-3">
-              <span>
-                <span className="block font-medium">{row.name}</span>
-                <span className="text-xs text-[#5C6570]">{formatDate(row.created_at)}</span>
-              </span>
-              <span className="text-xs capitalize text-[#806A50]">{row.status}</span>
-            </Link>
-          </li>
-        ))}
-        {!error && !(data || []).length ? <li className="px-4 py-6 text-sm text-[#5C6570]">No quote requests yet.</li> : null}
-      </ul>
+    <div className="space-y-6">
+      <div>
+        <p className="sv2-label text-[10px] text-[#7C766F] uppercase tracking-wider">Business account</p>
+        <h1 className="mt-1 sv2-headline-md text-[#1C1C18]">Requests</h1>
+        <p className="mt-1 text-sm text-[#4A4640]">Quote requests you have sent to our sales team.</p>
+      </div>
+
+      {error ? (
+        <div className="border border-[#CCC5BD] bg-[#F6F3EC] p-4 text-sm text-[#4A4640]">
+          Quote requests appear after the business portal migrations are applied.
+        </div>
+      ) : null}
+
+      <div className="overflow-x-auto border border-[#CCC5BD] bg-[#FCF9F2]">
+        <table className="w-full text-left text-sm border-collapse min-w-[540px]">
+          <thead>
+            <tr className="border-b border-[#CCC5BD] bg-[#F6F3EC]">
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F]">Request</th>
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F]">Submitted</th>
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F]">Deadline</th>
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F]">Status</th>
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F] text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#CCC5BD]">
+            {(data || []).map((row) => (
+              <tr key={row.id} className="hover:bg-[#F6F3EC] transition-colors">
+                <td className="p-3.5 font-medium text-[#1C1C18]">
+                  {row.name}
+                </td>
+                <td className="p-3.5 sv2-mono-sm text-xs text-[#4A4640]">
+                  {formatDate(row.created_at)}
+                </td>
+                <td className="p-3.5 sv2-mono-sm text-xs text-[#4A4640]">
+                  {row.deadline ? formatDate(row.deadline) : '—'}
+                </td>
+                <td className="p-3.5">
+                  <span className="inline-block px-2 py-0.5 sv2-label text-[10px] border border-[#CCC5BD] bg-[#F6F3EC] uppercase text-[#4A4640]">
+                    {row.status}
+                  </span>
+                </td>
+                <td className="p-3.5 text-right">
+                  <Link
+                    href={`/business/requests/${row.id}`}
+                    className="sv2-label text-[10px] text-[#9E4300] hover:underline"
+                  >
+                    View →
+                  </Link>
+                </td>
+              </tr>
+            ))}
+            {!error && !(data || []).length ? (
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-sm text-[#4A4640]">
+                  No quote requests yet.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
