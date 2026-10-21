@@ -11,14 +11,14 @@ import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'name', label: 'Product name', required: true },
   { key: 'sku', label: 'SKU', required: true },
-  { key: 'price', label: 'Price', required: true },
+  { key: 'supplier_cost', label: 'Cost price (₹, supplier price)' },
+  { key: 'price', label: 'Retail price override (blank = cost)' },
   { key: 'description', label: 'Description' },
   { key: 'category', label: 'Category' },
   { key: 'supplier', label: 'Supplier' },
   { key: 'moq', label: 'MOQ' },
   { key: 'stock_qty', label: 'Stock on hand' },
   { key: 'fulfillment_mode', label: 'Purchase path (auto / buy / rfq)' },
-  { key: 'supplier_cost', label: 'Cost price' },
   { key: 'internal_notes', label: 'Internal notes' },
   { key: 'hsn_code', label: 'HSN' },
   { key: 'image_url', label: 'Image URL' },
@@ -47,7 +47,9 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
   const { key, rotate } = useIdempotencyKey()
 
   const mappedRequired = useMemo(
-    () => FIELD_LABELS.filter((f) => f.required).every((f) => mapping[f.key]),
+    () =>
+      FIELD_LABELS.filter((f) => f.required).every((f) => mapping[f.key]) &&
+      Boolean(mapping.supplier_cost || mapping.price),
     [mapping],
   )
 
@@ -73,7 +75,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
       return
     }
     if (!mappedRequired) {
-      toast.error('Map product name, SKU and price before importing')
+      toast.error('Map product name, SKU and cost price before importing')
       return
     }
     const data = new FormData()
@@ -110,8 +112,8 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
             className="text-xs file:mr-2 file:px-3 file:py-1.5 file:border file:border-gray-200 file:bg-white file:text-xs"
           />
           <p className="text-[11px] text-gray-500 mt-2">
-            Required columns: product name, SKU, price. Optional: description, category, supplier, MOQ,
-            stock, product margin, internal notes, visibility, companies, image URL, image filename,
+            Required columns: product name, SKU, cost price. Retail = cost unless a price column is given; selling
+            prices are set in Pricing. Optional: description, category, supplier, MOQ, stock, internal notes, visibility, companies, image URL, image filename,
             colour, size, variant SKU, extra price, status.
           </p>
         </div>

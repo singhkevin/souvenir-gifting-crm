@@ -11,6 +11,7 @@ import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 import { withIdempotency } from '@/lib/idempotency'
 import { canonicalCategoryLabel, findCategory } from '@/lib/products/category-plan'
+import { resolveCostAndRetail } from '@/lib/products/cost-price'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const VISIBILITY_ROLES = ['admin'] as const
@@ -48,8 +49,12 @@ async function createProductOnce(formData: FormData) {
   const brand_id = (formData.get('brand_id') as string) || null
   const supplier_id = (formData.get('supplier_id') as string) || null
   const description = (formData.get('description') as string) || null
-  const price = parseFloat(formData.get('price') as string) || 0
-  const supplier_cost = formData.get('supplier_cost') ? parseFloat(formData.get('supplier_cost') as string) : null
+  // One number per product: the cost (supplier) price. Retail = cost (0% margin)
+  // unless an explicit retail override is given. Portal prices are set in Pricing.
+  const priced = resolveCostAndRetail({
+    cost: formData.get('supplier_cost'),
+    retailOverride: formData.get('price_override'),
+  })
   const moq = parseInt(formData.get('moq') as string, 10) || 1
   const fulfillment_mode = parseFulfillmentMode(formData.get('fulfillment_mode'))
   const stockRaw = String(formData.get('stock_qty') ?? '').trim()
@@ -77,6 +82,11 @@ async function createProductOnce(formData: FormData) {
   if (!category_id) {
     return { error: 'Please select a category' }
   }
+  if (!priced.ok) {
+    return { error: priced.error }
+  }
+  const price = priced.price
+  const supplier_cost = priced.cost
   if (image_url && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\b/i.test(image_url)) {
     return { error: 'Image URLs cannot point to localhost. Upload a product photo instead.' }
   }
@@ -128,7 +138,7 @@ async function createProductOnce(formData: FormData) {
     return { error: directOrderSchemaHint(error?.message || 'Product was not saved') }
   }
 
-  if (supplier_cost != null) {
+  {
     const { error: costError } = await upsertProductCost(supabase, product.id, {
       supplier_cost,
     })
@@ -138,7 +148,7 @@ async function createProductOnce(formData: FormData) {
     }
   }
 
-  if (supplier_id && supplier_cost != null) {
+  if (supplier_id) {
     const leadRaw = String(formData.get('lead_time_days') || '').trim()
     const lead = leadRaw ? Number(leadRaw) : null
     const { error: offerError } = await supabase.from('product_supplier_offers').insert({
@@ -260,23 +270,22 @@ export async function updateProduct(productId: string, formData: FormData) {
   text('subcategory_id')
   text('supplier_id')
   text('hsn_code')
-  number('price', 'price', 0)
   number('moq', 'moq', 1)
   const costPatch: { supplier_cost?: number | null } = {}
-  const readCost = (key: 'supplier_cost', label: string) => {
-    if (!formData.has(key)) return null
-    const raw = String(formData.get(key) ?? '').trim()
-    if (!raw) {
-      costPatch[key] = null
-      return null
-    }
-    const parsed = Number(raw)
-    if (!Number.isFinite(parsed)) return `${label} must be a number`
-    costPatch[key] = parsed
-    return null
+  if (formData.has('supplier_cost')) {
+    // Cost price is the one price staff enter. Retail = cost (0% margin) unless
+    // the optional retail override is filled in.
+    const priced = resolveCostAndRetail({
+      cost: formData.get('supplier_cost'),
+      retailOverride: formData.get('price_override'),
+    })
+    if (!priced.ok) return { error: priced.error }
+    costPatch.supplier_cost = priced.cost
+    update.price = priced.price
+  } else {
+    // Forms without a cost field (older screens) may still send a retail price.
+    number('price', 'price', 0)
   }
-  const supplierCostError = readCost('supplier_cost', 'Cost price')
-  if (supplierCostError) return { error: supplierCostError }
   if (formData.has('stock_qty')) {
     const raw = String(formData.get('stock_qty') ?? '').trim()
     const stock = raw ? Number(raw) : 0

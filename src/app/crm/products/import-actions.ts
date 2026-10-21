@@ -11,6 +11,7 @@ import { directOrderSchemaHint } from '@/lib/catalogue/purchase-path'
 import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { withIdempotency } from '@/lib/idempotency'
+import { resolveCsvRetail } from '@/lib/products/cost-price'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const IMAGE_BUCKET = 'product-images'
@@ -228,11 +229,6 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       failures.push({ row: rowNumber, sku, reason: 'SKU already exists' })
       return
     }
-    const price = Number(cell(row, 'price'))
-    if (!Number.isFinite(price) || price < 0) {
-      failures.push({ row: rowNumber, sku, reason: 'Price must be a number 0 or greater' })
-      return
-    }
     const companyNames = splitCompanyNames(cell(row, 'companies'))
     const companyIds: string[] = []
     for (const companyName of companyNames) {
@@ -308,6 +304,13 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       supplier_cost = supplierCost.value
       internal_notes = cell(row, 'internal_notes') || null
     }
+    // Cost price is the primary input. A blank price column means retail = cost.
+    const retail = resolveCsvRetail({ priceRaw: cell(row, 'price'), cost: supplier_cost })
+    if (!retail.ok) {
+      failures.push({ row: rowNumber, sku, reason: retail.reason })
+      return
+    }
+    const price = retail.price
 
     batchSkus.add(sku)
     prepared.push({

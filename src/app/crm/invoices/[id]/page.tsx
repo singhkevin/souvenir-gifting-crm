@@ -138,7 +138,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
               />
               
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Amount (?) *</label>
+                <label className="block font-semibold text-gray-700 mb-1">Amount (&#8377;) *</label>
                 <input
                   type="number"
                   name="amount"

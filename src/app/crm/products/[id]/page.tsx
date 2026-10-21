@@ -67,6 +67,11 @@ export default async function ProductDetailPage({
     costPrice: product.supplier_cost,
   }).price
 
+  // A stored retail price that differs from cost is an explicit override; keep it
+  // prefilled so saving other fields never silently reprices the product.
+  const hasRetailOverride =
+    product.supplier_cost != null && product.price != null && Number(product.price) !== Number(product.supplier_cost)
+
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
 
   return (
@@ -261,18 +266,55 @@ export default async function ProductDetailPage({
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Retail price</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="price"
-                  defaultValue={product.price}
-                  required
-                  className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
-                />
-                <p className="mt-1 text-[11px] text-[#7C766F]">
-                  Retail price on the store unless Pricing sets a store rule or a fixed price. Company prices are on the Pricing page.
-                </p>
+                {showCost ? (
+                  <>
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Cost price (&#8377;) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      name="supplier_cost"
+                      defaultValue={product.supplier_cost ?? product.price ?? ''}
+                      required
+                      className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                    />
+                    <p className="mt-1 text-[11px] text-[#7C766F]">
+                      What you pay the supplier per unit. Selling prices are set in{' '}
+                      <Link href="/crm/pricing" className="font-semibold text-[#9E4300] underline underline-offset-2 hover:text-[#1C1B1A]">
+                        Pricing
+                      </Link>
+                      . With no portal rule, retail = cost.
+                    </p>
+                    <details className="mt-2" open={hasRetailOverride}>
+                      <summary className="cursor-pointer select-none text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] hover:text-[#9E4300]">
+                        Override retail price
+                      </summary>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        name="price_override"
+                        defaultValue={hasRetailOverride ? product.price : ''}
+                        placeholder="Blank = use cost price"
+                        className="mt-1.5 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                      />
+                      <p className="mt-1 text-[11px] text-[#7C766F]">
+                        Current retail base: <span className="font-mono">{formatCurrency(product.price)}</span>. Clear this to make retail follow the cost.
+                      </p>
+                    </details>
+                  </>
+                ) : (
+                  <>
+                    <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Price</span>
+                    <p className="text-[11px] text-[#7C766F]">
+                      Prices come from the cost price, which admin or accounts set. Selling prices are set in{' '}
+                      <Link href="/crm/pricing" className="font-semibold text-[#9E4300] underline underline-offset-2 hover:text-[#1C1B1A]">
+                        Pricing
+                      </Link>
+                      .
+                    </p>
+                  </>
+                )}
               </div>
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">MOQ</label>
