@@ -7,6 +7,8 @@ import { TabSessionRevive } from '@/components/auth/tab-session-revive'
 import { headers } from 'next/headers'
 import { readTenantFromHeaders } from '@/lib/portal-host'
 import { isBusinessRole, isClientRole, isGiftEmployeeRole } from '@/lib/roles'
+import '@/app/sv2.css'
+import { newsreader, plusJakarta, jetbrainsMono } from '@/lib/fonts'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,8 +73,10 @@ export default async function PortalLayoutWrapper({ children }: { children: Reac
   const displayName = profile.full_name || user.email?.split('@')[0] || 'User'
 
   return (
-    <PortalLayout user={{ name: displayName, company_name: companyName }}>
-      {children}
-    </PortalLayout>
+    <div className={`sv2 ${newsreader.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} min-h-screen bg-[#FCF9F2] text-[#1C1C18]`}>
+      <PortalLayout user={{ name: displayName, company_name: companyName }}>
+        {children}
+      </PortalLayout>
+    </div>
   )
 }

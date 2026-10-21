@@ -35,18 +35,34 @@ export default async function GiftsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Gifts</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="font-serif text-3xl font-normal tracking-tight text-[#1C1B1A] sm:text-4xl">Gifts</h1>
+        <p className="mt-1 text-sm text-[#4A4640]">
           {showCollections
             ? 'Catalogs prepared for your team. Open one to add gifts to a quote.'
             : 'All gifts available to you. Add the ones you want to your quote basket.'}
         </p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Link href="/portal/gifts" className={tabClass(!showCollections)} aria-current={!showCollections ? 'page' : undefined}>
+      <div className="inline-flex border border-[#CCC5BD] bg-[#EBE8E1] p-0.5 rounded-none">
+        <Link
+          href="/portal/gifts"
+          className={`px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all rounded-none ${
+            !showCollections
+              ? 'bg-[#1C1B1A] text-[#FCF9F2]'
+              : 'text-[#4A4640] hover:text-[#1C1B1A]'
+          }`}
+          aria-current={!showCollections ? 'page' : undefined}
+        >
           All gifts
         </Link>
-        <Link href="/portal/gifts?tab=catalogs" className={tabClass(showCollections)} aria-current={showCollections ? 'page' : undefined}>
+        <Link
+          href="/portal/gifts?tab=catalogs"
+          className={`px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all rounded-none ${
+            showCollections
+              ? 'bg-[#1C1B1A] text-[#FCF9F2]'
+              : 'text-[#4A4640] hover:text-[#1C1B1A]'
+          }`}
+          aria-current={showCollections ? 'page' : undefined}
+        >
           Catalogs for you
         </Link>
       </div>
@@ -55,12 +71,6 @@ export default async function GiftsPage({
       )}
     </div>
   )
-}
-
-function tabClass(active: boolean) {
-  return `inline-flex min-h-10 items-center rounded-lg px-3 text-sm font-medium ${
-    active ? 'bg-primary/5 text-primary' : 'text-gray-600 hover:bg-gray-50'
-  }`
 }
 
 async function Collections({ companyId }: { companyId: string | null }) {
@@ -72,27 +82,52 @@ async function Collections({ companyId }: { companyId: string | null }) {
   }
 
   return (
-    <div className="space-y-3">
-      {catalogs.map((catalog) => (
-        <div key={catalog.id} className="rounded-2xl border bg-white p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <p className="font-serif text-lg">{catalog.name}</p>
-            <span className="rounded-full bg-[#E1EFFE] px-2.5 py-0.5 text-[10px] font-semibold text-[#1E429F]">
-              {catalogStatusLabel(catalog.status)}
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-gray-500">
-            {catalog.employee_quantity?.toLocaleString('en-IN')} people · {formatCurrency(catalog.budget_per_employee)} per person · {formatCurrency(catalog.total_budget)} total
-          </p>
-          <p className="mt-1 text-xs">Delivery {formatDate(catalog.required_delivery_date)}</p>
-          <Link
-            href={`/portal/gifts/collection/${catalog.id}`}
-            className="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-white hover:bg-[#9C8567]"
+    <div className="space-y-4">
+      {catalogs.map((catalog) => {
+        const isReady = catalog.status === 'published_to_client' || catalog.status === 'order_ready'
+        const isClosed = catalog.status === 'closed'
+        const statusChipClass = isReady
+          ? 'border-[#3A4537]/30 bg-[#DAE6D3] text-[#3A4537]'
+          : isClosed
+          ? 'border-[#CCC5BD] bg-[#EBE8E1] text-[#7C766F]'
+          : 'border-[#CCC5BD] bg-[#F1EEE7] text-[#1C1C18]'
+
+        return (
+          <div
+            key={catalog.id}
+            className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-5 sm:p-6 transition-colors hover:border-[#1C1B1A]"
           >
-            View catalog
-          </Link>
-        </div>
-      ))}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+              <div>
+                <h3 className="font-serif text-xl sm:text-2xl font-normal text-[#1C1B1A]">{catalog.name}</h3>
+                <p className="mt-2 font-mono text-xs text-[#4A4640]">
+                  {catalog.employee_quantity != null ? `${catalog.employee_quantity.toLocaleString('en-IN')} people · ` : ''}
+                  {catalog.budget_per_employee != null ? `${formatCurrency(catalog.budget_per_employee)} per person · ` : ''}
+                  {catalog.total_budget != null ? `${formatCurrency(catalog.total_budget)} total` : ''}
+                </p>
+                {catalog.required_delivery_date ? (
+                  <p className="mt-1 text-xs text-[#7C766F]">
+                    Delivery <span className="font-mono text-[#1C1B1A]">{formatDate(catalog.required_delivery_date)}</span>
+                  </p>
+                ) : null}
+              </div>
+              <div className="shrink-0">
+                <span className={`inline-block border px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider rounded-none ${statusChipClass}`}>
+                  {catalogStatusLabel(catalog.status)}
+                </span>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-[#CCC5BD]">
+              <Link
+                href={`/portal/gifts/collection/${catalog.id}`}
+                className="inline-flex min-h-10 items-center justify-center rounded-none bg-[#1C1B1A] px-4 text-xs font-bold uppercase tracking-[0.12em] text-white hover:bg-[#9E4300] transition-colors"
+              >
+                View catalog
+              </Link>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -166,22 +201,22 @@ async function AllGifts({
 
   return (
     <>
-      <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
-        <form className="flex w-full gap-2">
+      <div className="space-y-4 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-4 sm:p-5">
+        <form className="flex w-full flex-col sm:flex-row gap-2">
           {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
           {sort && sort !== 'name' ? <input type="hidden" name="sort" value={sort} /> : null}
           <div className="relative min-w-0 flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7C766F]" />
             <input
               name="q"
               defaultValue={q}
-              placeholder="Search gifts"
-              className="min-h-10 w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#806A50]"
+              placeholder="Search gifts by name, SKU or description..."
+              className="min-h-10 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] py-2 pl-9 pr-3 text-sm text-[#1C1C18] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none"
             />
           </div>
           <button
             type="submit"
-            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-white hover:bg-[#9C8567]"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-none bg-[#1C1B1A] px-5 text-xs font-bold uppercase tracking-[0.12em] text-white hover:bg-[#9E4300] transition-colors"
           >
             Search
           </button>
@@ -219,10 +254,10 @@ async function AllGifts({
         <EmptyState title="No gifts match your search" body="Try a different search term or clear the filters." />
       ) : (
         <>
-          <p className="text-xs text-gray-500">
+          <p className="font-mono text-xs uppercase tracking-wider text-[#7C766F]">
             Showing {from + 1}–{Math.min(from + PAGE_SIZE, total)} of {total}
           </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => {
               const shortlistProduct = {
                 id: product.id,
@@ -235,49 +270,76 @@ async function AllGifts({
               return (
                 <article
                   key={product.id}
-                  className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white transition-all hover:border-[var(--color-primary)] hover:shadow-sm"
+                  className="flex flex-col justify-between overflow-hidden rounded-none border border-[#CCC5BD] bg-[#FCF9F2] hover:border-[#1C1B1A] transition-colors group"
                 >
-                  <Link href={`/portal/gifts/${product.id}`} className="block">
-                    <div className="aspect-square border-b border-gray-100 bg-[#FAF7F2]">
-                      <ProductImage src={product.image_url} alt={product.name} size="md" className="h-full min-h-0" />
-                    </div>
-                  </Link>
-                  <div className="flex flex-1 flex-col justify-between space-y-3 p-4 sm:p-5">
-                    <div>
+                  <div>
+                    <Link href={`/portal/gifts/${product.id}`} className="block">
+                      <div className="relative aspect-square overflow-hidden border-b border-[#CCC5BD] bg-[#F1EEE7]">
+                        <ProductImage
+                          src={product.image_url}
+                          alt={product.name}
+                          size="md"
+                          className="h-full w-full object-cover rounded-none"
+                        />
+                        {product.moq ? (
+                          <span className="absolute top-2.5 left-2.5 border border-[#9E4300]/40 bg-[#FFDBCB]/90 text-[#9E4300] font-mono text-[10px] uppercase px-2 py-0.5 tracking-wider rounded-none">
+                            MOQ {product.moq}
+                          </span>
+                        ) : null}
+                      </div>
+                    </Link>
+                    <div className="p-4 space-y-2">
                       {product.category_name ? (
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary)]">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300] truncate">
                           {product.category_name}
                         </p>
                       ) : null}
-                      <Link href={`/portal/gifts/${product.id}`}>
-                        <h3 className="mt-1 line-clamp-1 text-sm font-semibold text-gray-900 hover:text-[#806A50]">{product.name}</h3>
+                      <Link href={`/portal/gifts/${product.id}`} className="block">
+                        <h3 className="font-serif text-lg text-[#1C1B1A] group-hover:text-[#9E4300] transition-colors line-clamp-1">
+                          {product.name}
+                        </h3>
                       </Link>
-                      <p className="mt-1 line-clamp-2 text-xs text-gray-500">{product.description || ''}</p>
+                      <p className="text-xs text-[#4A4640] line-clamp-2 leading-relaxed">
+                        {product.description || ''}
+                      </p>
                     </div>
-                    <div className="space-y-3 border-t border-gray-100 pt-3">
+                  </div>
+                  <div className="p-4 pt-0 space-y-3">
+                    <div className="border-t border-[#CCC5BD] pt-3 flex items-baseline justify-between gap-2">
                       <div>
-                        <p className="text-base font-semibold text-gray-900">
+                        <p className="font-mono text-base font-semibold text-[#1C1C18]">
                           {product.price == null ? 'Price on request' : formatCurrency(product.price)}
                         </p>
-                        <p className="text-[10px] text-gray-400">Per person · MOQ {product.moq || 1}</p>
+                        <p className="font-mono text-[10px] text-[#7C766F] uppercase">Per unit</p>
                       </div>
-                      <CatalogueShortlistButton product={shortlistProduct} />
+                      {product.moq ? (
+                        <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2 py-0.5 font-mono text-[10px] text-[#4A4640] rounded-none uppercase">
+                          MOQ {product.moq}
+                        </span>
+                      ) : null}
                     </div>
+                    <CatalogueShortlistButton product={shortlistProduct} />
                   </div>
                 </article>
               )
             })}
           </div>
           {totalPages > 1 && (
-            <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex items-center justify-between gap-3 pt-4 border-t border-[#CCC5BD]">
               {currentPage > 1 ? (
-                <Link href={pageHref(currentPage - 1)} className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2] sm:flex-none">
+                <Link
+                  href={pageHref(currentPage - 1)}
+                  className="inline-flex min-h-10 flex-1 items-center justify-center rounded-none border border-[#CCC5BD] bg-[#FCF9F2] px-4 text-xs font-bold uppercase tracking-[0.12em] text-[#1C1C18] hover:bg-[#F6F3EC] sm:flex-none transition-colors"
+                >
                   Previous
                 </Link>
               ) : <span className="flex-1 sm:flex-none" />}
-              <span className="text-xs text-gray-500">Page {currentPage} of {totalPages}</span>
+              <span className="font-mono text-xs text-[#7C766F] uppercase tracking-wider">Page {currentPage} of {totalPages}</span>
               {currentPage < totalPages ? (
-                <Link href={pageHref(currentPage + 1)} className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-white hover:bg-[#9C8567] sm:flex-none">
+                <Link
+                  href={pageHref(currentPage + 1)}
+                  className="inline-flex min-h-10 flex-1 items-center justify-center rounded-none bg-[#1C1B1A] px-4 text-xs font-bold uppercase tracking-[0.12em] text-white hover:bg-[#9E4300] sm:flex-none transition-colors"
+                >
                   Next
                 </Link>
               ) : <span className="flex-1 sm:flex-none" />}
@@ -291,10 +353,10 @@ async function AllGifts({
 
 function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-      <Package className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-      <p className="text-sm font-semibold text-gray-700">{title}</p>
-      <p className="mt-1 text-xs text-gray-400">{body}</p>
+    <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-12 text-center">
+      <Package className="mx-auto mb-3 h-10 w-10 text-[#7C766F]" />
+      <p className="font-serif text-lg text-[#1C1B1A]">{title}</p>
+      <p className="mt-1 text-xs text-[#7C766F]">{body}</p>
     </div>
   )
 }

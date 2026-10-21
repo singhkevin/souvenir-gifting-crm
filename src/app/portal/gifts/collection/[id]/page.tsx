@@ -8,6 +8,7 @@ import { displayableLineIds } from '@/lib/catalogs/visibility-data'
 import { formatCurrency } from '@/lib/utils'
 import { CatalogQuoteBoard, type CatalogQuoteItem } from '@/components/portal/catalog-quote-board'
 import { Package } from 'lucide-react'
+import { BackButton } from '@/components/ui/back-button'
 
 export default async function CollectionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -106,20 +107,29 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{campaignMeta.name || 'Catalog'}</h1>
-        <p className="mt-1 text-sm text-gray-500">
+      <BackButton
+        href="/portal/gifts?tab=catalogs"
+        label="Back to catalogs"
+        className="min-h-10 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] hover:text-[#1C1B1A]"
+      />
+      <div className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] p-6 sm:p-8">
+        {budget != null && (
+          <div className="mb-2 font-mono text-xs uppercase tracking-wider text-[#9E4300]">
+            Target Budget · {formatCurrency(budget)} per person
+          </div>
+        )}
+        <h1 className="font-serif text-3xl font-normal tracking-tight text-[#1C1B1A] sm:text-4xl">
+          {campaignMeta.name || 'Catalog'}
+        </h1>
+        <p className="mt-2 text-sm text-[#4A4640]">
           Add the gifts you need, set a quantity for each, and request one quote.
         </p>
-        {budget != null && (
-          <p className="mt-1 text-xs text-gray-500">Budget: {formatCurrency(budget)} per person</p>
-        )}
       </div>
       {groups.length === 0 ? (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-          <Package className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-          <p className="text-sm font-semibold text-gray-700">Nothing to review just yet</p>
-          <p className="mt-1 text-xs text-gray-400">Your account manager will share gifts for this catalog shortly.</p>
+        <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-12 text-center">
+          <Package className="mx-auto mb-3 h-10 w-10 text-[#7C766F]" />
+          <p className="font-serif text-lg text-[#1C1B1A]">Nothing to review just yet</p>
+          <p className="mt-1 text-xs text-[#7C766F]">Your account manager will share gifts for this catalog shortly.</p>
         </div>
       ) : (
         <CatalogQuoteBoard catalogId={id} budget={budget} groups={groups} />
