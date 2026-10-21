@@ -116,6 +116,8 @@ export const siteContent = {
     // TODO(client): Replace with verified dispatch locations
     dispatchCities: '[Dispatch locations]',
     // TODO(client): Confirm whether gifts can ship directly to recipients, and how
+    // TODO(client): Confirm accepted payment methods (no payment gateway is wired in code)
+    paymentMethods: '[Payment methods]',
     directDispatchNote: '[Direct-to-recipient dispatch details]',
   },
 } as const

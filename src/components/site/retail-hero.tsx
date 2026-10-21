@@ -229,16 +229,16 @@ export function RetailHero({ slides }: { slides: RetailHeroProduct[][] }) {
                 <span className="text-[#CCC5BD] text-[10px] font-mono">{siteContent.retail.dispatchCities}</span>
               </div>
               <div className="border-l border-[#7C766F] pl-3">
-                <span className="block text-[#FFB690] font-bold">Signature Box</span>
-                <span className="text-[#CCC5BD] text-[10px]">Personalised Note</span>
+                <span className="block text-[#FFB690] font-bold">Gift packaging</span>
+                <span className="text-[#CCC5BD] text-[10px]">{siteContent.retail.packagingNote}</span>
               </div>
               <div className="border-l border-[#7C766F] pl-3">
-                <span className="block text-[#FFB690] font-bold">Secure Payment</span>
-                <span className="text-[#CCC5BD] text-[10px]">UPI, Cards &amp; NetBanking</span>
+                <span className="block text-[#FFB690] font-bold">Payment</span>
+                <span className="text-[#CCC5BD] text-[10px]">{siteContent.retail.paymentMethods}</span>
               </div>
               <div className="border-l border-[#7C766F] pl-3">
-                <span className="block text-[#FFB690] font-bold">Direct Gifting</span>
-                <span className="text-[#CCC5BD] text-[10px]">Hidden Invoice Option</span>
+                <span className="block text-[#FFB690] font-bold">Direct gifting</span>
+                <span className="text-[#CCC5BD] text-[10px]">{siteContent.retail.directDispatchNote}</span>
               </div>
             </div>
           </div>

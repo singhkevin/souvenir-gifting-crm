@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { siteContent } from '@/config/siteContent'
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
@@ -117,16 +118,16 @@ export default async function PublicProductPage({ params }: Props) {
             {/* 3-Up Gifting Perks strip */}
             <div className="grid grid-cols-1 sm:grid-cols-3 border border-[#CCC5BD] bg-[#F6F3EC] divide-y sm:divide-y-0 sm:divide-x divide-[#CCC5BD]">
               <div className="p-4 space-y-1">
-                <span className="sv2-label text-[10px] text-[#9E4300] block">Signature Packaging</span>
-                <p className="sv2-body-sm text-xs text-[#4A4640]">Carefully packaged with gift note option.</p>
+                <span className="sv2-label text-[10px] text-[#9E4300] block">Gift packaging</span>
+                <p className="sv2-body-sm text-xs text-[#4A4640]">{siteContent.retail.packagingNote}</p>
               </div>
               <div className="p-4 space-y-1">
-                <span className="sv2-label text-[10px] text-[#9E4300] block">Transit Protection</span>
-                <p className="sv2-body-sm text-xs text-[#4A4640]">Protective packaging designed for safe delivery.</p>
+                <span className="sv2-label text-[10px] text-[#9E4300] block">Delivery</span>
+                <p className="sv2-body-sm text-xs text-[#4A4640]">{siteContent.retail.dispatchCities}</p>
               </div>
               <div className="p-4 space-y-1">
-                <span className="sv2-label text-[10px] text-[#9E4300] block">Direct Gifting</span>
-                <p className="sv2-body-sm text-xs text-[#4A4640]">Dispatches directly to recipient with prices removed.</p>
+                <span className="sv2-label text-[10px] text-[#9E4300] block">Direct gifting</span>
+                <p className="sv2-body-sm text-xs text-[#4A4640]">{siteContent.retail.directDispatchNote}</p>
               </div>
             </div>
           </div>
@@ -152,9 +153,6 @@ export default async function PublicProductPage({ params }: Props) {
                 <div className="flex items-baseline gap-2">
                   <span className="sv2-mono-lg text-3xl font-bold text-[#1C1C18]">
                     {product.price == null ? 'Price on quote' : formatCurrency(product.price)}
-                  </span>
-                  <span className="sv2-mono-sm text-[11px] text-[#7C766F] uppercase">
-                    (Incl. all taxes)
                   </span>
                 </div>
                 {product.purchase.buy ? (

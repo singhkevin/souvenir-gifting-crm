@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 const ORDER_STAGES = [
   { id: 'placed', label: 'Order Placed', desc: 'Order received & confirmed' },
-  { id: 'packed', label: 'Packed & Sealed', desc: 'Carefully wrapped in signature box' },
+  { id: 'packed', label: 'Packed & Sealed', desc: 'Packed and checked' },
   { id: 'dispatched', label: 'In Transit', desc: 'Handed to courier partner' },
   { id: 'out_for_delivery', label: 'Out for Delivery', desc: 'With local courier delivery team' },
   { id: 'delivered', label: 'Delivered', desc: 'Safely delivered to recipient' },

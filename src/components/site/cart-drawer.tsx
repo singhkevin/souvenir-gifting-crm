@@ -227,17 +227,6 @@ export function CartDrawer({
                     setPlaced(true)
                   }}
                 />
-
-                {/* Trust Badges */}
-                <div className="pt-2 text-center font-sans text-[11px] text-[#7C766F] space-y-1">
-                  <div>Direct Gifting Option Available</div>
-                  <div className="flex items-center justify-center gap-1.5 text-[9px] text-[#4A4640] flex-wrap">
-                    <span className="border border-[#CCC5BD] bg-[#FCF9F2] px-1.5 py-0.5">UPI</span>
-                    <span className="border border-[#CCC5BD] bg-[#FCF9F2] px-1.5 py-0.5">VISA</span>
-                    <span className="border border-[#CCC5BD] bg-[#FCF9F2] px-1.5 py-0.5">MASTERCARD</span>
-                    <span className="border border-[#CCC5BD] bg-[#FCF9F2] px-1.5 py-0.5">NETBANKING</span>
-                  </div>
-                </div>
               </div>
             ) : null}
           </aside>
