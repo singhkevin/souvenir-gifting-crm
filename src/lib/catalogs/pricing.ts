@@ -1,9 +1,7 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { listedUnitPrice } from '@/lib/pricing/listed'
-import { withProductCost } from '@/lib/pricing/product-costs'
-import { specialPricesForCompany } from '@/lib/pricing/server'
+import { resolveListedPrices } from '@/lib/pricing/server'
 import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
 
 /**
@@ -75,33 +73,29 @@ async function priceRows(
   if (!computeIds.length) return prices
 
   const productIds = [...new Set(rows.filter((row) => computeIds.includes(row.id)).map((row) => row.product_id))]
-  const [{ data: products }, companyResult, specials] = await Promise.all([
+  const [{ data: products }, companyResult] = await Promise.all([
     admin.from('products').select('id, price').in('id', productIds),
     companyId
       ? admin.from('companies').select('margin_percent').eq('id', companyId).maybeSingle()
       : Promise.resolve({ data: null }),
-    specialPricesForCompany(admin, companyId, productIds),
   ])
   if (!products) return prices
   const companyMargin = num((companyResult.data as { margin_percent?: unknown } | null)?.margin_percent)
-  const byProduct = new Map(products.map((product) => [product.id as string, withProductCost(product)]))
-
-  for (const row of rows) {
-    if (!computeIds.includes(row.id)) continue
+  const byProduct = new Map(products.map((product) => [product.id as string, product]))
+  const targets = rows.flatMap((row) => {
+    if (!computeIds.includes(row.id)) return []
     const product = byProduct.get(row.product_id)
-    if (!product) continue
-    const special = specials.get(row.product_id)
-    prices.set(
-      row.id,
-      listedUnitPrice({
-        specialPrice: special?.price,
-        specialValidUntil: special?.validUntil,
-        catalogManualPrice: row.manual_price,
-        basePrice: product.price,
-        companyMarginPercent: companyMargin,
-      }),
-    )
-  }
+    if (!product) return []
+    return [{
+      id: row.id,
+      productId: row.product_id,
+      retailPrice: num(product.price),
+      catalogManualPrice: row.manual_price,
+    }]
+  })
+  const resolved = await resolveListedPrices(targets, 'corporate', companyMargin, companyId)
+  if (!resolved) return prices
+  for (const [id, price] of resolved) prices.set(id, price.price)
   return prices
 }
 

@@ -136,7 +136,7 @@ export default async function NewProductPage({
             />
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Supplier Cost (?)</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Cost price (₹)</label>
               <input
                 type="number"
                 name="supplier_cost"
@@ -144,21 +144,6 @@ export default async function NewProductPage({
                 placeholder="e.g. 450"
                 className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Product margin override (%)</label>
-              <input
-                type="number"
-                name="internal_margin"
-                step="0.01"
-                min="0"
-                placeholder="Used only if channel % is blank"
-                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
-              />
-              <p className="mt-1 text-[11px] text-gray-500">
-                Public uses the B2C margin. Portal uses the company margin, then B2B. This % applies only when that channel % is blank.
-              </p>
             </div>
 
             <NameCreateField

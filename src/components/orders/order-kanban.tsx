@@ -17,6 +17,7 @@ export type KanbanCard = {
   companyName: string
   assigneeName: string
   departmentName: string
+  sourceLabel?: string
 }
 
 export function OrderKanban({
@@ -83,8 +84,15 @@ export function OrderKanban({
                       <p className="text-xs font-medium mt-1">{formatCurrency(card.order_value)}</p>
                       <p className="text-[11px] text-[#7A7267] mt-1">{card.assigneeName} · {card.departmentName}</p>
                       <p className="text-[11px] text-[#7A7267]">Due {formatDate(card.expected_delivery_date)}</p>
-                      <span className={`inline-block mt-2 px-2 py-0.5 text-[10px] font-semibold ${HEALTH_STYLES[card.health]}`}>
-                        {HEALTH_LABELS[card.health]}
+                      <span className="mt-2 inline-flex flex-wrap items-center gap-1">
+                        {card.sourceLabel ? (
+                          <span className="px-2 py-0.5 border border-[#CCC5BD] text-[10px] font-medium bg-[#F6F3EC] text-[#4A4640]">
+                            {card.sourceLabel}
+                          </span>
+                        ) : null}
+                        <span className={`inline-block px-2 py-0.5 text-[10px] font-semibold ${HEALTH_STYLES[card.health]}`}>
+                          {HEALTH_LABELS[card.health]}
+                        </span>
                       </span>
                     </article>
                   ))}

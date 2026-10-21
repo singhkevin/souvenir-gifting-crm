@@ -8,7 +8,8 @@ import { CatalogueShortlistButton } from '@/components/portal/catalogue-shortlis
 import { offeringPricesForCompany } from '@/lib/catalogs/pricing'
 import { headers } from 'next/headers'
 import { readTenantFromHeaders } from '@/lib/portal-host'
-import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
+import { getCompanyMarginPercent, getPricingSettings, sellPricesForSurface } from '@/lib/pricing/server'
+import { gstPriceNote } from '@/lib/pricing/engine'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { toggleOfferingSelectionForm } from '@/app/portal/catalogue/actions'
@@ -23,6 +24,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+  const gstNote = gstPriceNote((await getPricingSettings()).portals.corporate.gstMode)
 
   const withPurchase = 'id, name, sku, description, image_url, price, moq, category_name, brand_name, stock_qty, fulfillment_mode'
   const withoutPurchase = 'id, name, sku, description, image_url, price, moq, category_name, brand_name'
@@ -72,6 +74,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
                 <div className="border-y border-[#CCC5BD] py-4">
                   <p className="font-mono text-2xl sm:text-3xl font-semibold text-[#1C1C18]">
                     {product.price == null ? 'Price on request' : formatCurrency(product.price)}
+                    {product.price != null ? <span className="ml-2 font-sans text-[10px] font-medium uppercase tracking-wide text-[#7C766F]">{gstNote}</span> : null}
                   </p>
                   <p className="font-mono text-xs text-[#7C766F] mt-1">
                     Per unit · MOQ {product.moq || 1}
@@ -209,6 +212,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
                   <div>
                     <p className="font-mono text-2xl sm:text-3xl font-semibold text-[#1C1C18]">
                       {price == null ? 'Price on request' : formatCurrency(price)}
+                      {price != null ? <span className="ml-2 font-sans text-[10px] font-medium uppercase tracking-wide text-[#7C766F]">{gstNote}</span> : null}
                     </p>
                     <p className="font-mono text-xs text-[#7C766F] mt-1">
                       {kitMembers.length > 1 ? 'Combined price per person' : `Per person · MOQ ${offering.moq || 1}`}

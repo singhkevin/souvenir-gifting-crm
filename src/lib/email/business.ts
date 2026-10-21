@@ -47,6 +47,10 @@ export function businessRfqOwnerEmailHtml(input: { company: string; requirementU
   return shell('New business quote request', `${paragraph(`${input.company} submitted a quote request.`)}${button(input.requirementUrl, 'Open requirement')}`)
 }
 
+export function publicQuoteOwnerEmailHtml(input: { company: string; leadUrl: string }) {
+  return shell('New website quote request', `${paragraph(`${input.company} asked for a quote from the public catalogue.`)}${button(input.leadUrl, 'Open lead')}`)
+}
+
 export function businessQuoteSentEmailHtml(input: { number: string; quoteUrl: string; total?: string; validUntil?: string }) {
   const total = input.total ? ` Total incl. GST ${input.total}.` : ''
   const until = input.validUntil ? ` Valid until ${input.validUntil}.` : ''

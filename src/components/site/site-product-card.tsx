@@ -24,7 +24,11 @@ export function SiteProductCard({
   caption?: string
   hideQuickAdd?: boolean
 }) {
-  const displayPrice = priceText || (product.price == null ? 'Price on quote' : formatCurrency(product.price))
+  const displayPrice =
+    priceText ||
+    (product.price == null
+      ? 'Price on quote'
+      : `${formatCurrency(product.price)}${product.priceNote ? ` ${product.priceNote}` : ''}`)
 
   return (
     <article className="group flex h-full flex-col border border-[#CCC5BD] bg-[#FCF9F2] transition-colors hover:border-[#000000]">

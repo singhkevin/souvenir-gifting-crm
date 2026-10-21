@@ -8,6 +8,7 @@ import {
   HEALTH_LABELS,
   HEALTH_STYLES,
 } from '@/lib/order-workflow'
+import { isOrderSource, ORDER_SOURCE_LABELS, ORDER_SOURCES } from '@/lib/orders/source'
 import Link from 'next/link'
 import { OrderKanban } from '@/components/orders/order-kanban'
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
@@ -19,6 +20,7 @@ type ControlOrder = {
   order_number: string | null
   order_value: number | null
   status: string
+  source?: string | null
   expected_delivery_date: string | null
   updated_at?: string | null
   priority?: string | null
@@ -45,12 +47,14 @@ export default async function OrderControlCenterPage({
     view?: string
     from?: string
     to?: string
+    source?: string
   }>
 }) {
   const profile = await requireStaff(['admin', 'operations', 'management', 'sales', 'accounts'])
   const params = await searchParams
   const supabase = await createClient()
   const view = params.view === 'kanban' ? 'kanban' : 'table'
+  const sourceFilter = isOrderSource(params.source) ? params.source : 'all'
 
   const [{ data: companies }, { data: departments }, { data: staff }] = await Promise.all([
     supabase.from('companies').select('id, name').order('name'),
@@ -61,7 +65,7 @@ export default async function OrderControlCenterPage({
   let query = supabase
     .from('orders')
     .select(`
-      id, order_number, order_value, status, expected_delivery_date, updated_at, priority, stage_due_at, assigned_to, current_department_id, campaign_id,
+      id, order_number, order_value, status, source, expected_delivery_date, updated_at, priority, stage_due_at, assigned_to, current_department_id, campaign_id,
       company:companies(id, name),
       assignee:assigned_to(id, full_name),
       department:current_department_id(id, name),
@@ -74,6 +78,7 @@ export default async function OrderControlCenterPage({
   if (params.department) query = query.eq('current_department_id', params.department)
   if (params.employee) query = query.eq('assigned_to', params.employee)
   if (params.stage) query = query.eq('status', params.stage)
+  if (sourceFilter !== 'all') query = query.eq('source', sourceFilter)
   if (params.from) query = query.gte('expected_delivery_date', params.from)
   if (params.to) query = query.lte('expected_delivery_date', params.to)
 
@@ -190,6 +195,16 @@ export default async function OrderControlCenterPage({
               ],
             },
             {
+              key: 'source',
+              label: 'Source',
+              value: sourceFilter === 'all' ? '' : sourceFilter,
+              emptyLabel: 'All sources',
+              options: [
+                { value: '', label: 'All sources' },
+                ...ORDER_SOURCES.map((source) => ({ value: source, label: ORDER_SOURCE_LABELS[source] })),
+              ],
+            },
+            {
               key: 'sort',
               label: 'Sort by',
               value: params.sort || 'delivery',
@@ -216,6 +231,7 @@ export default async function OrderControlCenterPage({
             ...(params.stage ? { stage: params.stage } : {}),
             ...(params.health ? { health: params.health } : {}),
             ...(params.sort && params.sort !== 'delivery' ? { sort: params.sort } : {}),
+            ...(sourceFilter !== 'all' ? { source: sourceFilter } : {}),
           }}
           clearHref={
             filterQuery
@@ -229,6 +245,7 @@ export default async function OrderControlCenterPage({
                       stage: params.stage || '',
                       health: params.health || '',
                       sort: params.sort && params.sort !== 'delivery' ? params.sort : '',
+                      source: sourceFilter !== 'all' ? sourceFilter : '',
                     }).filter(([, v]) => Boolean(v))
                   )
                 ).toString()}`
@@ -239,7 +256,7 @@ export default async function OrderControlCenterPage({
         />
       </div>
 
-      <form className="hidden grid-cols-2 gap-3 border border-[#E5DFD5] bg-white p-4 md:grid-cols-4 lg:grid lg:grid-cols-9">
+      <form className="hidden grid-cols-2 gap-3 border border-[#E5DFD5] bg-white p-4 md:grid-cols-4 lg:grid lg:grid-cols-10">
         {view === 'kanban' ? <input type="hidden" name="view" value="kanban" /> : null}
         <select name="client" defaultValue={params.client || ''} className="border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All clients</option>
@@ -257,6 +274,10 @@ export default async function OrderControlCenterPage({
           <option value="">All stages</option>
           {ORDER_LIFECYCLE.map((s) => <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>)}
           <option value="cancelled">Cancelled</option>
+        </select>
+        <select name="source" defaultValue={sourceFilter === 'all' ? '' : sourceFilter} className="border bg-[#FAF7F2] px-2 py-2 text-xs">
+          <option value="">All sources</option>
+          {ORDER_SOURCES.map((source) => <option key={source} value={source}>{ORDER_SOURCE_LABELS[source]}</option>)}
         </select>
         <select name="health" defaultValue={params.health || ''} className="border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All health</option>
@@ -292,6 +313,7 @@ export default async function OrderControlCenterPage({
               companyName: company?.name || '—',
               assigneeName: assignee?.full_name || 'Unassigned',
               departmentName: department?.name || '—',
+              sourceLabel: isOrderSource(o.source) ? ORDER_SOURCE_LABELS[o.source] : 'CRM',
             }
           })}
         />
@@ -302,6 +324,7 @@ export default async function OrderControlCenterPage({
               <tr>
                 <th className="px-3 py-3 font-semibold">Order</th>
                 <th className="px-3 py-3 font-semibold">Client</th>
+                <th className="px-3 py-3 font-semibold">Source</th>
                 <th className="px-3 py-3 font-semibold">Catalog</th>
                 <th className="px-3 py-3 font-semibold">Value</th>
                 <th className="px-3 py-3 font-semibold">Stage</th>
@@ -326,6 +349,11 @@ export default async function OrderControlCenterPage({
                       </Link>
                     </td>
                     <td className="px-3 py-3">{company?.name || '—'}</td>
+                    <td className="px-3 py-3">
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-[#FAF7F2] text-[#624B32]">
+                        {isOrderSource(o.source) ? ORDER_SOURCE_LABELS[o.source] : 'CRM'}
+                      </span>
+                    </td>
                     <td className="px-3 py-3">{campaign?.name || '—'}</td>
                     <td className="px-3 py-3 font-medium">{formatCurrency(o.order_value)}</td>
                     <td className="px-3 py-3">
@@ -345,7 +373,7 @@ export default async function OrderControlCenterPage({
                 )
               })}
               {rows.length === 0 && (
-                <tr><td colSpan={10} className="px-3 py-8 text-center text-[#7A7267]">No orders match these filters.</td></tr>
+                <tr><td colSpan={11} className="px-3 py-8 text-center text-[#7A7267]">No orders match these filters.</td></tr>
               )}
             </tbody>
           </table>

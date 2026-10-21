@@ -14,7 +14,7 @@ import { CategoryField } from '@/components/products/category-field'
 import { readProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, loadSupplierOffers } from '@/lib/pricing/server'
 import { pickBestOffer } from '@/lib/pricing/offers'
-import { surfaceUnitPrice } from '@/lib/pricing/listed'
+import { resolvePortalPrice } from '@/lib/pricing/engine'
 import { NameCreateField } from '@/components/products/name-create-field'
 import { createBrand, createSupplier } from '../actions'
 import { SupplierOffersEditor } from './SupplierOffersEditor'
@@ -46,7 +46,7 @@ export default async function ProductDetailPage({
     { data: accessRecords },
     pricing,
   ] = await Promise.all([
-    supabase.from('products').select('*, product_costs(supplier_cost, internal_margin, internal_notes), category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
+    supabase.from('products').select('*, product_costs(supplier_cost, internal_notes), category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
     supabase.from('categories').select('id, name'),
     supabase.from('brands').select('id, name').order('name'),
     supabase.from('suppliers').select('id, name').order('name'),
@@ -60,7 +60,12 @@ export default async function ProductDetailPage({
   if (!product) notFound()
   Object.assign(product, readProductCost(product))
 
-  const storePrice = surfaceUnitPrice({ channel: 'b2c', retailPrice: product.price })
+  const storePrice = resolvePortalPrice({
+    portal: 'store',
+    rule: pricing.portals.store,
+    retailPrice: product.price,
+    costPrice: product.supplier_cost,
+  }).price
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
 
@@ -176,15 +181,15 @@ export default async function ProductDetailPage({
           <div>
             <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Store price</span>
             <span className="font-mono text-xl font-bold text-[#1C1B1A] mt-1 block">{formatCurrency(storePrice)}</span>
-            <span className="text-[11px] text-[#7C766F] mt-0.5 block">Retail price on the store</span>
+            <span className="text-[11px] text-[#7C766F] mt-0.5 block">Resolved store price. Edit prices in Pricing.</span>
           </div>
           <div>
             <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Company price</span>
-            <span className="text-xs text-[#4A4640] mt-1 block">Special, then catalog line, then this price plus the company margin</span>
+            <span className="text-xs text-[#4A4640] mt-1 block">Set on the Pricing page: company special, then catalog line, then the portal rule</span>
           </div>
           {showCost && (
             <div>
-              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Supplier Cost</span>
+              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Cost price</span>
               <span className="font-mono text-lg font-semibold text-[#4A4640] mt-1 block">{formatCurrency(product.supplier_cost)}</span>
             </div>
           )}
@@ -256,7 +261,7 @@ export default async function ProductDetailPage({
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Base price</label>
+                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Retail price</label>
                 <input
                   type="number"
                   step="0.01"
@@ -266,7 +271,7 @@ export default async function ProductDetailPage({
                   className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
                 />
                 <p className="mt-1 text-[11px] text-[#7C766F]">
-                  Used when no company special price and no catalog line price apply. Company margin is added on top for that company.
+                  Retail price on the store unless Pricing sets a store rule or a fixed price. Company prices are on the Pricing page.
                 </p>
               </div>
               <div>

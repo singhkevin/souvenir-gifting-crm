@@ -16,7 +16,6 @@ export default async function BusinessOrdersPage() {
         .from('orders')
         .select('id, order_number, status, order_value, created_at, quotation_id, tracking_number, dispatch_date, invoices(status, created_at)')
         .eq('company_id', companyId)
-        .not('quotation_id', 'is', null)
         .order('created_at', { ascending: false })
     : { data: [] }
 
@@ -25,7 +24,7 @@ export default async function BusinessOrdersPage() {
       <div>
         <p className="sv2-label text-[10px] text-[#7C766F] uppercase tracking-wider">Business account</p>
         <h1 className="mt-1 sv2-headline-md text-[#1C1C18]">Orders</h1>
-        <p className="mt-1 text-sm text-[#4A4640]">Orders created from an accepted business quote.</p>
+        <p className="mt-1 text-sm text-[#4A4640]">Orders from an accepted quote and orders placed directly from the store.</p>
       </div>
 
       <div className="overflow-x-auto border border-[#CCC5BD] bg-[#FCF9F2]">
@@ -78,7 +77,7 @@ export default async function BusinessOrdersPage() {
             {!(data || []).length ? (
               <tr>
                 <td colSpan={6} className="p-8 text-center text-sm text-[#4A4640]">
-                  No quote orders yet.
+                  No orders yet.
                 </td>
               </tr>
             ) : null}

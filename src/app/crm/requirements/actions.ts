@@ -129,6 +129,16 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
     req.company_id,
   )
 
+  for (const row of reqProducts) {
+    const product = Array.isArray(row.product) ? row.product[0] : row.product
+    const listPrice = Number(product?.price || 0)
+    const fromEngine = listedPrices?.has(row.product_id) ? listedPrices.get(row.product_id) : undefined
+    const unit = sellByProduct.get(row.product_id) ?? (fromEngine === undefined ? listPrice : fromEngine)
+    if (unit == null) {
+      return { error: `${product?.name || 'A product'} is price on quote. Set a price before creating the quotation.` }
+    }
+  }
+
   const { data: quoteNumber, error: numError } = await supabase.rpc('next_quotation_number')
   if (numError || !quoteNumber) return { error: numError?.message || 'Could not allocate quote number' }
 
@@ -163,7 +173,8 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
     const product = Array.isArray(row.product) ? row.product[0] : row.product
     const qty = row.quantity || req.quantity || 1
     const listPrice = Number(product?.price || 0)
-    const unit = sellByProduct.get(row.product_id) ?? listedPrices?.get(row.product_id) ?? listPrice
+    const fromEngine = listedPrices?.has(row.product_id) ? listedPrices.get(row.product_id) : undefined
+    const unit = sellByProduct.get(row.product_id) ?? (fromEngine === undefined ? listPrice : fromEngine) ?? 0
     return {
       quotation_id: quote.id,
       product_id: row.product_id,

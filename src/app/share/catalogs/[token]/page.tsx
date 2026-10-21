@@ -12,6 +12,8 @@ import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
 import { CatalogBuyPanel } from '@/components/catalogs/CatalogBuyPanel'
 import { purchaseOfferFromProduct } from '@/lib/catalogue/purchase-path'
 import { sharePricingCompanyId, withCompanyPrices } from '@/lib/catalogs/pricing'
+import { gstPriceNote } from '@/lib/pricing/engine'
+import { getPricingSettings } from '@/lib/pricing/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,6 +75,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
   }
   const primaries = products.filter((product) => product.pack_kit_role !== 'line')
   const budget = money(catalog.budget_per_employee)
+  const gstNote = gstPriceNote((await getPricingSettings()).portals.corporate.gstMode)
 
   return (
     <main className="min-h-screen bg-[#F4EFE6] text-[#1C1917]">
@@ -81,7 +84,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
         <h1 className="mt-2 font-serif text-4xl">{catalog.name}</h1>
         <p className="mt-2 text-sm text-[#5A5248]">
           {catalog.occasion ? `${catalog.occasion} · ` : ''}
-          Prices are client sell prices.
+          Prices are client sell prices, {gstNote}.
           {budget != null && budget > 0 ? ` Budget ${formatCurrency(budget)} per person.` : ''}
         </p>
         {catalog.expires_at && (

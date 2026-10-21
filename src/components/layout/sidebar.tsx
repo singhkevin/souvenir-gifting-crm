@@ -8,7 +8,7 @@ import {
   Package, Image as ImageIcon, FileText, ShoppingBag, KanbanSquare,
   Truck, Printer, Package2, Receipt, CreditCard, ArrowDownToLine,
   BarChart3, Activity, UserCog, Settings, ShieldCheck, LogOut,
-  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift
+  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift, Tags
 } from 'lucide-react';
 import { signOut } from '@/app/login/actions';
 import { BrandLogo } from '@/components/brand/brand-logo';
@@ -55,6 +55,7 @@ const navGroups: NavGroup[] = [
       { label: 'Products', href: '/crm/products', matchPrefix: '/crm/products', icon: Package },
       { label: 'Mockup Storage', href: '/crm/mockups', matchPrefix: '/crm/mockups', icon: ImageIcon },
       { label: 'Quotations', href: '/crm/quotations', matchPrefix: '/crm/quotations', icon: FileText },
+      { label: 'Pricing', href: '/crm/pricing', matchPrefix: '/crm/pricing', icon: Tags },
       { label: 'Orders', href: '/crm/orders', matchPrefix: '/crm/orders', icon: ShoppingBag },
       { label: 'Samples', href: '/crm/samples', matchPrefix: '/crm/samples', icon: Package2 },
       { label: 'Catalogs', href: '/crm/catalogs', matchPrefix: '/crm/catalogs', icon: FolderGit2 },
@@ -94,6 +95,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'accounts', 'management'],
     items: [
       { label: 'Invoices', href: '/crm/invoices', matchPrefix: '/crm/invoices', icon: Receipt },
+      { label: 'Pricing', href: '/crm/pricing', matchPrefix: '/crm/pricing', icon: Tags },
       { label: 'Payments', href: '/crm/payments', matchPrefix: '/crm/payments', icon: CreditCard },
       { label: 'Receivables', href: '/crm/receivables', matchPrefix: '/crm/receivables', icon: ArrowDownToLine },
       { label: 'Payables', href: '/crm/payables', matchPrefix: '/crm/payables', icon: Landmark },
