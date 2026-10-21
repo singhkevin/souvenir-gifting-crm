@@ -36,7 +36,7 @@ export function CatalogBuyPanel({
 
   if (mode === 'staff') {
     return (
-      <section className="rounded-2xl border border-[#E5DFD5] bg-white p-5 text-sm text-[#5A5248]">
+      <section className="border border-[#E5DFD5] bg-white p-5 text-sm text-[#5A5248]">
         Staff preview. Assigned clients can buy the in-stock gifts after they sign in.
       </section>
     )
@@ -44,7 +44,7 @@ export function CatalogBuyPanel({
 
   if (mode === 'guest' || mode === 'unassigned') {
     return (
-      <section className="rounded-2xl border border-[#E5DFD5] bg-white p-5 text-sm text-[#5A5248]">
+      <section className="border border-[#E5DFD5] bg-white p-5 text-sm text-[#5A5248]">
         <p>
           {mode === 'guest'
             ? 'Sign in with the company account for this catalog to buy the in-stock gifts.'
@@ -61,7 +61,7 @@ export function CatalogBuyPanel({
 
   if (order) {
     return (
-      <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
+      <section className="border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
         <p>Order {order.number || 'placed'}. The team will confirm the PO.</p>
         {order.id ? (
           <Link href={`/portal/orders/${order.id}`} className="mt-2 inline-flex font-semibold">
@@ -90,7 +90,7 @@ export function CatalogBuyPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-[#E5DFD5] bg-white p-5">
+    <section className="border border-[#E5DFD5] bg-white p-5">
       <h2 className="font-serif text-2xl text-[#1C1917]">Buy now</h2>
       <p className="mt-1 text-sm text-[#5A5248]">These gifts can be ordered at the catalog price. Kits and quote-only gifts stay in the request below.</p>
       <ul className="mt-4 space-y-3">
@@ -112,7 +112,7 @@ export function CatalogBuyPanel({
                 setQty((current) => ({ ...current, [offering.productId]: digits }))
               }}
               disabled={pending}
-              className="w-20 rounded-md border border-[#E5DFD5] px-2 py-2 text-center"
+              className="w-20 border border-[#E5DFD5] px-2 py-2 text-center"
             />
           </li>
         ))}
@@ -123,7 +123,7 @@ export function CatalogBuyPanel({
         disabled={pending}
         aria-busy={pending || undefined}
         onClick={submit}
-        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-4 inline-flex min-h-11 items-center justify-center bg-[#806A50] px-4 text-sm font-semibold text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending ? (
           <span className="inline-flex items-center justify-center gap-2">

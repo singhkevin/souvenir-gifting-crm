@@ -77,12 +77,12 @@ export function CartCheckout({
         <p className="font-serif text-lg font-normal">Order {order.number || 'placed successfully'}.</p>
         <p className="sv2-body-sm text-xs text-[#4A4640]">Our team will confirm your order and begin fulfilment dispatch.</p>
         {kind === 'portal' && order.id ? (
-          <Link href={`/portal/orders/${order.id}`} className="inline-flex sv2-mono-sm text-[11px] uppercase text-[#9E4300] hover:underline pt-1">
+          <Link href={`/portal/orders/${order.id}`} className="inline-flex sv2-label text-[11px] text-[#9E4300] hover:underline pt-1">
             View order in portal &rarr;
           </Link>
         ) : null}
         {quoteLock && order.id ? (
-          <Link href={`/business/orders/${order.id}`} className="inline-flex sv2-mono-sm text-[11px] uppercase text-[#9E4300] hover:underline pt-1">
+          <Link href={`/business/orders/${order.id}`} className="inline-flex sv2-label text-[11px] text-[#9E4300] hover:underline pt-1">
             View order details &rarr;
           </Link>
         ) : null}

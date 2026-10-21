@@ -4,9 +4,9 @@ import { FileQuestion } from 'lucide-react';
 export default function CrmNotFound() {
   return (
     <div>
-      <div className="max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-6">
+      <div className="max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] p-6">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 w-8 h-8 shrink-0 rounded-md bg-[var(--color-muted)] text-[var(--color-muted-fg)] flex items-center justify-center">
+          <span className="mt-0.5 w-8 h-8 shrink-0 bg-[var(--color-muted)] text-[var(--color-muted-fg)] flex items-center justify-center">
             <FileQuestion size={16} />
           </span>
           <div>
@@ -16,7 +16,7 @@ export default function CrmNotFound() {
             </p>
             <Link
               href="/crm/dashboard"
-              className="inline-block mt-4 px-3 py-1.5 rounded-md text-sm font-medium bg-[var(--color-primary)] text-[var(--color-primary-fg)] hover:opacity-90"
+              className="inline-block mt-4 px-3 py-1.5 text-sm font-medium bg-[var(--color-primary)] text-[var(--color-primary-fg)] hover:opacity-90"
             >
               Dashboard
             </Link>

@@ -88,7 +88,7 @@ export default async function RootPage({
   }
 
   return (
-    <SiteShell categoryVariant="compact">
+    <SiteShell>
       <Suspense fallback={<RetailHomeSkeleton />}>
         <PublicHome searchParams={params} basePath="/" />
       </Suspense>

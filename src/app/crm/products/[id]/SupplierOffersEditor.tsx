@@ -96,17 +96,17 @@ export function SupplierOffersEditor({
                     <div className="font-semibold text-[#1C1B1A]">{offer.supplier_name || 'Supplier'}</div>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {offer.id === bestOfferId && (
-                        <span className="inline-flex items-center gap-1 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[#3A4537]">
+                        <span className="inline-flex items-center gap-1 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-1.5 py-0.5 text-[10px] uppercase text-[#3A4537]">
                           <span className="h-1 w-1 rounded-full bg-[#3A4537]" /> Best
                         </span>
                       )}
                       {offer.is_preferred && (
-                        <span className="inline-flex items-center rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 font-mono text-[10px] uppercase text-[#9E4300]">
+                        <span className="inline-flex items-center rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 text-[10px] uppercase text-[#9E4300]">
                           Pinned
                         </span>
                       )}
                       {!offer.is_active && (
-                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-1.5 py-0.5 font-mono text-[10px] uppercase text-[#7C766F]">
+                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-1.5 py-0.5 text-[10px] uppercase text-[#7C766F]">
                           Inactive
                         </span>
                       )}
@@ -210,7 +210,7 @@ export function SupplierOffersEditor({
           <input
             value={sku}
             onChange={(event) => setSku(event.target.value)}
-            className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono uppercase text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+            className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs uppercase text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
           />
         </label>
         <label className="block">

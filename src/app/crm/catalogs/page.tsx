@@ -218,7 +218,7 @@ export default async function CatalogsPage({
                   <h2 className="font-[family-name:var(--font-newsreader)] text-xl font-normal leading-snug text-[#1C1B1A] transition-colors group-hover:text-[#9E4300]">
                     {catalog.name}
                   </h2>
-                  <span className="shrink-0 rounded-none border border-[#CCC5BD] px-2 py-0.5 font-mono text-[10px] uppercase text-[#4A4640]">
+                  <span className="shrink-0 rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#4A4640]">
                     {catalogStatusLabel(catalog.status)}
                   </span>
                 </div>

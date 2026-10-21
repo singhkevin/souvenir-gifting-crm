@@ -89,7 +89,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
         )}
 
         {primaries.length === 0 ? (
-          <p className="mt-10 rounded-2xl border border-[#E5DFD5] bg-white p-8 text-sm text-[#5A5248]">
+          <p className="mt-10 border border-[#E5DFD5] bg-white p-8 text-sm text-[#5A5248]">
             Nothing has been published on this catalog yet.
           </p>
         ) : (
@@ -101,7 +101,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
                 ? product.pack_option
                 : null
               return (
-                <article key={product.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#E5DFD5] bg-white">
+                <article key={product.id} className="flex flex-col overflow-hidden border border-[#E5DFD5] bg-white">
                   <ProductImage src={product.client_image_url} alt={product.display_name || 'Gift'} size="md" />
                   <div className="flex flex-1 flex-col gap-3 p-5">
                     {packKey && (
@@ -114,7 +114,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
                       <p className="text-xs text-[#5A5248]">{product.client_description}</p>
                     )}
                     {kit.length > 1 && (
-                      <ul className="space-y-1 rounded-lg bg-[#FAF7F2] p-2 text-[11px] text-[#5A5248]">
+                      <ul className="space-y-1 bg-[#FAF7F2] p-2 text-[11px] text-[#5A5248]">
                         {kit.map((line) => (
                           <li key={line.id} className="flex justify-between gap-2">
                             <span className="line-clamp-1">{line.display_name}</span>

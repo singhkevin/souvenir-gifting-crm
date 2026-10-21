@@ -5,6 +5,7 @@ import { getBusinessCatalogue, type BusinessProduct } from '@/lib/business/catal
 import { minimumOrderQty } from '@/lib/business/lines'
 import { getPublicBrands, getPublicCategories, type PublicProduct } from '@/lib/catalogue/products'
 import { curateTrendingProducts } from '@/lib/catalogue/curate'
+import { STORE_NAV_CATEGORIES, storeNavCategoryHref } from '@/lib/catalogue/store-nav'
 import { readCatalogueFilters } from '@/lib/catalogue/catalogue-query'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolvePublicContactPhone } from '@/lib/contact/public-phone'
@@ -15,6 +16,7 @@ import { UtilityBar } from '@/components/sv2/utility-bar'
 import { SV2Header } from '@/components/sv2/header'
 import { SV2Footer } from '@/components/sv2/footer'
 import { SectionHeader } from '@/components/sv2/section-header'
+import { Eyebrow } from '@/components/sv2/eyebrow'
 import { SV2KitCard } from '@/components/sv2/kit-card'
 import { BestsellerRail, type BestsellerProduct } from '@/components/sv2/bestseller-rail'
 import { PlaceholderTile } from '@/components/sv2/placeholder-tile'
@@ -201,13 +203,19 @@ export async function BusinessHome({
 
   const caption = (product: PublicProduct) => `MOQ ${minimumOrderQty(product.moq)} · indicative`
 
+  const navCategories = STORE_NAV_CATEGORIES.map((item) => ({
+    href: storeNavCategoryHref(categories, item.name),
+    label: item.label,
+    icon: item.icon,
+  }))
+
   return (
     <div className="w-full max-w-full min-w-0 pb-16 md:pb-0">
       {/* 1. Utility Bar */}
       <UtilityBar phone={phone} />
 
       {/* Primary Header */}
-      <SV2Header />
+      <SV2Header categories={navCategories} />
 
       <main id="main-content" className="w-full max-w-full min-w-0">
         {/* Indicative pricing notice & account access bar */}
@@ -246,9 +254,8 @@ export async function BusinessHome({
             {/* Left Column: Narrative & Quick SLAs */}
             <div className="lg:col-span-7 flex flex-col justify-between pr-0 lg:pr-8">
               <div>
-                {/* Technical Ledger Tag */}
                 <div className="inline-flex max-w-full items-center gap-2 border border-[#7C766F] px-2.5 sm:px-3 py-1 sv2-label text-[#FFB690] mb-6 text-[10px] sm:text-[11px]">
-                  <span className="truncate">// CORPORATE &amp; FESTIVE GIFTS // {siteContent.utilityBar.gstNote}</span>
+                  <span className="truncate">Corporate &amp; festive gifts — {siteContent.utilityBar.gstNote}</span>
                 </div>
 
                 <h1 className="sv2-display text-[#FCF9F2] mb-6">
@@ -459,9 +466,7 @@ export async function BusinessHome({
 
             {/* Client Logo Tiles (Neutral Placeholders) */}
             <div className="mb-10">
-              <span className="sv2-label text-[#7C766F] uppercase tracking-wider block mb-3">
-                // CLIENT DELIVERIES
-              </span>
+              <Eyebrow className="mb-3">Client deliveries</Eyebrow>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {siteContent.clientLogos.map((logo, idx) => (
                   <PlaceholderTile key={idx} text={logo} className="h-20" />
@@ -471,18 +476,14 @@ export async function BusinessHome({
 
             {/* Case Study Card (Neutral Placeholder) */}
             <div className="mb-10">
-              <span className="sv2-label text-[#7C766F] uppercase tracking-wider block mb-3">
-                // CASE STUDY
-              </span>
+              <Eyebrow className="mb-3">Case study</Eyebrow>
               {siteContent.caseStudies.map((cs, idx) => (
                 <article
                   key={idx}
                   className="border border-[#CCC5BD] bg-[#F6F3EC] p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
                 >
                   <div className="space-y-2 max-w-2xl">
-                    <span className="sv2-label text-[#9E4300] font-semibold block">
-                      CASE STUDY // MULTI-CITY LOGISTICS
-                    </span>
+                    <Eyebrow tone="saffron">Case study — multi-city logistics</Eyebrow>
                     <h3 className="sv2-headline-sm text-[#1C1C18]">{cs.title}</h3>
                     <p className="sv2-body-sm text-[#4A4640]">{cs.description}</p>
                   </div>
@@ -502,9 +503,7 @@ export async function BusinessHome({
 
             {/* Brand Partners */}
             <div>
-              <span className="sv2-label text-[#7C766F] uppercase tracking-wider block mb-3">
-                // BRAND PARTNERS
-              </span>
+              <Eyebrow className="mb-3">Brand partners</Eyebrow>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                 {siteContent.partnerBrands.map((brand, idx) => (
                   <PlaceholderTile key={idx} text={brand} className="h-20" />
@@ -572,7 +571,7 @@ export async function BusinessHome({
 
       {/* 10. Mobile Sticky CTA Bar */}
       <aside
-        className="fixed bottom-0 left-0 right-0 w-full z-40 md:hidden bg-[#1C1B1A] border-t border-[#7C766F] px-4 py-3 flex items-center justify-between shadow-2xl"
+        className="fixed bottom-0 left-0 right-0 w-full z-40 md:hidden bg-[#1C1B1A] border-t border-[#7C766F] px-4 py-3 flex items-center justify-between"
         aria-label="Mobile quick action"
       >
         <div>

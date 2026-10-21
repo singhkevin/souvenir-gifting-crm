@@ -12,7 +12,7 @@ export default async function PayablesPage() {
     <div>
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Accounts Payable</h1>
       
-      <div className="bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] overflow-hidden">
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-[var(--color-border)] bg-gray-50">
@@ -33,7 +33,7 @@ export default async function PayablesPage() {
               return (
                 <tr key={payable.id} className="border-b border-[var(--color-border)] hover:bg-gray-50">
                   <td className="p-3 text-sm">
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">{payable.vendor_type}</span>
+                    <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium">{payable.vendor_type}</span>
                   </td>
                   <td className="p-3 text-sm font-medium">{payable.vendor_name || 'N/A'}</td>
                   <td className="p-3 text-sm">{order?.order_number || 'N/A'}</td>
@@ -44,7 +44,7 @@ export default async function PayablesPage() {
                     {formatDate(payable.due_date)}
                   </td>
                   <td className="p-3 text-sm">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    <span className={`px-2 py-1  text-xs font-medium ${
                       payable.status === 'paid' ? 'bg-green-100 text-green-800' :
                       payable.status === 'partially_paid' ? 'bg-blue-100 text-blue-800' :
                       'bg-gray-100 text-gray-800'

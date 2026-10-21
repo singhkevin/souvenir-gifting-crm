@@ -116,21 +116,21 @@ export function DeckEditor({
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block text-xs text-gray-500">
           Title
-          <input name="title" required defaultValue={initial?.title || ''} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+          <input name="title" required defaultValue={initial?.title || ''} className="mt-1 w-full border px-3 py-2 text-sm" />
         </label>
         <label className="block text-xs text-gray-500">
           Client name
-          <input name="client_name" required defaultValue={initial?.clientName || ''} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+          <input name="client_name" required defaultValue={initial?.clientName || ''} className="mt-1 w-full border px-3 py-2 text-sm" />
         </label>
       </div>
       <label className="block text-xs text-gray-500">
         Notes
-        <textarea name="notes" defaultValue={initial?.notes || ''} rows={2} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+        <textarea name="notes" defaultValue={initial?.notes || ''} rows={2} className="mt-1 w-full border px-3 py-2 text-sm" />
       </label>
       <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <label className="block text-xs text-gray-500">
           Company prices
-          <select name="company_id" defaultValue={initial?.companyId || ''} className="mt-1 w-full rounded-lg border px-3 py-2 text-sm">
+          <select name="company_id" defaultValue={initial?.companyId || ''} className="mt-1 w-full border px-3 py-2 text-sm">
             <option value="">Custom prices only</option>
             {companies.map((company) => (
               <option key={company.id} value={company.id}>{company.name}</option>
@@ -151,24 +151,24 @@ export function DeckEditor({
         <div>
           <label className="block text-xs text-gray-500">
             Products
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
           <div className="mt-3 grid grid-cols-2 gap-3">
             {visible.map((product) => {
               const on = checked.includes(product.id)
               return (
-                <div key={product.id} className="rounded-xl border bg-white p-2">
-                  <div className="aspect-square overflow-hidden rounded-lg bg-[#F6F4F1]">
+                <div key={product.id} className="border bg-white p-2">
+                  <div className="aspect-square overflow-hidden bg-[#F6F4F1]">
                     <ProductImage src={product.image_url} alt={product.name} size="md" fit="contain" className="h-full w-full bg-transparent" />
                   </div>
                   <p className="mt-2 line-clamp-2 text-sm font-medium">{product.name}</p>
                   <p className="text-[11px] text-gray-500">{product.sku}</p>
                   <div className="mt-2 flex gap-2">
-                    <button type="button" onClick={() => addProduct(product)} className="rounded-md bg-[#241C12] px-2 py-1 text-[11px] font-semibold text-white">Add</button>
+                    <button type="button" onClick={() => addProduct(product)} className="bg-[#241C12] px-2 py-1 text-[11px] font-semibold text-white">Add</button>
                     <button
                       type="button"
                       onClick={() => setChecked((current) => current.includes(product.id) ? current.filter((id) => id !== product.id) : [...current, product.id])}
-                      className={`rounded-md border px-2 py-1 text-[11px] ${on ? 'border-[#806A50] text-[#806A50]' : ''}`}
+                      className={`border px-2 py-1 text-[11px] ${on ? 'border-[#806A50] text-[#806A50]' : ''}`}
                     >
                       {on ? 'In combo' : 'Combo'}
                     </button>
@@ -180,13 +180,13 @@ export function DeckEditor({
           <div className="mt-3 flex flex-wrap items-end gap-2">
             <label className="block text-xs text-gray-500">
               Combo name
-              <input value={comboName} onChange={(event) => setComboName(event.target.value)} className="mt-1 rounded-lg border px-3 py-2 text-sm" />
+              <input value={comboName} onChange={(event) => setComboName(event.target.value)} className="mt-1 border px-3 py-2 text-sm" />
             </label>
             <label className="block text-xs text-gray-500">
               Combined price
-              <input value={comboPrice} onChange={(event) => setComboPrice(event.target.value)} inputMode="decimal" className="mt-1 w-28 rounded-lg border px-3 py-2 text-sm" />
+              <input value={comboPrice} onChange={(event) => setComboPrice(event.target.value)} inputMode="decimal" className="mt-1 w-28 border px-3 py-2 text-sm" />
             </label>
-            <button type="button" disabled={checked.length < 2 || !comboName.trim() || parseMoney(comboPrice) == null} onClick={addCombo} className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40">
+            <button type="button" disabled={checked.length < 2 || !comboName.trim() || parseMoney(comboPrice) == null} onClick={addCombo} className="border px-3 py-2 text-sm disabled:opacity-40">
               Add combo ({checked.length})
             </button>
           </div>
@@ -195,7 +195,7 @@ export function DeckEditor({
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Slides</p>
           {slides.length === 0 ? <p className="text-sm text-gray-500">Nothing on the deck yet.</p> : null}
           {slides.map((slide) => (
-            <div key={slide.key} className="rounded-xl border p-3">
+            <div key={slide.key} className="border p-3">
               <div className="flex justify-between gap-2">
                 <p className="text-sm font-medium">{slide.title}</p>
                 <button type="button" className="text-xs text-red-700" onClick={() => setSlides((current) => current.filter((row) => row.key !== slide.key))}>Remove</button>
@@ -208,17 +208,17 @@ export function DeckEditor({
                   value={slide.specs}
                   rows={2}
                   onChange={(event) => setSlides((current) => current.map((row) => row.key === slide.key ? { ...row, specs: event.target.value } : row))}
-                  className="mt-1 w-full rounded-lg border px-2 py-1.5 text-sm"
+                  className="mt-1 w-full border px-2 py-1.5 text-sm"
                 />
               </label>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <label className="block text-xs text-gray-500">
                   Price
-                  <input value={slide.price} onChange={(event) => setSlides((current) => current.map((row) => row.key === slide.key ? { ...row, price: event.target.value } : row))} className="mt-1 w-full rounded-lg border px-2 py-1.5 text-sm" />
+                  <input value={slide.price} onChange={(event) => setSlides((current) => current.map((row) => row.key === slide.key ? { ...row, price: event.target.value } : row))} className="mt-1 w-full border px-2 py-1.5 text-sm" />
                 </label>
                 <label className="block text-xs text-gray-500">
                   MOQ
-                  <input value={slide.moq} onChange={(event) => setSlides((current) => current.map((row) => row.key === slide.key ? { ...row, moq: event.target.value } : row))} className="mt-1 w-full rounded-lg border px-2 py-1.5 text-sm" />
+                  <input value={slide.moq} onChange={(event) => setSlides((current) => current.map((row) => row.key === slide.key ? { ...row, moq: event.target.value } : row))} className="mt-1 w-full border px-2 py-1.5 text-sm" />
                 </label>
               </div>
             </div>

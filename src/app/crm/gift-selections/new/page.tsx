@@ -9,7 +9,7 @@ import { createGiftSelection } from '../actions'
 
 export const dynamic = 'force-dynamic'
 
-const inputClass = 'mt-1 w-full rounded-lg border px-3 py-2 text-sm'
+const inputClass = 'mt-1 w-full border px-3 py-2 text-sm'
 
 export default async function NewGiftSelectionPage() {
   const profile = await requireStaff()
@@ -29,7 +29,7 @@ export default async function NewGiftSelectionPage() {
         <Link href="/crm/gift-selections" className="text-sm text-gray-500">Gift selection</Link>
         <h1 className="mt-2 text-2xl font-bold text-[var(--color-primary)]">New gift selection</h1>
       </div>
-      <ActionForm action={createGiftSelection} className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
+      <ActionForm action={createGiftSelection} className="space-y-4 border bg-white p-4 sm:p-6">
         <label className="block text-xs text-gray-500">
           Company
           <select name="company_id" required className={inputClass} defaultValue="">
@@ -58,7 +58,7 @@ export default async function NewGiftSelectionPage() {
           </label>
         </div>
         <GiftItemPicker products={pickerProducts} />
-        <SubmitButton className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white" pendingLabel="Saving…">
+        <SubmitButton className="bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white" pendingLabel="Saving…">
           Create gift selection
         </SubmitButton>
       </ActionForm>

@@ -44,15 +44,15 @@ export default async function SamplesPage({
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{error}</div>
+        <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{error}</div>
       ) : null}
       {received ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div className="border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
           Sample received into office stock.
         </div>
       ) : null}
       {moved ? (
-        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div className="border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
           Sample movement recorded.
         </div>
       ) : null}
@@ -64,14 +64,14 @@ export default async function SamplesPage({
           ['With Client', totalWithClient],
           ['Pending Supplier', totalPending],
         ].map(([label, value]) => (
-          <div key={String(label)} className="p-4 bg-white border rounded-xl">
+          <div key={String(label)} className="p-4 bg-white border">
             <p className="text-xs text-[#7A7267]">{label}</p>
             <p className="text-xl font-semibold">{value}</p>
           </div>
         ))}
       </div>
 
-      <ActionForm action={receiveSample} className="grid items-end gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-4" resetOnSuccess>
+      <ActionForm action={receiveSample} className="grid items-end gap-3 border bg-white p-4 text-xs md:grid-cols-4" resetOnSuccess>
         <MobileSheetSelect
           name="product_id"
           label="Product"
@@ -86,24 +86,24 @@ export default async function SamplesPage({
         />
         <label className="block space-y-1">
           <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Quantity</span>
-          <input name="quantity" type="number" min="1" defaultValue={1} required className="min-h-11 w-full rounded-lg border px-2 py-2" />
+          <input name="quantity" type="number" min="1" defaultValue={1} required className="min-h-11 w-full border px-2 py-2" />
         </label>
         {showCost ? (
           <label className="block space-y-1">
             <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Unit cost</span>
-            <input name="unit_cost" type="number" step="0.01" min="0" placeholder="0.00" className="min-h-11 w-full rounded-lg border px-2 py-2" />
+            <input name="unit_cost" type="number" step="0.01" min="0" placeholder="0.00" className="min-h-11 w-full border px-2 py-2" />
           </label>
         ) : (
           <input type="hidden" name="unit_cost" value="0" />
         )}
         <SubmitButton
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 py-2.5 font-semibold text-white md:col-span-4"
+          className="inline-flex min-h-11 items-center justify-center bg-[#806A50] px-4 py-2.5 font-semibold text-white md:col-span-4"
          pendingLabel="Receiving…">
           Receive into office
         </SubmitButton>
       </ActionForm>
 
-      <div className="bg-white rounded-2xl border overflow-hidden">
+      <div className="bg-white border overflow-hidden">
         <table className="w-full text-left text-sm">
           <thead className="bg-[#FAF7F2] text-xs text-[#7A7267]">
             <tr>
@@ -133,7 +133,7 @@ export default async function SamplesPage({
                   <td className="p-3">
                     <div className="min-w-[220px] space-y-2">
                       <ActionForm action={moveSample}
-                        className="space-y-1.5 rounded-lg border border-[#806A50]/25 bg-[#F4EFE6] p-2 text-[11px]"
+                        className="space-y-1.5 border border-[#806A50]/25 bg-[#F4EFE6] p-2 text-[11px]"
                       >
                         <input type="hidden" name="stock_id" value={sample.id} />
                         <input type="hidden" name="to_holder" value="client" />
@@ -166,11 +166,11 @@ export default async function SamplesPage({
                             min="1"
                             defaultValue={1}
                             required
-                            className="rounded border px-1 py-1"
+                            className="border px-1 py-1"
                           />
-                          <SubmitButton className="rounded bg-[#806A50] py-1 font-semibold text-white" pendingLabel="Sending…">Send</SubmitButton>
+                          <SubmitButton className="bg-[#806A50] py-1 font-semibold text-white" pendingLabel="Sending…">Send</SubmitButton>
                         </div>
-                        <input name="note" placeholder="Note (optional)" className="w-full rounded border px-1 py-1" />
+                        <input name="note" placeholder="Note (optional)" className="w-full border px-1 py-1" />
                       </ActionForm>
 
                       <details className="text-[11px]">
@@ -198,7 +198,7 @@ export default async function SamplesPage({
                               { value: 'supplier', label: 'To supplier' },
                             ]}
                           />
-                          <input name="quantity" type="number" min="1" defaultValue={1} className="border rounded px-1 py-1" />
+                          <input name="quantity" type="number" min="1" defaultValue={1} className="border px-1 py-1" />
                           <MobileSheetSelect
                             name="company_id"
                             label="Client"
@@ -208,8 +208,8 @@ export default async function SamplesPage({
                               ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
                             ]}
                           />
-                          <input name="note" placeholder="Note / holder name" className="col-span-2 border rounded px-1 py-1" />
-                          <SubmitButton className="col-span-2 border rounded py-1 font-semibold" pendingLabel="Recording…">Record movement</SubmitButton>
+                          <input name="note" placeholder="Note / holder name" className="col-span-2 border px-1 py-1" />
+                          <SubmitButton className="col-span-2 border py-1 font-semibold" pendingLabel="Recording…">Record movement</SubmitButton>
                         </ActionForm>
                       </details>
                     </div>
@@ -224,7 +224,7 @@ export default async function SamplesPage({
         </table>
       </div>
 
-      <div className="bg-white rounded-2xl border p-5">
+      <div className="bg-white border p-5">
         <h2 className="font-serif text-lg mb-3">Movement history</h2>
         {(movements || []).map((m) => {
           const product = Array.isArray(m.product) ? m.product[0] : m.product

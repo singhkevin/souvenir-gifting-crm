@@ -298,7 +298,7 @@ function BudgetPill({ badge }: { badge: BudgetBadge }) {
   const within = badge === 'within'
   return (
     <span
-      className={`inline-block px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none border ${
+      className={`inline-block px-2 py-0.5 text-[10px]  uppercase tracking-wider rounded-none border ${
         within
           ? 'border-[#3A4537] bg-[#DAE6D3] text-[#3A4537]'
           : 'border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300]'

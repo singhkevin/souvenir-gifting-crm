@@ -61,13 +61,13 @@ export function CategoryField({
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="New category name"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs"
+            className="w-full border border-gray-200 px-3 py-2 text-xs"
           />
           <button
             type="button"
             disabled={pending || !name.trim()}
             onClick={() => void save()}
-            className="rounded-lg bg-[#806A50] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+            className="bg-[#806A50] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
           >
             {pending ? 'Saving…' : 'Add'}
           </button>

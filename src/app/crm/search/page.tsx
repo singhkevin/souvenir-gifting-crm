@@ -85,7 +85,7 @@ export default async function SearchPage({
   const orders = asRows<SearchOrder>(ordersRes.data)
 
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <section className="bg-white border rounded-2xl p-4 space-y-2">
+    <section className="bg-white border p-4 space-y-2">
       <h2 className="text-xs uppercase tracking-wider text-[#7A7267] font-semibold">{title}</h2>
       {children}
     </section>

@@ -33,9 +33,9 @@ export default async function NewProductPage({
     <div className="max-w-4xl mx-auto space-y-6">
       <BackButton href="/crm/products" label="Back to Products" />
 
-      <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+      <div className="bg-white p-8 border border-gray-200">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-          <div className="p-3 bg-[#806A50]/10 text-[#806A50] rounded-xl">
+          <div className="p-3 bg-[#806A50]/10 text-[#806A50]">
             <Package className="w-6 h-6" />
           </div>
           <div>
@@ -47,7 +47,7 @@ export default async function NewProductPage({
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          <div className="mb-4 border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
             {error}
           </div>
         )}
@@ -61,7 +61,7 @@ export default async function NewProductPage({
                 name="name"
                 required
                 placeholder="e.g. Premium Executive Leather Journal"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -72,7 +72,7 @@ export default async function NewProductPage({
                 name="sku"
                 required
                 placeholder="e.g. GIF-LJ001"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none font-mono uppercase"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none uppercase"
               />
             </div>
 
@@ -95,7 +95,7 @@ export default async function NewProductPage({
                 step="0.01"
                 required
                 placeholder="e.g. 750"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -107,7 +107,7 @@ export default async function NewProductPage({
                 defaultValue="50"
                 min="1"
                 required
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -119,7 +119,7 @@ export default async function NewProductPage({
                 defaultValue="0"
                 min="0"
                 step="1"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -142,7 +142,7 @@ export default async function NewProductPage({
                 name="supplier_cost"
                 step="0.01"
                 placeholder="e.g. 450"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -154,7 +154,7 @@ export default async function NewProductPage({
                 step="0.01"
                 min="0"
                 placeholder="Used only if channel % is blank"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
               <p className="mt-1 text-[11px] text-gray-500">
                 Public uses the B2C margin. Portal uses the company margin, then B2B. This % applies only when that channel % is blank.
@@ -178,7 +178,7 @@ export default async function NewProductPage({
                 min="0"
                 step="1"
                 placeholder="For this supplier"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
 
@@ -196,7 +196,7 @@ export default async function NewProductPage({
               <input
                 type="text"
                 name="hsn_code"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
               />
             </div>
           </div>
@@ -215,7 +215,7 @@ export default async function NewProductPage({
               type="url"
               name="image_url"
               placeholder="Only if the photo is already in product-images storage"
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+              className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
             />
             <p className="text-[11px] text-gray-400 mt-1">Prefer uploading a photo above. Do not use localhost or unrelated stock URLs.</p>
           </div>
@@ -226,31 +226,31 @@ export default async function NewProductPage({
               name="description"
               rows={3}
               placeholder="Dimensions, material composition, custom branding instructions..."
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+              className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">Colour</label>
-              <input name="colour" className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg" />
+              <input name="colour" className="w-full px-3 py-2 text-xs border border-gray-200" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">Size</label>
-              <input name="size" className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg" />
+              <input name="size" className="w-full px-3 py-2 text-xs border border-gray-200" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">Gender</label>
-              <input name="gender" className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg" />
+              <input name="gender" className="w-full px-3 py-2 text-xs border border-gray-200" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">Material</label>
-              <input name="material" className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg" />
+              <input name="material" className="w-full px-3 py-2 text-xs border border-gray-200" />
             </div>
           </div>
 
           {profile.role === 'admin' && (
-          <div className="border border-purple-100 bg-purple-50/30 p-5 rounded-xl space-y-4">
+          <div className="border border-purple-100 bg-purple-50/30 p-5 space-y-4">
             <div>
               <h3 className="text-sm font-bold text-gray-900">Catalogue Access & Company Visibility</h3>
               <p className="text-xs text-gray-500 mt-0.5">
@@ -259,7 +259,7 @@ export default async function NewProductPage({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#806A50] transition-colors">
+              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 cursor-pointer hover:border-[#806A50] transition-colors">
                 <input
                   type="radio"
                   name="catalogue_access"
@@ -278,7 +278,7 @@ export default async function NewProductPage({
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#806A50] transition-colors">
+              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 cursor-pointer hover:border-[#806A50] transition-colors">
                 <input
                   type="radio"
                   name="catalogue_access"
@@ -296,7 +296,7 @@ export default async function NewProductPage({
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-[#806A50] transition-colors">
+              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 cursor-pointer hover:border-[#806A50] transition-colors">
                 <input
                   type="radio"
                   name="catalogue_access"
@@ -319,14 +319,14 @@ export default async function NewProductPage({
               <label className="block text-xs font-semibold text-gray-700 mb-2">
                 Grant Access to Companies (if Personalized / Specific selected):
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 bg-white rounded-lg border border-gray-200">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 bg-white border border-gray-200">
                 {companies?.map((comp) => (
-                  <label key={comp.id} className="flex items-center gap-2 p-1.5 text-xs text-gray-700 hover:bg-gray-50 rounded cursor-pointer">
+                  <label key={comp.id} className="flex items-center gap-2 p-1.5 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer">
                     <input
                       type="checkbox"
                       name="company_ids"
                       value={comp.id}
-                      className="rounded border-gray-300 text-[#806A50] focus:ring-[#806A50]"
+                      className="border-gray-300 text-[#806A50] focus:ring-[#806A50]"
                     />
                     <span className="truncate font-medium">{comp.name}</span>
                   </label>
@@ -339,12 +339,12 @@ export default async function NewProductPage({
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <Link
               href="/crm/products"
-              className="px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
             >
               Cancel
             </Link>
             <SubmitButton
-              className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg transition-colors shadow-sm"
+              className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] transition-colors"
              pendingLabel="Creating…">
               Create Product
             </SubmitButton>

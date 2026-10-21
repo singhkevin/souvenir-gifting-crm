@@ -34,7 +34,7 @@ export default async function QuoteBasketPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-[#CCC5BD] pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 font-[family-name:var(--font-mono)] text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9E4300]">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9E4300]">
             REQUISITION BASKET
           </div>
           <h1 className="font-[family-name:var(--font-newsreader)] text-3xl font-normal tracking-tight text-[#1C1C18] sm:text-4xl">
@@ -57,7 +57,7 @@ export default async function QuoteBasketPage() {
       <section className="space-y-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-wider text-[#9E4300]">
+            <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2.5 py-1 text-[11px] uppercase tracking-wider text-[#9E4300]">
               CATALOG GIFTS
             </span>
             <h2 className="font-[family-name:var(--font-newsreader)] text-2xl font-normal tracking-tight text-[#1C1C18] sm:text-3xl">
@@ -69,7 +69,7 @@ export default async function QuoteBasketPage() {
 
         {campaignRows.length === 0 ? (
           <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-8 text-center sm:p-12">
-            <p className="font-[family-name:var(--font-mono)] text-xs uppercase tracking-wider text-[#7C766F]">
+            <p className="text-xs uppercase tracking-wider text-[#7C766F]">
               No catalog gifts saved yet.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -105,7 +105,7 @@ export default async function QuoteBasketPage() {
                   <div className="flex flex-1 flex-col justify-between space-y-4 p-5">
                     <div>
                       {campaign?.name ? (
-                        <p className="mb-1 font-[family-name:var(--font-mono)] text-[10px] font-semibold uppercase tracking-wider text-[#9E4300]">
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[#9E4300]">
                           {campaign.name}
                         </p>
                       ) : null}

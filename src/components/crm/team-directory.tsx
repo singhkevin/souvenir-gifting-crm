@@ -49,7 +49,7 @@ function isPendingAccount(profile: Profile) {
 function RoleBadge({ role }: { role: string }) {
   return (
     <span
-      className={`inline-block rounded px-2 py-1 text-[11px] font-medium uppercase md:text-xs ${
+      className={`inline-block  px-2 py-1 text-[11px] font-medium uppercase md:text-xs ${
         roleColors[role] || 'bg-gray-100'
       }`}
     >
@@ -107,7 +107,7 @@ function MemberForm({
       <SubmitButton
         pendingLabel="Saving…"
         disabled={saveBlocked}
-        className={`inline-flex items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF] disabled:cursor-not-allowed disabled:opacity-50 ${
+        className={`inline-flex items-center justify-center  bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF] disabled:cursor-not-allowed disabled:opacity-50 ${
           compact ? 'min-h-9' : 'min-h-10'
         }`}
       >
@@ -132,7 +132,7 @@ function MemberCard({
   pending: boolean
 }) {
   return (
-    <article className="space-y-3 rounded-xl border border-[#E8E4DE] bg-white p-4">
+    <article className="space-y-3 border border-[#E8E4DE] bg-white p-4">
       <div>
         <p className="text-sm font-semibold text-[#1C1917]">{profile.full_name}</p>
         <p className="mt-0.5 text-xs text-gray-500">{profile.email}</p>
@@ -160,7 +160,7 @@ function MemberTable({
   pending: boolean
 }) {
   return (
-    <div className="hidden overflow-x-auto rounded-lg border bg-white md:block">
+    <div className="hidden overflow-x-auto border bg-white md:block">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
           <tr className="border-b bg-gray-50 text-xs text-gray-500">

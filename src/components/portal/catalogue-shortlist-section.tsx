@@ -31,7 +31,7 @@ export function CatalogueShortlistSection() {
     <section className="space-y-4">
       <div>
         <div className="flex items-center gap-2.5">
-          <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-wider text-[#9E4300]">
+          <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2.5 py-1 text-[11px] uppercase tracking-wider text-[#9E4300]">
             SAVED GIFTS
           </span>
           <h2 className="font-[family-name:var(--font-newsreader)] text-2xl font-normal tracking-tight text-[#1C1C18] sm:text-3xl">
@@ -53,7 +53,7 @@ export function CatalogueShortlistSection() {
             <div className="flex flex-1 flex-col justify-between gap-4 p-5">
               <div>
                 {item.category_name ? (
-                  <p className="mb-1 font-[family-name:var(--font-mono)] text-[10px] font-semibold uppercase tracking-wider text-[#9E4300]">
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[#9E4300]">
                     {item.category_name}
                   </p>
                 ) : null}

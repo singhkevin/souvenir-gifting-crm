@@ -143,7 +143,7 @@ export default async function CatalogDetailPage({
 
       {/* Header Panel */}
       <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-4">
-        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
           <Link href="/crm/dashboard" className="hover:text-[#9E4300] transition-colors">CRM</Link>
           <span>/</span>
           <Link href="/crm/catalogs" className="hover:text-[#9E4300] transition-colors">Catalogs</Link>
@@ -154,16 +154,16 @@ export default async function CatalogDetailPage({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
-              <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2.5 py-0.5 font-mono text-[11px] uppercase text-[#4A4640]">
+              <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2.5 py-0.5 text-[11px] uppercase text-[#4A4640]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#9E4300]" />
                 {catalogStatusLabel(catalog.status)}
               </span>
               {catalog.published_to_client_at ? (
-                <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2.5 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+                <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2.5 py-0.5 text-[11px] uppercase text-[#3A4537]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> Published to client
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2.5 py-0.5 font-mono text-[11px] uppercase text-[#7C766F]">
+                <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2.5 py-0.5 text-[11px] uppercase text-[#7C766F]">
                   Draft
                 </span>
               )}
@@ -361,7 +361,7 @@ export default async function CatalogDetailPage({
                             </ul>
                           )}
                           {discontinued ? (
-                            <span className="mt-1 inline-block rounded-none border border-[#BA1A1A]/40 bg-[#FBEDEB] px-2 py-0.5 font-mono text-[10px] uppercase text-[#BA1A1A]">
+                            <span className="mt-1 inline-block rounded-none border border-[#BA1A1A]/40 bg-[#FBEDEB] px-2 py-0.5 text-[10px] uppercase text-[#BA1A1A]">
                               Master product discontinued — unpublish or replace
                             </span>
                           ) : null}
@@ -372,13 +372,13 @@ export default async function CatalogDetailPage({
                       {row.pack_kit_total != null ? (
                         <>
                           <p className="font-mono font-semibold text-[#1C1B1A]">{formatCurrency(row.pack_kit_total)}</p>
-                          <p className="text-[10px] font-mono uppercase text-[#7C766F]">kit total</p>
+                          <p className="text-[10px] uppercase text-[#7C766F]">kit total</p>
                         </>
                       ) : (
                         <>
                           <p className="font-mono font-semibold text-[#1C1B1A]">{formatCurrency(previewPrices.get(row.id) ?? row.selling_price)}</p>
                           {row.manual_price != null && (
-                            <span className="inline-block mt-0.5 rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.2 font-mono text-[10px] uppercase text-[#9E4300]">manual price</span>
+                            <span className="inline-block mt-0.5 rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.2 text-[10px] uppercase text-[#9E4300]">manual price</span>
                           )}
                           {row.pack_option && row.priced_company_id && (
                             <p className="text-[10px] text-[#7C766F] mt-0.5">
@@ -407,11 +407,11 @@ export default async function CatalogDetailPage({
                     </td>
                     <td className="px-3.5 py-3">
                       {row.visibility === 'published' ? (
-                        <span className="inline-flex items-center gap-1 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+                        <span className="inline-flex items-center gap-1 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
                           <span className="h-1 w-1 rounded-full bg-[#3A4537]" /> published
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 font-mono text-[11px] uppercase text-[#7C766F]">
+                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 text-[11px] uppercase text-[#7C766F]">
                           {row.visibility}
                         </span>
                       )}

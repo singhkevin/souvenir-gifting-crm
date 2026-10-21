@@ -7,6 +7,7 @@ import { Mail, Loader2 } from 'lucide-react';
 import { PasswordField } from '@/components/auth/password-field';
 import Image from 'next/image';
 import { BrandName } from '@/components/brand/brand-name';
+import { BrandLogo } from '@/components/brand/brand-logo';
 import { assignWithTab } from '@/lib/supabase/client';
 
 function safeHelpHref(value: string | undefined) {
@@ -81,13 +82,13 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
   return (
     <div className="flex min-h-[100dvh] flex-col justify-center bg-[#F4EFE6] px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
       {branded ? (
-        <div className="mx-auto mb-6 w-full max-w-lg overflow-hidden rounded-3xl">
+        <div className="mx-auto mb-6 w-full max-w-lg overflow-hidden">
           <Image src="/site/hero-composition.webp" alt="Corporate gifts" width={1200} height={640} priority className="h-40 w-full object-cover sm:h-52" />
         </div>
       ) : null}
       <div className="space-y-3 text-center sm:mx-auto sm:w-full sm:max-w-md">
         <Link href="/home" className="inline-block">
-          <BrandName as="h1" className="font-serif text-3xl tracking-tight text-[#1C1917] sm:text-4xl" />
+          <BrandLogo className="mx-auto h-10 w-auto object-contain sm:h-12" />
         </Link>
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7A7267]">
           Corporate Gifting CRM
@@ -98,29 +99,29 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
-        <div className="bg-white py-8 px-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] rounded-2xl border border-[#E5DFD5] sm:px-10">
+        <div className="bg-white py-8 px-6 border border-[#E5DFD5] sm:px-10">
           <p className="text-sm text-[#5A5248] mb-6 text-center">
             Sign in to <BrandName />
           </p>
           <form onSubmit={handleSubmit} className="space-y-5">
             {next ? <input type="hidden" name="next" value={next} /> : null}
             {confirmed && !error && (
-              <div className="p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
+              <div className="p-3 bg-green-50 text-green-800 text-xs border border-green-200">
                 Email confirmed. Sign in to open your business account.
               </div>
             )}
             {resetSuccess && !error && (
-              <div className="p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
+              <div className="p-3 bg-green-50 text-green-800 text-xs border border-green-200">
                 Password updated successfully. Please sign in with your new password.
               </div>
             )}
             {portalError && !error && (
-              <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
+              <div className="p-3 bg-red-50 text-red-700 text-xs border border-red-200">
                 This account cannot be used on this portal.
               </div>
             )}
             {error && (
-              <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
+              <div className="p-3 bg-red-50 text-red-700 text-xs border border-red-200">
                 <p>{error}</p>
                 {help ? (
                   <a href={help.href} className="mt-2 inline-block font-semibold underline">
@@ -145,7 +146,7 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   required
-                  className="block w-full rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] py-3 pl-10 pr-3 text-base text-[#1C1917] placeholder-gray-400 transition-colors focus:border-[#806A50] focus:outline-none focus:ring-1 focus:ring-[#806A50] sm:py-2.5 sm:text-xs"
+                  className="block w-full border border-[#E5DFD5] bg-[#FAF7F2] py-3 pl-10 pr-3 text-base text-[#1C1917] placeholder-gray-400 transition-colors focus:border-[#806A50] focus:outline-none focus:ring-1 focus:ring-[#806A50] sm:py-2.5 sm:text-xs"
                   placeholder="Enter your email"
                 />
               </div>
@@ -166,7 +167,7 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] hover:text-[#FFFFFF] focus:outline-none shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-full flex justify-center items-center py-3 px-4 text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] hover:text-[#FFFFFF] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
             </button>

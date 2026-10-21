@@ -306,7 +306,7 @@ export default async function DashboardPage({
           Activity
         </h2>
         <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+          <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
             {activityRows.length} RECENT
           </span>
           {(profile.role === 'admin' || profile.role === 'management') && (
@@ -435,7 +435,7 @@ export default async function DashboardPage({
                 <h2 className="font-[family-name:var(--font-newsreader)] text-lg sm:text-xl font-normal text-[#1C1B1A]">
                   Exceptions
                 </h2>
-                <span className="font-mono text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
                   {delayed.length} DELAYED
                 </span>
               </div>
@@ -459,7 +459,7 @@ export default async function DashboardPage({
                 Order pipeline
               </h2>
               <div className="flex items-center gap-3">
-                <span className="font-mono text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
                   {orderRows.length} ORDERS
                 </span>
                 <Link
@@ -517,7 +517,7 @@ export default async function DashboardPage({
                   <h2 className="font-[family-name:var(--font-newsreader)] text-lg sm:text-xl font-normal text-[#1C1B1A]">
                     Departments
                   </h2>
-                  <span className="font-mono text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                  <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
                     {deptStats.length} DEPARTMENTS
                   </span>
                 </div>
@@ -551,7 +551,7 @@ export default async function DashboardPage({
                   <h2 className="font-[family-name:var(--font-newsreader)] text-lg sm:text-xl font-normal text-[#1C1B1A]">
                     Team performance
                   </h2>
-                  <span className="font-mono text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                  <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
                     {people.length} MEMBERS
                   </span>
                 </div>
@@ -622,7 +622,7 @@ export default async function DashboardPage({
                   Upcoming follow-ups
                 </h2>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                  <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
                     {(followUps.data || []).length} DUE
                   </span>
                   <Link
@@ -637,7 +637,7 @@ export default async function DashboardPage({
                 {(followUps.data || []).map((a) => (
                   <div key={a.id} className="px-5 py-3 flex items-center justify-between gap-3 hover:bg-[#F6F3EC] transition-colors">
                     <span className="text-sm text-[#1C1B1A] font-medium">{a.title}</span>
-                    <span className="font-mono text-[11px] font-medium uppercase px-2 py-0.5 border border-[#CCC5BD] text-[#4A4640] rounded-none bg-transparent shrink-0">
+                    <span className="text-[11px] font-medium uppercase px-2 py-0.5 border border-[#CCC5BD] text-[#4A4640] rounded-none bg-transparent shrink-0">
                       {a.type}
                     </span>
                   </div>

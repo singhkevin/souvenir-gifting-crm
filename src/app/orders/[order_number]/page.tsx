@@ -94,27 +94,27 @@ export default async function GuestOrderStatusPage({
           {/* Monospaced Metadata Bar */}
           <div className="grid grid-cols-2 md:grid-cols-5 border border-[#CCC5BD] bg-[#FCF9F2] divide-x divide-y md:divide-y-0 divide-[#CCC5BD]">
             <div className="p-4 flex flex-col justify-between">
-              <span className="sv2-mono-sm text-[10px] text-[#7C766F] uppercase tracking-wider">ORDER NUMBER</span>
+              <span className="sv2-label text-[10px] text-[#7C766F]">ORDER NUMBER</span>
               <span className="sv2-mono-md font-bold text-[#1C1C18] mt-1">{order.order_number}</span>
             </div>
             <div className="p-4 flex flex-col justify-between">
-              <span className="sv2-mono-sm text-[10px] text-[#7C766F] uppercase tracking-wider">STATUS</span>
+              <span className="sv2-label text-[10px] text-[#7C766F]">STATUS</span>
               <span className="sv2-mono-md font-semibold text-[#9E4300] mt-1">
                 {CLIENT_STATUS_LABELS[order.status] || order.status}
               </span>
             </div>
             <div className="p-4 flex flex-col justify-between">
-              <span className="sv2-mono-sm text-[10px] text-[#7C766F] uppercase tracking-wider">TOTAL AMOUNT</span>
+              <span className="sv2-label text-[10px] text-[#7C766F]">TOTAL AMOUNT</span>
               <span className="sv2-mono-lg font-bold text-[#1C1C18] mt-0.5">
                 {formatCurrency(order.order_value || 0)}
               </span>
             </div>
             <div className="p-4 flex flex-col justify-between">
-              <span className="sv2-mono-sm text-[10px] text-[#7C766F] uppercase tracking-wider">INVOICE STATUS</span>
+              <span className="sv2-label text-[10px] text-[#7C766F]">INVOICE STATUS</span>
               <span className="sv2-mono-md text-[#1C1C18] mt-1">{paymentLabel(invoice?.status)}</span>
             </div>
             <div className="p-4 flex flex-col justify-between col-span-2 md:col-span-1">
-              <span className="sv2-mono-sm text-[10px] text-[#7C766F] uppercase tracking-wider">DISPATCH DATE</span>
+              <span className="sv2-label text-[10px] text-[#7C766F]">DISPATCH DATE</span>
               <span className="sv2-mono-md text-[#1C1C18] mt-1">
                 {order.dispatch_date ? formatDate(order.dispatch_date) : 'Pending dispatch'}
               </span>
@@ -188,7 +188,7 @@ export default async function GuestOrderStatusPage({
                 </p>
               </div>
               <div className="text-left sm:text-right">
-                <span className="sv2-mono-sm text-[10px] text-[#7C766F] uppercase block">Expected Delivery</span>
+                <span className="sv2-label text-[10px] text-[#7C766F] block">Expected Delivery</span>
                 <span className="sv2-mono-md font-bold text-[#1C1C18]">
                   {order.expected_delivery_date ? formatDate(order.expected_delivery_date) : 'To be confirmed'}
                 </span>
@@ -226,7 +226,7 @@ export default async function GuestOrderStatusPage({
                       ) : null}
                     </div>
                     <div className="text-left sm:text-right">
-                      <span className="sv2-mono-sm text-[10px] text-[#7C766F] uppercase block">Quantity</span>
+                      <span className="sv2-label text-[10px] text-[#7C766F] block">Quantity</span>
                       <span className="sv2-mono-md font-bold text-[#1C1C18]">&times; {item.quantity}</span>
                     </div>
                   </li>
@@ -240,7 +240,7 @@ export default async function GuestOrderStatusPage({
         <div className="pt-4">
           <Link
             href="/catalogue"
-            className="sv2-mono-sm text-[11px] uppercase tracking-wider text-[#9E4300] hover:underline inline-flex items-center gap-1"
+            className="sv2-label text-[11px] text-[#9E4300] hover:underline inline-flex items-center gap-1"
           >
             &larr; Back to the catalogue
           </Link>

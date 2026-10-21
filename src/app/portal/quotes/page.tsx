@@ -7,20 +7,20 @@ function requestStatusChip(status: string | null) {
   const norm = String(status || '').toLowerCase()
   if (norm === 'fulfilled') {
     return (
-      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         Fulfilled
       </span>
     )
   }
   if (norm === 'quoting' || norm === 'new') {
     return (
-      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         {norm === 'quoting' ? 'Under Review' : 'Received'}
       </span>
     )
   }
   return (
-    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#4A4640] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#4A4640] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
       {norm ? norm.replace('_', ' ') : '—'}
     </span>
   )
@@ -30,27 +30,27 @@ function quoteStatusChip(status: string | null) {
   const norm = String(status || 'sent').toLowerCase()
   if (norm === 'accepted') {
     return (
-      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         Accepted
       </span>
     )
   }
   if (norm === 'rejected') {
     return (
-      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         Declined
       </span>
     )
   }
   if (norm === 'sent' || norm === 'viewed') {
     return (
-      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         Awaiting Decision
       </span>
     )
   }
   return (
-    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#4A4640] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#4A4640] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
       {norm}
     </span>
   )

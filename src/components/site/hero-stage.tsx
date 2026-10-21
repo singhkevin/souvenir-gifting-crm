@@ -177,7 +177,7 @@ export function HeroStage({
                 <Link
                   key={product.id}
                   href={`/catalogue/${product.id}`}
-                  className="w-[42vw] max-w-[11.5rem] shrink-0 overflow-hidden rounded-md bg-white shadow-[0_10px_28px_rgba(0,0,0,0.22)]"
+                  className="w-[42vw] max-w-[11.5rem] shrink-0 overflow-hidden bg-white"
                 >
                   <div className="aspect-square catalogue-studio-field">
                     <ProductImage
@@ -208,7 +208,7 @@ export function HeroStage({
             <Link
               key={`slot-${index}`}
               href={`/catalogue/${product.id}`}
-              className="overflow-hidden rounded-md bg-white shadow-[0_16px_40px_rgba(0,0,0,0.28)]"
+              className="overflow-hidden bg-white"
             >
               <div className={`transition-opacity duration-700 ease-in-out ${contentClass}`}>
                 <div className="aspect-square catalogue-studio-field">

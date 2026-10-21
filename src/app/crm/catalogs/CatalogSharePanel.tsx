@@ -92,7 +92,7 @@ export function CatalogSharePanel({
     : null
 
   return (
-    <div className="space-y-3 rounded-2xl border bg-white p-4 text-xs">
+    <div className="space-y-3 border bg-white p-4 text-xs">
       <div>
         <h2 className="font-serif text-base text-[#1C1917]">Share link</h2>
         <p className="mt-1 text-[#7A7267]">
@@ -103,7 +103,7 @@ export function CatalogSharePanel({
 
       {url ? (
         <div className="space-y-2">
-          <p className="break-all rounded-lg bg-[#FAF7F2] px-3 py-2 font-mono text-[11px]">{url}</p>
+          <p className="break-all bg-[#FAF7F2] px-3 py-2 font-mono text-[11px]">{url}</p>
           <p className="text-[#7A7267]">{expiryLabel}</p>
           <p className="text-[#7A7267]">
             Prices on this link: {linkCompanyName ? `${linkCompanyName}'s margin` : companies.length > 1 ? 'the signed-in client\'s company, otherwise the catalog default' : 'the assigned company\'s margin'}.
@@ -111,7 +111,7 @@ export function CatalogSharePanel({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className="min-h-10 rounded-lg border px-3 font-semibold"
+              className="min-h-10 border px-3 font-semibold"
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(url)
@@ -128,7 +128,7 @@ export function CatalogSharePanel({
               disabled={pending}
               aria-busy={pending && active === 'extend' ? true : undefined}
               onClick={() => runLink('extend', extendCatalogShareLink, extendKey, 'Link extended')}
-              className="min-h-10 rounded-lg border px-3 font-semibold disabled:opacity-50"
+              className="min-h-10 border px-3 font-semibold disabled:opacity-50"
             >
               {busyLabel('extend', 'Extend 30 days', 'Extending…')}
             </button>
@@ -137,7 +137,7 @@ export function CatalogSharePanel({
               disabled={pending}
               aria-busy={pending && active === 'revoke' ? true : undefined}
               onClick={() => runLink('revoke', revokeCatalogShareLink, revokeKey, 'Link revoked')}
-              className="min-h-10 rounded-lg border border-red-200 px-3 font-semibold text-red-700 disabled:opacity-50"
+              className="min-h-10 border border-red-200 px-3 font-semibold text-red-700 disabled:opacity-50"
             >
               {busyLabel('revoke', 'Revoke link', 'Revoking…')}
             </button>
@@ -157,7 +157,7 @@ export function CatalogSharePanel({
         {companies.length > 1 && (
           <label className="flex items-center gap-2 text-[#5A5248]">
             Price for
-            <select name="company_id" defaultValue="" className="min-h-10 rounded-lg border bg-white px-2 py-2">
+            <select name="company_id" defaultValue="" className="min-h-10 border bg-white px-2 py-2">
               <option value="">Each viewer&apos;s company</option>
               {companies.map((company) => (
                 <option key={company.id} value={company.id}>{company.name}</option>
@@ -169,7 +169,7 @@ export function CatalogSharePanel({
           <input type="checkbox" name="no_expiry" value="1" checked={noExpiry} onChange={(event) => setNoExpiry(event.target.checked)} />
           No expiry
         </label>
-        <SubmitButton pendingLabel="Generating…" className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
+        <SubmitButton pendingLabel="Generating…" className="min-h-10 bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
           {url ? 'Regenerate link' : 'Generate 30-day link'}
         </SubmitButton>
       </ActionForm>
@@ -188,18 +188,18 @@ export function CatalogSharePanel({
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Client POC email"
-          className="min-h-10 rounded-lg border px-3 py-2"
+          className="min-h-10 border px-3 py-2"
         />
         <datalist id="catalog-poc-emails">
           {suggestions.map((row) => (
             <option key={row.email} value={row.email}>{row.label}</option>
           ))}
         </datalist>
-        <SubmitButton disabled={!url} pendingLabel="Sending…" className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
+        <SubmitButton disabled={!url} pendingLabel="Sending…" className="min-h-10 bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
           Email link
         </SubmitButton>
         {mailto ? (
-          <a href={mailto} className="inline-flex min-h-10 items-center justify-center rounded-lg border px-3 font-semibold text-[#806A50]">
+          <a href={mailto} className="inline-flex min-h-10 items-center justify-center border px-3 font-semibold text-[#806A50]">
             Open mail app
           </a>
         ) : (

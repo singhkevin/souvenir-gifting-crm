@@ -69,10 +69,10 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
           <Link href="/crm/presentations" className="text-xs text-gray-500">Presentations</Link>
           <h1 className="text-2xl font-semibold text-gray-900">{deck.title}</h1>
         </div>
-        <a href={`/crm/presentations/${id}/pdf`} className="rounded-lg border px-4 py-2 text-sm font-semibold">Download PDF</a>
+        <a href={`/crm/presentations/${id}/pdf`} className="border px-4 py-2 text-sm font-semibold">Download PDF</a>
       </div>
 
-      <section className="rounded-xl border bg-white p-4">
+      <section className="border bg-white p-4">
         <h2 className="text-sm font-semibold text-gray-900">Share link</h2>
         <p className="mt-1 text-sm text-gray-500">The public page shows the deck and hides prices.</p>
         {shareUrl ? (
@@ -85,7 +85,7 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
           <input type="hidden" name="id" value={id} />
           <label className="text-xs text-gray-500">
             Expiry
-            <select name="expiry" defaultValue="30" className="mt-1 block rounded-lg border px-3 py-2 text-sm">
+            <select name="expiry" defaultValue="30" className="mt-1 block border px-3 py-2 text-sm">
               <option value="30">30 days</option>
               <option value="date">Custom date</option>
               <option value="none">No expiry</option>
@@ -93,9 +93,9 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
           </label>
           <label className="text-xs text-gray-500">
             Custom date
-            <input type="date" name="expiry_date" className="mt-1 block rounded-lg border px-3 py-2 text-sm" />
+            <input type="date" name="expiry_date" className="mt-1 block border px-3 py-2 text-sm" />
           </label>
-          <SubmitButton className="rounded-lg bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
+          <SubmitButton className="bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
             {open ? 'Regenerate link' : 'Create link'}
           </SubmitButton>
         </ActionForm>
@@ -115,7 +115,7 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
         ) : null}
       </section>
 
-      <ActionForm action={updatePresentation} className="rounded-xl border bg-white p-4">
+      <ActionForm action={updatePresentation} className="border bg-white p-4">
         <input type="hidden" name="id" value={id} />
         <DeckEditor
           products={rows}
@@ -129,7 +129,7 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
             slides,
           }}
         />
-        <SubmitButton className="mt-4 rounded-lg bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
+        <SubmitButton className="mt-4 bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
           Save changes
         </SubmitButton>
       </ActionForm>

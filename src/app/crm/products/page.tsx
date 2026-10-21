@@ -234,30 +234,30 @@ export default async function ProductsPage({
                     </td>
                     <td className="px-3.5 py-2.5">
                       {p.catalogue_access === 'all' ? (
-                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 font-mono text-[10px] uppercase text-[#4A4640]">
+                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#4A4640]">
                           All Clients
                         </span>
                       ) : p.catalogue_access === 'selected' ? (
-                        <span className="inline-flex items-center rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 font-mono text-[10px] uppercase text-[#9E4300]">
+                        <span className="inline-flex items-center rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 text-[10px] uppercase text-[#9E4300]">
                           {companyCount} {companyCount === 1 ? 'Client' : 'Clients'}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 font-mono text-[10px] uppercase text-[#7C766F]">
+                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#7C766F]">
                           Internal Only
                         </span>
                       )}
                     </td>
                     <td className="px-3.5 py-2.5">
                       {p.status === 'active' ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+                        <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
                           <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> active
                         </span>
                       ) : p.status === 'discontinued' ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#BA1A1A]/10 px-2 py-0.5 font-mono text-[11px] uppercase text-[#BA1A1A]">
+                        <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#BA1A1A]/10 px-2 py-0.5 text-[11px] uppercase text-[#BA1A1A]">
                           <span className="h-1.5 w-1.5 rounded-full bg-[#BA1A1A]" /> discontinued
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 font-mono text-[11px] uppercase text-[#4A4640]">
+                        <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[11px] uppercase text-[#4A4640]">
                           {p.status}
                         </span>
                       )}
@@ -302,11 +302,11 @@ export default async function ProductsPage({
                   </div>
                   <div className="shrink-0">
                     {p.status === 'active' ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[10px] uppercase text-[#3A4537]">
+                      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[10px] uppercase text-[#3A4537]">
                         <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> active
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 font-mono text-[10px] uppercase text-[#4A4640]">
+                      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#4A4640]">
                         {p.status}
                       </span>
                     )}
@@ -338,15 +338,15 @@ export default async function ProductsPage({
                   )}
                   <div className="col-span-2 pt-1">
                     {p.catalogue_access === 'all' ? (
-                      <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 font-mono text-[10px] uppercase text-[#4A4640]">
+                      <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#4A4640]">
                         All Clients
                       </span>
                     ) : p.catalogue_access === 'selected' ? (
-                      <span className="inline-flex items-center rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 font-mono text-[10px] uppercase text-[#9E4300]">
+                      <span className="inline-flex items-center rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 text-[10px] uppercase text-[#9E4300]">
                         {companyCount} {companyCount === 1 ? 'Client' : 'Clients'}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 font-mono text-[10px] uppercase text-[#7C766F]">
+                      <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#7C766F]">
                         Internal Only
                       </span>
                     )}

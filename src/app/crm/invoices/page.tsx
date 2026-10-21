@@ -7,27 +7,27 @@ import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 function InvoiceStatusChip({ status }: { status: string }) {
   if (status === 'paid') {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
         <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> paid
       </span>
     )
   }
   if (status === 'partially_paid' || status === 'sent') {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 font-mono text-[11px] uppercase text-[#9E4300]">
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 text-[11px] uppercase text-[#9E4300]">
         <span className="h-1.5 w-1.5 rounded-full bg-[#9E4300]" /> {status.replace('_', ' ')}
       </span>
     )
   }
   if (status === 'overdue') {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#BA1A1A]/10 px-2 py-0.5 font-mono text-[11px] uppercase text-[#BA1A1A]">
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#BA1A1A]/10 px-2 py-0.5 text-[11px] uppercase text-[#BA1A1A]">
         <span className="h-1.5 w-1.5 rounded-full bg-[#BA1A1A]" /> overdue
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 font-mono text-[11px] uppercase text-[#4A4640]">
+    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[11px] uppercase text-[#4A4640]">
       {status}
     </span>
   )

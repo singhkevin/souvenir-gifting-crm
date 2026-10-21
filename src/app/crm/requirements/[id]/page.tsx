@@ -102,7 +102,7 @@ export default async function RequirementDetailPage({
       <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-5">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
               <Link href="/crm/dashboard" className="hover:text-[#9E4300] transition-colors">CRM</Link>
               <span>/</span>
               <Link href="/crm/requirements" className="hover:text-[#9E4300] transition-colors">Requirements</Link>
@@ -114,7 +114,7 @@ export default async function RequirementDetailPage({
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] bg-[#F6F3EC] text-[#4A4640] border border-[#CCC5BD] rounded-none">
                 <ClipboardList size={13} className="text-[#9E4300]" /> Client Brief
               </span>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-none font-mono text-[11px] uppercase ${
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-none  text-[11px] uppercase ${
                 ['active', 'won'].includes(req.status)
                   ? 'bg-[#DAE6D3] text-[#3A4537] border border-[#3A4537]/20'
                   : ['lost', 'closed'].includes(req.status)
@@ -140,7 +140,7 @@ export default async function RequirementDetailPage({
                 {(req.company as { name?: string })?.name}
               </Link>
               {(businessMeta?.account_type === 'business') ? (
-                <span className="ml-2 font-mono text-[11px] uppercase text-[#9E4300]">
+                <span className="ml-2 text-[11px] uppercase text-[#9E4300]">
                   {businessMeta.business_verification || 'unverified'}
                   {businessMeta.gst_number ? ` · GSTIN ${businessMeta.gst_number}` : ''}
                 </span>
@@ -650,7 +650,7 @@ export default async function RequirementDetailPage({
                       </td>
                       <td className="px-3.5 py-2.5 text-right font-mono font-medium text-[#1C1B1A]">{formatCurrency(q.total)}</td>
                       <td className="px-3.5 py-2.5">
-                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 font-mono text-[11px] uppercase text-[#4A4640]">
+                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 text-[11px] uppercase text-[#4A4640]">
                           {q.status}
                         </span>
                       </td>

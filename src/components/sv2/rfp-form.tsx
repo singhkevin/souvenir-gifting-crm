@@ -5,6 +5,7 @@ import { submitPublicQuote } from '@/app/request-quote/actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { siteContent } from '@/config/siteContent'
+import { Eyebrow } from '@/components/sv2/eyebrow'
 
 export function SV2RfpForm({ phone }: { phone?: string | null }) {
   const [submitted, setSubmitted] = useState(false)
@@ -13,9 +14,7 @@ export function SV2RfpForm({ phone }: { phone?: string | null }) {
   if (submitted) {
     return (
       <div className="border border-[#7C766F] bg-[#1C1B1A] p-6 sm:p-8 text-center space-y-3">
-        <span className="sv2-label text-[#FF8843] block font-bold uppercase tracking-wider">
-          // REQUEST RECEIVED //
-        </span>
+        <Eyebrow tone="peach">Request received</Eyebrow>
         <h4 className="sv2-headline-sm text-[#FCF9F2]">
           Thank you for reaching out.
         </h4>

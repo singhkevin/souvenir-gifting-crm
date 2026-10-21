@@ -48,7 +48,7 @@ export function CatalogAssignPanel({
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border bg-white p-4 text-xs">
+    <div className="space-y-3 border bg-white p-4 text-xs">
       <div>
         <h2 className="font-serif text-base text-[#1C1917]">Assigned companies</h2>
         <p className="mt-1 text-[#7A7267]">
@@ -60,7 +60,7 @@ export function CatalogAssignPanel({
       <ul className="space-y-2">
         {assigned.length === 0 && <li className="text-[#7A7267]">Not assigned yet. The catalog stays in the CRM until you share it.</li>}
         {assigned.map((row) => (
-          <li key={row.companyId} className="flex items-center justify-between gap-3 rounded-lg border border-[#E5DFD5] px-3 py-2">
+          <li key={row.companyId} className="flex items-center justify-between gap-3 border border-[#E5DFD5] px-3 py-2">
             <div className="min-w-0">
               <span className="font-semibold text-[#1C1917]">{row.name}</span>
               <HiddenItemsNote names={hiddenFor(row.companyId)} />
@@ -98,14 +98,14 @@ export function CatalogAssignPanel({
             required
             value={companyId}
             onChange={(event) => setCompanyId(event.target.value)}
-            className="min-h-10 flex-1 rounded-lg border px-2 py-2"
+            className="min-h-10 flex-1 border px-2 py-2"
           >
             <option value="" disabled>Add a company</option>
             {available.map((company) => (
               <option key={company.id} value={company.id}>{company.name}</option>
             ))}
           </select>
-          <SubmitButton pendingLabel="Assigning…" className="min-h-10 rounded-lg bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
+          <SubmitButton pendingLabel="Assigning…" className="min-h-10 bg-[#806A50] px-3 font-semibold text-white disabled:opacity-50">
             Assign
           </SubmitButton>
         </ActionForm>

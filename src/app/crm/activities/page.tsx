@@ -45,8 +45,8 @@ export default async function ActivitiesPage({
     <div className="mx-auto max-w-4xl space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Activity Feed</h1>
 
-      <ActionForm action={logActivity} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-2" resetOnSuccess>
-        <input name="title" required placeholder="Activity title" className="rounded-lg border px-2 py-2 md:col-span-2" />
+      <ActionForm action={logActivity} className="grid gap-3 border bg-white p-4 text-xs md:grid-cols-2" resetOnSuccess>
+        <input name="title" required placeholder="Activity title" className="border px-2 py-2 md:col-span-2" />
         <MobileSheetSelect
           name="type"
           label="Type"
@@ -59,7 +59,7 @@ export default async function ActivitiesPage({
             { value: 'message', label: 'Message' },
           ]}
         />
-        <input name="due_at" type="datetime-local" className="min-h-11 rounded-lg border px-2 py-2 md:min-h-0" />
+        <input name="due_at" type="datetime-local" className="min-h-11 border px-2 py-2 md:min-h-0" />
         <MobileSheetSelect
           name="assigned_to"
           label="Assigned to"
@@ -78,9 +78,9 @@ export default async function ActivitiesPage({
             { value: 'order', label: 'Order' },
           ]}
         />
-        <input name="related_id" placeholder="Related record ID" className="rounded-lg border px-2 py-2" />
-        <textarea name="notes" placeholder="Notes" className="min-h-[70px] rounded-lg border px-2 py-2 md:col-span-2" />
-        <SubmitButton className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] md:col-span-2" pendingLabel="Logging…">Log activity</SubmitButton>
+        <input name="related_id" placeholder="Related record ID" className="border px-2 py-2" />
+        <textarea name="notes" placeholder="Notes" className="min-h-[70px] border px-2 py-2 md:col-span-2" />
+        <SubmitButton className="bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] md:col-span-2" pendingLabel="Logging…">Log activity</SubmitButton>
       </ActionForm>
 
       <div className="md:hidden">
@@ -105,7 +105,7 @@ export default async function ActivitiesPage({
         />
       </div>
       <form className="hidden md:block">
-        <select name="type" defaultValue={params.type || ''} className="rounded border bg-white p-2 text-sm">
+        <select name="type" defaultValue={params.type || ''} className="border bg-white p-2 text-sm">
           <option value="">All types</option>
           <option value="call">Calls</option>
           <option value="email">Emails</option>
@@ -116,7 +116,7 @@ export default async function ActivitiesPage({
         <button type="submit" className="ml-2 text-sm underline">Filter</button>
       </form>
 
-      <div className="bg-white rounded-lg border p-6">
+      <div className="bg-white border p-6">
         <div className="relative border-l border-gray-200 ml-4 space-y-8">
           {(activities || []).map((activity) => {
             const creator = Array.isArray(activity.creator) ? activity.creator[0] : activity.creator
@@ -125,7 +125,7 @@ export default async function ActivitiesPage({
                 <div className="absolute -left-4 top-1 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm border">
                   {getIcon(activity.type)}
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 border">
+                <div className="bg-gray-50 p-4 border">
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <span className="font-semibold capitalize">{String(activity.type || '').replace('_', ' ')}</span>

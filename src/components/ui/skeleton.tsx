@@ -2,7 +2,7 @@ import React from 'react';
 
 export function Skeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-gray-200 ${className}`} />
   );
 }
 
@@ -29,7 +29,7 @@ export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: nu
 
 export function CardSkeleton() {
   return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-white space-y-4">
+    <div className="border border-gray-200 p-4 bg-white space-y-4">
       <Skeleton className="h-6 w-3/4" />
       <Skeleton className="h-4 w-1/2" />
       <div className="pt-4 border-t border-gray-100 flex gap-2">
@@ -42,7 +42,7 @@ export function CardSkeleton() {
 
 export function KpiSkeleton() {
   return (
-    <div className="border border-gray-200 rounded-lg p-5 bg-white flex flex-col gap-2">
+    <div className="border border-gray-200 p-5 bg-white flex flex-col gap-2">
       <Skeleton className="h-4 w-1/3" />
       <Skeleton className="h-8 w-1/2" />
       <Skeleton className="h-4 w-1/4 mt-2" />

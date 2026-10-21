@@ -18,9 +18,9 @@ export default function CrmError({
 
   return (
     <div>
-      <div className="max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-6">
+      <div className="max-w-lg bg-[var(--color-surface)] border border-[var(--color-border)] p-6">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 w-8 h-8 shrink-0 rounded-md bg-[var(--color-warning-bg)] text-[var(--color-warning)] flex items-center justify-center">
+          <span className="mt-0.5 w-8 h-8 shrink-0 bg-[var(--color-warning-bg)] text-[var(--color-warning)] flex items-center justify-center">
             <AlertTriangle size={16} />
           </span>
           <div>
@@ -34,13 +34,13 @@ export default function CrmError({
             <div className="flex items-center gap-3 mt-4">
               <button
                 onClick={reset}
-                className="px-3 py-1.5 rounded-md text-sm font-medium bg-[var(--color-primary)] text-[var(--color-primary-fg)] hover:opacity-90"
+                className="px-3 py-1.5 text-sm font-medium bg-[var(--color-primary)] text-[var(--color-primary-fg)] hover:opacity-90"
               >
                 Try again
               </button>
               <Link
                 href="/crm/dashboard"
-                className="px-3 py-1.5 rounded-md text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)]"
+                className="px-3 py-1.5 text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)]"
               >
                 Dashboard
               </Link>

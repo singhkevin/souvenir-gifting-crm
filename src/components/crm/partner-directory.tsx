@@ -45,7 +45,7 @@ export function PartnerDirectory({
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
             <Link href="/crm/dashboard" className="hover:text-[#9E4300] transition-colors">CRM</Link>
             <span>/</span>
             <span>Partners</span>
@@ -151,11 +151,11 @@ export function PartnerDirectory({
                 <p className="mt-0.5 text-xs text-[#7C766F]">{row.city || '—'}</p>
               </div>
               {row.is_active ? (
-                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> Active
                 </span>
               ) : (
-                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 font-mono text-[11px] uppercase text-[#7C766F]">
+                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 text-[11px] uppercase text-[#7C766F]">
                   Inactive
                 </span>
               )}
@@ -334,11 +334,11 @@ export function PartnerDirectory({
                 </td>
                 <td className="px-3.5 py-3">
                   {row.is_active ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+                    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
                       <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> Active
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 font-mono text-[11px] uppercase text-[#7C766F]">
+                    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 text-[11px] uppercase text-[#7C766F]">
                       Inactive
                     </span>
                   )}

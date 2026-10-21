@@ -84,8 +84,8 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
             </p>
           </div>
           <div className="flex gap-2 text-sm">
-            <a className="rounded-lg border px-3 py-2" href={`/crm/gift-selections/${id}/export?format=csv`}>CSV</a>
-            <a className="rounded-lg border px-3 py-2" href={`/crm/gift-selections/${id}/export?format=xls`}>Excel</a>
+            <a className="border px-3 py-2" href={`/crm/gift-selections/${id}/export?format=csv`}>CSV</a>
+            <a className="border px-3 py-2" href={`/crm/gift-selections/${id}/export?format=xls`}>Excel</a>
           </div>
         </div>
         <p className="mt-3 text-sm text-gray-600">
@@ -93,11 +93,11 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
         </p>
       </div>
 
-      <ActionForm action={updateGiftSelection} className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
+      <ActionForm action={updateGiftSelection} className="space-y-4 border bg-white p-4 sm:p-6">
         <input type="hidden" name="id" value={selection.id} />
         <label className="block text-xs text-gray-500">
           Name
-          <input name="name" defaultValue={selection.name} required className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+          <input name="name" defaultValue={selection.name} required className="mt-1 w-full border px-3 py-2 text-sm" />
         </label>
         <label className="block text-xs text-gray-500">
           Allowed email domains
@@ -105,17 +105,17 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
             name="allowed_email_domains"
             defaultValue={(selection.allowed_email_domains || []).join(', ')}
             required
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
+            className="mt-1 w-full border px-3 py-2 text-sm"
           />
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-xs text-gray-500">
             Opens (UTC)
-            <input type="datetime-local" name="opens_at" defaultValue={toLocalInput(selection.opens_at)} required className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+            <input type="datetime-local" name="opens_at" defaultValue={toLocalInput(selection.opens_at)} required className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
           <label className="block text-xs text-gray-500">
             Closes (UTC)
-            <input type="datetime-local" name="closes_at" defaultValue={toLocalInput(selection.closes_at)} required className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+            <input type="datetime-local" name="closes_at" defaultValue={toLocalInput(selection.closes_at)} required className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
         </div>
         {locked ? (
@@ -123,12 +123,12 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
         ) : (
           <GiftItemPicker products={(products || []) as GiftPickerProduct[]} initial={initial} />
         )}
-        <SubmitButton className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white" pendingLabel="Saving…">
+        <SubmitButton className="bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white" pendingLabel="Saving…">
           Save
         </SubmitButton>
       </ActionForm>
 
-      <section className="rounded-lg border bg-white p-4">
+      <section className="border bg-white p-4">
         <h2 className="text-sm font-semibold">Counts</h2>
         {counts.length === 0 ? <p className="mt-2 text-sm text-gray-500">No submissions yet.</p> : (
           <ul className="mt-3 divide-y text-sm">
@@ -142,7 +142,7 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
         )}
       </section>
 
-      <section className="overflow-x-auto rounded-lg border bg-white">
+      <section className="overflow-x-auto border bg-white">
         <table className="w-full min-w-[48rem] text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>

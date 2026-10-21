@@ -9,27 +9,27 @@ function QuoteStatusChip({ status }: { status: string | null }) {
   const norm = String(status || 'sent').toLowerCase()
   if (norm === 'accepted') {
     return (
-      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         Accepted
       </span>
     )
   }
   if (norm === 'rejected') {
     return (
-      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         Declined
       </span>
     )
   }
   if (norm === 'sent' || norm === 'viewed') {
     return (
-      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         Awaiting Decision
       </span>
     )
   }
   return (
-    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#4A4640] px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#4A4640] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
       {norm}
     </span>
   )
@@ -87,7 +87,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
         <BackButton
           href="/portal/quotes?tab=quotes"
           label="Back to quotes"
-          className="font-mono text-xs uppercase tracking-wider text-[#4A4640] hover:text-[#9E4300]"
+          className="text-xs uppercase tracking-wider text-[#4A4640] hover:text-[#9E4300]"
         />
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs font-semibold text-[#1C1C18] border border-[#CCC5BD] bg-[#F1EEE7] px-2 py-0.5 rounded-none">
@@ -188,7 +188,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
                           </div>
                         )}
                         {item.client_response && (
-                          <span className={`inline-block mt-1 px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider border ${
+                          <span className={`inline-block mt-1 px-1.5 py-0.5 text-[9px]  uppercase tracking-wider border ${
                             item.client_response === 'accepted'
                               ? 'border-[#3A4537] bg-[#DAE6D3] text-[#3A4537]'
                               : 'border-[#CCC5BD] bg-[#F1EEE7] text-[#7C766F]'
@@ -227,7 +227,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
                       )}
                     </div>
                     {item.client_response && (
-                      <span className={`px-2 py-0.5 text-[10px] font-mono uppercase border ${
+                      <span className={`px-2 py-0.5 text-[10px]  uppercase border ${
                         item.client_response === 'accepted'
                           ? 'border-[#3A4537] bg-[#DAE6D3] text-[#3A4537]'
                           : 'border-[#CCC5BD] bg-[#F1EEE7] text-[#7C766F]'

@@ -25,9 +25,9 @@ export default async function NewPresentationPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <h1 className="mb-4 text-2xl font-semibold text-gray-900">New presentation</h1>
-      <ActionForm action={createPresentation} className="rounded-xl border bg-white p-4">
+      <ActionForm action={createPresentation} className="border bg-white p-4">
         <DeckEditor products={rows} companies={companies || []} />
-        <SubmitButton className="mt-4 rounded-lg bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
+        <SubmitButton className="mt-4 bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
           Save presentation
         </SubmitButton>
       </ActionForm>

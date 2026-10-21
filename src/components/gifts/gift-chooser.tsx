@@ -133,7 +133,7 @@ export function GiftChooser({
           <button
             type="button"
             onClick={continueChoose}
-            className="bg-[#000000] hover:bg-[#9E4300] px-6 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
+            className="bg-[#000000] hover:bg-[#9E4300] px-6 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
           >
             Continue
           </button>
@@ -164,14 +164,14 @@ export function GiftChooser({
             <button
               type="button"
               onClick={() => setStep('choose')}
-              className="border border-[#CCC5BD] bg-[#FCF9F2] px-4 py-2 font-mono text-xs uppercase tracking-wider text-[#1C1B1A] hover:bg-[#F6F3EC]"
+              className="border border-[#CCC5BD] bg-[#FCF9F2] px-4 py-2 text-xs uppercase tracking-wider text-[#1C1B1A] hover:bg-[#F6F3EC]"
             >
               Back
             </button>
             <button
               type="button"
               onClick={continueDetails}
-              className="bg-[#000000] hover:bg-[#9E4300] px-6 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
+              className="bg-[#000000] hover:bg-[#9E4300] px-6 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
             >
               Review Selection
             </button>
@@ -206,12 +206,12 @@ export function GiftChooser({
             <button
               type="button"
               onClick={() => setStep('details')}
-              className="border border-[#CCC5BD] bg-[#FCF9F2] px-4 py-2 font-mono text-xs uppercase tracking-wider text-[#1C1B1A] hover:bg-[#F6F3EC]"
+              className="border border-[#CCC5BD] bg-[#FCF9F2] px-4 py-2 text-xs uppercase tracking-wider text-[#1C1B1A] hover:bg-[#F6F3EC]"
             >
               Back
             </button>
             <SubmitButton
-              className="bg-[#000000] hover:bg-[#9E4300] px-6 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
+              className="bg-[#000000] hover:bg-[#9E4300] px-6 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
               pendingLabel="Submitting…"
             >
               Submit choice

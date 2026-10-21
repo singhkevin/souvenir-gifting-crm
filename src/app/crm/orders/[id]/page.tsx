@@ -148,7 +148,7 @@ export default async function OrderDetailPage({
       {/* Header Panel */}
       <div className="bg-[#FCF9F2] p-6 border border-[#CCC5BD] rounded-none shadow-none flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
             <Link href="/crm/dashboard" className="hover:text-[#9E4300] transition-colors">CRM</Link>
             <span>/</span>
             <Link href="/crm/order-management" className="hover:text-[#9E4300] transition-colors">ORDERS</Link>
@@ -161,7 +161,7 @@ export default async function OrderDetailPage({
               <span className="w-1.5 h-1.5 rounded-full bg-[#9E4300]" />
               {ORDER_STATUS_LABELS[order.status] || order.status}
             </span>
-            <span className="inline-flex items-center px-2 py-0.5 text-[11px] font-mono uppercase border border-[#CCC5BD] text-[#4A4640] bg-[#F6F3EC] rounded-none">
+            <span className="inline-flex items-center px-2 py-0.5 text-[11px] uppercase border border-[#CCC5BD] text-[#4A4640] bg-[#F6F3EC] rounded-none">
               {isOrderSource(sourceValue) ? ORDER_SOURCE_LABELS[sourceValue] : 'CRM'}
             </span>
             {healthChip}

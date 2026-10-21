@@ -113,8 +113,8 @@ export default async function OrderControlCenterPage({
           </p>
         </div>
         <div className="flex gap-2 text-xs">
-          <Link href={tableHref} className={`min-h-10 flex-1 rounded-lg border px-3 py-2 text-center sm:flex-none ${view === 'table' ? 'border-[#806A50] bg-[#806A50] text-[#FFFFFF]' : 'bg-white'}`}>Table</Link>
-          <Link href={kanbanHref} className={`min-h-10 flex-1 rounded-lg border px-3 py-2 text-center sm:flex-none ${view === 'kanban' ? 'border-[#806A50] bg-[#806A50] text-[#FFFFFF]' : 'bg-white'}`}>Kanban</Link>
+          <Link href={tableHref} className={`min-h-10 flex-1 border px-3 py-2 text-center sm:flex-none ${view === 'table' ? 'border-[#806A50] bg-[#806A50] text-[#FFFFFF]' : 'bg-white'}`}>Table</Link>
+          <Link href={kanbanHref} className={`min-h-10 flex-1 border px-3 py-2 text-center sm:flex-none ${view === 'kanban' ? 'border-[#806A50] bg-[#806A50] text-[#FFFFFF]' : 'bg-white'}`}>Kanban</Link>
         </div>
       </div>
 
@@ -239,40 +239,40 @@ export default async function OrderControlCenterPage({
         />
       </div>
 
-      <form className="hidden grid-cols-2 gap-3 rounded-2xl border border-[#E5DFD5] bg-white p-4 md:grid-cols-4 lg:grid lg:grid-cols-9">
+      <form className="hidden grid-cols-2 gap-3 border border-[#E5DFD5] bg-white p-4 md:grid-cols-4 lg:grid lg:grid-cols-9">
         {view === 'kanban' ? <input type="hidden" name="view" value="kanban" /> : null}
-        <select name="client" defaultValue={params.client || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
+        <select name="client" defaultValue={params.client || ''} className="border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All clients</option>
           {(companies || []).map((c: { id: string; name: string }) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select name="department" defaultValue={params.department || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
+        <select name="department" defaultValue={params.department || ''} className="border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All departments</option>
           {(departments || []).map((d: { id: string; name: string }) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
-        <select name="employee" defaultValue={params.employee || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
+        <select name="employee" defaultValue={params.employee || ''} className="border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All employees</option>
           {(staff || []).map((s: { id: string; full_name: string | null }) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
         </select>
-        <select name="stage" defaultValue={params.stage || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
+        <select name="stage" defaultValue={params.stage || ''} className="border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All stages</option>
           {ORDER_LIFECYCLE.map((s) => <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>)}
           <option value="cancelled">Cancelled</option>
         </select>
-        <select name="health" defaultValue={params.health || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
+        <select name="health" defaultValue={params.health || ''} className="border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="">All health</option>
           <option value="on_track">On Track</option>
           <option value="at_risk">At Risk</option>
           <option value="delayed">Delayed</option>
         </select>
-        <input type="date" name="from" defaultValue={params.from || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs" />
-        <input type="date" name="to" defaultValue={params.to || ''} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs" />
-        <select name="sort" defaultValue={params.sort || 'delivery'} className="rounded-lg border bg-[#FAF7F2] px-2 py-2 text-xs">
+        <input type="date" name="from" defaultValue={params.from || ''} className="border bg-[#FAF7F2] px-2 py-2 text-xs" />
+        <input type="date" name="to" defaultValue={params.to || ''} className="border bg-[#FAF7F2] px-2 py-2 text-xs" />
+        <select name="sort" defaultValue={params.sort || 'delivery'} className="border bg-[#FAF7F2] px-2 py-2 text-xs">
           <option value="delivery">Delivery date</option>
           <option value="value">Order value</option>
           <option value="updated">Last updated</option>
           <option value="priority">Priority</option>
         </select>
-        <button className="rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF]">Apply</button>
+        <button className="bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF]">Apply</button>
       </form>
 
       {view === 'kanban' ? (
@@ -296,7 +296,7 @@ export default async function OrderControlCenterPage({
           })}
         />
       ) : (
-        <div className="bg-white rounded-2xl border border-[#E5DFD5] overflow-x-auto">
+        <div className="bg-white border border-[#E5DFD5] overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#FAF7F2] text-[#7A7267]">
               <tr>
@@ -336,7 +336,7 @@ export default async function OrderControlCenterPage({
                     <td className="px-3 py-3">{assignee?.full_name || 'Unassigned'}</td>
                     <td className="px-3 py-3">{formatDate(o.expected_delivery_date)}</td>
                     <td className="px-3 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${HEALTH_STYLES[o.health]}`}>
+                      <span className={`px-2 py-0.5 text-[10px] font-semibold ${HEALTH_STYLES[o.health]}`}>
                         {HEALTH_LABELS[o.health]}
                       </span>
                     </td>

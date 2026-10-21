@@ -1,9 +1,9 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { appName, appShortName, marketingHostLabel, marketingSiteUrl } from '@/lib/brand'
 import { BUDGET_BANDS } from '@/lib/catalogue/collections'
 import { siteContent } from '@/config/siteContent'
 import { whatsAppHref } from '@/lib/contact/public-phone'
+import { BrandLogo } from '@/components/brand/brand-logo'
 
 export function SiteFooter({
   workspaceHref,
@@ -26,7 +26,7 @@ export function SiteFooter({
         {/* Col 1: Brand & Overview */}
         <div className="space-y-4">
           <Link href="/home" className="inline-block">
-            <Image src="/logo.png" alt={appName()} width={140} height={44} className="h-8 w-auto object-contain" />
+            <BrandLogo className="h-8 w-auto object-contain" />
           </Link>
           <p className="sv2-body-sm text-[#4A4640]">
             {appName()} — Gifts, hampers, and keepsakes for personal celebrations, teams, and clients across India.

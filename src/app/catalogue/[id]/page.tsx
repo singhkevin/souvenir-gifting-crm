@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
+import { Breadcrumbs } from '@/components/sv2/breadcrumbs'
 import { ProductImage } from '@/components/ui/product-image'
 import { QuoteModal } from '@/components/site/quote-modal'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
@@ -77,23 +78,15 @@ export default async function PublicProductPage({ params }: Props) {
     <SiteShell>
       {/* Breadcrumb strip */}
       <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-4 py-3 sm:px-6 lg:px-16">
-        <div className="mx-auto max-w-7xl flex items-center gap-2 sv2-mono-sm text-xs text-[#7C766F]">
-          <Link href="/home" className="hover:text-[#1C1C18] transition-colors">
-            Home
-          </Link>
-          <span>/</span>
-          <Link href="/catalogue" className="hover:text-[#1C1C18] transition-colors">
-            Catalogue
-          </Link>
-          {product.category_name ? (
-            <>
-              <span>/</span>
-              <span className="text-[#1C1C18]">{product.category_name}</span>
-            </>
-          ) : null}
-          <span>/</span>
-          <span className="text-[#9E4300] truncate max-w-xs">{product.name}</span>
-        </div>
+        <Breadcrumbs
+          className="mx-auto max-w-7xl"
+          items={[
+            { label: 'Home', href: '/home' },
+            { label: 'Catalogue', href: '/catalogue' },
+            ...(product.category_name ? [{ label: product.category_name }] : []),
+            { label: product.name },
+          ]}
+        />
       </div>
 
       <article className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-16 lg:py-14">
@@ -110,7 +103,7 @@ export default async function PublicProductPage({ params }: Props) {
                 className="h-full w-full min-h-[18rem] sm:min-h-[26rem] bg-transparent"
                 imgClassName="catalogue-product-img sv2-img-zoom"
               />
-              <span className="absolute top-3 left-3 bg-[#FCF9F2] text-[#1C1C18] border border-[#CCC5BD] px-2.5 py-1 sv2-mono-sm text-[10px] font-semibold uppercase tracking-wider">
+              <span className="absolute top-3 left-3 bg-[#FCF9F2] text-[#1C1C18] border border-[#CCC5BD] px-2.5 py-1 sv2-label text-[10px] font-semibold">
                 {product.purchase.buy ? 'In Stock • Ready to Ship' : 'Available on Quote'}
               </span>
             </div>
@@ -211,7 +204,7 @@ export default async function PublicProductPage({ params }: Props) {
               <div>
                 <Link
                   href="/catalogue"
-                  className="sv2-mono-sm text-[11px] uppercase tracking-wider text-[#9E4300] hover:underline inline-flex items-center gap-1"
+                  className="sv2-label text-[11px] text-[#9E4300] hover:underline inline-flex items-center gap-1"
                 >
                   &larr; Back to catalogue
                 </Link>

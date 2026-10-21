@@ -127,7 +127,7 @@ export function ResetPasswordForm({
   return (
     <AuthShell title="Reset your password">
       <form onSubmit={onSubmit} className="space-y-5">
-        {error && <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">{error}</div>}
+        {error && <div className="p-3 bg-red-50 text-red-700 text-xs border border-red-200">{error}</div>}
         {!ready && (
           <div className="flex items-center justify-center gap-2 text-xs text-[#7A7267]">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -148,7 +148,7 @@ export function ResetPasswordForm({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] disabled:opacity-50"
+          className="w-full flex justify-center items-center py-3 px-4 text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] disabled:opacity-50"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Reset password'}
         </button>

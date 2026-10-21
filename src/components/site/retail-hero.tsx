@@ -50,7 +50,7 @@ function HeroCell({ product }: { product: RetailHeroProduct | null }) {
     >
       <HeroImage src={product.image_url} alt={product.name} />
       <span className="mt-2 line-clamp-1 px-1 font-serif text-[14px] sm:text-[15px] text-[#FCF9F2] leading-5">{product.name}</span>
-      <span className="px-1 pb-0.5 sv2-mono-sm text-[10px] text-[#FFB690] uppercase tracking-wider">View gift</span>
+      <span className="px-1 pb-0.5 sv2-label text-[10px] text-[#FFB690]">View gift</span>
     </Link>
   )
 }

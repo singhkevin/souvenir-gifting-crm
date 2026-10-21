@@ -57,7 +57,7 @@ export function CatalogueVisibilityEditor({
           { value: 'selected', label: 'Selected companies', hint: 'Only the companies you choose below.' },
           { value: 'none', label: 'Not in client catalogues', hint: 'Internal team only. Existing orders are unchanged.' },
         ].map((option) => (
-          <label key={option.value} className="flex items-start gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50">
+          <label key={option.value} className="flex items-start gap-3 p-3 border border-gray-200 cursor-pointer hover:bg-gray-50">
             <input
               type="radio"
               name="visibility-mode"
@@ -80,7 +80,7 @@ export function CatalogueVisibilityEditor({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search companies..."
-              className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg"
+              className="flex-1 px-3 py-2 text-xs border border-gray-200"
             />
             <button type="button" onClick={() => setSelected(filtered.map((c) => c.id))} className="text-xs text-[#806A50] hover:underline">
               Select all
@@ -89,7 +89,7 @@ export function CatalogueVisibilityEditor({
               Clear
             </button>
           </div>
-          <div className="max-h-56 overflow-y-auto border border-gray-200 rounded-xl divide-y">
+          <div className="max-h-56 overflow-y-auto border border-gray-200 divide-y">
             {filtered.map((company) => (
               <label key={company.id} className="flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 cursor-pointer">
                 <input
@@ -113,7 +113,7 @@ export function CatalogueVisibilityEditor({
         type="button"
         onClick={save}
         disabled={pending}
-        className="px-4 py-2 text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] hover:text-[#FFFFFF] rounded-lg disabled:opacity-50"
+        className="px-4 py-2 text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] hover:text-[#FFFFFF] disabled:opacity-50"
       >
         {pending ? (
           <span className="inline-flex items-center gap-2"><Spinner />Saving…</span>

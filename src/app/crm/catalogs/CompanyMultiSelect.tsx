@@ -58,13 +58,13 @@ export function CompanyMultiSelect({
       <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]" id={`${listId}-label`}>
         {label} <span className="font-normal normal-case tracking-normal">(optional)</span>
       </span>
-      <div className="flex min-h-11 flex-wrap items-center gap-1 rounded-lg border bg-white px-2 py-1">
+      <div className="flex min-h-11 flex-wrap items-center gap-1 border bg-white px-2 py-1">
         {chosen.map((company) => (
           <button
             key={company.id}
             type="button"
             onClick={() => toggle(company.id)}
-            className="max-w-full truncate rounded-full bg-[#FAF7F2] px-2 py-0.5 text-[11px] text-[#5A5248]"
+            className="max-w-full truncate bg-[#FAF7F2] px-2 py-0.5 text-[11px] text-[#5A5248]"
           >
             {companyListLabel(company)} ×
           </button>
@@ -89,7 +89,7 @@ export function CompanyMultiSelect({
           id={listId}
           role="listbox"
           aria-labelledby={`${listId}-label`}
-          className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-[#E5DFD5] bg-white p-1 shadow-lg"
+          className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto border border-[#E5DFD5] bg-white p-1"
         >
           {visible.length === 0 && <li className="px-2 py-2 text-[#7A7267]">No companies match.</li>}
           {visible.map((company) => {
@@ -101,7 +101,7 @@ export function CompanyMultiSelect({
                   role="option"
                   aria-selected={on}
                   onClick={() => toggle(company.id)}
-                  className={`flex w-full items-start gap-2 rounded px-2 py-1.5 text-left hover:bg-[#FAF7F2] ${on ? 'bg-[#FAF7F2]' : ''}`}
+                  className={`flex w-full items-start gap-2 px-2 py-1.5 text-left hover:bg-[#FAF7F2] ${on ? 'bg-[#FAF7F2]' : ''}`}
                 >
                   <span className="mt-0.5 w-3 shrink-0 text-[#806A50]">{on ? '✓' : ''}</span>
                   <span className="min-w-0">

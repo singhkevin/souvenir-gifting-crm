@@ -8,27 +8,27 @@ function OrderStatusChip({ status }: { status: string }) {
   const label = CLIENT_STATUS_LABELS[status] || status
   if (['delivered', 'fulfilled'].includes(status)) {
     return (
-      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         {label}
       </span>
     )
   }
   if (['cancelled', 'rejected'].includes(status)) {
     return (
-      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         {label}
       </span>
     )
   }
   if (['client_approval', 'production', 'mockup', 'dispatch'].includes(status)) {
     return (
-      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         {label}
       </span>
     )
   }
   return (
-    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#1C1C18] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#1C1C18] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
       {label}
     </span>
   )
@@ -37,20 +37,20 @@ function OrderStatusChip({ status }: { status: string }) {
 function InvoiceStatusChip({ status }: { status: string | null }) {
   if (status === 'paid') {
     return (
-      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         Paid
       </span>
     )
   }
   if (status === 'overdue') {
     return (
-      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         Overdue
       </span>
     )
   }
   return (
-    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#4A4640] px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none capitalize">
+    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#4A4640] px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-none capitalize">
       {status || 'Issued'}
     </span>
   )

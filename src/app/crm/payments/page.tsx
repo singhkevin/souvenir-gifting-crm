@@ -16,7 +16,7 @@ export default async function PaymentsPage() {
     <div>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-[var(--color-primary)]">Payments Received</h1>
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-green-800 shadow-sm">
+        <div className="border border-green-200 bg-green-50 px-4 py-2 text-green-800">
           <span className="mr-2 text-sm font-medium">Total This Month:</span>
           <span className="text-lg font-bold">{formatCurrency(totalThisMonth)}</span>
         </div>
@@ -27,13 +27,13 @@ export default async function PaymentsPage() {
           const invoice = oneRelation(payment.invoices)
           const company = oneRelation(invoice?.companies)
           return (
-            <article key={payment.id} className="space-y-3 rounded-xl border border-[#E8E4DE] bg-white p-4">
+            <article key={payment.id} className="space-y-3 border border-[#E8E4DE] bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-green-700">{formatCurrency(payment.amount)}</p>
                   <p className="mt-1 text-xs text-gray-500">{formatDate(payment.payment_date)}</p>
                 </div>
-                <span className="rounded bg-gray-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-gray-600">
+                <span className="bg-gray-100 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-gray-600">
                   {String(payment.method || '').replace('_', ' ')}
                 </span>
               </div>
@@ -41,7 +41,7 @@ export default async function PaymentsPage() {
               {payment.invoice_id ? (
                 <Link
                   href={`/crm/invoices/${payment.invoice_id}`}
-                  className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
+                  className="inline-flex min-h-10 w-full items-center justify-center bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
                 >
                   View {invoice?.invoice_number || 'invoice'}
                 </Link>
@@ -50,11 +50,11 @@ export default async function PaymentsPage() {
           )
         })}
         {(!payments || payments.length === 0) && (
-          <div className="rounded-xl border bg-white p-6 text-center text-sm text-[var(--color-text-secondary)]">No payments found.</div>
+          <div className="border bg-white p-6 text-center text-sm text-[var(--color-text-secondary)]">No payments found.</div>
         )}
       </div>
       
-      <div className="hidden overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
+      <div className="hidden overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-[var(--color-border)] bg-gray-50">
@@ -75,7 +75,7 @@ export default async function PaymentsPage() {
                 <td className="p-3 text-sm">{formatDate(payment.payment_date)}</td>
                 <td className="p-3 text-sm font-medium text-green-600">{formatCurrency(payment.amount)}</td>
                 <td className="p-3 text-sm">
-                  <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium uppercase tracking-wider text-gray-600">
+                  <span className="bg-gray-100 px-2 py-1 text-xs font-medium uppercase tracking-wider text-gray-600">
                     {String(payment.method || '').replace('_', ' ')}
                   </span>
                 </td>
@@ -83,7 +83,7 @@ export default async function PaymentsPage() {
                 <td className="p-3 text-sm">
                   <Link
                     href={`/crm/invoices/${payment.invoice_id}`}
-                    className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
+                    className="inline-flex min-h-9 items-center justify-center border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
                   >
                     {invoice?.invoice_number}
                   </Link>

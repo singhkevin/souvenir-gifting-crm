@@ -47,7 +47,7 @@ export function CatalogRfqPanel({
 
   if (mode === 'staff') {
     return (
-      <section id="request-quotation" className="rounded-2xl border border-[#E5DFD5] bg-white p-5 text-sm text-[#5A5248]">
+      <section id="request-quotation" className="border border-[#E5DFD5] bg-white p-5 text-sm text-[#5A5248]">
         Staff preview. Clients request a quotation from their portal, or from this link after they sign in.
       </section>
     )
@@ -55,7 +55,7 @@ export function CatalogRfqPanel({
 
   if (mode === 'unassigned') {
     return (
-      <section id="request-quotation" className="rounded-2xl border border-[#E5DFD5] bg-white p-5 text-sm text-[#5A5248]">
+      <section id="request-quotation" className="border border-[#E5DFD5] bg-white p-5 text-sm text-[#5A5248]">
         This catalog is not assigned to your company. Sign in with that company account, or ask your account manager to assign it.
       </section>
     )
@@ -63,7 +63,7 @@ export function CatalogRfqPanel({
 
   if (done) {
     return (
-      <section id="request-quotation" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
+      <section id="request-quotation" className="border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
         Request received. We will prepare a quotation from the quantities you sent.
       </section>
     )
@@ -117,7 +117,7 @@ export function CatalogRfqPanel({
   }
 
   return (
-    <section id="request-quotation" className="rounded-2xl border border-[#E5DFD5] bg-white p-5 sm:p-6">
+    <section id="request-quotation" className="border border-[#E5DFD5] bg-white p-5 sm:p-6">
       <h2 className="text-lg font-semibold text-[#1C1917]">Request Quotation</h2>
       <p className="mt-1 text-sm text-[#5A5248]">
         Choose products, enter a quantity for each, and send an RFQ to your account manager.
@@ -133,7 +133,7 @@ export function CatalogRfqPanel({
       )}
 
       <fieldset disabled={pending} className="contents">
-      <ul className="mt-4 divide-y divide-[#E8E4DE] rounded-xl border border-[#E8E4DE]">
+      <ul className="mt-4 divide-y divide-[#E8E4DE] border border-[#E8E4DE]">
         {offerings.map((offering) => (
           <li key={offering.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
             <label className="flex min-w-0 items-start gap-3 text-sm">
@@ -160,7 +160,7 @@ export function CatalogRfqPanel({
                 step={1}
                 value={qty[offering.id] ?? String(offering.moq)}
                 onChange={(event) => setQty((current) => ({ ...current, [offering.id]: event.target.value }))}
-                className="min-h-10 w-24 rounded-lg border border-[#E8E4DE] px-2"
+                className="min-h-10 w-24 border border-[#E8E4DE] px-2"
               />
             </label>
           </li>
@@ -174,7 +174,7 @@ export function CatalogRfqPanel({
             type="date"
             value={deadline}
             onChange={(event) => setDeadline(event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-[#E8E4DE] px-3"
+            className="min-h-11 w-full border border-[#E8E4DE] px-3"
           />
         </label>
         {mode === 'guest' && (
@@ -184,7 +184,7 @@ export function CatalogRfqPanel({
               <input
                 value={contact.full_name}
                 onChange={(event) => setContact({ ...contact, full_name: event.target.value })}
-                className="min-h-11 w-full rounded-lg border border-[#E8E4DE] px-3"
+                className="min-h-11 w-full border border-[#E8E4DE] px-3"
               />
             </label>
             <label className="block text-sm">
@@ -193,7 +193,7 @@ export function CatalogRfqPanel({
                 type="email"
                 value={contact.email}
                 onChange={(event) => setContact({ ...contact, email: event.target.value })}
-                className="min-h-11 w-full rounded-lg border border-[#E8E4DE] px-3"
+                className="min-h-11 w-full border border-[#E8E4DE] px-3"
               />
             </label>
             <label className="block text-sm">
@@ -201,7 +201,7 @@ export function CatalogRfqPanel({
               <input
                 value={contact.company_name}
                 onChange={(event) => setContact({ ...contact, company_name: event.target.value })}
-                className="min-h-11 w-full rounded-lg border border-[#E8E4DE] px-3"
+                className="min-h-11 w-full border border-[#E8E4DE] px-3"
               />
             </label>
             <label className="block text-sm">
@@ -209,7 +209,7 @@ export function CatalogRfqPanel({
               <input
                 value={contact.phone}
                 onChange={(event) => setContact({ ...contact, phone: event.target.value })}
-                className="min-h-11 w-full rounded-lg border border-[#E8E4DE] px-3"
+                className="min-h-11 w-full border border-[#E8E4DE] px-3"
               />
             </label>
             <input
@@ -232,7 +232,7 @@ export function CatalogRfqPanel({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           rows={3}
-          className="w-full rounded-lg border border-[#E8E4DE] px-3 py-2"
+          className="w-full border border-[#E8E4DE] px-3 py-2"
           placeholder="Branding, delivery city, or anything else we should know"
         />
       </label>
@@ -242,7 +242,7 @@ export function CatalogRfqPanel({
         onClick={submit}
         disabled={pending}
         aria-busy={pending || undefined}
-        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-5 text-sm font-semibold text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-4 inline-flex min-h-11 items-center justify-center bg-[#806A50] px-5 text-sm font-semibold text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? (
           <span className="inline-flex items-center justify-center gap-2">

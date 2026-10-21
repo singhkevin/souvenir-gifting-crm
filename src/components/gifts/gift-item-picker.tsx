@@ -102,7 +102,7 @@ export function GiftItemPicker({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search products"
-              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
+              className="mt-1 w-full border px-3 py-2 text-sm"
               disabled={locked}
             />
           </label>
@@ -110,8 +110,8 @@ export function GiftItemPicker({
             {visible.map((product) => {
               const on = checked.includes(product.id)
               return (
-                <div key={product.id} className="rounded-xl border bg-white p-2">
-                  <div className="aspect-square overflow-hidden rounded-lg bg-[#F6F4F1]">
+                <div key={product.id} className="border bg-white p-2">
+                  <div className="aspect-square overflow-hidden bg-[#F6F4F1]">
                     <ProductImage src={product.image_url} alt={product.name} size="md" fit="contain" className="h-full w-full bg-transparent" />
                   </div>
                   <p className="mt-2 line-clamp-2 text-sm font-medium text-gray-900">{product.name}</p>
@@ -121,7 +121,7 @@ export function GiftItemPicker({
                       type="button"
                       disabled={locked}
                       onClick={() => addProduct(product)}
-                      className="rounded-md bg-[#241C12] px-2 py-1 text-[11px] font-semibold text-white disabled:opacity-40"
+                      className="bg-[#241C12] px-2 py-1 text-[11px] font-semibold text-white disabled:opacity-40"
                     >
                       Add
                     </button>
@@ -135,7 +135,7 @@ export function GiftItemPicker({
                             : [...current, product.id],
                         )
                       }
-                      className={`rounded-md border px-2 py-1 text-[11px] ${on ? 'border-[#806A50] text-[#806A50]' : 'text-gray-600'}`}
+                      className={`border px-2 py-1 text-[11px] ${on ? 'border-[#806A50] text-[#806A50]' : 'text-gray-600'}`}
                     >
                       {on ? 'In combo' : 'Combo'}
                     </button>
@@ -152,14 +152,14 @@ export function GiftItemPicker({
                 onChange={(event) => setComboName(event.target.value)}
                 placeholder="Welcome kit"
                 disabled={locked}
-                className="mt-1 rounded-lg border px-3 py-2 text-sm"
+                className="mt-1 border px-3 py-2 text-sm"
               />
             </label>
             <button
               type="button"
               disabled={locked || checked.length < 2 || !comboName.trim()}
               onClick={addCombo}
-              className="rounded-lg border px-3 py-2 text-sm disabled:opacity-40"
+              className="border px-3 py-2 text-sm disabled:opacity-40"
             >
               Add combo ({checked.length})
             </button>
@@ -169,9 +169,9 @@ export function GiftItemPicker({
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Employees pick one</p>
           {chosen.length === 0 ? <p className="text-sm text-gray-500">Nothing shortlisted yet.</p> : null}
           {chosen.map((item) => (
-            <div key={item.key} className="rounded-xl border p-3">
+            <div key={item.key} className="border p-3">
               <div className="flex gap-3">
-                <div className="h-14 w-14 overflow-hidden rounded-lg bg-[#F6F4F1]">
+                <div className="h-14 w-14 overflow-hidden bg-[#F6F4F1]">
                   <ProductImage src={item.imageUrl} alt="" size="sm" fit="contain" className="h-full w-full bg-transparent" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -201,7 +201,7 @@ export function GiftItemPicker({
                       current.map((row) => (row.key === item.key ? { ...row, sizes: event.target.value } : row)),
                     )
                   }
-                  className="mt-1 w-full rounded-lg border px-2 py-1.5 text-sm"
+                  className="mt-1 w-full border px-2 py-1.5 text-sm"
                 />
               </label>
             </div>

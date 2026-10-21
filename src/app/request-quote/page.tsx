@@ -74,7 +74,7 @@ export default async function RequestQuotePage({
 
             {product ? (
               <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-6">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#9E4300] block mb-1">
+                <span className="text-[10px] uppercase tracking-widest text-[#9E4300] block mb-1">
                   SELECTED GIFT
                 </span>
                 <p className="font-serif text-lg text-[#1C1B1A]">{product.name}</p>

@@ -42,7 +42,7 @@ export default async function PortalHomePage() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 border-b border-[#CCC5BD] pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 font-[family-name:var(--font-mono)] text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9E4300]">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9E4300]">
             CORPORATE DESK
           </div>
           <h1 className="font-[family-name:var(--font-newsreader)] text-3xl font-normal tracking-tight text-[#1C1C18] sm:text-4xl">
@@ -141,7 +141,7 @@ export default async function PortalHomePage() {
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2.5 py-1 font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-wider text-[#9E4300]">
+            <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2.5 py-1 text-[11px] uppercase tracking-wider text-[#9E4300]">
               SECTION // 01
             </span>
             <h2 className="font-[family-name:var(--font-newsreader)] text-2xl font-normal tracking-tight text-[#1C1C18] sm:text-3xl">
@@ -166,7 +166,7 @@ export default async function PortalHomePage() {
                 className="group flex flex-col gap-2 border-l-[3px] border-transparent p-4 transition-colors hover:border-[#9E4300] hover:bg-[#F6F3EC] sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0 pr-2">
-                  <div className="font-[family-name:var(--font-mono)] text-xs uppercase tracking-wider text-[#9E4300]">
+                  <div className="text-xs uppercase tracking-wider text-[#9E4300]">
                     {o.order_number}
                   </div>
                   <div className="mt-0.5 truncate font-[family-name:var(--font-newsreader)] text-base text-[#1C1C18] sm:text-lg">
@@ -175,7 +175,7 @@ export default async function PortalHomePage() {
                 </div>
                 <div className="flex shrink-0 items-center justify-between gap-3 border-t border-[#CCC5BD]/50 pt-2 sm:border-t-0 sm:justify-end sm:gap-6 sm:pt-0">
                   <span
-                    className={`inline-block border px-2.5 py-0.5 font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-wider rounded-none ${getStatusChipClass(
+                    className={`inline-block border px-2.5 py-0.5  text-[10px] uppercase tracking-wider rounded-none ${getStatusChipClass(
                       o.status,
                     )}`}
                   >
@@ -193,7 +193,7 @@ export default async function PortalHomePage() {
           })}
           {(!orders || orders.length === 0) && (
             <div className="py-12 text-center">
-              <p className="font-[family-name:var(--font-mono)] text-xs uppercase tracking-wider text-[#7C766F]">
+              <p className="text-xs uppercase tracking-wider text-[#7C766F]">
                 No orders yet.
               </p>
             </div>

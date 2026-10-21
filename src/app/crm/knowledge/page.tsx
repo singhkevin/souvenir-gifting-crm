@@ -23,7 +23,7 @@ export default async function KnowledgePage() {
         </p>
       </div>
 
-      <section className="space-y-4 rounded-xl border border-[#E8E4DE] bg-white p-4 sm:p-5">
+      <section className="space-y-4 border border-[#E8E4DE] bg-white p-4 sm:p-5">
         <h2 className="font-serif text-lg text-[#1C1917]">Order workflow</h2>
         <ol className="space-y-2 text-sm">
           {ORDER_LIFECYCLE.map((st, i) => (
@@ -39,14 +39,14 @@ export default async function KnowledgePage() {
         {(profile.role === 'admin' || profile.role === 'operations') && (
           <Link
             href="/crm/order-management"
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-4 py-2 text-xs font-semibold text-[#FFFFFF] transition-colors hover:bg-[#9C8567] hover:text-[#FFFFFF] sm:w-auto"
+            className="inline-flex min-h-10 w-full items-center justify-center bg-[#806A50] px-4 py-2 text-xs font-semibold text-[#FFFFFF] transition-colors hover:bg-[#9C8567] hover:text-[#FFFFFF] sm:w-auto"
           >
             Open order management
           </Link>
         )}
       </section>
 
-      <section className="space-y-4 rounded-xl border border-[#E8E4DE] bg-white p-4 sm:p-5">
+      <section className="space-y-4 border border-[#E8E4DE] bg-white p-4 sm:p-5">
         <h2 className="font-serif text-lg text-[#1C1917]">Company announcements</h2>
         {(announcements || []).map((a) => (
           <article key={a.id} className="border-b border-[#EFE9E0] pb-3 last:border-b-0 last:pb-0">
@@ -60,7 +60,7 @@ export default async function KnowledgePage() {
         )}
         <Link
           href="/crm/announcements"
-          className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-[#806A50] bg-white px-4 py-2 text-xs font-semibold text-[#806A50] transition-colors hover:bg-[#F4EFE6] sm:w-auto"
+          className="inline-flex min-h-10 w-full items-center justify-center border border-[#806A50] bg-white px-4 py-2 text-xs font-semibold text-[#806A50] transition-colors hover:bg-[#F4EFE6] sm:w-auto"
         >
           All announcements
         </Link>

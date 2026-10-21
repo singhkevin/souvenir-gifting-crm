@@ -66,7 +66,7 @@ export function StitchProductCard({
             <span className="sv2-mono-md font-bold text-[#1C1C18]">
               {amount == null ? 'Price on quote' : formatCurrency(amount)}
             </span>
-            <span className="sv2-mono-sm text-[10px] text-[#7C766F] uppercase truncate">
+            <span className="sv2-label text-[10px] text-[#7C766F] truncate">
               {caption || (product.moq ? `MOQ: ${product.moq}` : 'Single Unit')}
             </span>
           </div>

@@ -1,11 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu, Search, User, X } from 'lucide-react'
-import { appName } from '@/lib/brand'
+import { BrandLogo } from '@/components/brand/brand-logo'
 import { PwaInstallButton } from '@/components/pwa/pwa-install-button'
 import { AudienceSwitch } from '@/components/site/audience-switch'
 import { CartDrawer } from '@/components/site/cart-drawer'
@@ -101,21 +100,11 @@ export function SiteHeader({
     <header className="sticky top-0 z-40 w-full border-b border-[#CCC5BD] bg-[#FCF9F2]">
       <div className="bg-[#FCF9F2]">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
-          {/* Logo + Tagline */}
+          {/* Logo */}
           <div className="flex shrink-0 items-center gap-4 sm:gap-6">
             <Link href="/home" className="flex items-center gap-3">
-              <Image
-                src="/logo.png"
-                alt={appName()}
-                width={140}
-                height={44}
-                className="h-7 sm:h-9 w-auto object-contain"
-                priority
-              />
+              <BrandLogo priority className="h-7 sm:h-9 w-auto object-contain" />
             </Link>
-            <span className="hidden xl:inline-block border-l border-[#CCC5BD] pl-4 sv2-label text-[10px] text-[#4A4640]">
-              RETAIL GIFTING // IN
-            </span>
           </div>
 
           {/* Desktop Search */}
@@ -147,7 +136,7 @@ export function SiteHeader({
                   >
                     <span className="block font-medium">{item.name}</span>
                     {item.category_name ? (
-                      <span className="mt-0.5 block sv2-mono-sm text-[10px] text-[#9E4300] uppercase">
+                      <span className="mt-0.5 block sv2-label text-[10px] text-[#9E4300]">
                         {item.category_name}
                       </span>
                     ) : null}
@@ -253,7 +242,7 @@ export function SiteHeader({
                   >
                     <span className="block font-medium">{item.name}</span>
                     {item.category_name ? (
-                      <span className="mt-0.5 block sv2-mono-sm text-[10px] text-[#9E4300] uppercase">
+                      <span className="mt-0.5 block sv2-label text-[10px] text-[#9E4300]">
                         {item.category_name}
                       </span>
                     ) : null}

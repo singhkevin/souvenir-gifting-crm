@@ -10,16 +10,16 @@ export default async function AddProductChoicePage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <BackButton href="/crm/products" label="Back to Products" />
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <div className="border border-gray-200 bg-white p-8">
         <h1 className="text-2xl font-bold text-gray-900">Add Product</h1>
         <p className="mt-1 text-xs text-gray-500">Choose how you&apos;d like to add products to the catalogue.</p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Link
             href="/crm/products/import"
-            className="group flex flex-col items-start gap-3 rounded-xl border border-gray-200 p-5 text-left transition-colors hover:border-[#806A50] hover:bg-[#806A50]/5"
+            className="group flex flex-col items-start gap-3 border border-gray-200 p-5 text-left transition-colors hover:border-[#806A50] hover:bg-[#806A50]/5"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#806A50]/10 text-[#806A50]">
+            <span className="flex h-10 w-10 items-center justify-center bg-[#806A50]/10 text-[#806A50]">
               <Upload size={18} />
             </span>
             <span className="font-semibold text-gray-900">Import CSV</span>
@@ -30,9 +30,9 @@ export default async function AddProductChoicePage() {
 
           <Link
             href="/crm/products/new"
-            className="group flex flex-col items-start gap-3 rounded-xl border border-gray-200 p-5 text-left transition-colors hover:border-[#806A50] hover:bg-[#806A50]/5"
+            className="group flex flex-col items-start gap-3 border border-gray-200 p-5 text-left transition-colors hover:border-[#806A50] hover:bg-[#806A50]/5"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#806A50]/10 text-[#806A50]">
+            <span className="flex h-10 w-10 items-center justify-center bg-[#806A50]/10 text-[#806A50]">
               <PencilLine size={18} />
             </span>
             <span className="font-semibold text-gray-900">Add Manually</span>

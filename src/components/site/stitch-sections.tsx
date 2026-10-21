@@ -219,7 +219,7 @@ export function RetailOccasionBento({
               <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1A]/95 via-[#1C1B1A]/50 to-transparent" />
               <div className="relative flex h-full flex-col justify-end p-5 text-[#FCF9F2]">
                 {occasion.kicker ? (
-                  <span className="mb-1.5 w-max border border-[#7C766F] bg-[#1C1B1A]/85 px-2 py-0.5 sv2-mono-sm text-[10px] uppercase tracking-wider text-[#FFB690]">
+                  <span className="mb-1.5 w-max border border-[#7C766F] bg-[#1C1B1A]/85 px-2 py-0.5 sv2-label text-[10px] text-[#FFB690]">
                     {occasion.kicker}
                   </span>
                 ) : null}
@@ -258,7 +258,7 @@ export function BusinessOccasionBento({
         className={`flex flex-col justify-between border border-[#CCC5BD] bg-[#FCF9F2] p-5 hover:border-[#000000] transition-colors ${className}`}
       >
         <div>
-          <span className="sv2-mono-sm text-[10px] text-[#9E4300] uppercase tracking-wider">{occasion.kicker}</span>
+          <span className="sv2-label text-[10px] text-[#9E4300]">{occasion.kicker}</span>
           <h3 className="mt-2 font-serif text-xl text-[#1C1C18] font-normal">{occasion.title}</h3>
           <p className="mt-2 sv2-body-sm text-[#4A4640]">{occasion.line}</p>
         </div>
@@ -288,7 +288,7 @@ export function BusinessOccasionBento({
           className="flex flex-col justify-between border border-[#7C766F] bg-[#1C1B1A] p-6 text-[#FCF9F2] md:col-span-2 lg:col-span-2 hover:border-[#CCC5BD] transition-colors"
         >
           <div>
-            <span className="inline-block border border-[#7C766F] bg-[#31312C] px-2 py-1 sv2-mono-sm text-[10px] uppercase tracking-wider text-[#FFB690]">
+            <span className="inline-block border border-[#7C766F] bg-[#31312C] px-2 py-1 sv2-label text-[10px] text-[#FFB690]">
               {festive.kicker}
             </span>
             <h3 className="mt-3 font-serif text-[22px] leading-7 text-[#FCF9F2] font-normal">{festive.title}</h3>

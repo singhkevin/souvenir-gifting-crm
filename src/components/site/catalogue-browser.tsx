@@ -128,7 +128,7 @@ export function CatalogueBrowser({
                 <p className="sv2-mono-md font-bold text-[#1C1C18]">
                   {priceLabel?.(product) || (product.price == null ? 'Price on quote' : formatCurrency(product.price))}
                 </p>
-                <p className="mt-0.5 sv2-mono-sm text-[10px] uppercase text-[#7C766F]">
+                <p className="mt-0.5 sv2-label text-[10px] text-[#7C766F]">
                   {captionFor?.(product) || purchaseCaption(product.purchase)}
                 </p>
               </div>

@@ -215,7 +215,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
                     </p>
                   </div>
                   {badge ? (
-                    <span className={`inline-flex rounded-none px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider border ${
+                    <span className={`inline-flex rounded-none px-2.5 py-0.5  text-[11px] uppercase tracking-wider border ${
                       badge === 'within'
                         ? 'border-[#3A4537]/30 bg-[#DAE6D3] text-[#3A4537]'
                         : 'border-[#BA1A1A]/30 bg-[#FFDAD6] text-[#BA1A1A]'

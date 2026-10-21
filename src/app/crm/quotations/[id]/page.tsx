@@ -140,7 +140,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
       <div className="bg-[#FCF9F2] p-6 border border-[#CCC5BD] rounded-none shadow-none flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div className="min-w-0">
           {quote.quotation_number && (
-            <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
               <Link href="/crm/dashboard" className="hover:text-[#9E4300] transition-colors">CRM</Link>
               <span>/</span>
               <Link href="/crm/quotations" className="hover:text-[#9E4300] transition-colors">QUOTATIONS</Link>

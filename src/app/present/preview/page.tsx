@@ -26,7 +26,7 @@ export default function PresentationPreviewPage() {
           { title: 'Desk kit', imageUrl: '/site/home-welcome-kit.webp', specs: 'Notebook and bottle.', moq: 25, kind: 'combo', memberNames: ['Welcome notebook', 'Steel bottle'] },
         ]}
       />
-      <section className="rounded-2xl border border-[#E8E4DE] bg-white p-4">
+      <section className="border border-[#E8E4DE] bg-white p-4">
         <h2 className="mb-3 font-serif text-2xl">Staff deck</h2>
         <DeckEditor products={PRODUCTS} companies={[{ id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', name: 'Northwind' }]} />
       </section>

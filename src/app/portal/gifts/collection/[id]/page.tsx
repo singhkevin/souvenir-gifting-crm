@@ -114,7 +114,7 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
       />
       <div className="rounded-none border border-[#CCC5BD] bg-[#F6F3EC] p-6 sm:p-8">
         {budget != null && (
-          <div className="mb-2 font-mono text-xs uppercase tracking-wider text-[#9E4300]">
+          <div className="mb-2 text-xs uppercase tracking-wider text-[#9E4300]">
             Target Budget · {formatCurrency(budget)} per person
           </div>
         )}

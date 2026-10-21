@@ -4,9 +4,9 @@ import { ShieldOff } from 'lucide-react'
 export default function AccessDeniedPage() {
   return (
     <div>
-      <div className="max-w-lg bg-white border border-[#E5DFD5] rounded-lg p-6">
+      <div className="max-w-lg bg-white border border-[#E5DFD5] p-6">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 w-8 h-8 shrink-0 rounded-md bg-[#FEE2E2] text-[#991B1B] flex items-center justify-center">
+          <span className="mt-0.5 w-8 h-8 shrink-0 bg-[#FEE2E2] text-[#991B1B] flex items-center justify-center">
             <ShieldOff size={16} />
           </span>
           <div>
@@ -16,7 +16,7 @@ export default function AccessDeniedPage() {
             </p>
             <Link
               href="/crm/dashboard"
-              className="inline-flex mt-4 px-3 py-1.5 rounded-md text-sm font-medium bg-[#806A50] text-[#FAF7F2] hover:bg-[#9C8567] hover:text-[#FAF7F2]"
+              className="inline-flex mt-4 px-3 py-1.5 text-sm font-medium bg-[#806A50] text-[#FAF7F2] hover:bg-[#9C8567] hover:text-[#FAF7F2]"
             >
               Back to dashboard
             </Link>

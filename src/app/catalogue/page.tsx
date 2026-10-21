@@ -256,12 +256,12 @@ export default async function CataloguePage({
                 />
               </label>
               <div className="hidden items-center gap-6 border-l border-[#CCC5BD] pl-6 lg:flex">
-                <label className="flex items-center gap-2 text-xs font-mono uppercase text-[#4A4640]">
+                <label className="flex items-center gap-2 text-xs uppercase text-[#4A4640]">
                   <span className="whitespace-nowrap">Sort by</span>
                   <select
                     name="sort"
                     defaultValue={sort}
-                    className="border border-[#CCC5BD] bg-[#FCF9F2] py-1.5 px-3 text-xs font-mono uppercase text-[#1C1B1A] outline-none focus:border-[#1C1B1A]"
+                    className="border border-[#CCC5BD] bg-[#FCF9F2] py-1.5 px-3 text-xs uppercase text-[#1C1B1A] outline-none focus:border-[#1C1B1A]"
                   >
                     <option value="name">A–Z</option>
                     <option value="newest">Newest</option>
@@ -271,7 +271,7 @@ export default async function CataloguePage({
                 </label>
                 <button
                   type="submit"
-                  className="bg-[#000000] hover:bg-[#9E4300] px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
+                  className="bg-[#000000] hover:bg-[#9E4300] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
                 >
                   Apply
                 </button>
@@ -279,7 +279,7 @@ export default async function CataloguePage({
               {sort && sort !== 'name' ? <input type="hidden" name="sort" value={sort} className="lg:hidden" /> : null}
               <button
                 type="submit"
-                className="bg-[#000000] hover:bg-[#9E4300] px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors lg:hidden"
+                className="bg-[#000000] hover:bg-[#9E4300] px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors lg:hidden"
               >
                 Apply
               </button>
@@ -288,7 +288,7 @@ export default async function CataloguePage({
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
                 href={hrefFor({ occasion: '' })}
-                className={`border px-3 py-1 font-mono text-xs tracking-wider transition-colors ${
+                className={`border px-3 py-1 text-xs font-semibold tracking-wider transition-colors ${
                   occasionFilter
                     ? 'border-[#CCC5BD] bg-[#FCF9F2] text-[#4A4640] hover:border-[#1C1B1A]'
                     : 'border-[#1C1B1A] bg-[#1C1B1A] text-[#FCF9F2]'
@@ -300,7 +300,7 @@ export default async function CataloguePage({
                 <Link
                   key={item.id}
                   href={hrefFor({ occasion: item.id })}
-                  className={`border px-3 py-1 font-mono text-xs tracking-wider transition-colors ${
+                  className={`border px-3 py-1 text-xs font-semibold tracking-wider transition-colors ${
                     occasionFilter === item.id
                       ? 'border-[#1C1B1A] bg-[#1C1B1A] text-[#FCF9F2]'
                       : 'border-[#CCC5BD] bg-[#FCF9F2] text-[#4A4640] hover:border-[#1C1B1A]'

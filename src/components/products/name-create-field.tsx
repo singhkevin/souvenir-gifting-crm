@@ -71,13 +71,13 @@ export function NameCreateField({
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             placeholder={placeholder}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs"
+            className="w-full border border-gray-200 px-3 py-2 text-xs"
           />
           <button
             type="button"
             disabled={pending || !draft.trim()}
             onClick={() => void save()}
-            className="rounded-lg bg-[#806A50] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+            className="bg-[#806A50] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
           >
             {pending ? 'Saving…' : 'Add'}
           </button>

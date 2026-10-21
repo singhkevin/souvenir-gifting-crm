@@ -27,12 +27,12 @@ export default async function NewLeadPage({
       <h1 className="mb-6 mt-4 text-2xl font-bold text-[var(--color-primary)]">Add Lead</h1>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+        <div className="mb-4 border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
           {error}
         </div>
       )}
 
-      <ActionForm action={createLead} className="grid gap-4 rounded-lg border border-[var(--color-border)] bg-white p-5 text-sm shadow-sm sm:p-6">
+      <ActionForm action={createLead} className="grid gap-4 border border-[var(--color-border)] bg-white p-5 text-sm sm:p-6">
         <MobileSheetSelect
           name="company_id"
           label="Company"
@@ -79,13 +79,13 @@ export default async function NewLeadPage({
         />
         <label className="block">
           <span className="text-xs font-semibold text-gray-700">Estimated value</span>
-          <input name="estimated_value" type="number" min="0" step="0.01" className="mt-1 min-h-11 w-full rounded-lg border px-3 py-2" />
+          <input name="estimated_value" type="number" min="0" step="0.01" className="mt-1 min-h-11 w-full border px-3 py-2" />
         </label>
         <label className="block">
           <span className="text-xs font-semibold text-gray-700">Notes</span>
-          <textarea name="notes" rows={3} className="mt-1 w-full rounded-lg border px-3 py-2" />
+          <textarea name="notes" rows={3} className="mt-1 w-full border px-3 py-2" />
         </label>
-        <SubmitButton className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-[#FFFFFF] hover:bg-[#9C8567]" pendingLabel="Creating…">
+        <SubmitButton className="inline-flex min-h-11 items-center justify-center bg-[#806A50] px-4 text-sm font-semibold text-[#FFFFFF] hover:bg-[#9C8567]" pendingLabel="Creating…">
           Create Lead
         </SubmitButton>
       </ActionForm>

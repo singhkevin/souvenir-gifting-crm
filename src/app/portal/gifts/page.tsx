@@ -112,7 +112,7 @@ async function Collections({ companyId }: { companyId: string | null }) {
                 ) : null}
               </div>
               <div className="shrink-0">
-                <span className={`inline-block border px-2.5 py-0.5 font-mono text-[11px] uppercase tracking-wider rounded-none ${statusChipClass}`}>
+                <span className={`inline-block border px-2.5 py-0.5 text-[11px] uppercase tracking-wider rounded-none ${statusChipClass}`}>
                   {catalogStatusLabel(catalog.status)}
                 </span>
               </div>
@@ -254,7 +254,7 @@ async function AllGifts({
         <EmptyState title="No gifts match your search" body="Try a different search term or clear the filters." />
       ) : (
         <>
-          <p className="font-mono text-xs uppercase tracking-wider text-[#7C766F]">
+          <p className="text-xs uppercase tracking-wider text-[#7C766F]">
             Showing {from + 1}–{Math.min(from + PAGE_SIZE, total)} of {total}
           </p>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -282,7 +282,7 @@ async function AllGifts({
                           className="h-full w-full object-cover rounded-none"
                         />
                         {product.moq ? (
-                          <span className="absolute top-2.5 left-2.5 border border-[#9E4300]/40 bg-[#FFDBCB]/90 text-[#9E4300] font-mono text-[10px] uppercase px-2 py-0.5 tracking-wider rounded-none">
+                          <span className="absolute top-2.5 left-2.5 border border-[#9E4300]/40 bg-[#FFDBCB]/90 text-[#9E4300] text-[10px] uppercase px-2 py-0.5 tracking-wider rounded-none">
                             MOQ {product.moq}
                           </span>
                         ) : null}
@@ -310,10 +310,10 @@ async function AllGifts({
                         <p className="font-mono text-base font-semibold text-[#1C1C18]">
                           {product.price == null ? 'Price on request' : formatCurrency(product.price)}
                         </p>
-                        <p className="font-mono text-[10px] text-[#7C766F] uppercase">Per unit</p>
+                        <p className="text-[10px] text-[#7C766F] uppercase">Per unit</p>
                       </div>
                       {product.moq ? (
-                        <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2 py-0.5 font-mono text-[10px] text-[#4A4640] rounded-none uppercase">
+                        <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2 py-0.5 text-[10px] text-[#4A4640] rounded-none uppercase">
                           MOQ {product.moq}
                         </span>
                       ) : null}
@@ -334,7 +334,7 @@ async function AllGifts({
                   Previous
                 </Link>
               ) : <span className="flex-1 sm:flex-none" />}
-              <span className="font-mono text-xs text-[#7C766F] uppercase tracking-wider">Page {currentPage} of {totalPages}</span>
+              <span className="text-xs text-[#7C766F] uppercase tracking-wider">Page {currentPage} of {totalPages}</span>
               {currentPage < totalPages ? (
                 <Link
                   href={pageHref(currentPage + 1)}

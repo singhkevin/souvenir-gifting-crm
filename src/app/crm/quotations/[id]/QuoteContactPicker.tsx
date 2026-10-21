@@ -21,7 +21,7 @@ export function QuoteContactPicker({
         value={contactId}
         onChange={(event) => setContactId(event.target.value)}
         aria-label="Choose a contact"
-        className="rounded border border-gray-200 px-2 py-1"
+        className="border border-gray-200 px-2 py-1"
       >
         <option value="">Select</option>
         {contacts.map((contact) => (
@@ -34,7 +34,7 @@ export function QuoteContactPicker({
         type="button"
         disabled={pending || !contactId}
         onClick={() => run(() => setQuotationContact(quotationId, contactId), { successMessage: 'Contact saved' })}
-        className="rounded bg-[#624B32] px-2 py-1 font-semibold text-white disabled:opacity-50"
+        className="bg-[#624B32] px-2 py-1 font-semibold text-white disabled:opacity-50"
       >
         {pending ? <Spinner /> : 'Save'}
       </button>

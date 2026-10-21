@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, PackageSearch, Heart, FileText, ShoppingBag, LayoutDashboard } from 'lucide-react';
 import { signOut } from '@/app/login/actions';
 import { CompanyAvatar } from '../ui/avatar';
-import { BrandName } from '@/components/brand/brand-name';
+import { BrandLogo } from '@/components/brand/brand-logo';
 
 interface PortalLayoutProps {
   children: React.ReactNode;
@@ -122,9 +122,9 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
           {/* Co-branded wordmark: brand + divider + Company Name */}
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             <Link href="/portal" className="flex min-w-0 items-center gap-2.5 sm:gap-3 transition-opacity hover:opacity-90">
-              <BrandName className="block max-w-[7rem] shrink-0 truncate font-[family-name:var(--font-newsreader)] text-xl tracking-tight text-[#1C1C18] sm:max-w-[11rem] xl:max-w-none sm:text-2xl" />
+              <BrandLogo className="h-7 w-auto shrink-0 object-contain sm:h-9" />
               <span className="h-4 w-px shrink-0 bg-[#CCC5BD]" aria-hidden="true" />
-              <span className="max-w-[110px] truncate font-[family-name:var(--font-mono)] text-[10px] font-semibold uppercase tracking-wider text-[#7C766F] sm:max-w-[180px] md:max-w-[240px] min-[1440px]:max-w-[320px]">
+              <span className="max-w-[110px] truncate text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] sm:max-w-[180px] md:max-w-[240px] min-[1440px]:max-w-[320px]">
                 {user?.company_name || 'Your Company'}
               </span>
             </Link>

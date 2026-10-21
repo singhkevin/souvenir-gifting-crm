@@ -29,7 +29,7 @@ export default async function PublicPresentationPage({ params }: { params: Promi
   const { data, error } = await supabase.rpc('presentation_public', { p_token: token })
   if (error) {
     return (
-      <div className="rounded-2xl border border-[#E8E4DE] bg-white p-6">
+      <div className="border border-[#E8E4DE] bg-white p-6">
         <h1 className="font-serif text-3xl">Presentation</h1>
         <p className="mt-3 text-sm text-[#5C6570]">This link is not available yet.</p>
       </div>

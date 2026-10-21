@@ -58,7 +58,7 @@ export function ActionForm({
     <ActionPendingContext.Provider value={{ pending, submitter }}>
       <form ref={formRef} onSubmit={onSubmit} className={className} aria-busy={pending || undefined}>
         {error && (
-          <div className="col-span-full mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
+          <div className="col-span-full mb-4 border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">
             {error}
           </div>
         )}

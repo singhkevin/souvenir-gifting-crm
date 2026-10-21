@@ -57,7 +57,7 @@ export default async function GiftChoicePage({ params }: { params: Promise<{ id:
 
   if (!giftWindowOpen(selection.opens_at, selection.closes_at)) {
     return (
-      <div className="rounded-2xl border border-[#E8E4DE] bg-white p-5">
+      <div className="border border-[#E8E4DE] bg-white p-5">
         <h1 className="font-serif text-3xl">{selection.name}</h1>
         <p className="mt-2 text-sm text-[#5C6570]">This gift selection is closed.</p>
       </div>

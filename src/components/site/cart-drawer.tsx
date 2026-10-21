@@ -108,7 +108,7 @@ export function CartDrawer({
               </div>
               <div className="flex items-baseline justify-between">
                 <h2 className="font-serif text-2xl font-normal text-[#1C1C18]">Your Bag ({count})</h2>
-                <span className="border border-[#3A4537]/30 bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 sv2-mono-sm text-[10px] uppercase font-semibold">
+                <span className="border border-[#3A4537]/30 bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 sv2-label text-[10px] font-semibold">
                   Ready to Ship
                 </span>
               </div>

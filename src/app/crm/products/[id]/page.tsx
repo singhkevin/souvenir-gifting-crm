@@ -89,7 +89,7 @@ export default async function ProductDetailPage({
 
       {/* Product Hero / Summary Panel */}
       <div className="bg-[#FCF9F2] p-6 rounded-none border border-[#CCC5BD] shadow-none">
-        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7C766F] mb-4">
+        <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#7C766F] mb-4">
           <Link href="/crm/dashboard" className="hover:text-[#9E4300] transition-colors">CRM</Link>
           <span>/</span>
           <Link href="/crm/products" className="hover:text-[#9E4300] transition-colors">Products</Link>
@@ -122,15 +122,15 @@ export default async function ProductDetailPage({
                   </span>
                 )}
                 {product.status === 'active' ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 font-mono text-[11px] uppercase text-[#3A4537]">
+                  <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> active
                   </span>
                 ) : product.status === 'discontinued' ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#FBEDEB] px-2 py-0.5 font-mono text-[11px] uppercase text-[#BA1A1A]">
+                  <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#FBEDEB] px-2 py-0.5 text-[11px] uppercase text-[#BA1A1A]">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#BA1A1A]" /> discontinued
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 font-mono text-[11px] uppercase text-[#4A4640]">
+                  <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 text-[11px] uppercase text-[#4A4640]">
                     {product.status}
                   </span>
                 )}
@@ -236,7 +236,7 @@ export default async function ProductDetailPage({
                   name="sku"
                   defaultValue={product.sku}
                   required
-                  className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono uppercase text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                  className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs uppercase text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
                 />
                 <p className="text-[11px] text-[#7C766F] mt-1">Permanent identifier. Admin-only to change; changes are audited.</p>
               </div>

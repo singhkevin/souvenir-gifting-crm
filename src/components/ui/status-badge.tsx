@@ -67,7 +67,9 @@ export function StatusBadge({ status, variant, className = '' }: StatusBadgeProp
     .join(' ');
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${style} ${className}`}>
+    <span
+      className={`inline-flex items-center border border-black/10 px-2 py-0.5 text-[11px] font-semibold ${style} ${className}`}
+    >
       {label}
     </span>
   );

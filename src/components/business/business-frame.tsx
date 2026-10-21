@@ -1,11 +1,10 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
-import { appName } from '@/lib/brand'
 import { usePathname } from 'next/navigation'
 import { AudienceSwitch } from '@/components/site/audience-switch'
 import { signOut } from '@/app/login/actions'
+import { BrandLogo } from '@/components/brand/brand-logo'
 
 const LINKS = [
   { href: '/business/dashboard', label: 'Dashboard' },
@@ -37,7 +36,7 @@ export function BusinessFrame({
               href="/business/dashboard"
               className="flex items-center"
             >
-              <Image src="/logo.png" alt={appName()} width={140} height={44} className="h-7 w-auto object-contain sm:h-8" priority />
+              <BrandLogo priority className="h-7 w-auto object-contain sm:h-8" />
             </Link>
             <span className="hidden sm:inline-block h-4 w-px bg-[#CCC5BD]" />
             <AudienceSwitch businessHref="/business/dashboard" />

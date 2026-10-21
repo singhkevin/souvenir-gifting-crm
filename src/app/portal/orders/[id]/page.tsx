@@ -22,27 +22,27 @@ function OrderStatusChip({ status }: { status: string }) {
   const label = CLIENT_STATUS_LABELS[status] || status
   if (['delivered', 'fulfilled'].includes(status)) {
     return (
-      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         {label}
       </span>
     )
   }
   if (['cancelled', 'rejected'].includes(status)) {
     return (
-      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         {label}
       </span>
     )
   }
   if (['client_approval', 'production', 'mockup', 'dispatch'].includes(status)) {
     return (
-      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
         {label}
       </span>
     )
   }
   return (
-    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#1C1C18] px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-none">
+    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#1C1C18] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
       {label}
     </span>
   )
@@ -120,7 +120,7 @@ export default async function PortalOrderDetailPage({
         <BackButton
           href="/portal/orders"
           label="Back to orders"
-          className="font-mono text-xs uppercase tracking-wider text-[#4A4640] hover:text-[#9E4300]"
+          className="text-xs uppercase tracking-wider text-[#4A4640] hover:text-[#9E4300]"
         />
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs text-[#7C766F]">{order.order_number}</span>
@@ -332,7 +332,7 @@ export default async function PortalOrderDetailPage({
                       </div>
                       <div className="text-right">
                         <p className="font-mono font-semibold text-[#1C1C18]">{formatCurrency(inv.amount)}</p>
-                        <p className="font-mono text-[10px] uppercase text-[#7C766F]">{inv.status}</p>
+                        <p className="text-[10px] uppercase text-[#7C766F]">{inv.status}</p>
                       </div>
                     </li>
                   ))}

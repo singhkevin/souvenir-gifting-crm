@@ -21,7 +21,7 @@ export function CatalogPublishButton({
     return published ? (
       <span
         aria-disabled="true"
-        className="inline-flex min-h-10 items-center rounded-lg bg-emerald-50 px-3 text-xs font-semibold text-emerald-800"
+        className="inline-flex min-h-10 items-center bg-emerald-50 px-3 text-xs font-semibold text-emerald-800"
       >
         Published
       </span>
@@ -41,7 +41,7 @@ export function CatalogPublishButton({
             : result,
         )
       }}
-      className="min-h-10 rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-white disabled:opacity-50"
+      className="min-h-10 bg-[#806A50] px-3 text-xs font-semibold text-white disabled:opacity-50"
     >
       {published ? `Publish ${draftCount} new item${draftCount === 1 ? '' : 's'}` : 'Publish catalog'}
     </ActionButton>

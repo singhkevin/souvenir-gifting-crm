@@ -17,7 +17,7 @@ export default function AppError({
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-6 text-center">
+      <div className="max-w-md w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-6 text-center">
         <div className="mx-auto w-10 h-10 rounded-full bg-[var(--color-warning-bg)] text-[var(--color-warning)] flex items-center justify-center mb-4">
           <AlertTriangle size={18} />
         </div>
@@ -31,13 +31,13 @@ export default function AppError({
         <div className="flex items-center justify-center gap-3 mt-5">
           <button
             onClick={reset}
-            className="px-4 py-2 rounded-md text-sm font-medium bg-[var(--color-primary)] text-[var(--color-primary-fg)] hover:opacity-90"
+            className="px-4 py-2 text-sm font-medium bg-[var(--color-primary)] text-[var(--color-primary-fg)] hover:opacity-90"
           >
             Try again
           </button>
           <Link
             href="/crm/dashboard"
-            className="px-4 py-2 rounded-md text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)]"
+            className="px-4 py-2 text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-subtle)]"
           >
             Go to dashboard
           </Link>

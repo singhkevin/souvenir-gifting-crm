@@ -204,7 +204,7 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
                   <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Company</span>
                   <span>{company?.name || '—'}</span>
                   {company?.account_type === 'business' ? (
-                    <span className="mt-0.5 block text-[10px] uppercase text-[#9E4300] font-mono">
+                    <span className="mt-0.5 block text-[10px] uppercase text-[#9E4300]">
                       {company.business_verification || 'unverified'}
                       {company.gst_number ? ` · ${company.gst_number}` : ''}
                     </span>
@@ -282,7 +282,7 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
                   <td className="py-2.5 px-4 text-sm text-[#4A4640]">
                     {company?.name || '—'}
                     {company?.account_type === 'business' ? (
-                      <span className="mt-0.5 block text-[10px] uppercase text-[#9E4300] font-mono">
+                      <span className="mt-0.5 block text-[10px] uppercase text-[#9E4300]">
                         {company.business_verification || 'unverified'}
                         {company.gst_number ? ` · ${company.gst_number}` : ''}
                       </span>

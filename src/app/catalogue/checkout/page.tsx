@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { SiteShell } from '@/components/site/site-shell'
+import { SV2Button } from '@/components/sv2/button'
 import { CartCheckout } from '@/components/site/cart-checkout'
 import { loadQuoteCheckout } from '@/lib/business/quote-checkout'
 import { formatCurrency } from '@/lib/utils'
@@ -58,12 +59,7 @@ export default async function QuoteCheckoutPage({
                   : 'This checkout link is not valid or has been revoked.'}
             </p>
             <div className="pt-2">
-              <Link
-                href="/catalogue"
-                className="inline-flex bg-[#000000] hover:bg-[#9E4300] text-white px-6 py-3 sv2-label text-[11px] tracking-wider transition-colors"
-              >
-                Return to catalogue
-              </Link>
+              <SV2Button href="/catalogue">Return to catalogue</SV2Button>
             </div>
           </div>
         ) : (
@@ -105,7 +101,7 @@ export default async function QuoteCheckoutPage({
               <div>
                 <Link
                   href="/catalogue"
-                  className="sv2-mono-sm text-[11px] uppercase tracking-wider text-[#9E4300] hover:underline inline-flex items-center gap-1"
+                  className="sv2-label text-[11px] text-[#9E4300] hover:underline inline-flex items-center gap-1"
                 >
                   &larr; Back to the catalogue
                 </Link>

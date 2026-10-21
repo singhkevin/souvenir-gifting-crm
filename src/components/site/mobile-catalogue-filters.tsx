@@ -241,7 +241,7 @@ export function MobileCatalogueFilters({
           setSheet(null)
           router.push('/catalogue')
         }}
-        className={`inline-flex min-h-10 w-full items-center font-mono text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${
+        className={`inline-flex min-h-10 w-full items-center  text-[11px] font-bold uppercase tracking-[0.14em] transition-colors ${
           hasFilters ? 'text-[#9E4300] hover:underline' : 'cursor-not-allowed text-[#CCC5BD]'
         }`}
       >

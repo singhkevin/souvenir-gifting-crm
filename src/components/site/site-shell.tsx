@@ -5,7 +5,7 @@ import { landingPathForRole } from '@/lib/safe-next'
 import { resolveHost } from '@/lib/portal-host'
 import { SiteHeader } from '@/components/site/site-header'
 import { SiteFooter } from '@/components/site/site-footer'
-import { CategoryIconStrip } from '@/components/site/category-icon-strip'
+import { CategoryNav } from '@/components/sv2/category-nav'
 import { WhatsAppButton } from '@/components/site/whatsapp-button'
 import { UtilityBar } from '@/components/sv2/utility-bar'
 import { getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
@@ -26,13 +26,7 @@ async function publicContactPhone() {
   return resolvePublicContactPhone(fromEnv, data.public_contact_phone as string | null)
 }
 
-export async function SiteShell({
-  children,
-  categoryVariant = 'cards',
-}: {
-  children: React.ReactNode
-  categoryVariant?: 'cards' | 'compact'
-}) {
+export async function SiteShell({ children }: { children: React.ReactNode }) {
   const profile = await getProfile()
   const headerStore = await headers()
   const hostKind = resolveHost(headerStore.get('x-forwarded-host') || headerStore.get('host')).kind
@@ -75,7 +69,7 @@ export async function SiteShell({
         businessHref={isBusiness ? '/business/dashboard' : '/business'}
         hideAudience={hostKind === 'tenant'}
       >
-        <CategoryIconStrip items={navCategories} variant={categoryVariant} />
+        <CategoryNav items={navCategories} />
       </SiteHeader>
       <main>{children}</main>
       <SiteFooter workspaceHref={workspaceHref} workspaceLabel={workspaceLabel} phone={phone} />

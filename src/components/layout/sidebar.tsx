@@ -11,7 +11,7 @@ import {
   ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift
 } from 'lucide-react';
 import { signOut } from '@/app/login/actions';
-import { BrandName } from '@/components/brand/brand-name';
+import { BrandLogo } from '@/components/brand/brand-logo';
 import type { Role } from '@/lib/types';
 
 interface SidebarProps {
@@ -189,13 +189,10 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
         <Link
           href="/crm/dashboard"
           onClick={onNavigate}
-          className="group flex items-baseline gap-2 min-w-0"
+          className="group flex items-center gap-2 min-w-0"
         >
-          <BrandName
-            as="h1"
-            className="font-[family-name:var(--font-newsreader)] text-xl font-normal leading-none tracking-tight text-[#FCF9F2] transition-colors group-hover:text-white sm:text-2xl"
-          />
-          <span className="shrink-0 font-mono text-[10px] font-medium uppercase tracking-wider text-[#FFB690]">
+          <BrandLogo tone="light" className="h-6 w-auto shrink-0 object-contain sm:h-7" />
+          <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.12em] text-[#FFB690]">
             CRM
           </span>
         </Link>

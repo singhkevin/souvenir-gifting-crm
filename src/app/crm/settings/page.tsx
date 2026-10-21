@@ -14,7 +14,7 @@ export default async function SettingsPage() {
   if (profile?.role !== 'admin') {
     return (
       <div>
-        <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg">
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4">
           <h2 className="font-bold mb-1">Access Denied</h2>
           <p className="text-sm">You must be an administrator to view this page.</p>
         </div>
@@ -34,18 +34,18 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Organization Settings</h1>
-      <ActionForm action={updateOrgSettings} className="bg-white p-6 rounded-lg border space-y-4 text-sm">
+      <ActionForm action={updateOrgSettings} className="bg-white p-6 border space-y-4 text-sm">
         <label className="block">
           <span className="text-gray-500 text-xs">Organisation name</span>
-          <input name="organisation_name" defaultValue={settings?.organisation_name || appName()} className="w-full border rounded-lg px-3 py-2 mt-1" />
+          <input name="organisation_name" defaultValue={settings?.organisation_name || appName()} className="w-full border px-3 py-2 mt-1" />
         </label>
         <label className="block">
           <span className="text-gray-500 text-xs">Default tax percent</span>
-          <input name="default_tax_percent" type="number" step="0.01" defaultValue={settings?.default_tax_percent || 18} className="w-full border rounded-lg px-3 py-2 mt-1" />
+          <input name="default_tax_percent" type="number" step="0.01" defaultValue={settings?.default_tax_percent || 18} className="w-full border px-3 py-2 mt-1" />
         </label>
         <label className="block">
           <span className="text-gray-500 text-xs">Currency</span>
-          <input name="currency" defaultValue={settings?.currency || 'INR'} className="w-full border rounded-lg px-3 py-2 mt-1" />
+          <input name="currency" defaultValue={settings?.currency || 'INR'} className="w-full border px-3 py-2 mt-1" />
         </label>
         <label className="block">
           <span className="text-gray-500 text-xs">Public contact phone</span>
@@ -53,7 +53,7 @@ export default async function SettingsPage() {
             name="public_contact_phone"
             defaultValue={settings?.public_contact_phone || ''}
             placeholder="Business number shown in the public footer and WhatsApp"
-            className="w-full border rounded-lg px-3 py-2 mt-1"
+            className="w-full border px-3 py-2 mt-1"
           />
           <span className="mt-1 block text-[11px] text-gray-500">
             Leave blank to hide the number. PUBLIC_CONTACT_PHONE overrides this when it is set on the server.
@@ -77,7 +77,7 @@ export default async function SettingsPage() {
                 step="0.01"
                 min="0"
                 defaultValue={settings?.default_margin_percent ?? 35}
-                className="w-full border rounded-lg px-3 py-2 mt-1"
+                className="w-full border px-3 py-2 mt-1"
               />
             </label>
             <label className="block">
@@ -88,7 +88,7 @@ export default async function SettingsPage() {
                 step="0.01"
                 min="0"
                 defaultValue={settings?.b2c_margin_percent ?? 40}
-                className="w-full border rounded-lg px-3 py-2 mt-1"
+                className="w-full border px-3 py-2 mt-1"
               />
             </label>
             <label className="block">
@@ -99,7 +99,7 @@ export default async function SettingsPage() {
                 step="0.01"
                 min="0"
                 defaultValue={settings?.b2b_margin_percent ?? 35}
-                className="w-full border rounded-lg px-3 py-2 mt-1"
+                className="w-full border px-3 py-2 mt-1"
               />
             </label>
           </div>
@@ -126,7 +126,7 @@ export default async function SettingsPage() {
               ['store', 'Public store'],
               ['business', 'Business portal'],
             ].map(([key, label]) => (
-              <div key={key} className="rounded-lg border border-gray-200 p-3 space-y-2">
+              <div key={key} className="border border-gray-200 p-3 space-y-2">
                 <p className="text-xs font-semibold text-gray-900">{label}</p>
                 <label className="flex items-center gap-2">
                   <input type="checkbox" name={`${key}_use_best_cost`} defaultChecked={Boolean(settings?.[`${key}_use_best_cost`])} />
@@ -151,12 +151,12 @@ export default async function SettingsPage() {
               min="1"
               max="90"
               defaultValue={settings?.quote_validity_days ?? 14}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
+              className="mt-1 w-full border px-3 py-2"
             />
           </label>
           <label className="block">
             <span className="text-gray-500 text-xs">Default owner for new business accounts</span>
-            <select name="business_default_owner_id" defaultValue={settings?.business_default_owner_id || ''} className="mt-1 w-full rounded-lg border px-3 py-2">
+            <select name="business_default_owner_id" defaultValue={settings?.business_default_owner_id || ''} className="mt-1 w-full border px-3 py-2">
               <option value="">Least-loaded salesperson</option>
               {(owners || []).map((owner) => (
                 <option key={owner.id} value={owner.id}>
@@ -167,10 +167,10 @@ export default async function SettingsPage() {
           </label>
         </div>
 
-        <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm" pendingLabel="Saving…">Save settings</SubmitButton>
+        <SubmitButton className="px-4 py-2 bg-[#806A50] text-white font-medium text-sm" pendingLabel="Saving…">Save settings</SubmitButton>
       </ActionForm>
 
-      <div className="mt-6 rounded-lg border bg-white p-6 text-sm">
+      <div className="mt-6 border bg-white p-6 text-sm">
         <h2 className="font-semibold text-gray-900">Work-email allowlist</h2>
         <p className="mt-1 text-xs text-gray-500">
           Business registration blocks free inboxes such as Gmail, Yahoo, and Outlook. Add a domain here to allow it.
@@ -197,13 +197,13 @@ export default async function SettingsPage() {
         <ActionForm action={addEmailDomainAllowlist} className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
           <label className="block text-xs text-gray-500">
             Domain
-            <input name="domain" placeholder="acme.com" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+            <input name="domain" placeholder="acme.com" className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
           <label className="block text-xs text-gray-500">
             Note
-            <input name="note" placeholder="Optional" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+            <input name="note" placeholder="Optional" className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
-          <SubmitButton className="rounded-lg bg-[#806A50] px-3 py-2 text-sm text-white" pendingLabel="Adding…">Add domain</SubmitButton>
+          <SubmitButton className="bg-[#806A50] px-3 py-2 text-sm text-white" pendingLabel="Adding…">Add domain</SubmitButton>
         </ActionForm>
       </div>
     </div>

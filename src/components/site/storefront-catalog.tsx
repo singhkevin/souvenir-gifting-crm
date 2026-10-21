@@ -172,7 +172,7 @@ export function StorefrontCatalog({
 
             {active ? (
               <div className="pt-2">
-                <Link href={basePath} className="sv2-mono-sm text-[11px] uppercase tracking-wider text-[#9E4300] hover:underline">
+                <Link href={basePath} className="sv2-label text-[11px] text-[#9E4300] hover:underline">
                   Clear all filters
                 </Link>
               </div>
@@ -200,7 +200,7 @@ export function StorefrontCatalog({
               <div className="mt-8 text-center">
                 <Link
                   href="/catalogue"
-                  className="sv2-mono-sm text-[12px] uppercase tracking-wider text-[#9E4300] hover:underline"
+                  className="sv2-label text-[12px] text-[#9E4300] hover:underline"
                 >
                   View all {filtered.length} products &rarr;
                 </Link>
