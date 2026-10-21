@@ -16,19 +16,31 @@ export async function updateOrgSettings(formData: FormData) {
     if (!Number.isInteger(n) || n < 1 || n > 90) return 14
     return n
   }
-  const payload = {
+  const storeOwner = String(formData.get('store_default_owner_id') || '') || null
+  const payload: Record<string, string | number | null> = {
     organisation_name: String(formData.get('organisation_name') || '') || null,
     public_contact_phone: String(formData.get('public_contact_phone') || '').trim() || null,
     default_tax_percent: formData.get('default_tax_percent') ? Number(formData.get('default_tax_percent')) : null,
     currency: String(formData.get('currency') || 'INR'),
     quote_validity_days: readDays('quote_validity_days'),
     business_default_owner_id: String(formData.get('business_default_owner_id') || '') || null,
+    store_default_owner_id: storeOwner,
   }
 
   const { data: existing } = await supabase.from('org_settings').select('id').limit(1).maybeSingle()
-  const error = existing
-    ? (await supabase.from('org_settings').update(payload).eq('id', existing.id)).error
-    : (await supabase.from('org_settings').insert(payload)).error
+  const save = (body: Record<string, string | number | null>) =>
+    existing
+      ? supabase.from('org_settings').update(body).eq('id', existing.id)
+      : supabase.from('org_settings').insert(body)
+  let error = (await save(payload)).error
+  if (error && /store_default_owner_id/i.test(error.message)) {
+    if (storeOwner) {
+      return { error: `${error.message} Apply supabase/migrations/20261022_channel_order_visibility.sql, then retry.` }
+    }
+    const rest = { ...payload }
+    delete rest.store_default_owner_id
+    error = (await save(rest)).error
+  }
   if (error) return { error: error.message }
   revalidatePath('/crm/settings')
   return { success: true }

@@ -94,6 +94,24 @@ export default async function SettingsPage() {
           </label>
         </div>
 
+        <div className="border-t pt-4 space-y-3">
+          <h2 className="text-sm font-semibold text-gray-900">Store orders</h2>
+          <label className="block">
+            <span className="text-gray-500 text-xs">Default owner for public store orders</span>
+            <select name="store_default_owner_id" defaultValue={settings?.store_default_owner_id || ''} className="mt-1 w-full rounded-lg border px-3 py-2">
+              <option value="">First active admin</option>
+              {(owners || []).map((owner) => (
+                <option key={owner.id} value={owner.id}>
+                  {owner.full_name || owner.email} ({owner.role})
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-[11px] text-gray-500">
+              Guest checkouts are assigned to this person. Leave blank to keep the first active admin.
+            </span>
+          </label>
+        </div>
+
         <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm" pendingLabel="Saving…">Save settings</SubmitButton>
       </ActionForm>
 

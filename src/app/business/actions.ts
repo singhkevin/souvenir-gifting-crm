@@ -330,16 +330,35 @@ async function respondBusinessQuotationOnce(formData: FormData) {
     else if (!link?.orderId) pendingVerification = company?.business_verification !== 'verified'
     const admin = createAdminClient()
     if (admin) {
-      await admin.from('tasks').insert({
+      const { data: acceptedQuote } = await admin
+        .from('quotations')
+        .select('quotation_number, company_id')
+        .eq('id', quotationId)
+        .maybeSingle()
+      const quoteLabel = acceptedQuote?.quotation_number || quotationId
+      const quotePath = `/crm/quotations/${quotationId}`
+      const description = pendingVerification
+        ? `Business accepted quotation ${quoteLabel} before verification. Verify the account, then the checkout link can be issued. ${quotePath}`
+        : `Business accepted quotation ${quoteLabel}. Follow up if store checkout is not completed. ${quotePath}`
+      const taskRow = {
         title: 'Follow up if quote checkout is not completed',
-        description: pendingVerification
-          ? 'Business accepted a quote before verification. Verify the account, then the checkout link can be issued.'
-          : 'Business accepted a quote. Follow up if store checkout is not completed.',
+        description,
+        company_id: acceptedQuote?.company_id || company?.id || null,
         created_by: limitedProfile.id,
         due_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-      }).then(({ error: taskError }) => {
-        if (taskError) console.error('[business-accept-task]', taskError.message)
-      })
+      }
+      const inserted = await admin.from('tasks').insert(taskRow)
+      if (inserted.error && /company_id/i.test(inserted.error.message)) {
+        const retry = await admin.from('tasks').insert({
+          title: taskRow.title,
+          description: taskRow.description,
+          created_by: taskRow.created_by,
+          due_at: taskRow.due_at,
+        })
+        if (retry.error) console.error('[business-accept-task]', retry.error.message)
+      } else if (inserted.error) {
+        console.error('[business-accept-task]', inserted.error.message)
+      }
     }
   }
 

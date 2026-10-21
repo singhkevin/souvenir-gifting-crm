@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { businessOrderBelongsToCompany } from '@/lib/business/order-visibility'
 import { requireBusiness } from '@/lib/business/session'
 import { createClient } from '@/lib/supabase/server'
 import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
@@ -18,7 +19,7 @@ export default async function BusinessOrderPage({ params }: { params: Promise<{ 
     .select('id, order_number, status, order_value, created_at, quotation_id, company_id, tracking_number, dispatch_date')
     .eq('id', id)
     .maybeSingle()
-  if (!order || !order.quotation_id || order.company_id !== (company?.id || profile.company_id)) notFound()
+  if (!order || !businessOrderBelongsToCompany(order, company?.id || profile.company_id)) notFound()
   const { data: invoice } = await supabase
     .from('invoices')
     .select('status, created_at')

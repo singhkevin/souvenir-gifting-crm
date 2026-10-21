@@ -16,14 +16,13 @@ export default async function BusinessOrdersPage() {
         .from('orders')
         .select('id, order_number, status, order_value, created_at, quotation_id, tracking_number, dispatch_date, invoices(status, created_at)')
         .eq('company_id', companyId)
-        .not('quotation_id', 'is', null)
         .order('created_at', { ascending: false })
     : { data: [] }
 
   return (
     <div className="space-y-4">
       <h1 className="font-serif text-3xl">Orders</h1>
-      <p className="text-sm text-[#5C6570]">Orders created from an accepted business quote.</p>
+      <p className="text-sm text-[#5C6570]">Orders from an accepted quote and orders placed directly from the store.</p>
       <ul className="divide-y divide-[#E8E4DE] rounded-lg border border-[#E8E4DE] bg-white">
         {(data || []).map((row) => (
           <li key={row.id}>
@@ -44,7 +43,7 @@ export default async function BusinessOrdersPage() {
             </Link>
           </li>
         ))}
-        {!(data || []).length ? <li className="px-4 py-6 text-sm text-[#5C6570]">No quote orders yet.</li> : null}
+        {!(data || []).length ? <li className="px-4 py-6 text-sm text-[#5C6570]">No orders yet.</li> : null}
       </ul>
     </div>
   )

@@ -2,9 +2,13 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getProfile } from '@/lib/auth'
+import { requestOrigin } from '@/lib/auth/request-origin'
 import { isUuid } from '@/lib/utils'
 import { shouldAttachNamedCompany } from '@/lib/business/email-domain'
 import { appName } from '@/lib/brand'
+import { resolveAlertOwnerId } from '@/lib/alerts/owner'
+import { publicQuoteOwnerEmailHtml } from '@/lib/email/business'
+import { sendEmail } from '@/lib/email/resend'
 import { withIdempotency } from '@/lib/idempotency'
 
 function clean(value: FormDataEntryValue | null) {
@@ -113,12 +117,12 @@ async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: stri
 
   const matched = await admin
     .from('companies')
-    .select('id, name, status, account_type')
+    .select('id, name, status, account_type, owner_id')
     .ilike('name', companyName)
     .limit(1)
     .maybeSingle()
   const existingCompany = matched.error && /account_type/i.test(matched.error.message)
-    ? (await admin.from('companies').select('id, name, status').ilike('name', companyName).limit(1).maybeSingle()).data
+    ? (await admin.from('companies').select('id, name, status, owner_id').ilike('name', companyName).limit(1).maybeSingle()).data
     : matched.data
 
   let companyId: string | undefined
@@ -162,15 +166,51 @@ async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: stri
     return { error: 'Unable to save this enquiry. Please try again.' }
   }
 
-  const { error: leadError } = await admin.from('leads').insert({
+  const { data: lead, error: leadError } = await admin.from('leads').insert({
     company_id: companyId,
     contact_id: contact.id,
     owner_id: owner?.id || null,
     source: 'website',
     stage: 'cold',
     notes,
-  })
-  if (leadError) return { error: 'Unable to save this enquiry. Please try again.' }
+  }).select('id').single()
+  if (leadError || !lead) return { error: 'Unable to save this enquiry. Please try again.' }
+
+  const attachedOwner = existingCompany && companyId === existingCompany.id ? existingCompany.owner_id : null
+  const alertOwnerId = await resolveAlertOwnerId(admin, attachedOwner || owner?.id || null)
+  if (alertOwnerId) {
+    const leadPath = `/crm/leads/${lead.id}`
+    const note = {
+      user_id: alertOwnerId,
+      audience: 'internal',
+      title: 'New website quote request',
+      body: `${companyName} asked for a quote.`,
+      link: leadPath,
+    }
+    const inserted = await admin.from('notifications').insert(note)
+    if (inserted.error) {
+      await admin.from('notifications').insert({
+        user_id: note.user_id,
+        title: note.title,
+        body: note.body,
+        link: note.link,
+      })
+    }
+    const { data: alertOwner } = await admin
+      .from('profiles')
+      .select('email')
+      .eq('id', alertOwnerId)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (alertOwner?.email) {
+      const origin = await requestOrigin()
+      await sendEmail({
+        to: alertOwner.email,
+        subject: 'New website quote request',
+        html: publicQuoteOwnerEmailHtml({ company: companyName, leadUrl: `${origin}${leadPath}` }),
+      })
+    }
+  }
 
   return { success: true }
 }

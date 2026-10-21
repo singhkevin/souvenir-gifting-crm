@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
 import { formatCurrency, formatDate, oneRelation, asRows } from '@/lib/utils'
 import { ORDER_STATUS_LABELS, orderHealth, HEALTH_LABELS, HEALTH_STYLES } from '@/lib/order-workflow'
+import { isOrderSource, ORDER_SOURCE_LABELS, ORDER_SOURCES } from '@/lib/orders/source'
 import Link from 'next/link'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
@@ -34,6 +35,7 @@ type WorkOrder = {
   expected_delivery_date: string | null
   stage_due_at: string | null
   order_value: number | null
+  source?: string | null
   next_action: string | null
   created_at: string
   company?: NamedCompany | NamedCompany[] | null
@@ -50,6 +52,14 @@ type WorkTask = {
   orders?: { order_number: string | null } | { order_number: string | null }[] | null
 }
 
+function workHref(period: string, source: string) {
+  const params = new URLSearchParams()
+  if (period && period !== 'today') params.set('filter', period)
+  if (source && source !== 'all') params.set('source', source)
+  const query = params.toString()
+  return query ? `/crm/my-work?${query}` : '/crm/my-work'
+}
+
 const FILTERS = [
   { id: 'today', label: 'Today' },
   { id: 'week', label: 'This week' },
@@ -61,11 +71,12 @@ const FILTERS = [
 export default async function MyWorkPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string }>
+  searchParams: Promise<{ filter?: string; source?: string }>
 }) {
   const profile = await requireStaff()
-  const { filter: filterParam } = await searchParams
+  const { filter: filterParam, source: sourceParam } = await searchParams
   const filter = filterParam || 'today'
+  const sourceFilter = isOrderSource(sourceParam) ? sourceParam : 'all'
   const supabase = await createClient()
   const today = new Date().toISOString().slice(0, 10)
   const weekStart = new Date()
@@ -77,8 +88,9 @@ export default async function MyWorkPage({
 
   let myOrderQuery = supabase
     .from('orders')
-    .select('id, order_number, status, expected_delivery_date, stage_due_at, order_value, next_action, created_at, company:companies(name)')
+    .select('id, order_number, status, source, expected_delivery_date, stage_due_at, order_value, next_action, created_at, company:companies(name)')
     .order('expected_delivery_date', { ascending: true })
+  if (sourceFilter !== 'all') myOrderQuery = myOrderQuery.eq('source', sourceFilter)
   if (profile.role === 'sales') {
     myOrderQuery = myOrderQuery.or(`owner_id.eq.${profile.id},assigned_to.eq.${profile.id}`)
   } else {
@@ -158,6 +170,16 @@ export default async function MyWorkPage({
                 ...FILTERS.filter((f) => f.id !== 'today').map((f) => ({ value: f.id, label: f.label })),
               ],
             },
+            {
+              key: 'source',
+              label: 'Source',
+              value: sourceFilter === 'all' ? '' : sourceFilter,
+              emptyLabel: 'All sources',
+              options: [
+                { value: '', label: 'All sources' },
+                ...ORDER_SOURCES.map((source) => ({ value: source, label: ORDER_SOURCE_LABELS[source] })),
+              ],
+            },
           ]}
         />
       </div>
@@ -165,12 +187,33 @@ export default async function MyWorkPage({
         {FILTERS.map((f) => (
           <Link
             key={f.id}
-            href={`/crm/my-work?filter=${f.id}`}
+            href={workHref(f.id, sourceFilter)}
             className={`rounded-lg px-3 py-2 text-xs font-medium ${
               filter === f.id ? 'bg-[#806A50] text-[#FFFFFF]' : 'border bg-white text-gray-600 hover:bg-gray-50'
             }`}
           >
             {f.label}
+          </Link>
+        ))}
+      </div>
+      <div className="hidden flex-wrap gap-2 md:flex">
+        <Link
+          href={workHref(filter, 'all')}
+          className={`rounded-lg px-3 py-2 text-xs font-medium ${
+            sourceFilter === 'all' ? 'bg-[#806A50] text-[#FFFFFF]' : 'border bg-white text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          All sources
+        </Link>
+        {ORDER_SOURCES.map((source) => (
+          <Link
+            key={source}
+            href={workHref(filter, source)}
+            className={`rounded-lg px-3 py-2 text-xs font-medium ${
+              sourceFilter === source ? 'bg-[#806A50] text-[#FFFFFF]' : 'border bg-white text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            {ORDER_SOURCE_LABELS[source]}
           </Link>
         ))}
       </div>
@@ -203,7 +246,12 @@ export default async function MyWorkPage({
           return (
             <Link key={o.id} href={`/crm/orders/${o.id}`} className="flex items-center justify-between p-3 rounded-xl border border-[#EFE9E0] hover:bg-[#FAF7F2]">
               <div>
-                <p className="text-sm font-semibold font-mono">{o.order_number}</p>
+                <p className="text-sm font-semibold font-mono">
+                  {o.order_number}
+                  <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-[#FAF7F2] text-[#624B32]">
+                    {isOrderSource(o.source) ? ORDER_SOURCE_LABELS[o.source] : 'CRM'}
+                  </span>
+                </p>
                 <p className="text-[11px] text-[#7A7267]">{company?.name} · {ORDER_STATUS_LABELS[o.status] || o.status} · {formatCurrency(o.order_value)}</p>
               </div>
               <span className={`text-[10px] px-2 py-0.5 rounded-full ${HEALTH_STYLES[health]}`}>{HEALTH_LABELS[health]}</span>
