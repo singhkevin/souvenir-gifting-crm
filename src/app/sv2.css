@@ -1,0 +1,233 @@
+/*
+ * Souvenir v2 — scoped design tokens and component styles.
+ * All rules are scoped under `.sv2` to avoid leaking into the existing site.
+ */
+
+/* ── Colour tokens (CSS custom properties on .sv2 wrapper) ── */
+.sv2 {
+  --sv2-bg: #FCF9F2;
+  --sv2-linen: #F6F3EC;
+  --sv2-charcoal: #1C1B1A;
+  --sv2-saffron: #9E4300;
+  --sv2-peach: #FFB690;
+  --sv2-hairline: #CCC5BD;
+  --sv2-muted: #4A4640;
+  --sv2-ink: #1C1C18;
+  --sv2-surface-container: #F1EEE7;
+  --sv2-surface-high: #EBE8E1;
+  --sv2-outline: #7C766F;
+  --sv2-inverse: #31312C;
+  --sv2-error: #BA1A1A;
+  --sv2-secondary-container: #FF8843;
+  --sv2-tertiary-fixed: #DAE6D3;
+  --sv2-on-tertiary: #3A4537;
+
+  background-color: var(--sv2-bg);
+  color: var(--sv2-ink);
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Override the global heading font-family only inside .sv2 */
+.sv2 :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-newsreader), 'Newsreader', serif;
+  font-weight: 400;
+}
+
+/* ── Typography utilities ── */
+.sv2 .sv2-display {
+  font-family: var(--font-newsreader), 'Newsreader', serif;
+  font-size: 72px;
+  line-height: 80px;
+  letter-spacing: -0.03em;
+  font-weight: 400;
+}
+
+.sv2 .sv2-headline-lg {
+  font-family: var(--font-newsreader), 'Newsreader', serif;
+  font-size: 48px;
+  line-height: 56px;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+.sv2 .sv2-headline-md {
+  font-family: var(--font-newsreader), 'Newsreader', serif;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+.sv2 .sv2-headline-sm {
+  font-family: var(--font-newsreader), 'Newsreader', serif;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 500;
+}
+
+.sv2 .sv2-body-lg {
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  font-size: 18px;
+  line-height: 28px;
+}
+
+.sv2 .sv2-body-md {
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+.sv2 .sv2-body-sm {
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.sv2 .sv2-label {
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sv2 .sv2-mono-sm {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+.sv2 .sv2-mono-md {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 18px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}
+
+.sv2 .sv2-mono-lg {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+/* ── Section numeral (01, 02, ...) ── */
+.sv2 .sv2-section-numeral {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: 72px;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--sv2-hairline);
+  user-select: none;
+}
+
+/* ── Scroll animations (respects prefers-reduced-motion) ── */
+.sv2 .sv2-fade-in {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.sv2 .sv2-fade-in.sv2-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sv2 .sv2-img-zoom {
+  transition: transform 0.5s ease;
+}
+
+.sv2 .sv2-img-zoom:hover {
+  transform: scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv2 .sv2-fade-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .sv2 .sv2-img-zoom {
+    transition: none;
+  }
+
+  .sv2 .sv2-img-zoom:hover {
+    transform: none;
+  }
+}
+
+/* ── Pulse dot for utility bar ── */
+.sv2 .sv2-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--sv2-secondary-container);
+  animation: sv2-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sv2-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv2 .sv2-pulse-dot {
+    animation: none;
+  }
+}
+
+/* ── Scoped StorefrontCatalog integration ── */
+.sv2 #catalog {
+  background-color: transparent;
+  border-top: none;
+}
+
+.sv2 #catalog > div {
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0;
+  max-width: 100%;
+}
+
+.sv2 #catalog > div > .mb-5 > div:first-child {
+  display: none;
+}
+
+/* ── Scrollbar utility for horizontal rails ── */
+.sv2 .no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sv2 .no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Mobile display adjustments ── */
+@media (max-width: 767px) {
+  .sv2 .sv2-display {
+    font-size: 40px;
+    line-height: 44px;
+    letter-spacing: -0.02em;
+    word-break: break-word;
+  }
+
+  .sv2 .sv2-headline-lg {
+    font-size: 28px;
+    line-height: 34px;
+    letter-spacing: -0.01em;
+    word-break: break-word;
+  }
+
+  .sv2 .sv2-section-numeral {
+    font-size: 40px;
+  }
+}
