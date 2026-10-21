@@ -20,19 +20,29 @@ function CredentialsOnce({
 }) {
   const [revealed, setRevealed] = useState(false)
   return (
-    <div className="md:col-span-2 p-3 rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] space-y-2">
-      <p className="text-xs font-semibold text-[#1C1917]">Client login created</p>
-      <p className="text-[11px] text-[#7A7267]">Share these credentials now. They are not stored in the CRM and cannot be recovered later.</p>
+    <div className="md:col-span-2 p-4 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] space-y-3">
+      <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A]">Client login created</p>
+      <p className="text-[11px] text-[#7C766F]">Share these credentials now. They are not stored in the CRM and cannot be recovered later.</p>
       {loginUrl ? (
-        <p className="text-xs"><span className="text-[#7A7267]">Portal sign in:</span> <span className="font-mono break-all">{loginUrl}</span></p>
+        <p className="text-xs">
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Portal sign in</span>
+          <span className="font-mono break-all text-[#9E4300]">{loginUrl}</span>
+        </p>
       ) : null}
-      <p className="text-xs"><span className="text-[#7A7267]">Client ID / Login email:</span> <span className="font-mono">{email}</span></p>
       <p className="text-xs">
-        <span className="text-[#7A7267]">Temporary password — share securely:</span>{' '}
-        <span className="font-mono">{revealed ? password : '••••••••'}</span>
+        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Client ID / Login email</span>
+        <span className="font-mono text-[#1C1B1A]">{email}</span>
       </p>
-      <div className="flex flex-wrap gap-2">
-        <button type="button" onClick={() => setRevealed((v) => !v)} className="px-3 py-1.5 text-xs border rounded-lg">
+      <p className="text-xs">
+        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Temporary password — share securely</span>
+        <span className="font-mono text-[#1C1B1A]">{revealed ? password : '••••••••'}</span>
+      </p>
+      <div className="flex flex-wrap gap-2 pt-1">
+        <button
+          type="button"
+          onClick={() => setRevealed((v) => !v)}
+          className="px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] border border-[#1C1B1A] bg-transparent text-[#1C1B1A] hover:bg-[#FCF9F2] rounded-none transition-colors"
+        >
           {revealed ? 'Hide' : 'Reveal once'}
         </button>
         <button
@@ -41,11 +51,15 @@ function CredentialsOnce({
             await navigator.clipboard.writeText(loginUrl ? `${loginUrl}\n${email}\n${password}` : `${email}\n${password}`)
             toast.success('Copied')
           }}
-          className="px-3 py-1.5 text-xs border rounded-lg"
+          className="px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] border border-[#1C1B1A] bg-transparent text-[#1C1B1A] hover:bg-[#FCF9F2] rounded-none transition-colors"
         >
           Copy
         </button>
-        <button type="button" onClick={onDone} className="px-3 py-1.5 text-xs font-semibold text-white bg-[#806A50] rounded-lg">
+        <button
+          type="button"
+          onClick={onDone}
+          className="px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#FCF9F2] bg-[#1C1B1A] hover:bg-[#9E4300] rounded-none transition-colors shadow-none"
+        >
           Done
         </button>
       </div>
@@ -79,41 +93,62 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
         setPassword('')
         setFormKey((key) => key + 1)
       }}
-      className="grid md:grid-cols-2 gap-3 text-xs"
+      className="grid md:grid-cols-2 gap-4 text-xs"
     >
       <input type="hidden" name="company_id" value={companyId} />
-      <input name="full_name" required placeholder="Client name" className="border rounded-lg px-3 py-2" />
-      <input name="email" type="email" required placeholder="Client ID / Login email" className="border rounded-lg px-3 py-2" />
+      <label className="block space-y-1">
+        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Client Name</span>
+        <input
+          name="full_name"
+          required
+          placeholder="Client name"
+          className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+        />
+      </label>
+      <label className="block space-y-1">
+        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Client ID / Login Email</span>
+        <input
+          name="email"
+          type="email"
+          required
+          placeholder="Client ID / Login email"
+          className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 font-mono"
+        />
+      </label>
       <MobileSheetSelect
         name="role"
         label="Role"
+        showDesktopLabel
         defaultValue="client_user"
         options={[
           { value: 'client_user', label: 'Client user' },
           { value: 'client_admin', label: 'Client admin' },
         ]}
       />
-      <div className="flex gap-2">
-        <input
-          name="password"
-          type="password"
-          minLength={8}
-          autoComplete="new-password"
-          placeholder="Temporary password (min 8)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="border rounded-lg px-3 py-2 flex-1"
-        />
-        <SubmitButton
-          name="generate_password"
-          value="1"
-          pendingLabel="Generating…"
-          className="px-3 py-2 border rounded-lg whitespace-nowrap"
-        >
-          Generate password
-        </SubmitButton>
-      </div>
-      <p className="md:col-span-2 text-[11px] text-gray-500">
+      <label className="block space-y-1">
+        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Password</span>
+        <div className="flex gap-2">
+          <input
+            name="password"
+            type="password"
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="Temporary password (min 8)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 font-mono flex-1"
+          />
+          <SubmitButton
+            name="generate_password"
+            value="1"
+            pendingLabel="Generating…"
+            className="px-3.5 py-2 border border-[#1C1B1A] bg-transparent text-[#1C1B1A] hover:bg-[#F6F3EC] rounded-none text-xs font-bold uppercase tracking-[0.08em] whitespace-nowrap transition-colors shadow-none"
+          >
+            Generate password
+          </SubmitButton>
+        </div>
+      </label>
+      <p className="md:col-span-2 text-[11px] text-[#7C766F]">
         The password is sent to Supabase Auth only. It is never stored in application tables.
       </p>
       {created && (
@@ -126,7 +161,7 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
       )}
       <SubmitButton
         pendingLabel="Creating login…"
-        className="md:col-span-2 px-3 py-2 text-xs font-semibold text-white bg-[#806A50] rounded-lg"
+        className="md:col-span-2 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] bg-[#1C1B1A] hover:bg-[#9E4300] rounded-none transition-colors shadow-none"
       >
         Create client login
       </SubmitButton>
