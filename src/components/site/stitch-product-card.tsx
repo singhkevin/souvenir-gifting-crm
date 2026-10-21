@@ -11,6 +11,7 @@ export function StitchProductCard({
   showSample = true,
   caption,
   tone = 'default',
+  channel = 'retail',
 }: {
   product: PublicProduct
   href?: string
@@ -18,64 +19,65 @@ export function StitchProductCard({
   showSample?: boolean
   caption?: string
   tone?: 'default' | 'retail'
+  channel?: 'retail' | 'business'
 }) {
   const destination = href || `/catalogue/${product.id}`
   const amount = price === undefined ? product.price : price
   const quoteHref = `/request-quote?product=${product.id}`
-  const meta = [product.category_name, product.brand_name].filter(Boolean).join(' // ')
+  const category = product.category_name && !/^other$/i.test(product.category_name) ? product.category_name : null
+  const meta = [category, product.brand_name].filter(Boolean).join(' · ')
+  const canBuy = Boolean(showSample && product.purchase.buy)
+  const moqLine = channel === 'business' ? caption || (product.moq ? `MOQ ${product.moq}` : null) : null
 
   return (
-    <article className="group flex h-full flex-col border border-[#CCC5BD] bg-[#FCF9F2] transition-colors hover:border-[#000000]">
+    <article className="group flex h-full flex-col border border-[#CCC5BD] bg-[#FCF9F2] transition-colors hover:border-[#9E4300] focus-within:border-[#9E4300]">
       <Link
         href={destination}
-        className="block flex-1 text-inherit focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#000000]"
+        aria-label={`View ${product.name}`}
+        className="block flex-1 text-inherit focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#9E4300]"
       >
         {/* Product Image Stage */}
-        <div className="relative aspect-square overflow-hidden bg-[#F1EEE7] border-b border-[#CCC5BD]">
+        <div className="relative aspect-[4/5] overflow-hidden bg-[#F6F3EC]">
           <ProductImage
             src={product.image_url}
             alt={product.name}
-            size="md"
-            fit="contain"
-            className="absolute inset-0 h-full w-full bg-transparent sv2-img-zoom"
+            fit="cover"
+            className="absolute inset-0 h-full w-full bg-transparent"
+            imgClassName="scale-[1.04] transition-transform duration-500 group-hover:scale-[1.1] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.04]"
           />
-          {product.purchase.buy && showSample ? (
-            <span className="absolute left-2.5 top-2.5 border border-[#CCC5BD] bg-[#FCF9F2] px-2 py-0.5 sv2-mono-sm text-[10px] text-[#1C1C18] font-semibold">
-              READY TO SHIP
+          {canBuy ? (
+            <span className="absolute left-2.5 top-2.5 border border-[#CCC5BD] bg-[#FCF9F2] px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wider text-[#1C1C18]">
+              Ready to ship
             </span>
           ) : (
-            <span className="absolute left-2.5 top-2.5 border border-[#CCC5BD] bg-[#FCF9F2] px-2 py-0.5 sv2-mono-sm text-[10px] text-[#7C766F]">
-              ON QUOTE
+            <span className="absolute left-2.5 top-2.5 border border-[#CCC5BD] bg-[#FCF9F2] px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wider text-[#7C766F]">
+              On quote
             </span>
           )}
         </div>
 
         {/* Product Meta */}
-        <div className="p-3 sm:p-3.5 flex flex-col justify-between">
-          <div>
-            {meta ? (
-              <p className="truncate font-sans text-[11px] font-semibold text-[#9E4300] uppercase tracking-wider mb-1">
-                {meta}
-              </p>
-            ) : null}
-            <h3 className="line-clamp-2 font-serif text-[15px] sm:text-[17px] leading-snug text-[#1C1C18] font-normal min-h-10">
-              {product.name}
-            </h3>
-          </div>
-          <div className="mt-3 pt-2 border-t border-[#CCC5BD]/50 flex items-baseline justify-between gap-2">
-            <span className="sv2-mono-md font-bold text-[#1C1C18]">
-              {amount == null ? 'Price on quote' : formatCurrency(amount)}
-            </span>
-            <span className="sv2-label text-[10px] text-[#7C766F] truncate">
-              {caption || (product.moq ? `MOQ: ${product.moq}` : 'Single Unit')}
-            </span>
-          </div>
+        <div className="flex flex-col gap-1 px-3 py-3 sm:px-3.5">
+          {meta ? (
+            <p className="truncate font-sans text-[11px] font-semibold uppercase tracking-wider text-[#9E4300]">{meta}</p>
+          ) : null}
+          <h3 className="line-clamp-2 font-serif text-[15px] sm:text-[17px] leading-snug text-[#1C1C18] font-normal">
+            {product.name}
+          </h3>
+          <span className="sv2-mono-md font-bold text-[#1C1C18]">
+            {amount == null ? 'Price on quote' : formatCurrency(amount)}
+          </span>
+          {moqLine ? <span className="truncate sv2-mono-sm text-[11px] text-[#7C766F]">{moqLine}</span> : null}
         </div>
       </Link>
 
       {/* Button Actions */}
-      <div className="mt-auto grid grid-cols-2 gap-1.5 p-2.5 border-t border-[#CCC5BD] bg-[#F6F3EC]">
-        {showSample && product.purchase.buy ? (
+      <div
+        className={`mt-auto grid gap-1.5 border-t border-[#CCC5BD] bg-[#F6F3EC] p-2.5 ${
+          canBuy && product.purchase.rfq ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
+        }`}
+      >
+        {canBuy ? (
           <AddToCartButton
             maxQuantity={product.purchase.maxBuyQty}
             label="Buy 1 sample"
@@ -88,20 +90,15 @@ export function StitchProductCard({
             }}
             className="border border-[#000000] bg-[#000000] hover:bg-[#9E4300] hover:border-[#9E4300] px-2 py-2 text-center sv2-label text-[10px] text-white tracking-wider transition-colors"
           />
-        ) : (
+        ) : null}
+        {!canBuy || product.purchase.rfq ? (
           <Link
             href={quoteHref}
-            className="border border-[#CCC5BD] bg-[#FCF9F2] hover:border-[#000000] px-2 py-2 text-center sv2-label text-[10px] text-[#1C1C18] tracking-wider transition-colors"
+            className="border border-[#CCC5BD] bg-[#FCF9F2] hover:border-[#9E4300] px-2 py-2 text-center sv2-label text-[10px] text-[#1C1C18] tracking-wider transition-colors"
           >
             Request quote
           </Link>
-        )}
-        <Link
-          href={showSample && product.purchase.buy ? quoteHref : destination}
-          className="border border-[#CCC5BD] bg-[#FCF9F2] hover:border-[#000000] px-2 py-2 text-center sv2-label text-[10px] text-[#1C1C18] tracking-wider transition-colors"
-        >
-          {showSample && product.purchase.buy ? 'Request quote' : 'View'}
-        </Link>
+        ) : null}
       </div>
     </article>
   )

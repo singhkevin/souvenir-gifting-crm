@@ -16,14 +16,14 @@ const SLIDE_MS = 5600
 function HeroImage({ src, alt }: { src: string | null; alt: string }) {
   const [ready, setReady] = useState(false)
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden bg-[#31312C] border border-[#7C766F]/40">
+    <div className="relative min-h-0 flex-1 overflow-hidden bg-[#31312C]">
       {!ready ? <div className="absolute inset-0 animate-pulse bg-[#31312C]" aria-hidden="true" /> : null}
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
           alt={alt}
-          className={`h-full w-full object-cover transition-opacity duration-300 ${ready ? 'opacity-100' : 'opacity-0'}`}
+          className={`h-full w-full scale-[1.08] object-cover transition-[opacity,transform] duration-500 group-hover:scale-[1.14] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.08] ${ready ? 'opacity-100' : 'opacity-0'}`}
           onLoad={() => setReady(true)}
           onError={() => setReady(true)}
         />
@@ -35,10 +35,11 @@ function HeroImage({ src, alt }: { src: string | null; alt: string }) {
 function HeroCell({ product }: { product: RetailHeroProduct | null }) {
   if (!product) {
     return (
-      <div className="flex h-full min-h-0 flex-col bg-[#1C1B1A] border border-[#7C766F]/60 p-2.5" aria-hidden="true">
+      <div className="flex h-full min-h-0 flex-col bg-[#1C1B1A] border border-[#7C766F]/60" aria-hidden="true">
         <div className="min-h-0 flex-1 animate-pulse bg-[#31312C]" />
-        <div className="mt-2 h-4 w-3/4 animate-pulse bg-[#31312C]" />
-        <div className="mt-1.5 mb-1 h-3 w-16 animate-pulse bg-[#31312C]" />
+        <div className="border-t border-[#7C766F]/40 px-2.5 py-2">
+          <div className="h-4 w-3/4 animate-pulse bg-[#31312C]" />
+        </div>
       </div>
     )
   }
@@ -46,11 +47,13 @@ function HeroCell({ product }: { product: RetailHeroProduct | null }) {
   return (
     <Link
       href={`/catalogue/${product.id}`}
-      className="group flex h-full min-h-0 flex-col overflow-hidden bg-[#1C1B1A] border border-[#7C766F]/70 p-2.5 text-[#FCF9F2] transition-colors hover:border-[#CCC5BD] focus-visible:outline focus-visible:outline-1 focus-visible:outline-white"
+      aria-label={`View ${product.name}`}
+      className="group flex h-full min-h-0 flex-col overflow-hidden bg-[#1C1B1A] border border-[#7C766F]/70 text-[#FCF9F2] transition-colors hover:border-[#9E4300] focus-visible:border-[#9E4300] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#9E4300]"
     >
       <HeroImage src={product.image_url} alt={product.name} />
-      <span className="mt-2 line-clamp-1 px-1 font-serif text-[14px] sm:text-[15px] text-[#FCF9F2] leading-5">{product.name}</span>
-      <span className="px-1 pb-0.5 sv2-label text-[10px] text-[#FFB690]">View gift</span>
+      <span className="truncate border-t border-[#7C766F]/40 px-2.5 py-2 font-serif text-[14px] sm:text-[15px] text-[#FCF9F2] leading-5">
+        {product.name}
+      </span>
     </Link>
   )
 }
@@ -131,7 +134,7 @@ export function RetailHeroSlider({ slides }: { slides: RetailHeroProduct[][] }) 
         </span>
       </div>
 
-      <div className="relative h-[22rem] sm:h-[25rem] lg:h-[26rem] w-full overflow-hidden">
+      <div className="relative h-[23rem] sm:h-[25.75rem] lg:h-[27.6rem] w-full overflow-hidden">
         {frames.map((slide, slideIndex) => (
           <div
             key={slide.map((product) => product.id).join('-') || slideIndex}
@@ -243,7 +246,8 @@ export function RetailHero({ slides }: { slides: RetailHeroProduct[][] }) {
             </div>
           </div>
 
-          <div>
+          {/* Featured gifts panel sits at 92% width (8% smaller) per design review. */}
+          <div className="mx-auto w-[92%] lg:mr-0">
             <RetailHeroSlider slides={slides} />
           </div>
         </div>
@@ -261,8 +265,8 @@ export function RetailHomeSkeleton() {
           <div className="mt-4 h-16 w-full max-w-md animate-pulse bg-[#31312C]" />
           <div className="mt-4 h-12 w-72 animate-pulse bg-[#31312C]" />
         </div>
-        <div>
-          <div className="grid h-[22.5rem] grid-cols-2 grid-rows-2 gap-3 sm:h-[26rem] lg:h-[28rem] border border-[#7C766F] p-4 bg-[#31312C]">
+        <div className="mx-auto w-[92%] lg:mr-0">
+          <div className="grid h-[23rem] grid-cols-2 grid-rows-2 gap-3 sm:h-[25.75rem] lg:h-[27.6rem] border border-[#7C766F] p-4 bg-[#31312C]">
             {Array.from({ length: 4 }, (_, index) => (
               <div key={index} className="animate-pulse bg-[#1C1B1A] border border-[#7C766F]/40" />
             ))}

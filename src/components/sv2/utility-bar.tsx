@@ -5,7 +5,14 @@ import { siteContent } from '@/config/siteContent'
  * Displays dispatch verification, shipping/GST compliance notes,
  * concierge contact, and B2B minimum order note.
  */
-export function UtilityBar({ phone }: { phone?: string | null }) {
+export function UtilityBar({
+  phone,
+  showMinimumOrder = false,
+}: {
+  phone?: string | null
+  /** B2B minimum order note — business surfaces only. */
+  showMinimumOrder?: boolean
+}) {
   const displayPhone = phone || siteContent.phone
 
   return (
@@ -28,10 +35,14 @@ export function UtilityBar({ phone }: { phone?: string | null }) {
         <span className="text-[#FCF9F2]">
           Phone: <span className="sv2-mono-sm">{displayPhone}</span>
         </span>
-        <span className="text-[#868382] hidden sm:inline">|</span>
-        <span className="text-[#FF8843] font-medium hidden sm:inline sv2-mono-sm">
-          {siteContent.stats.minimumOrder}
-        </span>
+        {showMinimumOrder ? (
+          <>
+            <span className="text-[#868382] hidden sm:inline">|</span>
+            <span className="text-[#FF8843] font-medium hidden sm:inline sv2-mono-sm">
+              {siteContent.stats.minimumOrder}
+            </span>
+          </>
+        ) : null}
       </div>
     </aside>
   )

@@ -181,7 +181,9 @@ export function SiteHeader({
 
           {/* Mobile Action Cluster */}
           <div className="flex items-center gap-1.5 sm:gap-2 lg:hidden">
-            <PwaInstallButton />
+            <div className="hidden sm:block">
+              <PwaInstallButton />
+            </div>
             <button
               type="button"
               aria-label="Search catalogue"
@@ -196,7 +198,7 @@ export function SiteHeader({
             {corporate ? null : <CartDrawer iconClassName="text-[#1C1C18]" />}
             <Link
               href="/login"
-              className="bg-[#000000] px-2.5 py-1.5 sv2-label text-[10px] text-white"
+              className="flex h-9 items-center whitespace-nowrap bg-[#000000] px-2.5 sv2-label text-[10px] text-white"
             >
               Sign in
             </Link>
@@ -312,6 +314,9 @@ export function SiteHeader({
                   </Link>
                 </div>
               )}
+              <div className="mt-3 flex justify-center sm:hidden">
+                <PwaInstallButton />
+              </div>
             </nav>
           </div>
         ) : null}

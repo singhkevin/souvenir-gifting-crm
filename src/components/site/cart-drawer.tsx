@@ -71,11 +71,12 @@ export function CartDrawer({
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Cart, ${count} item${count === 1 ? '' : 's'}`}
-        className={`group relative flex items-center gap-1.5 border border-[#CCC5BD] px-3 py-2 text-[#1C1C18] hover:border-[#000000] bg-[#F6F3EC] transition-colors ${iconClassName}`}
+        className={`group relative flex h-9 items-center gap-1.5 border border-[#CCC5BD] px-2.5 sm:px-3 text-[#1C1C18] hover:border-[#000000] bg-[#F6F3EC] transition-colors ${iconClassName}`}
       >
         <ShoppingBag size={18} strokeWidth={1.8} />
-        <span className="sv2-mono-sm font-semibold text-[11px]">
-          Bag ({count})
+        <span className="whitespace-nowrap sv2-label text-[11px] font-semibold">
+          <span className="hidden sm:inline">Bag </span>
+          <span className="sv2-mono-sm text-[11px]">({count})</span>
         </span>
       </button>
 

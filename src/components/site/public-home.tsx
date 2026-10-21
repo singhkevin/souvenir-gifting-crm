@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { Gift, MapPinned, PackageSearch, PenLine, Truck } from 'lucide-react'
 import { siteContent } from '@/config/siteContent'
+import { ProductImage } from '@/components/ui/product-image'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { RetailHero } from '@/components/site/retail-hero'
 import { BrandLogoRow, ProductSection, RetailOccasionBento } from '@/components/site/stitch-sections'
@@ -17,6 +19,9 @@ function withImage(products: PublicProduct[]) {
   const pictured = products.filter((product) => product.image_url)
   return pictured.length ? pictured : products
 }
+
+/** Icons for siteContent.retail.packagingSteps, in the same order. */
+const PACKAGING_ICONS = [Gift, PenLine, Truck, MapPinned, PackageSearch]
 
 export async function PublicHome({
   searchParams,
@@ -53,6 +58,15 @@ export async function PublicHome({
       /festive|diwali|hamper/i.test(product.name),
   )
   const festive = withImage(festivePool).slice(0, 4)
+  const packagingShots = products
+    .filter(
+      (product) =>
+        product.image_url &&
+        !festive.some((item) => item.id === product.id) &&
+        /gift box|hamper|gift set|basket|crate|box/i.test(product.name) &&
+        !/badge|lanyard|holder/i.test(product.name),
+    )
+    .slice(0, 2)
 
   return (
     <div className="bg-[#FCF9F2] text-[#1C1C18]">
@@ -74,8 +88,8 @@ export async function PublicHome({
         tone="retail"
       />
 
-      {/* 4. Brand Alliances */}
-      <BrandLogoRow brands={brands} eyebrow="Partner Alliances" title="Authorised Brand Alliances" tone="retail" />
+      {/* 4. Brand partners */}
+      <BrandLogoRow brands={brands} eyebrow="Brands we work with" title="Brand partners" tone="retail" />
 
       {/* 5. Merchandise Under ₹999 */}
       <ProductSection
@@ -105,37 +119,49 @@ export async function PublicHome({
       {/* 7. Unboxing Experience Strip */}
       <section className="border-b border-[#CCC5BD] bg-[#F6F3EC] py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 border-b border-[#CCC5BD] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-            <div>
-              <span className="font-sans text-xs uppercase tracking-wider font-semibold text-[#9E4300] block mb-1">Packaging &amp; delivery</span>
-              <h2 className="font-serif sv2-headline-md font-normal text-[#1C1C18]">
-                Every Gift, an Unforgettable <span className="italic text-[#9E4300]">Unboxing Experience</span>.
-              </h2>
-            </div>
-            <span className="font-sans text-xs uppercase tracking-wider font-semibold text-[#7C766F]">Packaging &amp; Delivery</span>
+          <div className="mb-8 border-b border-[#CCC5BD] pb-4">
+            <span aria-hidden="true" className="mb-3 block h-0.5 w-10 bg-[#9E4300]" />
+            <span className="font-sans text-xs uppercase tracking-wider font-semibold text-[#9E4300] block mb-1">Packaging &amp; delivery</span>
+            <h2 className="font-serif sv2-headline-md font-normal text-[#1C1C18]">
+              Every Gift, an Unforgettable <span className="italic text-[#9E4300]">Unboxing Experience</span>.
+            </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-2">
-              <span className="border border-[#9E4300] px-2 py-0.5 font-sans text-xs text-[#9E4300] font-semibold">01</span>
-              <h4 className="font-serif text-lg text-[#1C1C18] font-normal pt-2">Gift packaging</h4>
-              <p className="sv2-body-sm text-[#4A4640]">
-                {siteContent.retail.packagingNote}
-              </p>
+          {packagingShots.length === 2 ? (
+            <div className="mb-6 grid grid-cols-2 gap-px border border-[#CCC5BD] bg-[#CCC5BD]">
+              {packagingShots.map((product) => (
+                <div key={product.id} className="relative aspect-[16/9] overflow-hidden bg-[#FCF9F2]">
+                  <ProductImage
+                    src={product.image_url}
+                    alt={product.name}
+                    fit="cover"
+                    className="absolute inset-0 h-full w-full bg-transparent"
+                  />
+                </div>
+              ))}
             </div>
-            <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-2">
-              <span className="border border-[#9E4300] px-2 py-0.5 font-sans text-xs text-[#9E4300] font-semibold">02</span>
-              <h4 className="font-serif text-lg text-[#1C1C18] font-normal pt-2">Direct-to-recipient dispatch</h4>
-              <p className="sv2-body-sm text-[#4A4640]">
-                {siteContent.retail.directDispatchNote}
-              </p>
-            </div>
-            <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-2">
-              <span className="border border-[#9E4300] px-2 py-0.5 font-sans text-xs text-[#9E4300] font-semibold">03</span>
-              <h4 className="font-serif text-lg text-[#1C1C18] font-normal pt-2">Delivery</h4>
-              <p className="sv2-body-sm text-[#4A4640]">
-                {siteContent.retail.dispatchCities}
-              </p>
-            </div>
+          ) : null}
+          <div className="grid grid-cols-1 gap-px border border-[#CCC5BD] bg-[#CCC5BD] sm:grid-cols-2 lg:grid-cols-5">
+            {siteContent.retail.packagingSteps.map((step, index) => {
+              const Icon = PACKAGING_ICONS[index]
+              const lead = index === 0
+              return (
+                <div
+                  key={step.title}
+                  className={`flex flex-col gap-3 p-6 ${lead ? 'bg-[#1C1B1A] text-[#FCF9F2]' : 'bg-[#FCF9F2] text-[#1C1C18]'}`}
+                >
+                  <Icon
+                    size={22}
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                    className={lead ? 'text-[#FFB690]' : 'text-[#9E4300]'}
+                  />
+                  <h3 className={`font-serif text-lg font-normal leading-snug ${lead ? 'text-[#FCF9F2]' : 'text-[#1C1C18]'}`}>
+                    {step.title}
+                  </h3>
+                  <p className={`sv2-body-sm ${lead ? 'text-[#CCC5BD]' : 'text-[#4A4640]'}`}>{step.description}</p>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -147,7 +173,7 @@ export async function PublicHome({
         brands={brands}
         filters={filters}
         basePath={basePath}
-        heading="Live Procurement Catalogue"
+        heading="Gift catalogue"
         intro="Filter the live catalogue by category, brand, price and occasion."
         priceOf={storePrice}
         limit={8}

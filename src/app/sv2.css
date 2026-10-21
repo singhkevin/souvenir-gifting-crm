@@ -184,21 +184,41 @@
   }
 }
 
-/* ── Scoped StorefrontCatalog integration ── */
-.sv2 #catalog {
-  background-color: transparent;
-  border-top: none;
+/* ── Festive band atmosphere (dark product section) ── */
+.sv2 .sv2-festive-glow {
+  background:
+    radial-gradient(55% 48% at 12% 0%, rgba(158, 67, 0, 0.30), transparent 70%),
+    radial-gradient(45% 45% at 88% 100%, rgba(255, 182, 144, 0.14), transparent 70%);
 }
 
-.sv2 #catalog > div {
-  padding-left: 0;
-  padding-right: 0;
-  padding-top: 0;
-  max-width: 100%;
+.sv2 .sv2-festive-motif {
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23FFB690' stroke-width='1'%3E%3Ccircle cx='60' cy='60' r='26'/%3E%3Ccircle cx='60' cy='60' r='13'/%3E%3Cpath d='M60 18 L72 34 L60 50 L48 34 Z'/%3E%3Cpath d='M60 70 L72 86 L60 102 L48 86 Z'/%3E%3Cpath d='M18 60 L34 72 L50 60 L34 48 Z'/%3E%3Cpath d='M70 60 L86 72 L102 60 L86 48 Z'/%3E%3Cpath d='M0 0 L12 12 M120 0 L108 12 M0 120 L12 108 M120 120 L108 108'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 120px 120px;
 }
 
-.sv2 #catalog > div > .mb-5 > div:first-child {
-  display: none;
+.sv2 .sv2-twinkle {
+  animation: sv2-twinkle 3.4s ease-in-out infinite;
+}
+
+.sv2 .sv2-twinkle-delay-1 {
+  animation-delay: 1.1s;
+}
+
+.sv2 .sv2-twinkle-delay-2 {
+  animation-delay: 2.2s;
+}
+
+@keyframes sv2-twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv2 .sv2-twinkle {
+    animation: none;
+    opacity: 0.4;
+  }
 }
 
 /* ── Scrollbar utility for horizontal rails ── */

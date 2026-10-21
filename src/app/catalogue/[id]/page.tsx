@@ -157,11 +157,6 @@ export default async function PublicProductPage({ params }: Props) {
               <p className="sv2-mono-sm text-[11px] text-[#4A4640]">
                 {purchaseCaption(product.purchase)}
               </p>
-              {product.purchase.rfq ? (
-                <p className="sv2-mono-sm text-[11px] text-[#7C766F]">
-                  Quotation minimum: {product.moq || 1} units
-                </p>
-              ) : null}
             </div>
 
             {/* Description */}

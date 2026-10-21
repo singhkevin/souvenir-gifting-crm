@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ProductImage } from '@/components/ui/product-image'
 import { StitchProductCard } from '@/components/site/stitch-product-card'
+import { siteContent } from '@/config/siteContent'
 import { brandPath } from '@/lib/catalogue/store-nav'
 import { collectionBySlug } from '@/lib/catalogue/collections'
 import { formatCurrency } from '@/lib/utils'
@@ -131,8 +132,138 @@ function lowestPrice(items: PublicProduct[], priceOf: (product: PublicProduct) =
   return Math.min(...prices)
 }
 
-function sampleFor(items: PublicProduct[]) {
-  return items.find((product) => product.image_url) || items[0] || null
+/** Keyword hints used to pick a representative photo for each collection tile. */
+const COLLECTION_KEYWORDS: Record<string, RegExp> = {
+  'festival-gifting': /hamper|gift box|festive|sweets|diya/i,
+  'welcome-kits': /kit|welcome|bottle|notebook/i,
+  'client-appreciation': /premium|leather|crystal|watch|award/i,
+  'new-joiner-essentials': /notebook|desk|bottle|mug|kit/i,
+  'conference-and-events': /bag|lanyard|badge|bottle|pen|notebook/i,
+  'executive-edit': /award|plaque|trophy|crystal|watch|frame/i,
+}
+
+/** Picks up to `count` distinct pictured products, preferring names that fit the collection. */
+function pickTileProducts(
+  items: PublicProduct[],
+  slug: string,
+  usedIds: Set<string>,
+  usedImages: Set<string>,
+  count: number,
+) {
+  const pattern = COLLECTION_KEYWORDS[slug]
+  const ranked = items
+    .filter((product) => product.image_url && !usedIds.has(product.id) && !usedImages.has(product.image_url))
+    .map((product) => ({
+      product,
+      score: pattern && pattern.test(`${product.name} ${product.category_name || ''}`) ? 1 : 0,
+    }))
+    .sort((a, b) => b.score - a.score)
+
+  const picked: PublicProduct[] = []
+  for (const { product } of ranked) {
+    if (picked.length >= count) break
+    const image = product.image_url as string
+    if (usedImages.has(image)) continue
+    usedIds.add(product.id)
+    usedImages.add(image)
+    picked.push(product)
+  }
+  return picked
+}
+
+function OccasionCard({
+  occasion,
+  pictures,
+  from,
+}: {
+  occasion: Occasion
+  pictures: PublicProduct[]
+  from: number | null
+}) {
+  const [main, ...extras] = pictures
+
+  return (
+    <Link
+      href={occasion.href}
+      aria-label={occasion.title}
+      className="group flex w-[80%] shrink-0 snap-start flex-col border border-[#CCC5BD] bg-[#FCF9F2] transition-colors hover:border-[#9E4300] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#9E4300] sm:w-[55%] lg:w-auto lg:shrink"
+    >
+      <div className="flex aspect-[4/3] gap-px overflow-hidden bg-[#CCC5BD]">
+        <div className="relative min-w-0 flex-1 overflow-hidden bg-[#F6F3EC]">
+          {main ? (
+            <ProductImage
+              src={main.image_url}
+              alt=""
+              fit="cover"
+              className="absolute inset-0 h-full w-full bg-transparent"
+              imgClassName="transition-transform duration-500 group-hover:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            />
+          ) : null}
+        </div>
+        {extras.length ? (
+          <div className="flex w-[32%] shrink-0 flex-col gap-px">
+            {extras.map((item) => (
+              <div key={item.id} className="relative min-h-0 flex-1 overflow-hidden bg-[#F6F3EC]">
+                <ProductImage
+                  src={item.image_url}
+                  alt=""
+                  fit="cover"
+                  className="absolute inset-0 h-full w-full bg-transparent"
+                  imgClassName="transition-transform duration-500 group-hover:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                />
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <div className="flex flex-1 flex-col border-t border-[#CCC5BD] bg-[#FCF9F2] p-4 sm:p-5">
+        <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-[#9E4300]">
+          {occasion.kicker}
+        </span>
+        <h3 className="mt-1.5 font-serif text-[20px] font-normal leading-snug text-[#1C1C18] decoration-[#9E4300] underline-offset-4 group-hover:underline">
+          {occasion.title}
+        </h3>
+        <p className="mt-1.5 sv2-body-sm text-[#4A4640]">{occasion.line}</p>
+        {from != null ? (
+          <p className="mt-auto pt-3 sv2-mono-sm text-[12px] font-bold text-[#1C1C18]">From {formatCurrency(from)}</p>
+        ) : null}
+      </div>
+    </Link>
+  )
+}
+
+function OccasionGrid({
+  occasions,
+  products,
+  priceOf,
+}: {
+  occasions: Occasion[]
+  products: PublicProduct[]
+  priceOf: (product: PublicProduct) => number | null
+}) {
+  const usedIds = new Set<string>()
+  const usedImages = new Set<string>()
+  const tiles = occasions.map((occasion) => {
+    const items = matches(products, occasion.slug)
+    return {
+      occasion,
+      from: lowestPrice(items, priceOf),
+      pictures: pickTileProducts(items, occasion.slug, usedIds, usedImages, occasion.size === 'large' ? 3 : 2),
+    }
+  })
+
+  return (
+    <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 no-scrollbar sm:-mx-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0 lg:pb-0">
+      {tiles.map((tile) => (
+        <OccasionCard
+          key={tile.occasion.slug + tile.occasion.title}
+          occasion={tile.occasion}
+          pictures={tile.pictures}
+          from={tile.from}
+        />
+      ))}
+    </div>
+  )
 }
 
 export function SectionHeading({
@@ -142,6 +273,7 @@ export function SectionHeading({
   action,
   tone = 'default',
   dark = false,
+  accent = false,
 }: {
   eyebrow?: string
   title: string
@@ -149,10 +281,13 @@ export function SectionHeading({
   action?: string
   tone?: 'default' | 'retail'
   dark?: boolean
+  /** Short saffron rule above the eyebrow. */
+  accent?: boolean
 }) {
   return (
     <div className={`mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b pb-4 ${dark ? 'border-[#7C766F]' : 'border-[#CCC5BD]'}`}>
       <div>
+        {accent ? <span aria-hidden="true" className="mb-3 block h-0.5 w-10 bg-[#9E4300]" /> : null}
         {eyebrow ? (
           <p className={`font-sans text-xs uppercase tracking-wider font-semibold mb-1 ${dark ? 'text-[#FFB690]' : 'text-[#9E4300]'}`}>
             {eyebrow}
@@ -186,57 +321,13 @@ export function RetailOccasionBento({
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
       <SectionHeading
-        eyebrow="Gift Collections"
-        title="Procure by Occasion & Milestone"
+        eyebrow="Collections"
+        title="Gifts by occasion"
         actionHref="/collections"
         action="View All Collections"
         tone="retail"
       />
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
-        {RETAIL_OCCASIONS.map((occasion) => {
-          const items = matches(products, occasion.slug)
-          const sample = sampleFor(items)
-          const from = lowestPrice(items, priceOf)
-          const tall = occasion.size === 'large'
-          return (
-            <Link
-              key={occasion.slug + occasion.title}
-              href={occasion.href}
-              className={`group relative overflow-hidden border border-[#CCC5BD] bg-[#1C1B1A] transition-colors hover:border-[#000000] ${
-                tall ? 'h-56 sm:h-64' : 'h-44 sm:h-52'
-              } lg:col-span-2`}
-            >
-              {sample ? (
-                <ProductImage
-                  src={sample.image_url}
-                  alt=""
-                  fit="cover"
-                  className="absolute inset-0 h-full w-full opacity-65 sv2-img-zoom"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-[#1C1B1A]" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1A]/95 via-[#1C1B1A]/50 to-transparent" />
-              <div className="relative flex h-full flex-col justify-end p-5 text-[#FCF9F2]">
-                {occasion.kicker ? (
-                  <span className="mb-1.5 w-max border border-[#7C766F] bg-[#1C1B1A]/85 px-2 py-0.5 sv2-label text-[10px] text-[#FFB690]">
-                    {occasion.kicker}
-                  </span>
-                ) : null}
-                <h3 className={`font-serif text-[#FCF9F2] font-normal ${tall ? 'text-[22px] leading-snug' : 'text-lg leading-snug'}`}>
-                  {occasion.title}
-                </h3>
-                <p className="mt-1 line-clamp-2 sv2-body-sm text-xs text-[#CCC5BD]">{occasion.line}</p>
-                {from != null ? (
-                  <p className="mt-2.5 sv2-mono-sm text-[12px] font-bold text-[#FFB690]">
-                    From {formatCurrency(from)}
-                  </p>
-                ) : null}
-              </div>
-            </Link>
-          )
-        })}
-      </div>
+      <OccasionGrid occasions={RETAIL_OCCASIONS} products={products} priceOf={priceOf} />
     </section>
   )
 }
@@ -248,32 +339,6 @@ export function BusinessOccasionBento({
   products: PublicProduct[]
   priceOf: (product: PublicProduct) => number | null
 }) {
-  const card = (occasion: Occasion, className: string) => {
-    const items = matches(products, occasion.slug)
-    const from = lowestPrice(items, priceOf)
-    return (
-      <Link
-        key={occasion.title}
-        href={occasion.href}
-        className={`flex flex-col justify-between border border-[#CCC5BD] bg-[#FCF9F2] p-5 hover:border-[#000000] transition-colors ${className}`}
-      >
-        <div>
-          <span className="sv2-label text-[10px] text-[#9E4300]">{occasion.kicker}</span>
-          <h3 className="mt-2 font-serif text-xl text-[#1C1C18] font-normal">{occasion.title}</h3>
-          <p className="mt-2 sv2-body-sm text-[#4A4640]">{occasion.line}</p>
-        </div>
-        <div className="mt-4 flex items-center justify-between border-t border-[#CCC5BD] pt-3 sv2-mono-sm text-xs">
-          <span className="font-bold text-[#1C1C18]">
-            {from != null ? `From ${formatCurrency(from)}` : 'Price on quote'}
-          </span>
-          <span className="font-semibold text-[#9E4300]">View {items.length || 'collection'} &rarr;</span>
-        </div>
-      </Link>
-    )
-  }
-
-  const [festive, welcome, onboarding, client, conference, anniversary] = BUSINESS_OCCASIONS
-
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
       <SectionHeading
@@ -282,30 +347,7 @@ export function BusinessOccasionBento({
         actionHref="#catalog"
         action="Explore All Collections"
       />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-        <Link
-          href={festive.href}
-          className="flex flex-col justify-between border border-[#7C766F] bg-[#1C1B1A] p-6 text-[#FCF9F2] md:col-span-2 lg:col-span-2 hover:border-[#CCC5BD] transition-colors"
-        >
-          <div>
-            <span className="inline-block border border-[#7C766F] bg-[#31312C] px-2 py-1 sv2-label text-[10px] text-[#FFB690]">
-              {festive.kicker}
-            </span>
-            <h3 className="mt-3 font-serif text-[22px] leading-7 text-[#FCF9F2] font-normal">{festive.title}</h3>
-            <p className="mt-2 sv2-body-sm text-[#CCC5BD]">{festive.line}</p>
-          </div>
-          <p className="mt-6 sv2-mono-sm text-sm font-semibold text-[#FFB690]">
-            {lowestPrice(matches(products, festive.slug), priceOf) != null
-              ? `From ${formatCurrency(lowestPrice(matches(products, festive.slug), priceOf) as number)}`
-              : 'Browse festive gifts'} &rarr;
-          </p>
-        </Link>
-        {card(welcome, 'lg:col-span-2')}
-        {card(onboarding, 'lg:col-span-1')}
-        {card(client, 'bg-[#F6F3EC] lg:col-span-1')}
-        {card(conference, 'md:col-span-1 lg:col-span-3')}
-        {card(anniversary, 'md:col-span-1 lg:col-span-3')}
-      </div>
+      <OccasionGrid occasions={BUSINESS_OCCASIONS} products={products} priceOf={priceOf} />
     </section>
   )
 }
@@ -321,25 +363,45 @@ export function BrandLogoRow({
   eyebrow?: string
   tone?: 'default' | 'retail'
 }) {
-  if (!brands.length) return null
+  const hidden = siteContent.hiddenBrandNames.map((name) => name.toLowerCase())
+  const visible = brands.filter((brand) => !hidden.includes(brand.name.trim().toLowerCase()))
+  if (!visible.length) return null
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-      <SectionHeading eyebrow={eyebrow} title={title} actionHref="/catalogue" action="View All Brands" tone={tone} />
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-t border-l border-[#CCC5BD]">
-        {brands.map((brand) => (
-          <Link
-            key={brand.id}
-            href={brandPath(brand, brands)}
-            className="flex h-20 items-center justify-center border-r border-b border-[#CCC5BD] bg-[#FCF9F2] px-4 text-center hover:bg-[#F6F3EC] transition-colors"
-          >
-            {brand.logo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={brand.logo_url} alt={brand.name} className="max-h-9 w-auto object-contain" />
-            ) : (
-              <span className="font-serif text-lg leading-none text-[#1C1C18]">{brand.name}</span>
-            )}
-          </Link>
-        ))}
+    <section className="border-y border-[#1C1B1A] bg-[#F6F3EC]">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <SectionHeading
+          eyebrow={eyebrow}
+          title={title}
+          actionHref="/catalogue"
+          action="View All Brands"
+          tone={tone}
+          accent
+        />
+        <p className="-mt-2 mb-8 max-w-xl sv2-body-sm text-[#4A4640]">
+          Branded products available through our catalogue.
+        </p>
+        <div className="flex flex-wrap justify-center border-t border-[#CCC5BD]">
+          {visible.map((brand) => (
+            <Link
+              key={brand.id}
+              href={brandPath(brand, brands)}
+              className="group flex w-1/2 items-center justify-center border-b border-[#CCC5BD] px-5 py-8 text-center transition-colors hover:bg-[#FCF9F2] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#9E4300] sm:w-1/3 lg:w-1/4"
+            >
+              {brand.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={brand.logo_url}
+                  alt={brand.name}
+                  className="h-10 w-auto max-w-full object-contain grayscale transition-[filter] duration-300 group-hover:grayscale-0 motion-reduce:transition-none"
+                />
+              ) : (
+                <span className="font-serif text-[22px] leading-none text-[#1C1C18] decoration-[#9E4300] underline-offset-4 group-hover:underline lg:text-[26px]">
+                  {brand.name}
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -375,11 +437,20 @@ export function ProductSection({
     <section
       className={
         dark
-          ? 'bg-[#1C1B1A] py-12 sm:py-16 text-[#FCF9F2] border-y border-[#CCC5BD]'
+          ? 'relative isolate overflow-hidden bg-[#1C1B1A] py-12 sm:py-16 text-[#FCF9F2] border-y border-[#CCC5BD]'
           : 'mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8'
       }
     >
-      <div className={dark ? 'mx-auto max-w-7xl px-4 sm:px-6 lg:px-8' : undefined}>
+      {dark ? (
+        <>
+          <span aria-hidden="true" className="pointer-events-none absolute inset-0 sv2-festive-glow" />
+          <span aria-hidden="true" className="pointer-events-none absolute inset-0 sv2-festive-motif" />
+          <span aria-hidden="true" className="pointer-events-none absolute left-[12%] top-10 h-1 w-1 bg-[#FFB690] sv2-twinkle" />
+          <span aria-hidden="true" className="pointer-events-none absolute right-[18%] top-24 h-1 w-1 bg-[#FFB690] sv2-twinkle sv2-twinkle-delay-1" />
+          <span aria-hidden="true" className="pointer-events-none absolute left-[42%] bottom-12 h-1 w-1 bg-[#FFB690] sv2-twinkle sv2-twinkle-delay-2" />
+        </>
+      ) : null}
+      <div className={dark ? 'relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8' : undefined}>
         <SectionHeading
           eyebrow={eyebrow}
           title={title}
@@ -387,8 +458,9 @@ export function ProductSection({
           action={action}
           tone={tone}
           dark={dark}
+          accent={dark}
         />
-        <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${columns} gap-4 sm:gap-5`}>
+        <div className={`grid grid-cols-2 md:grid-cols-3 ${columns} gap-4 sm:gap-5`}>
           {products.map((product) => (
             <StitchProductCard
               key={product.id}

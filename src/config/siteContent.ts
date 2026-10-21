@@ -45,6 +45,9 @@ export const siteContent = {
     '[Client logo 6]',
   ],
 
+  // TODO(client): confirm which demo brands to hide before launch
+  hiddenBrandNames: ['QA Brand', 'Test', 'apple'],
+
   // TODO(client): Replace with real partner brand names
   partnerBrands: [
     '[Partner brand 1]',
@@ -119,6 +122,34 @@ export const siteContent = {
     // TODO(client): Confirm accepted payment methods (no payment gateway is wired in code)
     paymentMethods: '[Payment methods]',
     directDispatchNote: '[Direct-to-recipient dispatch details]',
+
+    packagingSteps: [
+      {
+        // TODO(client): confirm offered
+        title: 'Gift wrapping & branded packaging',
+        description: 'Wrap each gift and add your branding to the box.',
+      },
+      {
+        // TODO(client): confirm offered
+        title: 'Personal notes & greeting cards',
+        description: 'Add a printed note or greeting card to each gift.',
+      },
+      {
+        // TODO(client): confirm offered
+        title: 'Direct-to-recipient shipping',
+        description: 'Ship each gift straight to the person receiving it.',
+      },
+      {
+        // TODO(client): confirm offered
+        title: 'Bulk & multi-location dispatch',
+        description: 'Send one order to many addresses at once.',
+      },
+      {
+        // TODO(client): confirm offered
+        title: 'Recipient tracking',
+        description: 'Share tracking details with each recipient.',
+      },
+    ],
   },
 } as const
 

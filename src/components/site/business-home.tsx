@@ -212,7 +212,7 @@ export async function BusinessHome({
   return (
     <div className="w-full max-w-full min-w-0 pb-16 md:pb-0">
       {/* 1. Utility Bar */}
-      <UtilityBar phone={phone} />
+      <UtilityBar phone={phone} showMinimumOrder />
 
       {/* Primary Header */}
       <SV2Header categories={navCategories} />
@@ -323,7 +323,7 @@ export async function BusinessHome({
           <div className="max-w-[1440px] mx-auto w-full max-w-full min-w-0">
             <div className="w-full max-w-full min-w-0 overflow-x-auto flex items-center gap-3 sm:gap-4 text-[#1C1C18] py-0.5 no-scrollbar">
               <span className="sv2-label text-[#7C766F] uppercase tracking-wider whitespace-nowrap shrink-0">
-                QUICK DISCOVERY //
+                QUICK DISCOVERY
               </span>
               <div className="flex items-center gap-3 min-w-max">
                 <Link
@@ -446,12 +446,13 @@ export async function BusinessHome({
             brands={brands}
             filters={filters}
             basePath="/business"
-            heading="Corporate catalogue"
-            intro="Filter by category, brand, price and occasion. Prices shown here are indicative."
+            heading="Corporate gift catalogue"
             priceOf={businessPrice}
             showSample={false}
             captionFor={caption}
             limit={8}
+            channel="business"
+            embedded
           />
         </FadeIn>
 
@@ -502,9 +503,12 @@ export async function BusinessHome({
             </div>
 
             {/* Brand Partners */}
-            <div>
-              <Eyebrow className="mb-3">Brand partners</Eyebrow>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="border-y border-[#1C1B1A] bg-[#F6F3EC] p-6 sm:p-8">
+              <span aria-hidden="true" className="mb-3 block h-0.5 w-10 bg-[#9E4300]" />
+              <Eyebrow className="mb-1">Brands we work with</Eyebrow>
+              <h3 className="mb-2 font-serif text-2xl font-normal text-[#1C1C18]">Brand partners</h3>
+              <p className="mb-6 sv2-body-sm text-[#4A4640]">Branded products available through our catalogue.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {siteContent.partnerBrands.map((brand, idx) => (
                   <PlaceholderTile key={idx} text={brand} className="h-20" />
                 ))}

@@ -208,7 +208,8 @@ export function HeroStage({
             <Link
               key={`slot-${index}`}
               href={`/catalogue/${product.id}`}
-              className="overflow-hidden bg-white"
+              aria-label={`View ${product.name}`}
+              className="group overflow-hidden border border-transparent bg-white transition-colors hover:border-[#9E4300] focus-visible:border-[#9E4300] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#9E4300]"
             >
               <div className={`transition-opacity duration-700 ease-in-out ${contentClass}`}>
                 <div className="aspect-square catalogue-studio-field">
@@ -216,15 +217,13 @@ export function HeroStage({
                     src={product.image_url}
                     alt={product.name}
                     size="md"
-                    fit="contain"
-                    fadeEdges
+                    fit="cover"
                     className="h-full w-full bg-transparent"
-                    imgClassName="catalogue-product-img scale-[1.04]"
+                    imgClassName="scale-[1.08] transition-transform duration-500 group-hover:scale-[1.14] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.08]"
                   />
                 </div>
-                <div className="border-t border-[#E8E4DE] bg-white px-3 py-2.5 text-[#1B2430]">
-                  <p className="truncate text-center text-[12px] leading-snug">{product.name}</p>
-                  <p className="mt-0.5 text-center text-[11px] font-semibold text-[#806A50]">View gift</p>
+                <div className="border-t border-[#E8E4DE] bg-white px-2.5 py-2 text-[#1B2430]">
+                  <p className="truncate text-[12px] leading-snug">{product.name}</p>
                 </div>
               </div>
             </Link>
