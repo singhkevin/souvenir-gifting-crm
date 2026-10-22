@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BrandName } from '@/components/brand/brand-name'
 import { SiteShell } from '@/components/site/site-shell'
-import { CATALOGUE_COLLECTIONS, CATALOGUE_OCCASIONS } from '@/lib/catalogue/collections'
+import { CATALOGUE_OCCASIONS } from '@/lib/catalogue/collections'
+import { listedStoreCollections } from '@/lib/homepage/collections-server'
 import { appName } from '@/lib/brand'
 
 const ARROW = '\u2192'
@@ -12,7 +13,10 @@ export const metadata: Metadata = {
   description: `Editorial ${appName()} collections and corporate occasions, grouped from the existing catalogue.`,
 }
 
-export default function CollectionsPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function CollectionsPage() {
+  const collections = await listedStoreCollections()
   return (
     <SiteShell>
       <div className="border-b border-[#3A3835] bg-[#1C1B1A] text-[#FCF9F2]">
@@ -42,7 +46,7 @@ export default function CollectionsPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          {CATALOGUE_COLLECTIONS.map((collection) => (
+          {collections.map((collection) => (
             <Link
               key={collection.slug}
               href={`/collections/${collection.slug}`}

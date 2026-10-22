@@ -1,5 +1,7 @@
 import { slugify } from '@/lib/utils'
 import type { PublicProduct } from '@/lib/catalogue/products'
+import { DEFAULT_COLLECTIONS } from '@/lib/homepage/defaults'
+import { matchRule } from '@/lib/homepage/rules'
 
 export type CatalogueCollection = {
   slug: string
@@ -9,88 +11,21 @@ export type CatalogueCollection = {
   match: (product: PublicProduct) => boolean
 }
 
-/** Editorial collections — filters over existing catalogue data, not a second product system. */
-export const CATALOGUE_COLLECTIONS: CatalogueCollection[] = [
-  {
-    slug: 'executive-edit',
-    title: 'The Executive Edit',
-    kicker: 'Collection',
-    description: 'Premium gifts for leadership and VIP clients.',
-    match: (product) =>
-      ['Apparel', 'Bags & Travel', 'Awards & Recognition', 'Watches'].includes(product.category_name || '') ||
-      (product.price || 0) >= 2500,
-  },
-  {
-    slug: 'new-joiner-essentials',
-    title: 'New Joiner Essentials',
-    kicker: 'Collection',
-    description: 'Thoughtful employee onboarding from the live catalogue.',
-    match: (product) =>
-      product.category_name === 'Welcome Kits' ||
-      /welcome|onboard|lanyard|kit/i.test(product.name) ||
-      /welcome|onboard/i.test(product.description || ''),
-  },
-  {
-    slug: 'client-appreciation',
-    title: 'Client Appreciation',
-    kicker: 'Collection',
-    description: 'Gifts that strengthen business relationships.',
-    match: (product) =>
-      ['Hampers & Gift Sets', 'Awards & Recognition', 'Home & Lifestyle'].includes(product.category_name || ''),
-  },
-  {
-    slug: 'festival-gifting',
-    title: 'Festive Corporate',
-    kicker: 'Collection',
-    description: 'Premium seasonal gifting for celebrations and festivals.',
-    match: (product) =>
-      product.category_name === 'Hampers & Gift Sets' || /festive|hamper|celebration/i.test(product.name),
-  },
-  {
-    slug: 'conference-and-events',
-    title: 'Conference & Events',
-    kicker: 'Collection',
-    description: 'Drinkware, desk pieces and tech for events and offsites.',
-    match: (product) =>
-      ['Drinkware', 'Desk & Stationery', 'Tech & Electronics'].includes(product.category_name || ''),
-  },
-  {
-    slug: 'welcome-kits',
-    title: 'Welcome Kits',
-    kicker: 'Collection',
-    description: 'The Welcome Kits category, presented as a programme.',
-    match: (product) => product.category_name === 'Welcome Kits',
-  },
-  {
-    slug: 'sustainable-gifting',
-    title: 'The Sustainable Edit',
-    kicker: 'Collection',
-    description: 'Thoughtful eco-conscious gifting from the catalogue.',
-    match: (product) =>
-      product.category_name === 'Eco-Friendly Gifts' || /recycled|bamboo|eco|sustainable/i.test(product.name),
-  },
-  {
-    slug: 'premium-corporate-gifts',
-    title: 'Premium Corporate Gifts',
-    kicker: 'Collection',
-    description: 'Higher-value catalogue pieces, selected from existing prices.',
-    match: (product) => (product.price || 0) >= 2000,
-  },
-  {
-    slug: 'desk-essentials',
-    title: 'Desk Essentials',
-    kicker: 'Collection',
-    description: 'Stationery and desk accessories for everyday branded presence.',
-    match: (product) => product.category_name === 'Desk & Stationery',
-  },
-  {
-    slug: 'premium-tech',
-    title: 'Premium Tech',
-    kicker: 'Collection',
-    description: 'Smart products for modern teams.',
-    match: (product) => product.category_name === 'Tech & Electronics',
-  },
-]
+/**
+ * Editorial collections: rule-based views over the existing catalogue, not a second
+ * product system. These are the built-in definitions (DEFAULT_COLLECTIONS); once the
+ * collections table exists the CRM edits them there (src/lib/homepage/collections-server.ts).
+ * Homepage-only groups (listed: false) are left out of this list.
+ */
+export const CATALOGUE_COLLECTIONS: CatalogueCollection[] = DEFAULT_COLLECTIONS.filter((collection) => collection.listed).map(
+  (collection) => ({
+    slug: collection.slug,
+    title: collection.title,
+    kicker: collection.kicker,
+    description: collection.description,
+    match: (product: PublicProduct) => matchRule(product, collection.rule),
+  }),
+)
 
 /** Occasion discovery maps to existing categories/collections — no fabricated occasion field. */
 export const CATALOGUE_OCCASIONS = [

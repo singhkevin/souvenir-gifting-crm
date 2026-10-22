@@ -6,6 +6,8 @@ import { brandPath } from '@/lib/catalogue/store-nav'
 import { collectionBySlug } from '@/lib/catalogue/collections'
 import { formatCurrency } from '@/lib/utils'
 import type { PublicProduct } from '@/lib/catalogue/products'
+import { headingParts } from '@/lib/homepage/heading'
+import type { OccasionCard as OccasionCardData, OccasionGridContent } from '@/lib/homepage/types'
 
 type Brand = { id: string; name: string; logo_url: string | null }
 
@@ -236,15 +238,23 @@ function OccasionGrid({
   occasions,
   products,
   priceOf,
+  resolved,
 }: {
   occasions: Occasion[]
   products: PublicProduct[]
   priceOf: (product: PublicProduct) => number | null
+  /** Cards with their collection products already resolved (editable homepage). */
+  resolved?: { card: OccasionCardData; items: PublicProduct[] }[]
 }) {
   const usedIds = new Set<string>()
   const usedImages = new Set<string>()
-  const tiles = occasions.map((occasion) => {
-    const items = matches(products, occasion.slug)
+  const sources = resolved
+    ? resolved.map(({ card, items }) => ({
+        occasion: { ...card, slug: card.collectionSlug } as Occasion,
+        items,
+      }))
+    : occasions.map((occasion) => ({ occasion, items: matches(products, occasion.slug) }))
+  const tiles = sources.map(({ occasion, items }) => {
     return {
       occasion,
       from: lowestPrice(items, priceOf),
@@ -294,7 +304,15 @@ export function SectionHeading({
           </p>
         ) : null}
         <h2 className={`font-serif text-[1.75rem] leading-tight tracking-tight sm:text-3xl lg:text-4xl font-normal ${dark ? 'text-[#FCF9F2]' : 'text-[#1C1C18]'}`}>
-          {title}
+          {headingParts(title).map((part, index) =>
+            part.accent ? (
+              <span key={index} className={`italic ${dark ? 'text-[#FFB690]' : 'text-[#9E4300]'}`}>
+                {part.text}
+              </span>
+            ) : (
+              part.text
+            ),
+          )}
         </h2>
       </div>
       {actionHref && action ? (
@@ -314,20 +332,26 @@ export function SectionHeading({
 export function RetailOccasionBento({
   products,
   priceOf,
+  content,
+  cards,
 }: {
   products: PublicProduct[]
   priceOf: (product: PublicProduct) => number | null
+  content?: OccasionGridContent
+  cards?: { card: OccasionCardData; items: PublicProduct[] }[]
 }) {
+  if (cards && !cards.length) return null
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
       <SectionHeading
-        eyebrow="Collections"
-        title="Gifts by occasion"
-        actionHref="/collections"
-        action="View All Collections"
+        eyebrow={content ? content.eyebrow : 'Collections'}
+        title={content ? content.heading : 'Gifts by occasion'}
+        actionHref={content ? content.ctaHref : '/collections'}
+        action={content ? content.ctaLabel : 'View All Collections'}
         tone="retail"
       />
-      <OccasionGrid occasions={RETAIL_OCCASIONS} products={products} priceOf={priceOf} />
+      {content?.subtext ? <p className="-mt-2 mb-8 max-w-xl sv2-body-sm text-[#4A4640]">{content.subtext}</p> : null}
+      <OccasionGrid occasions={RETAIL_OCCASIONS} products={products} priceOf={priceOf} resolved={cards} />
     </section>
   )
 }
@@ -357,11 +381,17 @@ export function BrandLogoRow({
   title,
   eyebrow,
   tone = 'default',
+  subtext = 'Branded products available through our catalogue.',
+  actionHref = '/catalogue',
+  action = 'View All Brands',
 }: {
   brands: Brand[]
   title: string
   eyebrow?: string
   tone?: 'default' | 'retail'
+  subtext?: string
+  actionHref?: string
+  action?: string
 }) {
   const hidden = siteContent.hiddenBrandNames.map((name) => name.toLowerCase())
   const visible = brands.filter((brand) => !hidden.includes(brand.name.trim().toLowerCase()))
@@ -372,14 +402,12 @@ export function BrandLogoRow({
         <SectionHeading
           eyebrow={eyebrow}
           title={title}
-          actionHref="/catalogue"
-          action="View All Brands"
+          actionHref={actionHref}
+          action={action}
           tone={tone}
           accent
         />
-        <p className="-mt-2 mb-8 max-w-xl sv2-body-sm text-[#4A4640]">
-          Branded products available through our catalogue.
-        </p>
+        {subtext ? <p className="-mt-2 mb-8 max-w-xl sv2-body-sm text-[#4A4640]">{subtext}</p> : <div className="mb-8" />}
         <div className="flex flex-wrap justify-center border-t border-[#CCC5BD]">
           {visible.map((brand) => (
             <Link

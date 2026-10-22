@@ -9,6 +9,7 @@ import { SiteShell } from "@/components/site/site-shell"
 import { PublicHome } from "@/components/site/public-home"
 import { RetailHomeSkeleton } from "@/components/site/retail-hero"
 import { PortalFinder } from "@/components/site/portal-finder"
+import { wantsPreview } from "@/lib/homepage/view"
 import { appName } from "@/lib/brand"
 import { isGiftEmployeeRole } from "@/lib/roles"
 import { domainSplitEnabled } from "@/lib/domain-flag"
@@ -84,7 +85,8 @@ export default async function RootPage({
       redirect("/portal/gifts")
     }
 
-    redirect("/crm/dashboard")
+    // Admins previewing the draft homepage (?preview=1) stay on the store page.
+    if (!(profile?.role === "admin" && wantsPreview(params))) redirect("/crm/dashboard")
   }
 
   return (

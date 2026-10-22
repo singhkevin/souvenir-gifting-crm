@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
 import { CatalogueBrowser } from '@/components/site/catalogue-browser'
-import { collectionBySlug, productsInCollection } from '@/lib/catalogue/collections'
+import { storeCollectionBySlug, storeCollectionProducts } from '@/lib/homepage/collections-server'
 import { getPublicCatalogueProducts } from '@/lib/catalogue/products'
 import { appName } from '@/lib/brand'
 
@@ -11,7 +11,7 @@ type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const collection = collectionBySlug(slug)
+  const collection = await storeCollectionBySlug(slug)
   return {
     title: collection?.title || 'Collection',
     description: collection?.description || `A ${appName()} catalogue collection.`,
@@ -20,9 +20,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CollectionDetailPage({ params }: Props) {
   const { slug } = await params
-  const collection = collectionBySlug(slug)
+  const collection = await storeCollectionBySlug(slug)
   if (!collection) notFound()
-  const products = productsInCollection(await getPublicCatalogueProducts(), slug)
+  const products = storeCollectionProducts(await getPublicCatalogueProducts(), collection)
 
   return (
     <SiteShell>

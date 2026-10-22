@@ -3,7 +3,11 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { siteContent } from '@/config/siteContent'
+import { DEFAULT_SECTIONS } from '@/lib/homepage/defaults'
+import { headingParts } from '@/lib/homepage/heading'
+import type { HeroContent } from '@/lib/homepage/types'
+
+const DEFAULT_HERO = DEFAULT_SECTIONS.find((section) => section.key === 'hero')!.content as HeroContent
 
 export type RetailHeroProduct = {
   id: string
@@ -193,57 +197,64 @@ export function RetailHeroSlider({ slides }: { slides: RetailHeroProduct[][] }) 
   )
 }
 
-export function RetailHero({ slides }: { slides: RetailHeroProduct[][] }) {
+export function RetailHero({ slides, content = DEFAULT_HERO }: { slides: RetailHeroProduct[][]; content?: HeroContent }) {
   return (
     <section className="bg-[#1C1B1A] text-[#FCF9F2] border-b border-[#CCC5BD]">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
         <div className="grid items-stretch gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-12">
           <div className="flex flex-col justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 border border-[#7C766F] px-3 py-1 font-sans text-xs uppercase tracking-wider text-[#FFB690] font-semibold mb-5">
-                <span>The Souvenir Collection</span>
-              </div>
+              {content.eyebrow ? (
+                <div className="inline-flex items-center gap-2 border border-[#7C766F] px-3 py-1 font-sans text-xs uppercase tracking-wider text-[#FFB690] font-semibold mb-5">
+                  <span>{content.eyebrow}</span>
+                </div>
+              ) : null}
               <h1 className="font-serif sv2-display text-4xl sm:text-5xl lg:text-[3.35rem] leading-[1.05] tracking-tight text-[#FCF9F2]">
-                Thoughtful gifting, <span className="italic font-normal text-[#FFB690]">handcrafted</span> to be cherished.
+                {headingParts(content.heading).map((part, index) =>
+                  part.accent ? (
+                    <span key={index} className="italic font-normal text-[#FFB690]">
+                      {part.text}
+                    </span>
+                  ) : (
+                    part.text
+                  ),
+                )}
               </h1>
-              <p className="mt-4 max-w-xl sv2-body-lg text-[#CCC5BD]">
-                Thoughtfully assembled keepsakes, brassware, and gift hampers for personal celebrations, weddings, anniversaries, and homes.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3.5">
-                <Link
-                  href="/catalogue"
-                  className="inline-flex items-center bg-[#9E4300] hover:bg-[#FF8843] px-7 py-3.5 sv2-label text-white tracking-wider transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-white"
-                >
-                  Explore Catalogue
-                </Link>
-                <Link
-                  href="/request-quote"
-                  className="inline-flex items-center border border-[#FCF9F2] px-7 py-3.5 sv2-label text-[#FCF9F2] tracking-wider hover:bg-[#FCF9F2] hover:text-[#000000] transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-white"
-                >
-                  Request a Quote
-                </Link>
-              </div>
+              {content.subtext ? <p className="mt-4 max-w-xl sv2-body-lg text-[#CCC5BD]">{content.subtext}</p> : null}
+              {(content.ctaLabel && content.ctaHref) || (content.cta2Label && content.cta2Href) ? (
+                <div className="mt-8 flex flex-wrap gap-3.5">
+                  {content.ctaLabel && content.ctaHref ? (
+                    <Link
+                      href={content.ctaHref}
+                      className="inline-flex items-center bg-[#9E4300] hover:bg-[#FF8843] px-7 py-3.5 sv2-label text-white tracking-wider transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-white"
+                    >
+                      {content.ctaLabel}
+                    </Link>
+                  ) : null}
+                  {content.cta2Label && content.cta2Href ? (
+                    <Link
+                      href={content.cta2Href}
+                      className="inline-flex items-center border border-[#FCF9F2] px-7 py-3.5 sv2-label text-[#FCF9F2] tracking-wider hover:bg-[#FCF9F2] hover:text-[#000000] transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-white"
+                    >
+                      {content.cta2Label}
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
-            {/* 4-item stat strip with hairline dividers */}
-            <div className="mt-10 grid grid-cols-2 md:grid-cols-4 border-t border-[#7C766F] pt-4 gap-3 font-sans text-xs">
-              <div>
-                <span className="block text-[#FFB690] font-bold font-mono">{siteContent.stats.dispatch}</span>
-                <span className="text-[#CCC5BD] text-[10px] font-mono">{siteContent.retail.dispatchCities}</span>
+            {/* Stat strip with hairline dividers */}
+            {content.stats.length ? (
+              <div className="mt-10 grid grid-cols-2 md:grid-cols-4 border-t border-[#7C766F] pt-4 gap-3 font-sans text-xs">
+                {content.stats.map((stat, index) => (
+                  <div key={`${stat.title}-${index}`} className={index === 0 ? undefined : 'border-l border-[#7C766F] pl-3'}>
+                    {/* The first stat is a figure (dispatch time), so it keeps the mono face. */}
+                    <span className={`block text-[#FFB690] font-bold${index === 0 ? ' font-mono' : ''}`}>{stat.title}</span>
+                    <span className={`text-[#CCC5BD] text-[10px]${index === 0 ? ' font-mono' : ''}`}>{stat.text}</span>
+                  </div>
+                ))}
               </div>
-              <div className="border-l border-[#7C766F] pl-3">
-                <span className="block text-[#FFB690] font-bold">Gift packaging</span>
-                <span className="text-[#CCC5BD] text-[10px]">{siteContent.retail.packagingNote}</span>
-              </div>
-              <div className="border-l border-[#7C766F] pl-3">
-                <span className="block text-[#FFB690] font-bold">Payment</span>
-                <span className="text-[#CCC5BD] text-[10px]">{siteContent.retail.paymentMethods}</span>
-              </div>
-              <div className="border-l border-[#7C766F] pl-3">
-                <span className="block text-[#FFB690] font-bold">Direct gifting</span>
-                <span className="text-[#CCC5BD] text-[10px]">{siteContent.retail.directDispatchNote}</span>
-              </div>
-            </div>
+            ) : null}
           </div>
 
           {/* Featured gifts panel sits at 92% width (8% smaller) per design review. */}
