@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
+import { sellPricesForSurface } from '@/lib/pricing/server'
 import { isUuid } from '@/lib/utils'
 import { storeSiteUrl } from '@/lib/brand'
 import { ActionForm } from '@/components/ui/action-form'
@@ -21,7 +22,7 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
   const [{ data: deck }, { data: items }, { data: products }, { data: companies }, { data: links }, contact] = await Promise.all([
     supabase.from('presentations').select('id, title, client_name, notes, company_id, show_prices').eq('id', id).maybeSingle(),
     supabase.from('presentation_items').select('id, kind, product_id, title, image_url, specs, price, moq, member_names, sort_order').eq('presentation_id', id).order('sort_order'),
-    supabase.from('products').select('id, name, sku, image_url, description, price, moq').eq('status', 'active').order('name').limit(80),
+    supabase.from('products').select('id, name, sku, image_url, description, moq').eq('status', 'active').order('name').limit(80),
     supabase.from('companies').select('id, name').order('name').limit(200),
     supabase.from('presentation_links').select('token, expires_at, revoked_at, created_at').eq('presentation_id', id).order('created_at', { ascending: false }).limit(5),
     publicDeckContact(),
@@ -38,13 +39,15 @@ export default async function PresentationPage({ params }: { params: Promise<{ i
     comboIds.set(row.item_id, list)
   }
 
+  // Default slide price: the calculated Business price (no company). Blank = price on quote (0).
+  const deckPrices = await sellPricesForSurface((products || []).map((product) => product.id), 'business', null, null)
   const rows: DeckProduct[] = (products || []).map((product) => ({
     id: product.id,
     name: product.name,
     sku: product.sku,
     image_url: product.image_url,
     description: product.description,
-    price: Number(product.price) || 0,
+    price: deckPrices?.get(product.id) ?? 0,
     moq: product.moq && product.moq > 0 ? product.moq : 1,
   }))
   const slides = (items || []).map((item) => ({

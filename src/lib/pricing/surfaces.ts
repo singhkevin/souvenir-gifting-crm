@@ -1,9 +1,7 @@
 import {
   SEEDED_PORTAL_RULES,
   type GstMode,
-  type NoCostFallback,
   type PortalRule,
-  type PriceBase,
   type PricingPortal,
   type RoundingMode,
 } from '@/lib/pricing/engine'
@@ -26,8 +24,6 @@ export type PricingSettings = MarginSettings & {
 
 const PORTAL_COLUMNS: Record<PricingPortal, {
   margin: string
-  base: string
-  fallback: string
   rounding: string
   gst: string
   floor: string
@@ -35,8 +31,6 @@ const PORTAL_COLUMNS: Record<PricingPortal, {
 }> = {
   store: {
     margin: 'store_margin_percent',
-    base: 'store_price_base',
-    fallback: 'store_no_cost_fallback',
     rounding: 'store_rounding',
     gst: 'store_gst_mode',
     floor: 'store_min_margin_percent',
@@ -44,8 +38,6 @@ const PORTAL_COLUMNS: Record<PricingPortal, {
   },
   business: {
     margin: 'business_margin_percent',
-    base: 'business_price_base',
-    fallback: 'business_no_cost_fallback',
     rounding: 'business_rounding',
     gst: 'business_gst_mode',
     floor: 'business_min_margin_percent',
@@ -53,8 +45,6 @@ const PORTAL_COLUMNS: Record<PricingPortal, {
   },
   corporate: {
     margin: 'corporate_margin_percent',
-    base: 'corporate_price_base',
-    fallback: 'corporate_no_cost_fallback',
     rounding: 'corporate_rounding',
     gst: 'corporate_gst_mode',
     floor: 'corporate_min_margin_percent',
@@ -65,8 +55,6 @@ const PORTAL_COLUMNS: Record<PricingPortal, {
 export const PORTAL_SETTING_COLUMNS = [
   ...new Set(Object.values(PORTAL_COLUMNS).flatMap((column) => [
     column.margin,
-    column.base,
-    column.fallback,
     column.rounding,
     column.gst,
     column.floor,
@@ -91,8 +79,6 @@ export function portalRuleFromRow(
   const floorNumber = floor == null || floor === '' ? null : Number(floor)
   return {
     marginPercent: marginPercent != null && Number.isFinite(marginPercent) ? marginPercent : seed.marginPercent,
-    base: oneOf<PriceBase>(row?.[column.base], ['retail', 'cost'], seed.base),
-    noCostFallback: oneOf<NoCostFallback>(row?.[column.fallback], ['retail_margin', 'on_quote'], seed.noCostFallback),
     rounding: oneOf<RoundingMode>(row?.[column.rounding], ['none', 'whole', 'end9', 'end99'], seed.rounding),
     gstMode: oneOf<GstMode>(row?.[column.gst], ['inclusive', 'exclusive'], seed.gstMode),
     showPrices: flag(row?.[column.show], seed.showPrices),

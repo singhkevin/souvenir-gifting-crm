@@ -9,14 +9,13 @@ import {
   fixedPriceBlockReason,
   resolvePortalPrice,
   type GstMode,
-  type NoCostFallback,
-  type PriceBase,
   type PricingPortal,
   type RoundingMode,
 } from '@/lib/pricing/engine'
 import { pickBestOffer } from '@/lib/pricing/offers'
 import { upsertProductCost } from '@/lib/pricing/product-costs'
-import { getPricingSettings, loadSupplierOffers } from '@/lib/pricing/server'
+import { getPricingSettings, loadEffectiveCosts, loadProductMargins, loadSupplierOffers } from '@/lib/pricing/server'
+import { parseCostSource, type CostSource } from '@/lib/pricing/cost-basis'
 import { isUuid } from '@/lib/utils'
 
 const PORTALS: PricingPortal[] = ['store', 'business', 'corporate']
@@ -48,11 +47,22 @@ function money(value: string): number | null | 'bad' {
   return n
 }
 
+/** The stored manual cost. */
 async function costOf(productId: string) {
   const supabase = await createClient()
   const { data } = await supabase.from('product_costs').select('supplier_cost').eq('product_id', productId).maybeSingle()
   return data?.supplier_cost == null ? null : Number(data.supplier_cost)
 }
+
+/** The cost prices are built from (manual or the chosen supplier offer). Used for the margin floor. */
+async function effectiveCostOf(productId: string) {
+  const supabase = await createClient()
+  const settings = await getPricingSettings()
+  const costs = await loadEffectiveCosts(supabase, [productId], { requireInStock: settings.requireInStock })
+  return costs.get(productId)?.cost ?? null
+}
+
+const MIGRATION_HINT = 'Apply supabase/migrations/20261022_pricing_cost_basis.sql, then retry.'
 
 export async function savePortalRules(formData: FormData) {
   const access = await editor()
@@ -75,12 +85,10 @@ export async function savePortalRules(formData: FormData) {
     if (marginRaw !== '' && (!Number.isFinite(margin) || (margin as number) < 0)) {
       return { error: `${portal} margin must be blank or a number of 0 or more` }
     }
-    const base = readMode<PriceBase>(`${portal}_base`, ['retail', 'cost'], 'retail')
-    const fallback = readMode<NoCostFallback>(`${portal}_fallback`, ['retail_margin', 'on_quote'], 'retail_margin')
     const rounding = readMode<RoundingMode>(`${portal}_rounding`, ['none', 'whole', 'end9', 'end99'], 'none')
     const gst = readMode<GstMode>(`${portal}_gst`, ['inclusive', 'exclusive'], portal === 'store' ? 'inclusive' : 'exclusive')
-    if (base === 'bad' || fallback === 'bad' || rounding === 'bad' || gst === 'bad') {
-      return { error: 'Choose a valid base, fallback, rounding, and GST mode' }
+    if (rounding === 'bad' || gst === 'bad') {
+      return { error: 'Choose a valid rounding and GST mode' }
     }
     const floorRaw = String(formData.get(`${portal}_floor`) ?? '').trim()
     const floor = floorRaw === '' ? 0 : Number(floorRaw)
@@ -88,8 +96,6 @@ export async function savePortalRules(formData: FormData) {
 
     const next = {
       margin,
-      base,
-      fallback,
       rounding,
       gst,
       floor,
@@ -97,8 +103,6 @@ export async function savePortalRules(formData: FormData) {
     }
     const previous = {
       margin: existing[`${portal}_margin_percent`] == null ? null : Number(existing[`${portal}_margin_percent`]),
-      base: existing[`${portal}_price_base`] || 'retail',
-      fallback: existing[`${portal}_no_cost_fallback`] || 'retail_margin',
       rounding: existing[`${portal}_rounding`] || 'none',
       gst: existing[`${portal}_gst_mode`] || (portal === 'store' ? 'inclusive' : 'exclusive'),
       floor: existing[`${portal}_min_margin_percent`] == null ? 0 : Number(existing[`${portal}_min_margin_percent`]),
@@ -107,8 +111,6 @@ export async function savePortalRules(formData: FormData) {
         : existing[`${portal}_show_sell_price`] !== false,
     }
     payload[`${portal}_margin_percent`] = next.margin
-    payload[`${portal}_price_base`] = next.base
-    payload[`${portal}_no_cost_fallback`] = next.fallback
     payload[`${portal}_rounding`] = next.rounding
     payload[`${portal}_gst_mode`] = next.gst
     payload[`${portal}_min_margin_percent`] = next.floor
@@ -181,7 +183,7 @@ export async function setPortalFixedPrice(formData: FormData) {
   }
 
   const settings = await getPricingSettings()
-  const blocked = fixedPriceBlockReason(parsed as number, await costOf(productId), settings.portals[portal].minMarginPercent)
+  const blocked = fixedPriceBlockReason(parsed as number, await effectiveCostOf(productId), settings.portals[portal].minMarginPercent)
   if (blocked) return { error: blocked }
   const { error } = await supabase.from('portal_product_prices').upsert({
     product_id: productId,
@@ -233,23 +235,73 @@ export async function setCostPrice(formData: FormData) {
   return { success: true }
 }
 
-export async function setRetailPrice(formData: FormData) {
+/** Margin over cost for one product on one portal. Blank clears it. */
+export async function setPortalMargin(formData: FormData) {
   const access = await editor()
   if ('error' in access) return access
   const productId = String(formData.get('product_id') || '')
-  const parsed = money(String(formData.get('price') ?? ''))
-  if (!isUuid(productId) || parsed === 'bad' || parsed == null) return { error: 'Enter a retail price of zero or more' }
+  const portal = asPortal(String(formData.get('portal') || ''))
+  if (!isUuid(productId) || !portal) return { error: 'Choose a product and a portal' }
+  const raw = String(formData.get('margin') ?? '').trim()
+  const clear = formData.get('clear') === '1' || raw === ''
+  const margin = clear ? null : Number(raw)
+  if (!clear && (!Number.isFinite(margin) || (margin as number) < 0 || (margin as number) > 1000)) {
+    return { error: 'Enter a margin from 0 to 1000, or leave it blank' }
+  }
   const supabase = await createClient()
-  const { data: previous } = await supabase.from('products').select('price').eq('id', productId).maybeSingle()
-  const { error } = await supabase.from('products').update({ price: parsed }).eq('id', productId)
-  if (error) return { error: error.message }
+  const { data: previous, error: readError } = await supabase
+    .from('portal_product_margins')
+    .select('margin_percent')
+    .eq('product_id', productId)
+    .eq('portal', portal)
+    .maybeSingle()
+  if (readError && /portal_product_margins|schema cache/i.test(readError.message)) return { error: MIGRATION_HINT }
+  const result = clear
+    ? await supabase.from('portal_product_margins').delete().eq('product_id', productId).eq('portal', portal)
+    : await supabase.from('portal_product_margins').upsert({
+      product_id: productId,
+      portal,
+      margin_percent: margin,
+      updated_by: access.profile.id,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'product_id,portal' })
+  if (result.error) return { error: /portal_product_margins|schema cache/i.test(result.error.message) ? MIGRATION_HINT : result.error.message }
   const logError = await recordPriceChange(supabase, {
     actorId: access.profile.id,
     productId,
-    portal: 'store',
-    field: 'retail',
-    oldValue: previous?.price == null ? null : String(previous.price),
-    newValue: String(parsed),
+    portal,
+    field: 'portal_margin',
+    oldValue: previous?.margin_percent == null ? null : String(previous.margin_percent),
+    newValue: margin == null ? null : String(margin),
+  })
+  if (logError) return { error: logError }
+  reprice()
+  return { success: true }
+}
+
+/** Where the product's cost comes from: manual, preferred supplier, or lowest eligible offer. */
+export async function setCostSource(formData: FormData) {
+  const access = await editor()
+  if ('error' in access) return access
+  const productId = String(formData.get('product_id') || '')
+  if (!isUuid(productId)) return { error: 'Product not found' }
+  const parsed = parseCostSource(formData.get('cost_source'))
+  if (!parsed.ok) return { error: parsed.error }
+  const supabase = await createClient()
+  const { data: previous, error: readError } = await supabase
+    .from('product_costs')
+    .select('cost_source')
+    .eq('product_id', productId)
+    .maybeSingle()
+  if (readError && /cost_source/i.test(readError.message)) return { error: MIGRATION_HINT }
+  const { error } = await upsertProductCost(supabase, productId, { cost_source: parsed.value })
+  if (error) return { error: /cost_source/i.test(error.message) ? MIGRATION_HINT : error.message }
+  const logError = await recordPriceChange(supabase, {
+    actorId: access.profile.id,
+    productId,
+    field: 'cost_source',
+    oldValue: (previous?.cost_source as string | null | undefined) || 'manual',
+    newValue: parsed.value,
   })
   if (logError) return { error: logError }
   reprice()
@@ -295,12 +347,13 @@ export async function bulkAdjustPrices(formData: FormData) {
   const supabase = await createClient()
   const settings = await getPricingSettings()
   const rule = settings.portals[portal]
-  const [{ data: products }, { data: costs }, { data: fixed }] = await Promise.all([
-    supabase.from('products').select('id, price').in('id', ids),
-    supabase.from('product_costs').select('product_id, supplier_cost').in('product_id', ids),
+  const [{ data: products }, costs, margins, { data: fixed }] = await Promise.all([
+    supabase.from('products').select('id').in('id', ids),
+    loadEffectiveCosts(supabase, ids, { requireInStock: settings.requireInStock }),
+    loadProductMargins(supabase, ids, portal),
     supabase.from('portal_product_prices').select('product_id, price').eq('portal', portal).in('product_id', ids),
   ])
-  const costById = new Map((costs || []).map((row) => [row.product_id, row.supplier_cost == null ? null : Number(row.supplier_cost)]))
+  const costById = new Map([...costs].map(([id, basis]) => [id, basis.cost]))
   const fixedById = new Map((fixed || []).map((row) => [row.product_id, Number(row.price)]))
   let updated = 0
   const skipped: string[] = []
@@ -308,8 +361,8 @@ export async function bulkAdjustPrices(formData: FormData) {
     const current = resolvePortalPrice({
       portal,
       rule,
-      retailPrice: product.price == null ? null : Number(product.price),
       costPrice: costById.get(product.id) ?? null,
+      productMarginPercent: margins.get(product.id) ?? null,
       portalFixedPrice: fixedById.get(product.id) ?? null,
     })
     if (current.price == null) {
@@ -347,13 +400,27 @@ export async function bulkAdjustPrices(formData: FormData) {
   return { success: true }
 }
 
-type CsvChange = {
+/**
+ * One pricing CSV row. Columns: sku, cost, cost_source, store/business/corporate (fixed price),
+ * store_margin/business_margin/corporate_margin. A blank fixed price or margin clears it.
+ * The old retail column is not imported (products.price is frozen).
+ */
+export type CsvChange = {
   sku: string
   cost?: number | null
-  retail?: number | null
+  cost_source?: CostSource
   store?: number | null
   business?: number | null
   corporate?: number | null
+  store_margin?: number | null
+  business_margin?: number | null
+  corporate_margin?: number | null
+}
+
+const MARGIN_KEY: Record<PricingPortal, 'store_margin' | 'business_margin' | 'corporate_margin'> = {
+  store: 'store_margin',
+  business: 'business_margin',
+  corporate: 'corporate_margin',
 }
 
 export async function applyPricingCsv(formData: FormData) {
@@ -373,13 +440,11 @@ export async function applyPricingCsv(formData: FormData) {
   const supabase = await createClient()
   const settings = await getPricingSettings()
   const skus = [...new Set(changes.map((row) => String(row.sku || '').trim().toUpperCase()).filter(Boolean))]
-  const { data: products } = await supabase.from('products').select('id, sku, price').in('sku', skus)
+  const { data: products } = await supabase.from('products').select('id, sku').in('sku', skus)
   const bySku = new Map((products || []).map((product) => [String(product.sku).toUpperCase(), product]))
   const ids = (products || []).map((product) => product.id)
-  const { data: costs } = ids.length
-    ? await supabase.from('product_costs').select('product_id, supplier_cost').in('product_id', ids)
-    : { data: [] }
-  const costById = new Map((costs || []).map((row) => [row.product_id, row.supplier_cost == null ? null : Number(row.supplier_cost)]))
+  const effective = await loadEffectiveCosts(supabase, ids, { requireInStock: settings.requireInStock })
+  const costById = new Map([...effective].map(([id, basis]) => [id, basis.manualCost]))
   const problems: string[] = []
 
   for (const change of changes) {
@@ -389,7 +454,8 @@ export async function applyPricingCsv(formData: FormData) {
       problems.push(`${sku || '(blank)'}: product not found`)
       continue
     }
-    const cost = costById.get(product.id) ?? null
+    // The floor uses the cost the row sets, else the product's effective cost.
+    const cost = 'cost' in change && change.cost != null ? Number(change.cost) : effective.get(product.id)?.cost ?? null
     for (const portal of PORTALS) {
       if (!(portal in change) || change[portal] == null) continue
       const price = Number(change[portal])
@@ -400,8 +466,14 @@ export async function applyPricingCsv(formData: FormData) {
       const blocked = fixedPriceBlockReason(price, cost, settings.portals[portal].minMarginPercent)
       if (blocked) problems.push(`${sku}: ${blocked}`)
     }
-    if ('retail' in change && change.retail != null && (!Number.isFinite(Number(change.retail)) || Number(change.retail) < 0)) {
-      problems.push(`${sku}: retail price is not a number`)
+    for (const portal of PORTALS) {
+      const key = MARGIN_KEY[portal]
+      if (key in change && change[key] != null && (!Number.isFinite(Number(change[key])) || Number(change[key]) < 0)) {
+        problems.push(`${sku}: ${portal} margin is not a number of 0 or more`)
+      }
+    }
+    if ('cost_source' in change && change.cost_source != null && !parseCostSource(change.cost_source).ok) {
+      problems.push(`${sku}: cost source must be manual, preferred or lowest`)
     }
     if ('cost' in change && change.cost != null && (!Number.isFinite(Number(change.cost)) || Number(change.cost) < 0)) {
       problems.push(`${sku}: cost price is not a number`)
@@ -425,18 +497,52 @@ export async function applyPricingCsv(formData: FormData) {
       })
       if (logError) return { error: logError }
     }
-    if ('retail' in change && change.retail != null) {
-      const { error } = await supabase.from('products').update({ price: change.retail }).eq('id', product.id)
-      if (error) return { error: error.message }
-      const logError = await recordPriceChange(supabase, {
-        actorId: access.profile.id,
-        productId: product.id,
-        portal: 'store',
-        field: 'retail',
-        oldValue: product.price == null ? null : String(product.price),
-        newValue: String(change.retail),
-      })
-      if (logError) return { error: logError }
+    if ('cost_source' in change && change.cost_source != null) {
+      const parsed = parseCostSource(change.cost_source)
+      if (parsed.ok) {
+        const previous = effective.get(product.id)?.source || 'manual'
+        if (previous !== parsed.value) {
+          const { error } = await upsertProductCost(supabase, product.id, { cost_source: parsed.value })
+          if (error) return { error: /cost_source/i.test(error.message) ? MIGRATION_HINT : error.message }
+          const logError = await recordPriceChange(supabase, {
+            actorId: access.profile.id,
+            productId: product.id,
+            field: 'cost_source',
+            oldValue: previous,
+            newValue: parsed.value,
+          })
+          if (logError) return { error: logError }
+        }
+      }
+    }
+    for (const portal of PORTALS) {
+      const key = MARGIN_KEY[portal]
+      if (!(key in change)) continue
+      const margin = change[key] == null ? null : Number(change[key])
+      const { data: previous } = await supabase.from('portal_product_margins').select('margin_percent').eq('product_id', product.id).eq('portal', portal).maybeSingle()
+      const result = margin == null
+        ? await supabase.from('portal_product_margins').delete().eq('product_id', product.id).eq('portal', portal)
+        : await supabase.from('portal_product_margins').upsert({
+          product_id: product.id,
+          portal,
+          margin_percent: margin,
+          updated_by: access.profile.id,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'product_id,portal' })
+      if (result.error) return { error: /portal_product_margins|schema cache/i.test(result.error.message) ? MIGRATION_HINT : result.error.message }
+      const oldValue = previous?.margin_percent == null ? null : String(previous.margin_percent)
+      const newValue = margin == null ? null : String(margin)
+      if (oldValue !== newValue) {
+        const logError = await recordPriceChange(supabase, {
+          actorId: access.profile.id,
+          productId: product.id,
+          portal,
+          field: 'portal_margin',
+          oldValue,
+          newValue,
+        })
+        if (logError) return { error: logError }
+      }
     }
     for (const portal of PORTALS) {
       if (!(portal in change)) continue

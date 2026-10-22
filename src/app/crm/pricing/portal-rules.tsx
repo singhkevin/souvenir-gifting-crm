@@ -8,9 +8,7 @@ import {
   PORTAL_LABEL,
   resolvePortalPrice,
   type GstMode,
-  type NoCostFallback,
   type PortalRule,
-  type PriceBase,
   type PricingPortal,
   type RoundingMode,
 } from '@/lib/pricing/engine'
@@ -48,7 +46,6 @@ export function PortalRules({
       resolved: resolvePortalPrice({
         portal,
         rule: draft[portal],
-        retailPrice: sample.retail,
         costPrice: showCost ? sample.cost : null,
       }),
     })),
@@ -69,8 +66,9 @@ export function PortalRules({
                 <h2 className="text-sm font-semibold text-gray-900">{PORTAL_LABEL[portal]}</h2>
                 <p className="mt-1 text-xs text-gray-500">
                   {portal === 'store'
-                    ? 'Retail means the store price is the product retail price. Cost means auto from cost.'
-                    : 'Margin is the company margin when that company has one, otherwise this portal margin.'}
+                    ? 'Retail store price = cost + this margin, unless the product has its own Retail margin or fixed price.'
+                    : 'Price = cost + the company margin when the company has one, else the product margin, else this margin.'}
+                  {' '}A product without a cost is priced on quote.
                 </p>
               </div>
               <label className="block text-xs text-gray-500">
@@ -86,32 +84,6 @@ export function PortalRules({
                   className={field}
                   placeholder="No portal margin"
                 />
-              </label>
-              <label className="block text-xs text-gray-500">
-                Base on
-                <select
-                  name={`${portal}_base`}
-                  value={rule.base}
-                  disabled={!canEdit}
-                  onChange={(event) => update(portal, { base: event.target.value as PriceBase })}
-                  className={field}
-                >
-                  <option value="retail">{portal === 'store' ? 'Retail price (as-is)' : 'Retail price'}</option>
-                  <option value="cost">{portal === 'store' ? 'Cost price (auto from cost)' : 'Cost price'}</option>
-                </select>
-              </label>
-              <label className="block text-xs text-gray-500">
-                No cost on a cost-based rule
-                <select
-                  name={`${portal}_fallback`}
-                  value={rule.noCostFallback}
-                  disabled={!canEdit}
-                  onChange={(event) => update(portal, { noCostFallback: event.target.value as NoCostFallback })}
-                  className={field}
-                >
-                  <option value="retail_margin">Retail price × margin</option>
-                  <option value="on_quote">Price on quote</option>
-                </select>
               </label>
               <label className="block text-xs text-gray-500">
                 Rounding
@@ -178,7 +150,7 @@ export function PortalRules({
       <section className="rounded-xl border border-gray-200 bg-white p-4">
         <h2 className="text-sm font-semibold text-gray-900">Preview before saving</h2>
         <p className="mt-1 text-xs text-gray-500">Rule prices for a few products. Specials, catalog lines, and fixed prices are not in this preview.</p>
-        {!showCost ? <p className="mt-1 text-xs text-gray-500">Cost stays hidden on this account, so a cost-based preview uses the no-cost fallback. The price grid shows the saved sell price.</p> : null}
+        {!showCost ? <p className="mt-1 text-xs text-gray-500">Cost stays hidden on this account, so the preview shows price on quote. The price grid shows the saved sell price.</p> : null}
         {preview.length === 0 ? <p className="mt-3 text-sm text-gray-500">No active products to preview.</p> : (
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[640px] text-xs">

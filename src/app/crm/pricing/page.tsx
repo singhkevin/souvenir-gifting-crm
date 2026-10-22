@@ -11,6 +11,7 @@ import { savePricingCompanyMargin, setCatalogManualPrice } from './actions'
 import { loadPricingPage } from './load'
 import { PortalRules } from './portal-rules'
 import { PriceGrid } from './price-grid'
+import { COST_SOURCE_LABEL } from '@/lib/pricing/cost-basis'
 import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
@@ -80,7 +81,7 @@ export default async function PricingPage({
               )
             })}
           </div>
-          {data.showCost ? <p className="text-xs text-gray-500">Cost price {amount(data.drill.product.cost)} · Retail {amount(data.drill.product.retail)}</p> : null}
+          {data.showCost ? <p className="text-xs text-gray-500">Cost price {amount(data.drill.product.cost)} · {COST_SOURCE_LABEL[data.drill.product.costSource]}</p> : null}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-xs">
               <thead className="text-left text-gray-500">
@@ -185,7 +186,11 @@ export default async function PricingPage({
                         {data.specials.map((row) => (
                           <tr key={row.productId} className="border-t border-gray-100">
                             <td className="py-2 pr-3"><div className="flex items-center gap-2"><ProductThumb src={row.imageUrl} alt={row.name} /><span>{row.name} <span className="font-mono text-[10px] text-gray-400">{row.sku}</span></span></div></td>
-                            <td className="py-2 pr-3">{amount(row.price)}</td>
+                            <td className="py-2 pr-3">
+                              {amount(row.price)}
+                              {row.portal ? <span className="block text-[10px] text-gray-500">{row.portal === 'corporate' ? 'Corporate only' : 'Business only'}</span> : null}
+                              {row.migrated ? <span className="block text-[10px] text-gray-500">Migrated from retail</span> : null}
+                            </td>
                             <td className="py-2 pr-3">{row.validUntil || 'No end date'}</td>
                             <td className="py-2">
                               {canEdit ? (

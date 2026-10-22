@@ -17,7 +17,6 @@ type ProductSnap = {
   name: string
   image_url: string | null
   description: string | null
-  price: number
   moq: number | null
 }
 
@@ -102,7 +101,7 @@ async function loadProducts(ids: string[]) {
   if (!unique.length) return new Map<string, ProductSnap>()
   const { data } = await supabase
     .from('products')
-    .select('id, name, image_url, description, price, moq')
+    .select('id, name, image_url, description, moq')
     .in('id', unique)
   return new Map((data || []).map((row) => [row.id, row as ProductSnap]))
 }

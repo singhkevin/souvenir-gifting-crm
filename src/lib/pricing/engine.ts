@@ -4,17 +4,17 @@ import { roundMoney } from '@/lib/pricing/resolve'
 /** Store, the business portal, and the corporate portal (company portal, microsite, catalogs). */
 export type PricingPortal = 'store' | 'business' | 'corporate'
 
-export type PriceBase = 'retail' | 'cost'
 export type RoundingMode = 'none' | 'whole' | 'end9' | 'end99'
 export type GstMode = 'inclusive' | 'exclusive'
-export type NoCostFallback = 'retail_margin' | 'on_quote'
 export type PriceSource = 'override' | 'special' | 'catalog' | 'fixed' | 'rule' | 'on_quote'
 
+/**
+ * One portal's defaults. Every rule price is cost plus a margin; there is no retail base.
+ * A product without a cost is priced on quote.
+ */
 export type PortalRule = {
+  /** Default margin over cost for the portal. Null means cost as-is. */
   marginPercent: number | null
-  /** Retail, or cost. On the store, retail means products.price as-is. Cost means auto from cost. */
-  base: PriceBase
-  noCostFallback: NoCostFallback
   rounding: RoundingMode
   gstMode: GstMode
   showPrices: boolean
@@ -22,16 +22,10 @@ export type PortalRule = {
   minMarginPercent: number
 }
 
-/**
- * Day-one rules. They reproduce today's prices:
- * store is the retail price, business and corporate are retail plus the company margin
- * (no portal margin), rounding is to paise, and nothing is hidden.
- */
+/** Fallback rules when org_settings cannot be read: cost as-is, paise rounding, nothing hidden. */
 export const SEEDED_PORTAL_RULES: Record<PricingPortal, PortalRule> = {
   store: {
     marginPercent: null,
-    base: 'retail',
-    noCostFallback: 'retail_margin',
     rounding: 'none',
     gstMode: 'inclusive',
     showPrices: true,
@@ -39,17 +33,13 @@ export const SEEDED_PORTAL_RULES: Record<PricingPortal, PortalRule> = {
   },
   business: {
     marginPercent: null,
-    base: 'retail',
-    noCostFallback: 'retail_margin',
     rounding: 'none',
     gstMode: 'exclusive',
     showPrices: true,
     minMarginPercent: 0,
   },
   corporate: {
-    marginPercent: null,
-    base: 'retail',
-    noCostFallback: 'retail_margin',
+    marginPercent: 0,
     rounding: 'none',
     gstMode: 'exclusive',
     showPrices: true,
@@ -57,8 +47,9 @@ export const SEEDED_PORTAL_RULES: Record<PricingPortal, PortalRule> = {
   },
 }
 
+/** Store and Retail are one concept: the retail store price. */
 export const PORTAL_LABEL: Record<PricingPortal, string> = {
-  store: 'Store',
+  store: 'Retail',
   business: 'Business',
   corporate: 'Corporate',
 }
@@ -75,9 +66,11 @@ export const SOURCE_LABEL: Record<PriceSource, string> = {
 export type PortalPriceInput = {
   portal: PricingPortal
   rule: PortalRule
-  retailPrice?: number | null
+  /** The effective cost (see cost-basis.ts). Missing cost means price on quote. */
   costPrice?: number | null
   companyMarginPercent?: number | null
+  /** Margin for this product on this portal. Below the company margin, above the portal default. */
+  productMarginPercent?: number | null
   specialPrice?: number | null
   specialValidUntil?: string | null
   catalogManualPrice?: number | null
@@ -90,7 +83,7 @@ export type PortalPriceInput = {
 export type ResolvedPortalPrice = {
   price: number | null
   source: PriceSource
-  /** Company margin when set, otherwise the portal margin. Null on the store while it stays on retail. */
+  /** The margin the rule used: company, then product, then portal default. Null for fixed prices. */
   marginPercent: number | null
   /** (price − cost) / cost × 100. Null when cost is missing or zero. */
   marginOverCost: number | null
@@ -186,10 +179,11 @@ function finish(
 }
 
 /**
- * One sell price for every surface.
- * Company special, then a corporate catalog line, then a portal fixed price,
- * then the portal rule. A quote override is the frozen line price.
- * The minimum-margin floor is reported, not applied, so a rule is never rewritten.
+ * One sell price for every surface. Mirrors public.portal_unit_price.
+ * Locked quote price, then company fixed price, then corporate catalog manual price, then portal fixed price,
+ * then cost plus the company margin, else the product's portal margin, else the portal default margin.
+ * Pack lines keep their stored catalog price and do not come through here.
+ * No cost means price on quote. The minimum-margin floor is reported, not applied.
  */
 export function resolvePortalPrice(input: PortalPriceInput): ResolvedPortalPrice {
   const rule = input.rule
@@ -213,26 +207,10 @@ export function resolvePortalPrice(input: PortalPriceInput): ResolvedPortalPrice
     return finish(fixed, 'fixed', input, null)
   }
 
-  const retail = asFinite(input.retailPrice)
   const cost = asFinite(input.costPrice)
   const companyMargin = input.portal === 'store' ? null : asFinite(input.companyMarginPercent)
-  const margin = companyMargin != null ? companyMargin : asFinite(rule.marginPercent)
-  const useCost = rule.base === 'cost'
-
-  if (useCost && cost != null) {
-    const price = margin != null ? cost * (1 + margin / 100) : cost
-    return finish(price, 'rule', input, margin)
-  }
-
-  if (useCost && cost == null && rule.noCostFallback === 'on_quote') {
-    return finish(null, 'on_quote', input, margin)
-  }
-
-  if (input.portal === 'store' && !useCost) {
-    return finish(Math.max(0, retail ?? 0), 'rule', input, null)
-  }
-
-  const base = retail ?? 0
-  const price = margin != null ? base * (1 + margin / 100) : Math.max(0, base)
+  const margin = companyMargin ?? asFinite(input.productMarginPercent) ?? asFinite(rule.marginPercent)
+  if (cost == null) return finish(null, 'on_quote', input, margin)
+  const price = margin != null ? cost * (1 + margin / 100) : cost
   return finish(price, 'rule', input, margin)
 }

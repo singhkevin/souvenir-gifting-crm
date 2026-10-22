@@ -96,7 +96,7 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
 
   const { data: reqProducts } = await supabase
     .from('requirement_products')
-    .select('product_id, quantity, product:products(id, name, price, product_costs(supplier_cost, internal_margin))')
+    .select('product_id, quantity, product:products(id, name, product_costs(supplier_cost, internal_margin))')
     .eq('requirement_id', req.id)
 
   if (!reqProducts?.length) {
@@ -131,9 +131,9 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
 
   for (const row of reqProducts) {
     const product = Array.isArray(row.product) ? row.product[0] : row.product
-    const listPrice = Number(product?.price || 0)
+    // No retail fallback: without the pricer (no service role) the line starts at 0 for staff to price.
     const fromEngine = listedPrices?.has(row.product_id) ? listedPrices.get(row.product_id) : undefined
-    const unit = sellByProduct.get(row.product_id) ?? (fromEngine === undefined ? listPrice : fromEngine)
+    const unit = sellByProduct.get(row.product_id) ?? (fromEngine === undefined ? 0 : fromEngine)
     if (unit == null) {
       return { error: `${product?.name || 'A product'} is price on quote. Set a price before creating the quotation.` }
     }
@@ -172,9 +172,8 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
   const items = reqProducts.map((row) => {
     const product = Array.isArray(row.product) ? row.product[0] : row.product
     const qty = row.quantity || req.quantity || 1
-    const listPrice = Number(product?.price || 0)
     const fromEngine = listedPrices?.has(row.product_id) ? listedPrices.get(row.product_id) : undefined
-    const unit = sellByProduct.get(row.product_id) ?? (fromEngine === undefined ? listPrice : fromEngine) ?? 0
+    const unit = sellByProduct.get(row.product_id) ?? (fromEngine === undefined ? 0 : fromEngine) ?? 0
     return {
       quotation_id: quote.id,
       product_id: row.product_id,

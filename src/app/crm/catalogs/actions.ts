@@ -291,7 +291,7 @@ export async function addCatalogProducts(formData: FormData) {
     supabase.from('campaign_products').select('product_id').eq('campaign_id', campaignId),
     supabase
       .from('products')
-      .select('id, name, description, image_url, price, moq, status')
+      .select('id, name, description, image_url, moq, status')
       .in('id', productIds)
       .eq('status', 'active'),
     catalog.company_id ? getCompanyMarginPercent(catalog.company_id) : Promise.resolve(null),
@@ -300,10 +300,7 @@ export async function addCatalogProducts(formData: FormData) {
   const taken = new Set((existing || []).map((row) => row.product_id))
   const byId = new Map((products || []).map((product) => [product.id, product]))
   const resolved = await resolveListedPrices(
-    (products || []).map((product) => ({
-      id: product.id,
-      retailPrice: product.price == null ? null : Number(product.price),
-    })),
+    (products || []).map((product) => ({ id: product.id })),
     'corporate',
     companyMargin,
     catalog.company_id,
@@ -323,7 +320,8 @@ export async function addCatalogProducts(formData: FormData) {
     }
     const requested = Math.round(Number(quantities[productId]))
     const moq = Number.isInteger(requested) && requested > 0 ? requested : (product.moq || 1)
-    const sellingPrice = resolved?.get(productId)?.price ?? (Number(product.price) || 0)
+    // Snapshot of the corporate price; 0 = price on quote (no cost yet).
+    const sellingPrice = resolved?.get(productId)?.price ?? 0
     const { error } = await supabase.from('campaign_products').insert({
       campaign_id: campaignId,
       product_id: productId,

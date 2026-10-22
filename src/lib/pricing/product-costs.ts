@@ -36,7 +36,7 @@ export function withProductCost<T extends object>(row: T): T & ProductCostFields
 export async function upsertProductCost(
   client: SupabaseClient,
   productId: string,
-  fields: Partial<ProductCostFields>,
+  fields: Partial<ProductCostFields> & { cost_source?: 'manual' | 'preferred' | 'lowest' },
 ) {
   const payload: Record<string, unknown> = {
     product_id: productId,
@@ -45,5 +45,7 @@ export async function upsertProductCost(
   if ('supplier_cost' in fields) payload.supplier_cost = fields.supplier_cost
   if ('internal_margin' in fields) payload.internal_margin = fields.internal_margin
   if ('internal_notes' in fields) payload.internal_notes = fields.internal_notes
+  // Needs 20261022_pricing_cost_basis.sql. Only sent when a caller sets it.
+  if ('cost_source' in fields) payload.cost_source = fields.cost_source
   return client.from('product_costs').upsert(payload)
 }

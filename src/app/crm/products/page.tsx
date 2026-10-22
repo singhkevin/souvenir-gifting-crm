@@ -5,6 +5,7 @@ import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { isUuid, formatCurrency, oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
 import { readProductCost } from '@/lib/pricing/product-costs'
+import { resolveListedPrices } from '@/lib/pricing/server'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 import { ProductImage } from '@/components/ui/product-image'
 import { ChannelBadges } from '@/components/products/channel-badges'
@@ -56,6 +57,12 @@ export default async function ProductsPage({
     supabase.from('categories').select('id, name'),
   ])
 
+  // Calculated Retail (store) price; products.price is frozen legacy data.
+  const retailPrices = await resolveListedPrices((products || []).map((p) => ({ id: p.id })), 'store', null, null)
+  const retailOf = (id: string) => {
+    const price = retailPrices?.get(id)?.price
+    return price == null ? 'On quote' : formatCurrency(price)
+  }
   const categories = sortProductCategories(categoryRows || [])
   const total = count || 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -190,7 +197,7 @@ export default async function ProductsPage({
               {showCost && (
                 <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Cost (₹)</th>
               )}
-              <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Price (₹)</th>
+              <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Retail price</th>
               <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Shows on</th>
               <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Status</th>
             </tr>
@@ -232,7 +239,7 @@ export default async function ProductsPage({
                       </td>
                     )}
                     <td className="px-3.5 py-2.5 text-right font-mono font-medium text-[#1C1B1A]">
-                      {formatCurrency(p.price)}
+                      {retailOf(p.id)}
                     </td>
                     <td className="px-3.5 py-2.5">
                       <ChannelBadges summary={channelSummary(p, companyCount)} />
@@ -313,8 +320,8 @@ export default async function ProductsPage({
                     {brand?.name || '—'}
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Price: </span>
-                    <span className="font-mono font-semibold text-[#1C1B1A]">{formatCurrency(p.price)}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Retail: </span>
+                    <span className="font-mono font-semibold text-[#1C1B1A]">{retailOf(p.id)}</span>
                   </div>
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">MOQ: </span>

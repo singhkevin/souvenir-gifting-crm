@@ -13,9 +13,9 @@ import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 import { CategoryField } from '@/components/products/category-field'
 import { readProductCost } from '@/lib/pricing/product-costs'
-import { getPricingSettings, loadSupplierOffers } from '@/lib/pricing/server'
+import { getPricingSettings, loadEffectiveCosts, loadSupplierOffers, resolveListedPrices } from '@/lib/pricing/server'
 import { pickBestOffer } from '@/lib/pricing/offers'
-import { resolvePortalPrice } from '@/lib/pricing/engine'
+import { COST_SOURCES, COST_SOURCE_LABEL } from '@/lib/pricing/cost-basis'
 import { NameCreateField } from '@/components/products/name-create-field'
 import { createBrand, createSupplier } from '../actions'
 import { SupplierOffersEditor } from './SupplierOffersEditor'
@@ -61,17 +61,11 @@ export default async function ProductDetailPage({
   if (!product) notFound()
   Object.assign(product, readProductCost(product))
 
-  const storePrice = resolvePortalPrice({
-    portal: 'store',
-    rule: pricing.portals.store,
-    retailPrice: product.price,
-    costPrice: product.supplier_cost,
-  }).price
-
-  // A stored retail price that differs from cost is an explicit override; keep it
-  // prefilled so saving other fields never silently reprices the product.
-  const hasRetailOverride =
-    product.supplier_cost != null && product.price != null && Number(product.price) !== Number(product.supplier_cost)
+  // Store (Retail) price from the shared pricer: fixed price, product margin, or cost + store margin.
+  const storeResolved = await resolveListedPrices([{ id }], 'store', null, null, pricing)
+  const storePrice = storeResolved?.get(id)?.price ?? null
+  const costBasis = (await loadEffectiveCosts(supabase, [id], { requireInStock: pricing.requireInStock })).get(id)
+  const costSource = costBasis?.source || 'manual'
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
   const channels = channelSummary(product, grantedCompanyIds.length)
@@ -173,7 +167,7 @@ export default async function ProductDetailPage({
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 mt-6 pt-5 border-t border-[#CCC5BD]">
           <div>
             <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Store price</span>
-            <span className="font-mono text-xl font-bold text-[#1C1B1A] mt-1 block">{formatCurrency(storePrice)}</span>
+            <span className="font-mono text-xl font-bold text-[#1C1B1A] mt-1 block">{storePrice == null ? 'On quote' : formatCurrency(storePrice)}</span>
             <span className="text-[11px] text-[#7C766F] mt-0.5 block">Resolved store price. Edit prices in Pricing.</span>
           </div>
           <div>
@@ -262,7 +256,7 @@ export default async function ProductDetailPage({
                       step="0.01"
                       min="0.01"
                       name="supplier_cost"
-                      defaultValue={product.supplier_cost ?? product.price ?? ''}
+                      defaultValue={product.supplier_cost ?? ''}
                       required
                       className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
                     />
@@ -271,25 +265,19 @@ export default async function ProductDetailPage({
                       <Link href="/crm/pricing" className="font-semibold text-[#9E4300] underline underline-offset-2 hover:text-[#1C1B1A]">
                         Pricing
                       </Link>
-                      . With no portal rule, retail = cost.
+                      . Fixed prices and margins per portal live there.
                     </p>
-                    <details className="mt-2" open={hasRetailOverride}>
-                      <summary className="cursor-pointer select-none text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] hover:text-[#9E4300]">
-                        Override retail price
-                      </summary>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        name="price_override"
-                        defaultValue={hasRetailOverride ? product.price : ''}
-                        placeholder="Blank = use cost price"
-                        className="mt-1.5 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
-                      />
-                      <p className="mt-1 text-[11px] text-[#7C766F]">
-                        Current retail base: <span className="font-mono">{formatCurrency(product.price)}</span>. Clear this to make retail follow the cost.
-                      </p>
-                    </details>
+                    <label className="mt-2 block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Cost source</label>
+                    <select
+                      name="cost_source"
+                      defaultValue={costSource}
+                      className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+                    >
+                      {COST_SOURCES.map((source) => <option key={source} value={source}>{COST_SOURCE_LABEL[source]}</option>)}
+                    </select>
+                    <p className="mt-1 text-[11px] text-[#7C766F]">
+                      Prices are built from this cost.{costBasis && costBasis.source !== 'manual' ? <> Effective cost now: <span className="font-mono">{formatCurrency(costBasis.cost)}</span>{costBasis.from === 'offer' ? ' (supplier offer)' : ' (manual, no eligible offer)'}.</> : null}
+                    </p>
                   </>
                 ) : (
                   <>

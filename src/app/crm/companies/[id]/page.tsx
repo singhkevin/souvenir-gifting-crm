@@ -10,6 +10,7 @@ import { formatAllowedEmailDomains } from '@/lib/pricing/domains'
 import { portalAddressHelp, portalUrlForSlug } from '@/lib/portal-host'
 import { portalDnsMode } from '@/lib/portal-hosts/mode'
 import { requireStaff } from '@/lib/auth'
+import { resolveListedPrices } from '@/lib/pricing/server'
 import { createContact } from '@/app/crm/contacts/actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { PortalClientForm } from '../portal-client-form'
@@ -71,7 +72,7 @@ export default async function CompanyDetailPage({
     supabase.from('company_product_access').select('product_id, created_at').eq('company_id', id),
     supabase
       .from('products')
-      .select('id, name, sku, price, moq, image_url, catalogue_access, category:categories(name)')
+      .select('id, name, sku, moq, image_url, catalogue_access, category:categories(name)')
       .eq('status', 'active')
       .order('name'),
     supabase.from('company_product_exclusions').select('product_id, created_at').eq('company_id', id),
@@ -98,6 +99,14 @@ export default async function CompanyDetailPage({
   const specialMissing = Boolean(
     specialPricesResult.error && /company_product_prices|schema cache|does not exist/i.test(specialPricesResult.error.message),
   )
+  // Picker price = this company's calculated price (products.price is frozen legacy data).
+  const companyPortal = company.account_type === 'business' ? 'business' : 'corporate'
+  const companyPrices = await resolveListedPrices(
+    productRows.map((row) => ({ id: row.id })),
+    companyPortal,
+    company.margin_percent == null ? null : Number(company.margin_percent),
+    company.id,
+  )
   const pickerProducts: PickerProduct[] = productRows.map((row) => {
     const category = oneRelation(row.category)
     return {
@@ -106,7 +115,7 @@ export default async function CompanyDetailPage({
       sku: row.sku,
       imageUrl: row.image_url,
       category: category?.name || null,
-      price: Number(row.price) || 0,
+      price: companyPrices?.get(row.id)?.price ?? 0,
       moq: row.moq && row.moq > 0 ? row.moq : 1,
     }
   })
@@ -129,7 +138,7 @@ export default async function CompanyDetailPage({
 
   const assignedProductIds = new Set((companyProducts || []).map((cp) => cp.product_id))
   const excludedProductIds = new Set((productExclusions || []).map((e) => e.product_id))
-  const products = productRows as CatalogueBrowserProduct[]
+  const products: CatalogueBrowserProduct[] = productRows.map((row) => ({ ...row, price: companyPrices?.get(row.id)?.price ?? null }))
 
   const catalogueRows: CatalogueBrowserRow[] = products
     .map((product) => {

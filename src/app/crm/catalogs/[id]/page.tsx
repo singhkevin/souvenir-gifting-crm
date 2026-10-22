@@ -347,7 +347,7 @@ export default async function CatalogDetailPage({
                         </div>
                         <div>
                           <p className="font-semibold text-[#1C1B1A]">{row.display_name || product?.name}</p>
-                          <p className="font-mono text-[11px] text-[#7C766F]">{product?.sku} · base {formatCurrency(product?.price)}</p>
+                          <p className="font-mono text-[11px] text-[#7C766F]">{product?.sku}</p>
                           {kitLines.length > 0 && (
                             <ul className="mt-1.5 space-y-0.5 text-[11px] text-[#4A4640]">
                               {kitLines.map((line) => {

@@ -7,7 +7,9 @@ import {
   SOURCE_LABEL,
   type PricingPortal,
 } from '@/lib/pricing/engine'
-import { getPricingSettings } from '@/lib/pricing/server'
+import { getPricingSettings, loadEffectiveCosts, type ProductCostBasis } from '@/lib/pricing/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import type { CostSource } from '@/lib/pricing/cost-basis'
 import type { PricingSettings } from '@/lib/pricing/surfaces'
 import { oneRelation } from '@/lib/utils'
 
@@ -25,8 +27,14 @@ export type GridRow = {
   imageUrl: string | null
   category: string | null
   categoryId: string | null
+  /** Effective cost (what prices are built from). Null when hidden or missing. */
   cost: number | null
-  retail: number | null
+  /** The stored manual cost, shown when the source is an offer. */
+  manualCost: number | null
+  costSource: CostSource
+  /** Per-product portal margin and fixed price, the editable overrides. */
+  margins: Record<PricingPortal, number | null>
+  fixed: Record<PricingPortal, number | null>
   store: GridCell
   business: GridCell
   corporate: GridCell
@@ -36,7 +44,6 @@ export type RuleSample = {
   id: string
   name: string
   sku: string
-  retail: number | null
   cost: number | null
 }
 
@@ -61,6 +68,9 @@ export type SpecialRow = {
   imageUrl?: string | null
   price: number
   validUntil: string | null
+  /** Null = business and corporate. */
+  portal: PricingPortal | null
+  migrated: boolean
 }
 
 export type CatalogFixedRow = {
@@ -93,7 +103,7 @@ function num(value: unknown): number | null {
 
 function cell(
   portal: PricingPortal,
-  product: { price: number | null; supplier_cost: number | null },
+  product: { cost: number | null; margins: Partial<Record<PricingPortal, number | null>> },
   fixed: { price: number; valid_until: string | null } | undefined,
   settings: PricingSettings,
   showCost: boolean,
@@ -104,8 +114,8 @@ function cell(
   const resolved = resolvePortalPrice({
     portal,
     rule: settings.portals[portal],
-    retailPrice: product.price,
-    costPrice: product.supplier_cost,
+    costPrice: product.cost,
+    productMarginPercent: product.margins[portal] ?? null,
     companyMarginPercent: companyMargin,
     specialPrice: special?.price,
     specialValidUntil: special?.validUntil,
@@ -130,7 +140,7 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
 
   const productQuery = await supabase
     .from('products')
-    .select('id, name, sku, price, image_url, category_id, category:categories(id, name), product_costs(supplier_cost)')
+    .select('id, name, sku, image_url, category_id, category:categories(id, name)')
     .eq('status', 'active')
     .order('name')
     .limit(1000)
@@ -146,12 +156,27 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
     }
   }
 
+  // Costs come from the effective-cost rule. Read with the service role so a sales login still sees
+  // sell prices; the cost itself is only returned when this profile may see costs.
+  const costClient = createAdminClient() || supabase
+  const costBasis = await loadEffectiveCosts(costClient, products.map((row) => row.id), { requireInStock: settings.requireInStock })
+  const marginQuery = await costClient.from('portal_product_margins').select('product_id, portal, margin_percent')
+  const marginsByProduct = new Map<string, Partial<Record<PricingPortal, number | null>>>()
+  if (!marginQuery.error) {
+    for (const row of (marginQuery.data || []) as { product_id: string; portal: PricingPortal; margin_percent: number }[]) {
+      const current = marginsByProduct.get(row.product_id) || {}
+      current[row.portal] = num(row.margin_percent)
+      marginsByProduct.set(row.product_id, current)
+    }
+  }
+  const basisFor = (id: string): ProductCostBasis | undefined => costBasis.get(id)
+
   const rows: GridRow[] = products.map((row) => {
     const category = oneRelation(row.category as { id?: string; name?: string | null } | { id?: string; name?: string | null }[] | null)
-    const costRelation = row.product_costs as { supplier_cost?: number | null } | { supplier_cost?: number | null }[] | null
-    const cost = num(Array.isArray(costRelation) ? costRelation[0]?.supplier_cost : costRelation?.supplier_cost)
-    const retail = num(row.price)
-    const product = { price: retail, supplier_cost: cost }
+    const basis = basisFor(row.id)
+    const cost = basis?.cost ?? null
+    const margins = marginsByProduct.get(row.id) || {}
+    const product = { cost, margins }
     const fixed = fixedByProduct.get(row.id)
     return {
       id: row.id,
@@ -161,7 +186,10 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
       category: category?.name || null,
       categoryId: row.category_id,
       cost: showCost ? cost : null,
-      retail,
+      manualCost: showCost ? basis?.manualCost ?? null : null,
+      costSource: basis?.source || 'manual',
+      margins: { store: margins.store ?? null, business: margins.business ?? null, corporate: margins.corporate ?? null },
+      fixed: { store: fixed?.store?.price ?? null, business: fixed?.business?.price ?? null, corporate: fixed?.corporate?.price ?? null },
       store: cell('store', product, fixed?.store, settings, showCost),
       business: cell('business', product, fixed?.business, settings, showCost),
       corporate: cell('corporate', product, fixed?.corporate, settings, showCost),
@@ -170,15 +198,13 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
 
   const samples: RuleSample[] = []
   for (const row of products) {
-    const costRelation = row.product_costs as { supplier_cost?: number | null } | { supplier_cost?: number | null }[] | null
-    const cost = num(Array.isArray(costRelation) ? costRelation[0]?.supplier_cost : costRelation?.supplier_cost)
+    const cost = basisFor(row.id)?.cost ?? null
     if (samples.length >= 4) break
     if (samples.some((sample) => (sample.cost == null) === (cost == null)) && samples.length >= 2) continue
     samples.push({
       id: row.id,
       name: row.name,
       sku: row.sku,
-      retail: num(row.price),
       cost: showCost ? cost : null,
     })
   }
@@ -186,9 +212,8 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
     for (const row of products) {
       if (samples.length >= 4) break
       if (samples.some((sample) => sample.id === row.id)) continue
-      const costRelation = row.product_costs as { supplier_cost?: number | null } | { supplier_cost?: number | null }[] | null
-      const cost = num(Array.isArray(costRelation) ? costRelation[0]?.supplier_cost : costRelation?.supplier_cost)
-      samples.push({ id: row.id, name: row.name, sku: row.sku, retail: num(row.price), cost: showCost ? cost : null })
+      const cost = basisFor(row.id)?.cost ?? null
+      samples.push({ id: row.id, name: row.name, sku: row.sku, cost: showCost ? cost : null })
     }
   }
 
@@ -210,7 +235,7 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
   if (selected) {
     const specialQuery = await supabase
       .from('company_product_prices')
-      .select('product_id, price, valid_until, product:products(name, sku, image_url)')
+      .select('*, product:products(name, sku, image_url)')
       .eq('company_id', selected.id)
     specials = (specialQuery.data || []).map((row) => {
       const product = oneRelation(row.product as { name?: string; sku?: string; image_url?: string | null } | { name?: string; sku?: string; image_url?: string | null }[] | null)
@@ -221,6 +246,8 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
         imageUrl: product?.image_url || null,
         price: Number(row.price),
         validUntil: row.valid_until,
+        portal: (row.portal as PricingPortal | null | undefined) || null,
+        migrated: row.source === 'migrated_from_retail',
       }
     })
     const assigned = await supabase.from('catalog_assignments').select('campaign_id').eq('company_id', selected.id)
@@ -258,15 +285,12 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
   if (focus) {
     const specialsForProduct = await supabase
       .from('company_product_prices')
-      .select('company_id, price, valid_until, company:companies(name, margin_percent)')
+      .select('*, company:companies(name, margin_percent)')
       .eq('product_id', focus.id)
     const companyRows = new Map<string, DrillCompany>()
     for (const company of companies) {
       if (company.margin == null) continue
-      const full = products.find((product) => product.id === focus.id)
-      const costRelation = full?.product_costs as { supplier_cost?: number | null } | { supplier_cost?: number | null }[] | null
-      const cost = num(Array.isArray(costRelation) ? costRelation[0]?.supplier_cost : costRelation?.supplier_cost)
-      const product = { price: focus.retail, supplier_cost: cost }
+      const product = { cost: basisFor(focus.id)?.cost ?? null, margins: focus.margins }
       const fixed = fixedByProduct.get(focus.id)
       companyRows.set(company.id, {
         id: company.id,
@@ -281,18 +305,16 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
     for (const row of specialsForProduct.data || []) {
       const company = oneRelation(row.company as { name?: string; margin_percent?: number | null } | { name?: string; margin_percent?: number | null }[] | null)
       const margin = num(company?.margin_percent)
-      const full = products.find((product) => product.id === focus.id)
-      const costRelation = full?.product_costs as { supplier_cost?: number | null } | { supplier_cost?: number | null }[] | null
-      const cost = num(Array.isArray(costRelation) ? costRelation[0]?.supplier_cost : costRelation?.supplier_cost)
-      const product = { price: focus.retail, supplier_cost: cost }
+      const product = { cost: basisFor(focus.id)?.cost ?? null, margins: focus.margins }
       const special = { price: Number(row.price), validUntil: row.valid_until as string | null }
+      const scope = (row.portal as string | null | undefined) || null
       const fixed = fixedByProduct.get(focus.id)
       companyRows.set(row.company_id, {
         id: row.company_id,
         name: company?.name || 'Company',
         margin,
-        business: cell('business', product, fixed?.business, settings, showCost, margin, special),
-        corporate: cell('corporate', product, fixed?.corporate, settings, showCost, margin, special),
+        business: cell('business', product, fixed?.business, settings, showCost, margin, scope && scope !== 'business' ? null : special),
+        corporate: cell('corporate', product, fixed?.corporate, settings, showCost, margin, scope && scope !== 'corporate' ? null : special),
         special: Number(row.price),
         specialUntil: row.valid_until,
       })

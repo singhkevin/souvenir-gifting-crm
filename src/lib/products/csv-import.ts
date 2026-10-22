@@ -2,10 +2,10 @@ export type ImportNotice = { row: number; sku: string; reason: string }
 
 export const PRODUCT_STATUSES = ['active', 'inactive', 'discontinued'] as const
 
-export const COST_CSV_FIELDS = ['supplier_cost', 'internal_margin', 'internal_notes'] as const
+export const COST_CSV_FIELDS = ['supplier_cost', 'cost_source', 'internal_margin', 'internal_notes'] as const
 
 const COST_IGNORED_REASON =
-  'Cost columns were ignored. This account cannot import supplier cost, product margin, or internal notes.'
+  'Cost columns were ignored. This account cannot import supplier cost, cost source, product margin, or internal notes.'
 
 /** Blank status stays active. Any other unknown value is rejected. */
 export function parseProductStatus(raw: string): { ok: true; status: string } | { ok: false; reason: string } {

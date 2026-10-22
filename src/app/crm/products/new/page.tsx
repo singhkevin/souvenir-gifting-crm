@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { COST_SOURCES, COST_SOURCE_LABEL } from '@/lib/pricing/cost-basis'
 import { requireStaff } from '@/lib/auth'
 import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
@@ -104,21 +105,16 @@ export default async function NewProductPage({
                 <Link href="/crm/pricing" className="font-semibold text-[#806A50] underline underline-offset-2 hover:text-[#624b32]">
                   Pricing
                 </Link>
-                . With no portal rule, retail = cost.
+                . Fixed prices and margins per portal live there.
               </p>
-              <details className="mt-2 group">
-                <summary className="cursor-pointer select-none text-[11px] font-semibold text-gray-600 hover:text-[#806A50]">
-                  Override retail price (optional)
-                </summary>
-                <input
-                  type="number"
-                  name="price_override"
-                  step="0.01"
-                  min="0"
-                  placeholder="Leave blank to use the cost price"
-                  className="mt-1.5 w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
-                />
-              </details>
+              <label className="mt-2 block text-xs font-semibold text-gray-700 mb-1.5">Cost source</label>
+              <select
+                name="cost_source"
+                defaultValue="manual"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+              >
+                {COST_SOURCES.map((source) => <option key={source} value={source}>{COST_SOURCE_LABEL[source]}</option>)}
+              </select>
             </div>
 
             <div>

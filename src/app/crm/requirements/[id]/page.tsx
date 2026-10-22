@@ -6,6 +6,7 @@ import { formatCurrency, formatDate, isUuid } from '@/lib/utils'
 import { ClipboardList, Plus, Trash2 } from 'lucide-react'
 import { ProductImage } from '@/components/ui/product-image'
 import { requireStaff } from '@/lib/auth'
+import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 import {
   updateRequirementForm,
   removeRequirement,
@@ -64,7 +65,7 @@ export default async function RequirementDetailPage({
       .eq('requirement_id', id)
       .order('created_at', { ascending: false })
       .limit(1),
-    supabase.from('products').select('id, name, sku, price, status').eq('status', 'active').order('name'),
+    supabase.from('products').select('id, name, sku, status').eq('status', 'active').order('name'),
   ])
 
   if (!req) notFound()
@@ -75,6 +76,10 @@ export default async function RequirementDetailPage({
     : { data: null, error: null }
   const businessMeta = businessMetaQuery.error ? null : businessMetaQuery.data
 
+  // Line price shown = the calculated price for this company (no products.price).
+  const companyMargin = companyId ? await getCompanyMarginPercent(companyId) : null
+  const lineIds = ((products || []) as { product_id?: string | null }[]).flatMap((row) => (row.product_id ? [row.product_id] : []))
+  const linePrices = await sellPricesForSurface(lineIds, 'portal', companyMargin, companyId || null)
   const productRows = products || []
   const quoteRows = quotations || []
   const order = relatedOrders?.[0] || null
@@ -565,7 +570,9 @@ export default async function RequirementDetailPage({
                         </ActionForm>
                       </td>
                       <td className="px-3.5 py-2.5 text-right font-mono font-medium text-[#1C1B1A]">
-                        {formatCurrency(item.product?.price)}
+                        {item.product?.id && linePrices?.has(item.product.id)
+                          ? (linePrices.get(item.product.id) == null ? 'On quote' : formatCurrency(linePrices.get(item.product.id)))
+                          : '—'}
                       </td>
                       <td className="px-3.5 py-2.5 text-right">
                         <ActionForm action={removeProductFromRequirement} className="inline">

@@ -12,7 +12,8 @@ const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'name', label: 'Product name', required: true },
   { key: 'sku', label: 'SKU', required: true },
   { key: 'supplier_cost', label: 'Cost price (₹, supplier price)' },
-  { key: 'price', label: 'Retail price override (blank = cost)' },
+  { key: 'cost_source', label: 'Cost source (manual / preferred / lowest)' },
+  { key: 'price', label: 'Old price column (read as cost when cost is blank)' },
   { key: 'description', label: 'Description' },
   { key: 'category', label: 'Category' },
   { key: 'supplier', label: 'Supplier' },
@@ -114,8 +115,8 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
             className="text-xs file:mr-2 file:px-3 file:py-1.5 file:border file:border-gray-200 file:bg-white file:text-xs"
           />
           <p className="text-[11px] text-gray-500 mt-2">
-            Required columns: product name, SKU, cost price. Retail = cost unless a price column is given; selling
-            prices are set in Pricing. Optional: description, category, supplier, MOQ, stock, internal notes, retail (yes / no), business (yes / no), corporate visibility, companies, image URL, image filename,
+            Required columns: product name, SKU, cost price. Selling prices are calculated from cost
+            and set in Pricing. Cost source is manual, preferred or lowest (blank = manual). Optional: description, category, supplier, MOQ, stock, internal notes, retail (yes / no), business (yes / no), corporate visibility, companies, image URL, image filename,
             colour, size, variant SKU, extra price, status. Blank retail / business follow corporate &ldquo;all&rdquo;, as before.
           </p>
         </div>

@@ -1,21 +1,20 @@
 import { createClient } from '@/lib/supabase/server'
 import { oneRelation } from '@/lib/utils'
-import { resolvePortalPrice, SEEDED_PORTAL_RULES } from '@/lib/pricing/engine'
-import { getCompanyMarginPercent, getPricingSettings, resolveListedPrices, specialPricesForCompany } from '@/lib/pricing/server'
+import { getCompanyMarginPercent, resolveListedPrices } from '@/lib/pricing/server'
 import type { PickerProduct } from '@/components/products/product-picker-drawer'
 
 const PICKER_LIMIT = 1000
 
 /**
  * Active products for the catalog and quotation pickers.
- * Price is the company special, or base price plus the company margin. Cost stays off this payload.
+ * Price is the corporate price from the shared pricer (0 = price on quote). Cost stays off this payload.
  */
 export async function listCatalogPickerProducts(companyId: string | null): Promise<PickerProduct[]> {
   const supabase = await createClient()
   const [{ data: products }, companyMargin] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, sku, price, moq, image_url, category:categories(name)')
+      .select('id, name, sku, moq, image_url, category:categories(name)')
       .eq('status', 'active')
       .order('name')
       .limit(PICKER_LIMIT),
@@ -23,31 +22,15 @@ export async function listCatalogPickerProducts(companyId: string | null): Promi
   ])
 
   const rows = products || []
-  const resolved = await resolveListedPrices(
-    rows.map((row) => ({ id: row.id, retailPrice: row.price == null ? null : Number(row.price) })),
-    'corporate',
-    companyMargin,
-    companyId,
-  )
-  const specials = resolved
-    ? null
-    : await specialPricesForCompany(supabase, companyId, rows.map((row) => row.id))
-  const rule = resolved ? null : (await getPricingSettings()).portals.corporate
+  // Shared pricer: company special, fixed price, cost + margins. Falls back to this session's
+  // client when the service role is not configured.
+  const targets = rows.map((row) => ({ id: row.id }))
+  const resolved = (await resolveListedPrices(targets, 'corporate', companyMargin, companyId))
+    || (await resolveListedPrices(targets, 'corporate', companyMargin, companyId, undefined, supabase))
 
   return rows.map((row) => {
     const category = oneRelation(row.category as { name?: string | null } | { name?: string | null }[] | null)
-    const fromEngine = resolved?.get(row.id)
-    const special = specials?.get(row.id)
-    const price = fromEngine
-      ? fromEngine.price
-      : resolvePortalPrice({
-        portal: 'corporate',
-        rule: rule || SEEDED_PORTAL_RULES.corporate,
-        retailPrice: row.price,
-        companyMarginPercent: companyMargin,
-        specialPrice: special?.price,
-        specialValidUntil: special?.validUntil,
-      }).price
+    const price = resolved?.get(row.id)?.price ?? null
     return {
       id: row.id,
       name: row.name,

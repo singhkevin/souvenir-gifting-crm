@@ -75,7 +75,7 @@ export default async function CollectionSetupPage({
   const supabase = await createClient()
   const missing = collection.productIds.filter((productId) => !byId.has(productId))
   const extra = missing.length
-    ? (((await supabase.from('products').select('id, name, sku, image_url, price').in('id', missing)).data || []) as PublicProduct[])
+    ? (((await supabase.from('products').select('id, name, sku, image_url').in('id', missing)).data || []).map((row) => ({ ...row, price: null })) as PublicProduct[])
     : []
   for (const product of extra) byId.set(product.id, product)
 

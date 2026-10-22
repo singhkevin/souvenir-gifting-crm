@@ -11,7 +11,8 @@ import { directOrderSchemaHint } from '@/lib/catalogue/purchase-path'
 import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { withIdempotency } from '@/lib/idempotency'
-import { resolveCsvRetail } from '@/lib/products/cost-price'
+import { legacyPriceForInsert, resolveCsvCost } from '@/lib/products/cost-price'
+import { parseCostSource, type CostSource } from '@/lib/pricing/cost-basis'
 import { CHANNEL_MIGRATION, channelColumnsMissing, legacyChannelDefault, parseChannelCell } from '@/lib/products/channel-visibility'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
@@ -185,8 +186,8 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     description: string | null
     category_id: string | null
     supplier_id: string | null
-    price: number
     supplier_cost: number | null
+    cost_source: CostSource | null
     moq: number
     hsn_code: string | null
     image_url: string | null
@@ -305,6 +306,7 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       return
     }
     let supplier_cost: number | null = null
+    let cost_source: CostSource | null = null
     let internal_notes: string | null = null
     if (allowCosts) {
       const supplierCost = parseOptionalNumber(cell(row, 'supplier_cost'))
@@ -314,14 +316,20 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       }
       supplier_cost = supplierCost.value
       internal_notes = cell(row, 'internal_notes') || null
+      const source = parseCostSource(cell(row, 'cost_source'))
+      if (!source.ok) {
+        failures.push({ row: rowNumber, sku, reason: source.error })
+        return
+      }
+      cost_source = cell(row, 'cost_source') ? source.value : null
     }
-    // Cost price is the primary input. A blank price column means retail = cost.
-    const retail = resolveCsvRetail({ priceRaw: cell(row, 'price'), cost: supplier_cost })
-    if (!retail.ok) {
-      failures.push({ row: rowNumber, sku, reason: retail.reason })
+    // Cost price is the one price on a product. An old price column is read as the cost.
+    const costed = resolveCsvCost({ cost: supplier_cost, priceRaw: cell(row, 'price'), allowCosts })
+    if (!costed.ok) {
+      failures.push({ row: rowNumber, sku, reason: costed.reason })
       return
     }
-    const price = retail.price
+    supplier_cost = costed.cost
 
     batchSkus.add(sku)
     prepared.push({
@@ -331,8 +339,8 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       description: cell(row, 'description') || null,
       category_id,
       supplier_id,
-      price,
       supplier_cost,
+      cost_source,
       moq: Math.max(1, parseInt(cell(row, 'moq') || '1', 10) || 1),
       hsn_code: cell(row, 'hsn_code') || null,
       image_url: imageUrl || null,
@@ -373,7 +381,8 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       description: item.description,
       category_id: item.category_id,
       supplier_id: item.supplier_id,
-      price: item.price,
+      // Frozen legacy column; nothing prices from it.
+      price: legacyPriceForInsert(item.supplier_cost),
       moq: item.moq,
       stock_qty: item.stock_qty,
       fulfillment_mode: item.fulfillment_mode,
@@ -411,8 +420,9 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       continue
     }
 
-    const costPayload: { supplier_cost?: number | null; internal_notes?: string | null } = {}
+    const costPayload: { supplier_cost?: number | null; internal_notes?: string | null; cost_source?: CostSource } = {}
     if (item.supplier_cost != null) costPayload.supplier_cost = item.supplier_cost
+    if (item.cost_source && item.cost_source !== 'manual') costPayload.cost_source = item.cost_source
     if (item.internal_notes) costPayload.internal_notes = item.internal_notes
     if (Object.keys(costPayload).length > 0) {
       const { error: costError } = await upsertProductCost(supabase, product.id, costPayload)

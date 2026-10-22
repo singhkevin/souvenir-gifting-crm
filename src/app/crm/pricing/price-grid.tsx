@@ -5,13 +5,15 @@ import Link from 'next/link'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { parseCsv } from '@/lib/csv'
-import { fixedPriceBlockReason, type PricingPortal } from '@/lib/pricing/engine'
+import { fixedPriceBlockReason, PORTAL_LABEL, type PricingPortal } from '@/lib/pricing/engine'
+import { COST_SOURCES, COST_SOURCE_LABEL, parseCostSource, type CostSource } from '@/lib/pricing/cost-basis'
 import {
   applyPricingCsv,
   bulkAdjustPrices,
   setCostPrice,
+  setCostSource,
   setPortalFixedPrice,
-  setRetailPrice,
+  setPortalMargin,
   useBestOfferAsCost,
 } from './actions'
 import type { GridRow } from './load'
@@ -27,12 +29,17 @@ function amount(value: number | null) {
 type ImportRow = {
   sku: string
   cost?: number | null
-  retail?: number | null
+  cost_source?: CostSource
   store?: number | null
   business?: number | null
   corporate?: number | null
+  store_margin?: number | null
+  business_margin?: number | null
+  corporate_margin?: number | null
   note: string
 }
+
+const IMPORT_KEYS = ['cost', 'cost_source', 'store', 'business', 'corporate', 'store_margin', 'business_margin', 'corporate_margin'] as const
 
 function parseCell(value: string): number | null | undefined | 'bad' {
   const raw = value.trim()
@@ -97,28 +104,39 @@ export function PriceGrid({
           return at < 0 ? undefined : parseCell(cells[at] || '')
         }
         const change: ImportRow = { sku, note: '' }
+        // retail_price is exported for reference only; it is not imported (products.price is frozen).
         const cost = read('cost_price')
-        const retail = read('retail_price')
         const store = read('store_fixed_price')
         const business = read('business_fixed_price')
         const corporate = read('corporate_fixed_price')
+        const storeMargin = read('store_margin_percent')
+        const businessMargin = read('business_margin_percent')
+        const corporateMargin = read('corporate_margin_percent')
+        const sourceAt = index('cost_source')
+        const sourceRaw = sourceAt < 0 ? '' : (cells[sourceAt] || '').trim()
+        const source = sourceRaw ? parseCostSource(sourceRaw) : null
         if (cost !== undefined) change.cost = cost === 'bad' ? null : cost
-        if (retail !== undefined) change.retail = retail === 'bad' ? null : retail
+        if (source?.ok) change.cost_source = source.value
         if (store !== undefined) change.store = store === 'bad' ? null : store
         if (business !== undefined) change.business = business === 'bad' ? null : business
         if (corporate !== undefined) change.corporate = corporate === 'bad' ? null : corporate
+        if (storeMargin !== undefined) change.store_margin = storeMargin === 'bad' ? null : storeMargin
+        if (businessMargin !== undefined) change.business_margin = businessMargin === 'bad' ? null : businessMargin
+        if (corporateMargin !== undefined) change.corporate_margin = corporateMargin === 'bad' ? null : corporateMargin
         const product = bySku.get(sku)
         if (!product) change.note = 'Product not found'
-        else if ([cost, retail, store, business, corporate].includes('bad')) change.note = 'A price is not a number'
+        else if ([cost, store, business, corporate, storeMargin, businessMargin, corporateMargin].includes('bad')) change.note = 'A price or margin is not a number'
+        else if (source && !source.ok) change.note = 'Cost source must be manual, preferred or lowest'
         else {
+          const floorCost = change.cost ?? product.cost
           for (const portal of PORTALS) {
             const price = change[portal]
             if (price == null) continue
-            const blocked = fixedPriceBlockReason(price, product.cost, floors[portal])
+            const blocked = fixedPriceBlockReason(price, floorCost, floors[portal])
             if (blocked) change.note = blocked
           }
         }
-        if (cost !== undefined || retail !== undefined || store !== undefined || business !== undefined || corporate !== undefined) {
+        if (IMPORT_KEYS.some((key) => key in change) || change.note) {
           next.push(change)
         }
       }
@@ -175,10 +193,9 @@ export function PriceGrid({
               <th className="p-3" />
               <th className="p-3 font-medium">Product</th>
               {showCost ? <th className="p-3 font-medium">Cost</th> : null}
-              <th className="p-3 font-medium">Retail</th>
-              <th className="p-3 font-medium">Store</th>
-              <th className="p-3 font-medium">Business</th>
-              <th className="p-3 font-medium">Corporate</th>
+              <th className="p-3 font-medium">{PORTAL_LABEL.store}</th>
+              <th className="p-3 font-medium">{PORTAL_LABEL.business}</th>
+              <th className="p-3 font-medium">{PORTAL_LABEL.corporate}</th>
             </tr>
           </thead>
           <tbody>
@@ -200,8 +217,19 @@ export function PriceGrid({
                 </td>
                 {showCost ? (
                   <td className="p-3">
-                    <p>{amount(row.cost)}</p>
-                    {canEdit ? <PriceField action={setCostPrice} productId={row.id} price={row.cost} allowBlank /> : null}
+                    <p className="font-medium text-gray-900">{amount(row.cost)}</p>
+                    <p className="text-[10px] uppercase tracking-wide text-gray-400">{COST_SOURCE_LABEL[row.costSource]}</p>
+                    {row.costSource !== 'manual' && row.manualCost !== row.cost ? <p className="text-[10px] text-gray-500">Manual {amount(row.manualCost)}</p> : null}
+                    {canEdit ? <PriceField action={setCostPrice} productId={row.id} price={row.manualCost} allowBlank /> : null}
+                    {canEdit ? (
+                      <ActionForm action={setCostSource} className="mt-1 flex items-center gap-1">
+                        <input type="hidden" name="product_id" value={row.id} />
+                        <select name="cost_source" defaultValue={row.costSource} className="rounded border border-gray-200 px-1 py-1 text-[11px]" aria-label={`Cost source for ${row.name}`}>
+                          {COST_SOURCES.map((source) => <option key={source} value={source}>{COST_SOURCE_LABEL[source]}</option>)}
+                        </select>
+                        <button type="submit" className="text-[11px] font-medium text-[#806A50]">Save</button>
+                      </ActionForm>
+                    ) : null}
                     {canEdit ? (
                       <ActionForm action={useBestOfferAsCost} className="mt-1">
                         <input type="hidden" name="product_id" value={row.id} />
@@ -210,17 +238,13 @@ export function PriceGrid({
                     ) : null}
                   </td>
                 ) : null}
-                <td className="p-3">
-                  <p>{amount(row.retail)}</p>
-                  {canEdit ? <PriceField action={setRetailPrice} productId={row.id} price={row.retail} /> : null}
-                </td>
                 <PortalCell row={row} portal="store" canEdit={canEdit} showCost={showCost} />
                 <PortalCell row={row} portal="business" canEdit={canEdit} showCost={showCost} />
                 <PortalCell row={row} portal="corporate" canEdit={canEdit} showCost={showCost} />
               </tr>
             ))}
             {visible.length === 0 ? (
-              <tr><td colSpan={showCost ? 7 : 6} className="p-6 text-center text-gray-500">No products match these filters.</td></tr>
+              <tr><td colSpan={showCost ? 6 : 5} className="p-6 text-center text-gray-500">No products match these filters.</td></tr>
             ) : null}
           </tbody>
         </table>
@@ -229,7 +253,7 @@ export function PriceGrid({
       {canEdit ? (
         <section className="space-y-3 rounded-xl border border-gray-200 bg-white p-4">
           <h2 className="text-sm font-semibold text-gray-900">Import CSV</h2>
-          <p className="text-xs text-gray-500">Columns: sku, cost_price, retail_price, store_fixed_price, business_fixed_price, corporate_fixed_price. A blank cell is left unchanged. Type clear to remove a portal fixed price.</p>
+          <p className="text-xs text-gray-500">Columns: sku, cost_price, cost_source (manual, preferred or lowest), store_fixed_price, business_fixed_price, corporate_fixed_price, store_margin_percent, business_margin_percent, corporate_margin_percent. A blank cell is left unchanged. Type clear to remove a fixed price or margin. The exported retail_price and effective_cost columns are for reference and are not imported.</p>
           <input type="file" accept=".csv,text/csv" onChange={(event) => onCsv(event.target.files?.[0] || null)} className="text-sm" />
           {importRows.length > 0 ? (
             <>
@@ -240,7 +264,7 @@ export function PriceGrid({
                     {importRows.slice(0, 30).map((row, index) => (
                       <tr key={`${row.sku}-${index}`} className="border-t border-gray-100">
                         <td className="py-1 pr-3 font-mono">{row.sku || '—'}</td>
-                        <td className="py-1 pr-3">{['cost', 'retail', 'store', 'business', 'corporate'].filter((key) => key in row).join(', ') || '—'}</td>
+                        <td className="py-1 pr-3">{IMPORT_KEYS.filter((key) => key in row).join(', ') || '—'}</td>
                         <td className="py-1">{row.note || 'Ready'}</td>
                       </tr>
                     ))}
@@ -283,11 +307,20 @@ function PortalCell({
         <ActionForm action={setPortalFixedPrice} className="mt-1 flex flex-wrap items-center gap-1">
           <input type="hidden" name="product_id" value={row.id} />
           <input type="hidden" name="portal" value={portal} />
-          <input name="price" type="number" min="0" step="0.01" defaultValue={cell.source === 'Fixed' ? cell.price ?? '' : ''} placeholder="Fixed" className="w-24 rounded border border-gray-200 px-2 py-1" />
+          <input name="price" type="number" min="0" step="0.01" defaultValue={row.fixed[portal] ?? ''} placeholder="Fixed" className="w-24 rounded border border-gray-200 px-2 py-1" />
           <button type="submit" className="text-[11px] font-medium text-[#806A50]">Set</button>
-          {cell.source === 'Fixed' ? <button type="submit" name="clear" value="1" className="text-[11px] text-gray-500 underline">Clear</button> : null}
+          {row.fixed[portal] != null ? <button type="submit" name="clear" value="1" className="text-[11px] text-gray-500 underline">Clear</button> : null}
         </ActionForm>
       ) : null}
+      {canEdit ? (
+        <ActionForm action={setPortalMargin} className="mt-1 flex flex-wrap items-center gap-1">
+          <input type="hidden" name="product_id" value={row.id} />
+          <input type="hidden" name="portal" value={portal} />
+          <input name="margin" type="number" min="0" max="1000" step="0.01" defaultValue={row.margins[portal] ?? ''} placeholder="Margin %" className="w-24 rounded border border-gray-200 px-2 py-1" aria-label={`${PORTAL_LABEL[portal]} margin for ${row.name}`} />
+          <button type="submit" className="text-[11px] font-medium text-[#806A50]">Set</button>
+          {row.margins[portal] != null ? <button type="submit" name="clear" value="1" className="text-[11px] text-gray-500 underline">Clear</button> : null}
+        </ActionForm>
+      ) : row.margins[portal] != null ? <p className="text-[10px] text-gray-500">Product margin {row.margins[portal]}%</p> : null}
     </td>
   )
 }

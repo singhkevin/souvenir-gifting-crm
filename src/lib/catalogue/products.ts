@@ -2,9 +2,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
-import { gstPriceNote, resolvePortalPrice } from '@/lib/pricing/engine'
+import { gstPriceNote } from '@/lib/pricing/engine'
 import { readProductCost } from '@/lib/pricing/product-costs'
-import { getPricingSettings } from '@/lib/pricing/server'
+import { getPricingSettings, resolveListedPrices } from '@/lib/pricing/server'
 import { type PurchaseOffer } from '@/lib/catalogue/purchase-path'
 import { occasionTagList, storefrontSampleOffer } from '@/lib/catalogue/storefront'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -256,14 +256,13 @@ export async function getPublicCatalogueProducts(channel: Channel = 'store'): Pr
     const settings = await getPricingSettings()
     const rule = settings.portals.store
     const note = settings.surfaces.store.showSellPrice ? gstPriceNote(rule.gstMode) : null
+    // Store (Retail) price: fixed price, else effective cost + product margin or store margin.
+    const resolved = settings.surfaces.store.showSellPrice
+      ? await resolveListedPrices(data.map((row) => ({ id: row.id })), 'store', null, null, settings, client)
+      : null
     const priced = !settings.surfaces.store.showSellPrice
       ? data.map((row) => toPublicProduct(row, null))
-      : data.map((row) => toPublicProduct(row, resolvePortalPrice({
-        portal: 'store',
-        rule,
-        retailPrice: row.price,
-        costPrice: row.supplier_cost,
-      }).price, note))
+      : data.map((row) => toPublicProduct(row, resolved?.get(row.id)?.price ?? null, note))
     return decorateStorefront(client, priced)
   } catch {
     return []
@@ -310,12 +309,8 @@ export async function getPublicProduct(id: string): Promise<PublicProduct | null
     if (!settings.surfaces.store.showSellPrice) {
       return (await decorateStorefront(client, [toPublicProduct(data, null)]))[0] || null
     }
-    const price = resolvePortalPrice({
-      portal: 'store',
-      rule: settings.portals.store,
-      retailPrice: data.price,
-      costPrice: data.supplier_cost,
-    }).price
+    const resolved = await resolveListedPrices([{ id: data.id }], 'store', null, null, settings, client)
+    const price = resolved?.get(data.id)?.price ?? null
     return (await decorateStorefront(client, [toPublicProduct(data, price, gstPriceNote(settings.portals.store.gstMode))]))[0] || null
   } catch {
     return null

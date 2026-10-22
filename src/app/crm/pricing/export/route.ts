@@ -1,14 +1,28 @@
 import { NextResponse } from 'next/server'
 import { canSeeCosts, canViewPricing, getProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getPricingSettings, loadEffectiveCosts, resolveListedPrices } from '@/lib/pricing/server'
+import type { PricingPortal } from '@/lib/pricing/engine'
 
 export const dynamic = 'force-dynamic'
+
+const PORTALS: PricingPortal[] = ['store', 'business', 'corporate']
 
 function cell(value: string) {
   const safe = /^[=+\-@]/.test(value) ? `'${value}` : value
   return /[",\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
 }
 
+function text(value: number | null | undefined) {
+  return value == null ? '' : String(value)
+}
+
+/**
+ * Pricing CSV. Import columns: sku, cost_price, cost_source, *_fixed_price, *_margin_percent.
+ * Reference only (ignored on import): name, effective_cost, retail_price (frozen products.price),
+ * *_sell_price (what each portal charges with no company).
+ */
 export async function GET() {
   const profile = await getProfile()
   if (!profile || !canViewPricing(profile.role)) {
@@ -16,25 +30,53 @@ export async function GET() {
   }
   const showCost = canSeeCosts(profile.role)
   const supabase = await createClient()
-  const [{ data: products }, fixed] = await Promise.all([
-    supabase.from('products').select('id, sku, name, price, product_costs(supplier_cost)').eq('status', 'active').order('sku').limit(2000),
+  const settings = await getPricingSettings()
+  const [{ data: products }, fixed, margins] = await Promise.all([
+    supabase.from('products').select('id, sku, name, price').eq('status', 'active').order('sku').limit(2000),
     supabase.from('portal_product_prices').select('product_id, portal, price'),
+    supabase.from('portal_product_margins').select('product_id, portal, margin_percent'),
   ])
+  const rows = products || []
+  const ids = rows.map((product) => product.id)
+  const costs = showCost
+    ? await loadEffectiveCosts(createAdminClient() || supabase, ids, { requireInStock: settings.requireInStock })
+    : new Map()
+  const sell = new Map<PricingPortal, Map<string, { price: number | null }> | null>()
+  for (const portal of PORTALS) {
+    sell.set(portal, await resolveListedPrices(ids.map((id) => ({ id })), portal, null, null, settings))
+  }
   const fixedPrice = new Map<string, string>()
-  for (const row of fixed.data || []) fixedPrice.set(`${row.product_id}:${row.portal}`, row.price == null ? '' : String(row.price))
-  const headers = ['sku', 'name', ...(showCost ? ['cost_price'] : []), 'retail_price', 'store_fixed_price', 'business_fixed_price', 'corporate_fixed_price']
+  for (const row of fixed.data || []) fixedPrice.set(`${row.product_id}:${row.portal}`, text(row.price == null ? null : Number(row.price)))
+  const marginOf = new Map<string, string>()
+  if (!margins.error) {
+    for (const row of margins.data || []) marginOf.set(`${row.product_id}:${row.portal}`, text(row.margin_percent == null ? null : Number(row.margin_percent)))
+  }
+  const headers = [
+    'sku',
+    'name',
+    ...(showCost ? ['cost_price', 'cost_source', 'effective_cost'] : []),
+    'store_fixed_price',
+    'business_fixed_price',
+    'corporate_fixed_price',
+    'store_margin_percent',
+    'business_margin_percent',
+    'corporate_margin_percent',
+    'store_sell_price',
+    'business_sell_price',
+    'corporate_sell_price',
+    'retail_price',
+  ]
   const lines = [headers.join(',')]
-  for (const product of products || []) {
-    const costRelation = product.product_costs as { supplier_cost?: number | null } | { supplier_cost?: number | null }[] | null
-    const cost = Array.isArray(costRelation) ? costRelation[0]?.supplier_cost : costRelation?.supplier_cost
+  for (const product of rows) {
+    const basis = costs.get(product.id)
     const values = [
       product.sku || '',
       product.name || '',
-      ...(showCost ? [cost == null ? '' : String(cost)] : []),
-      product.price == null ? '' : String(product.price),
-      fixedPrice.get(`${product.id}:store`) || '',
-      fixedPrice.get(`${product.id}:business`) || '',
-      fixedPrice.get(`${product.id}:corporate`) || '',
+      ...(showCost ? [text(basis?.manualCost), basis?.source || 'manual', text(basis?.cost)] : []),
+      ...PORTALS.map((portal) => fixedPrice.get(`${product.id}:${portal}`) || ''),
+      ...PORTALS.map((portal) => marginOf.get(`${product.id}:${portal}`) || ''),
+      ...PORTALS.map((portal) => text(sell.get(portal)?.get(product.id)?.price)),
+      text(product.price == null ? null : Number(product.price)),
     ]
     lines.push(values.map((value) => cell(String(value))).join(','))
   }

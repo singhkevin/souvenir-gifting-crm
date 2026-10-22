@@ -12,7 +12,8 @@ import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
  *   1. company_product_prices (while valid_until is blank or still current), else
  *   2. campaign_products.manual_price, else
  *   3. pack / kit rows keep their stored price, else
- *   4. base price marked up by that company's margin percent.
+ *   4. portal fixed price, else effective cost marked up by the company margin, the product's
+ *      corporate margin, or the corporate default margin (no cost = price on quote).
  * campaign_products.selling_price stays as the snapshot used when the product row is missing.
  * Mirrors public.place_direct_order for the catalog surface so the price shown is the price charged.
  */
@@ -74,7 +75,7 @@ async function priceRows(
 
   const productIds = [...new Set(rows.filter((row) => computeIds.includes(row.id)).map((row) => row.product_id))]
   const [{ data: products }, companyResult] = await Promise.all([
-    admin.from('products').select('id, price').in('id', productIds),
+    admin.from('products').select('id').in('id', productIds),
     companyId
       ? admin.from('companies').select('margin_percent').eq('id', companyId).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -89,7 +90,6 @@ async function priceRows(
     return [{
       id: row.id,
       productId: row.product_id,
-      retailPrice: num(product.price),
       catalogManualPrice: row.manual_price,
     }]
   })

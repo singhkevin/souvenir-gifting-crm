@@ -345,7 +345,7 @@ export async function searchQuoteProducts(quotationId: string, query: string) {
   if (term.length < 2) return { error: 'Type at least 2 characters' }
   const { data, error } = await draft.supabase
     .from('products')
-    .select('id, name, sku, moq, price')
+    .select('id, name, sku, moq')
     .eq('status', 'active')
     .or(`name.ilike.%${term}%,sku.ilike.%${term}%`)
     .order('name')
@@ -373,7 +373,7 @@ export async function addQuotationProduct(quotationId: string, productId: string
   const { supabase, quote } = draft
   const { data: product } = await supabase
     .from('products')
-    .select('id, name, price, moq, status')
+    .select('id, name, moq, status')
     .eq('id', productId)
     .maybeSingle()
   if (!product || product.status !== 'active') return { error: 'That product is not available' }
@@ -400,7 +400,8 @@ export async function addQuotationProduct(quotationId: string, productId: string
     const prices = await sellPricesForSurface([productId], surface, Number.isFinite(margin) ? margin : null, quote.company_id)
     const listed = prices?.has(productId) ? prices.get(productId) : undefined
     if (listed === null) return { error: 'This product is price on quote. Set a fixed price or a company special before adding it.' }
-    const unit = listed ?? (Number(product.price) || 0)
+    // Without the pricer (no service role) the line starts at 0 for staff to price. No retail fallback.
+    const unit = listed ?? 0
     const quantityToSave = addQty
     const { error } = await supabase.from('quotation_items').insert({
       quotation_id: quotationId,

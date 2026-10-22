@@ -11,7 +11,8 @@ import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 import { withIdempotency } from '@/lib/idempotency'
 import { canonicalCategoryLabel, findCategory } from '@/lib/products/category-plan'
-import { resolveCostAndRetail } from '@/lib/products/cost-price'
+import { legacyPriceForInsert, resolveCost } from '@/lib/products/cost-price'
+import { parseCostSource } from '@/lib/pricing/cost-basis'
 import {
   CHANNEL_MIGRATION,
   channelColumnsMissing,
@@ -56,12 +57,10 @@ async function createProductOnce(formData: FormData) {
   const brand_id = (formData.get('brand_id') as string) || null
   const supplier_id = (formData.get('supplier_id') as string) || null
   const description = (formData.get('description') as string) || null
-  // One number per product: the cost (supplier) price. Retail = cost (0% margin)
-  // unless an explicit retail override is given. Portal prices are set in Pricing.
-  const priced = resolveCostAndRetail({
-    cost: formData.get('supplier_cost'),
-    retailOverride: formData.get('price_override'),
-  })
+  // One number per product: the cost (supplier) price. Selling prices are calculated
+  // from the effective cost in Pricing; there is no retail override.
+  const priced = resolveCost(formData.get('supplier_cost'))
+  const costSource = parseCostSource(formData.get('cost_source'))
   const moq = parseInt(formData.get('moq') as string, 10) || 1
   const fulfillment_mode = parseFulfillmentMode(formData.get('fulfillment_mode'))
   const stockRaw = String(formData.get('stock_qty') ?? '').trim()
@@ -97,7 +96,9 @@ async function createProductOnce(formData: FormData) {
   if (!priced.ok) {
     return { error: priced.error }
   }
-  const price = priced.price
+  if (!costSource.ok) return { error: costSource.error }
+  // Frozen legacy column (NOT NULL until 20261022_pricing_cost_basis.sql); nothing prices from it.
+  const price = legacyPriceForInsert(priced.cost)
   const supplier_cost = priced.cost
   if (image_url && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\b/i.test(image_url)) {
     return { error: 'Image URLs cannot point to localhost. Upload a product photo instead.' }
@@ -166,6 +167,7 @@ async function createProductOnce(formData: FormData) {
   {
     const { error: costError } = await upsertProductCost(supabase, product.id, {
       supplier_cost,
+      ...(costSource.value !== 'manual' ? { cost_source: costSource.value } : {}),
     })
     if (costError) {
       await supabase.from('products').delete().eq('id', product.id)
@@ -296,20 +298,17 @@ export async function updateProduct(productId: string, formData: FormData) {
   text('supplier_id')
   text('hsn_code')
   number('moq', 'moq', 1)
-  const costPatch: { supplier_cost?: number | null } = {}
+  const costPatch: { supplier_cost?: number | null; cost_source?: 'manual' | 'preferred' | 'lowest' } = {}
   if (formData.has('supplier_cost')) {
-    // Cost price is the one price staff enter. Retail = cost (0% margin) unless
-    // the optional retail override is filled in.
-    const priced = resolveCostAndRetail({
-      cost: formData.get('supplier_cost'),
-      retailOverride: formData.get('price_override'),
-    })
+    // Cost price is the one price staff enter. products.price is frozen and never written here.
+    const priced = resolveCost(formData.get('supplier_cost'))
     if (!priced.ok) return { error: priced.error }
     costPatch.supplier_cost = priced.cost
-    update.price = priced.price
-  } else {
-    // Forms without a cost field (older screens) may still send a retail price.
-    number('price', 'price', 0)
+  }
+  if (formData.has('cost_source')) {
+    const source = parseCostSource(formData.get('cost_source'))
+    if (!source.ok) return { error: source.error }
+    costPatch.cost_source = source.value
   }
   if (formData.has('stock_qty')) {
     const raw = String(formData.get('stock_qty') ?? '').trim()
@@ -365,9 +364,16 @@ export async function updateProduct(productId: string, formData: FormData) {
     return { error: directOrderSchemaHint(error.message) }
   }
 
-  if (formData.has('supplier_cost')) {
-    const { error: costError } = await upsertProductCost(supabase, productId, costPatch)
-    if (costError) return { error: supplierSchemaHint(costError.message) }
+  if (Object.keys(costPatch).length > 0) {
+    let { error: costError } = await upsertProductCost(supabase, productId, costPatch)
+    // Before the cost-basis migration there is no cost_source column; manual is the only behaviour then.
+    if (costError && /cost_source/i.test(costError.message) && costPatch.cost_source === 'manual') {
+      delete costPatch.cost_source
+      costError = Object.keys(costPatch).length ? (await upsertProductCost(supabase, productId, costPatch)).error : null
+    }
+    if (costError) {
+      return { error: /cost_source/i.test(costError.message) ? 'Cost source needs supabase/migrations/20261022_pricing_cost_basis.sql' : supplierSchemaHint(costError.message) }
+    }
   }
 
   if (update.status && update.status !== 'active') {
