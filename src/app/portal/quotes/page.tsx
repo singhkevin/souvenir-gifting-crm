@@ -93,7 +93,7 @@ export default async function QuotesPage({
       {/* Page Header */}
       <div className="border-b border-[#CCC5BD] pb-6">
         <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
-          Client portal // Quotes
+          Client portal · Quotes
         </span>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1C1C18] tracking-tight">Quotes & Requests</h1>
         <p className="mt-2 text-sm text-[#4A4640]">Requests you have sent, and quotes ready for your decision.</p>

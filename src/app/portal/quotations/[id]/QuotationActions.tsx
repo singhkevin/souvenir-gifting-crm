@@ -94,7 +94,7 @@ export function QuotationActions({
     <div className="space-y-6 pt-2">
       <div>
         <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300] mb-1">
-          Quotation // Review
+          Quotation · Review
         </span>
         <h3 className="font-serif text-2xl text-[#1C1C18]">Your decision</h3>
         <p className="mt-1 text-sm text-[#4A4640]">

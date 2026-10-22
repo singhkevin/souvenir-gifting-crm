@@ -71,7 +71,7 @@ export default async function PortalOrdersPage() {
       {/* Page Header */}
       <div className="border-b border-[#CCC5BD] pb-6">
         <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
-          Client portal // Orders
+          Client portal · Orders
         </span>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1C1C18] tracking-tight">Orders</h1>
         <p className="mt-2 text-sm text-[#4A4640]">Track deliveries and the documents for each order.</p>

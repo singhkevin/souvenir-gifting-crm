@@ -141,7 +141,7 @@ export default async function PortalOrderDetailPage({
           <div className="flex flex-col sm:flex-row justify-between gap-4">
             <div className="min-w-0 space-y-1">
               <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
-                Order // {order.order_number}
+                Order · {order.order_number}
               </span>
               <h1 className="font-serif text-3xl sm:text-4xl text-[#1C1C18] tracking-tight">
                 {campaign?.name || order.order_number}
@@ -242,7 +242,7 @@ export default async function PortalOrderDetailPage({
           <div className="p-6 space-y-4 bg-[#FFDBCB]/20 border-l-4 border-l-[#9E4300]">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
-                Action needed // Mockup approval
+                Action needed · Mockup approval
               </span>
               <h2 className="font-serif text-2xl text-[#1C1C18] mt-1">Client approval</h2>
               {order.client_approval_status === 'approved' ? (

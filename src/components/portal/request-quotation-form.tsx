@@ -97,7 +97,7 @@ export function RequestQuotationForm() {
       {/* Page Title */}
       <div className="border-b border-[#CCC5BD] pb-6">
         <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
-          Client portal // Request a quote
+          Client portal · Request a quote
         </span>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#1C1C18] tracking-tight">Request Quotation</h1>
         <p className="mt-2 text-sm text-[#4A4640]">
@@ -163,7 +163,7 @@ export function RequestQuotationForm() {
               <div className="space-y-6">
                 <div className="border-b border-[#CCC5BD] pb-3">
                   <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
-                    Step 01 // General Information
+                    Step 01 · General information
                   </span>
                   <h2 className="font-serif text-2xl text-[#1C1C18] mt-1">What do you need?</h2>
                 </div>
@@ -214,7 +214,7 @@ export function RequestQuotationForm() {
               <div className="space-y-6">
                 <div className="border-b border-[#CCC5BD] pb-3">
                   <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
-                    Step 02 // Budget and delivery
+                    Step 02 · Budget and delivery
                   </span>
                   <h2 className="font-serif text-2xl text-[#1C1C18] mt-1">Budget & Logistics</h2>
                 </div>
@@ -287,7 +287,7 @@ export function RequestQuotationForm() {
               <div className="space-y-6">
                 <div className="border-b border-[#CCC5BD] pb-3">
                   <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
-                    Step 03 // Gift selection
+                    Step 03 · Gift selection
                   </span>
                   <h2 className="font-serif text-2xl text-[#1C1C18] mt-1">Products & Quantities</h2>
                   <p className="mt-1 text-xs text-[#4A4640]">

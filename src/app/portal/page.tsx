@@ -142,7 +142,7 @@ export default async function PortalHomePage() {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2.5 py-1 text-[11px] uppercase tracking-wider text-[#9E4300]">
-              SECTION // 01
+              SECTION · 01
             </span>
             <h2 className="font-[family-name:var(--font-newsreader)] text-2xl font-normal tracking-tight text-[#1C1C18] sm:text-3xl">
               My orders
