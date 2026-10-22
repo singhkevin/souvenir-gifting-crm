@@ -507,6 +507,46 @@ export type ChannelVisibilityInput = {
   business: boolean
   corporate: string
   companyIds: string[]
+  /** With "All companies": also delete the per-company hide rules for this product. */
+  clearExclusions?: boolean
+}
+
+type ExclusionClient = Awaited<ReturnType<typeof createClient>>
+
+/**
+ * Deletes company_product_exclusions rows for one product (optionally only some
+ * companies) and writes a catalogue_client_unhidden audit row per removed hide,
+ * mirroring the catalogue_client_hidden shape the table trigger writes.
+ */
+async function clearProductExclusions(
+  supabase: ExclusionClient,
+  productId: string,
+  userId: string,
+  companyIds?: string[],
+): Promise<{ error?: string; removed: string[] }> {
+  if (companyIds && companyIds.length === 0) return { removed: [] }
+  let query = supabase.from('company_product_exclusions').delete().eq('product_id', productId)
+  if (companyIds) query = query.in('company_id', companyIds)
+  const { data, error } = await query.select('company_id')
+  if (error) {
+    // Older databases without the exclusions table have nothing to clear.
+    if (/schema cache|could not find the table|does not exist/i.test(error.message)) return { removed: [] }
+    return { error: error.message, removed: [] }
+  }
+  const removed = (data || []).map((row) => row.company_id as string)
+  if (removed.length) {
+    const { data: product } = await supabase.from('products').select('sku').eq('id', productId).maybeSingle()
+    for (const companyId of removed) {
+      await writeAudit(supabase, {
+        action: 'catalogue_client_unhidden',
+        entity: 'company_product_exclusions',
+        entityId: productId,
+        previous: { company_id: companyId, product_id: productId, sku: product?.sku ?? null },
+        userId,
+      })
+    }
+  }
+  return { removed }
 }
 
 /**
@@ -559,6 +599,21 @@ export async function saveChannelVisibility(productId: string, input: ChannelVis
     if (insertError) return { error: 'Unable to update product visibility. Please try again.' }
   }
 
+  // A hide rule beats a grant, so ticking a company in "Selected companies" must
+  // also lift its hide rule; otherwise the company stays hidden while the panel
+  // says it can see the product. With "All companies" the admin chooses.
+  let unhidden: string[] = []
+  if (mode === 'selected' || (mode === 'all' && input.clearExclusions)) {
+    const cleared = await clearProductExclusions(
+      supabase,
+      productId,
+      profile.id,
+      mode === 'selected' ? companyIds : undefined,
+    )
+    if (cleared.error) return { error: 'Visibility saved, but the hide rules could not be cleared. Please try again.' }
+    unhidden = cleared.removed
+  }
+
   await writeAudit(supabase, {
     action: 'assignment_change',
     entity: 'products',
@@ -568,6 +623,7 @@ export async function saveChannelVisibility(productId: string, input: ChannelVis
       show_in_business: business,
       catalogue_access: mode,
       companyIds: mode === 'selected' ? companyIds : [],
+      ...(unhidden.length ? { unhiddenCompanyIds: unhidden } : {}),
     },
     userId: profile.id,
   })
@@ -694,17 +750,23 @@ export async function hideCompanyProduct(productId: string, companyId: string) {
     .maybeSingle()
   if (!product) return { error: 'Choose an active catalogue product' }
 
-  const { error: excludeError } = await supabase
-    .from('company_product_exclusions')
-    .upsert({ product_id: productId, company_id: companyId }, { onConflict: 'company_id,product_id' })
-  if (excludeError) {
-    if (/schema cache|could not find the table/i.test(excludeError.message)) {
-      return { error: 'Catalogue exclusions are not available yet. Apply migration 20261002_company_product_exclusions, then retry.' }
+  // Hide rules only mean something for "All companies" products. For "Selected
+  // companies" removing the grant is the hide; writing an exclusion as well left a
+  // stale rule behind that silently hid the product again after an admin later
+  // re-ticked the company or switched the product to "All companies".
+  if (product.catalogue_access === 'all') {
+    const { error: excludeError } = await supabase
+      .from('company_product_exclusions')
+      .upsert({ product_id: productId, company_id: companyId }, { onConflict: 'company_id,product_id' })
+    if (excludeError) {
+      if (/schema cache|could not find the table/i.test(excludeError.message)) {
+        return { error: 'Catalogue exclusions are not available yet. Apply migration 20261002_company_product_exclusions, then retry.' }
+      }
+      return { error: excludeError.message }
     }
-    return { error: excludeError.message }
   }
 
-  // For selected products, also drop the grant so Hide is a single clear action.
+  // For selected products, drop the grant so Hide is a single clear action.
   if (product.catalogue_access === 'selected') {
     await supabase
       .from('company_product_access')
@@ -770,6 +832,29 @@ export async function showCompanyProduct(productId: string, companyId: string) {
       if (updateError) return { error: updateError.message }
     }
   }
+
+  revalidatePath('/crm/products/' + productId)
+  revalidatePath('/crm/companies/' + companyId)
+  revalidatePath('/crm/products')
+  revalidatePath('/portal/catalogue')
+  return { success: true }
+}
+
+/**
+ * Lift one company's hide rule for a product from the product page. Only deletes
+ * the exclusion; it never adds a grant, so "Selected companies" stays as chosen.
+ */
+export async function unhideCompanyProduct(productId: string, companyId: string) {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!VISIBILITY_ROLES.includes(profile.role as (typeof VISIBILITY_ROLES)[number])) {
+    return { error: 'Only admin can change product visibility' }
+  }
+  if (!isUuid(productId) || !isUuid(companyId)) return { error: 'Product and company are required' }
+
+  const supabase = await createClient()
+  const cleared = await clearProductExclusions(supabase, productId, profile.id, [companyId])
+  if (cleared.error) return { error: 'Unable to unhide this company. Please try again.' }
 
   revalidatePath('/crm/products/' + productId)
   revalidatePath('/crm/companies/' + companyId)

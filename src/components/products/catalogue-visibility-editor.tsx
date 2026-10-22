@@ -1,14 +1,29 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Briefcase, Building2, Store } from 'lucide-react'
+import { Briefcase, Building2, EyeOff, Store } from 'lucide-react'
 import { useAction } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
-import { saveChannelVisibility } from '@/app/crm/products/actions'
+import { saveChannelVisibility, unhideCompanyProduct } from '@/app/crm/products/actions'
 import { CompanyAvatar } from '@/components/ui/avatar'
 import { CHANNEL_MIGRATION } from '@/lib/products/channel-visibility'
 
 type Company = { id: string; name: string; logo_path?: string | null }
+export type HiddenCompany = Company & { hiddenAt?: string | null }
+
+function formatHiddenAt(value?: string | null) {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }) + ' IST'
+}
 
 const CORPORATE_OPTIONS = [
   { value: 'all', label: 'All companies', hint: 'Every corporate client portal, client catalogue and microsite.' },
@@ -65,6 +80,7 @@ export function CatalogueVisibilityEditor({
   channelsReady,
   companies,
   grantedIds,
+  hiddenFrom = [],
 }: {
   productId: string
   initialMode: string
@@ -73,6 +89,7 @@ export function CatalogueVisibilityEditor({
   channelsReady: boolean
   companies: Company[]
   grantedIds: string[]
+  hiddenFrom?: HiddenCompany[]
 }) {
   const [store, setStore] = useState(initialStore)
   const [business, setBusiness] = useState(initialBusiness)
@@ -80,6 +97,8 @@ export function CatalogueVisibilityEditor({
   const [selected, setSelected] = useState<string[]>(grantedIds)
   const [query, setQuery] = useState('')
   const { pending, run } = useAction()
+  const [unhidingId, setUnhidingId] = useState<string | null>(null)
+  const hiddenIds = useMemo(() => new Set(hiddenFrom.map((c) => c.id)), [hiddenFrom])
 
   // Before the migration, Retail and Business follow corporate "All companies".
   const legacy = mode === 'all'
@@ -97,15 +116,38 @@ export function CatalogueVisibilityEditor({
   }
 
   const save = () => {
+    let clearExclusions = false
+    if (mode === 'all' && hiddenFrom.length > 0) {
+      const names = hiddenFrom.map((c) => c.name).join(', ')
+      // Default (Cancel) keeps the hide rules; OK clears them.
+      clearExclusions = window.confirm(
+        `This product is hidden from ${hiddenFrom.length} ${hiddenFrom.length === 1 ? 'company' : 'companies'}: ${names}.\n\n` +
+          'Hide rules override "All companies".\n\n' +
+          'OK: clear these hide rules so every company sees it.\n' +
+          'Cancel: keep them hidden from these companies.',
+      )
+    }
+    const unhidesTicked = mode === 'selected' && selected.some((id) => hiddenIds.has(id))
     run(
       async () => saveChannelVisibility(productId, {
         store: storeValue,
         business: businessValue,
         corporate: mode,
         companyIds: mode === 'selected' ? selected : [],
+        clearExclusions,
       }),
-      { successMessage: 'Visibility updated' },
+      {
+        successMessage:
+          clearExclusions || unhidesTicked ? 'Visibility updated and hide rules cleared' : 'Visibility updated',
+      },
     )
+  }
+
+  const unhide = (company: HiddenCompany) => {
+    setUnhidingId(company.id)
+    run(async () => unhideCompanyProduct(productId, company.id), {
+      successMessage: `Unhidden for ${company.name}`,
+    })
   }
 
   return (
@@ -170,6 +212,46 @@ export function CatalogueVisibilityEditor({
         ))}
       </div>
 
+      {hiddenFrom.length > 0 && (
+        <div className="space-y-2 border border-[#9E4300]/30 bg-[#FFB690]/15 p-3">
+          <div>
+            <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#9E4300]">
+              <EyeOff className="h-3.5 w-3.5" /> Hidden from these companies
+            </h3>
+            <p className="text-[11px] text-[#7C766F] mt-0.5">
+              A hide rule overrides the corporate setting above. These companies do not see this product on their portal or microsite.
+            </p>
+          </div>
+          <ul className="divide-y divide-[#EDE8DF] border border-[#CCC5BD] bg-white">
+            {hiddenFrom.map((company) => {
+              const when = formatHiddenAt(company.hiddenAt)
+              const busy = pending && unhidingId === company.id
+              return (
+                <li key={company.id} className="flex items-center gap-2 px-3 py-2 text-xs">
+                  <CompanyAvatar name={company.name} logoPath={company.logo_path} size="sm" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium text-[#1C1B1A] truncate">{company.name}</span>
+                    {when && <span className="block text-[10px] text-[#7C766F]">Hidden {when}</span>}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => unhide(company)}
+                    disabled={pending}
+                    className="shrink-0 border border-[#9E4300]/40 px-2.5 py-1 text-[11px] font-semibold text-[#9E4300] hover:bg-[#9E4300]/10 disabled:opacity-50"
+                  >
+                    {busy ? (
+                      <span className="inline-flex items-center gap-1.5"><Spinner />Unhiding…</span>
+                    ) : (
+                      'Unhide'
+                    )}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
       {mode === 'selected' && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -197,6 +279,11 @@ export function CatalogueVisibilityEditor({
                 />
                 <CompanyAvatar name={company.name} logoPath={company.logo_path} size="sm" />
                 <span className="font-medium text-[#1C1B1A]">{company.name}</span>
+                {hiddenIds.has(company.id) && (
+                  <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9E4300]">
+                    {selected.includes(company.id) ? 'Hidden · unhides on save' : 'Hidden'}
+                  </span>
+                )}
               </label>
             ))}
             {filtered.length === 0 && (

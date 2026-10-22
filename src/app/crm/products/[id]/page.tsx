@@ -46,6 +46,7 @@ export default async function ProductDetailPage({
     { data: suppliers },
     { data: allCompanies },
     { data: accessRecords },
+    { data: exclusionRecords },
     pricing,
   ] = await Promise.all([
     supabase.from('products').select('*, product_costs(supplier_cost, internal_notes), category:categories(id, name), brand:brands(id, name), supplier:suppliers(id, name)').eq('id', id).maybeSingle(),
@@ -54,6 +55,12 @@ export default async function ProductDetailPage({
     supabase.from('suppliers').select('id, name').order('name'),
     supabase.from('companies').select('id, name, logo_path').eq('status', 'active').order('name'),
     supabase.from('company_product_access').select('*, company:companies(id, name, city)').eq('product_id', id),
+    // Per-company hide rules. They beat "All companies", so the panel must show them.
+    supabase
+      .from('company_product_exclusions')
+      .select('company_id, created_at, company:companies(id, name, logo_path)')
+      .eq('product_id', id)
+      .order('created_at', { ascending: false }),
     getPricingSettings(),
   ])
   const offers = canPrice ? await loadSupplierOffers(supabase, [id]) : []
@@ -73,6 +80,17 @@ export default async function ProductDetailPage({
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
   const channels = channelSummary(product, grantedCompanyIds.length)
+  const hiddenFrom = (exclusionRecords || []).map((row) => {
+    const company = (Array.isArray(row.company) ? row.company[0] : row.company) as
+      | { id: string; name: string; logo_path: string | null }
+      | null
+    return {
+      id: row.company_id as string,
+      name: company?.name || 'Unknown company',
+      logo_path: company?.logo_path ?? null,
+      hiddenAt: row.created_at as string,
+    }
+  })
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -117,6 +135,14 @@ export default async function ProductDetailPage({
                   {product.sku}
                 </span>
                 <ChannelBadges summary={channels} />
+                {hiddenFrom.length > 0 && (
+                  <span
+                    title={`Hidden from: ${hiddenFrom.map((c) => c.name).join(', ')}`}
+                    className="inline-flex items-center whitespace-nowrap border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[#9E4300] rounded-none"
+                  >
+                    Hidden from {hiddenFrom.length} {hiddenFrom.length === 1 ? 'company' : 'companies'}
+                  </span>
+                )}
                 {product.status === 'active' ? (
                   <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> active
@@ -397,6 +423,7 @@ export default async function ProductDetailPage({
             channelsReady={hasChannelColumns(product)}
             companies={allCompanies || []}
             grantedIds={grantedCompanyIds}
+            hiddenFrom={hiddenFrom}
           />
         </div>
         ) : (
@@ -405,6 +432,11 @@ export default async function ProductDetailPage({
             <h2 className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1B1A]">Where this product shows</h2>
           </div>
           <ChannelBadges summary={channels} />
+          {hiddenFrom.length > 0 && (
+            <p className="text-xs text-[#9E4300]">
+              Hidden from these companies: {hiddenFrom.map((c) => c.name).join(' · ')}
+            </p>
+          )}
           <p className="text-xs text-[#7C766F]">Only admin can change where this product shows.</p>
         </div>
         )}
