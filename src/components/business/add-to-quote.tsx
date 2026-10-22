@@ -65,18 +65,20 @@ export function AddToQuote({
 
   return (
     <div className="space-y-4">
-      <label className="block text-sm">
-        Quantity (minimum {product.moqUnits})
+      <label className="block">
+        <span className="sv2-label text-[10px] text-[#4A4640]">
+          Quantity (minimum <span className="sv2-mono-sm">{product.moqUnits}</span>)
+        </span>
         <input
           type="number"
           min={product.moqUnits}
           value={quantity}
           onChange={(event) => setQuantity(Number(event.target.value))}
-          className="mt-1 w-full rounded-md border border-[#E5DFD5] px-3 py-2"
+          className="mt-1 w-full border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 sv2-mono-sm text-sm text-[#1C1C18] rounded-none focus:border-[#1C1C18] focus:outline-none"
         />
       </label>
-      <fieldset className="space-y-2">
-        <legend className="text-sm">Optional quantity breaks</legend>
+      <fieldset className="border border-[#CCC5BD] bg-[#F6F3EC] p-3 rounded-none space-y-2">
+        <legend className="px-1 sv2-label text-[10px] text-[#4A4640]">Optional quantity breaks</legend>
         {breaks.map((value, index) => (
           <input
             key={index}
@@ -89,43 +91,47 @@ export function AddToQuote({
               next[index] = event.target.value
               setBreaks(next)
             }}
-            className="w-full rounded-md border border-[#E5DFD5] px-3 py-2 text-sm"
+            className="w-full border border-[#CCC5BD] bg-[#FCF9F2] px-3 py-2 sv2-mono-sm text-sm text-[#1C1C18] rounded-none focus:border-[#1C1C18] focus:outline-none"
           />
         ))}
       </fieldset>
-      <label className="block text-sm">
-        Target unit price (optional)
+      <label className="block">
+        <span className="sv2-label text-[10px] text-[#4A4640]">Target unit price (optional)</span>
         <input
           type="number"
           min="0"
           step="0.01"
           value={target}
           onChange={(event) => setTarget(event.target.value)}
-          className="mt-1 w-full rounded-md border border-[#E5DFD5] px-3 py-2"
+          className="mt-1 w-full border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 sv2-mono-sm text-sm text-[#1C1C18] rounded-none focus:border-[#1C1C18] focus:outline-none"
         />
       </label>
-      <label className="block text-sm">
-        Note
+      <label className="block">
+        <span className="sv2-label text-[10px] text-[#4A4640]">Note</span>
         <textarea
           value={note}
           maxLength={500}
           onChange={(event) => setNote(event.target.value)}
-          className="mt-1 w-full rounded-md border border-[#E5DFD5] px-3 py-2"
+          className="mt-1 w-full border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-sm text-[#1C1C18] rounded-none focus:border-[#1C1C18] focus:outline-none"
           rows={3}
         />
       </label>
-      {error ? <p className="text-sm text-red-700">{error}</p> : null}
+      {error ? (
+        <div className="border border-[#BA1A1A] bg-[#FFDAD6]/30 p-2 text-xs text-[#BA1A1A]">
+          {error}
+        </div>
+      ) : null}
       <button
         type="button"
         onClick={add}
-        className="w-full bg-[#806A50] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+        className="w-full bg-[#9E4300] px-4 py-3 sv2-label text-xs text-white hover:bg-[#783100] transition-colors rounded-none"
       >
         Add to quote
       </button>
       {product.buyOnStore ? (
         <Link
           href={`/catalogue/cart/add?items=${product.id}:${Math.max(1, Math.round(quantity) || 1)}`}
-          className="block text-center text-sm text-[#806A50]"
+          className="block text-center sv2-label text-[11px] text-[#9E4300] hover:underline"
         >
           Buy on store
         </Link>

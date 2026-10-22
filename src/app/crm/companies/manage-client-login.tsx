@@ -43,51 +43,139 @@ export function ManageClientLogin({
 
   return (
     <>
-      <button type="button" onClick={() => { setOpen(true); setIssued(null); setPassword(''); setRevealed(false) }} className="text-[11px] font-semibold text-[#624B32] hover:underline">
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true)
+          setIssued(null)
+          setPassword('')
+          setRevealed(false)
+        }}
+        className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9E4300] hover:underline"
+      >
         Manage Login
       </button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button type="button" className="absolute inset-0 bg-black/40" aria-label="Close" onClick={() => { if (!pending) setOpen(false) }} />
-          <div className="relative bg-white rounded-2xl border border-[#E5DFD5] shadow-lg w-full max-w-md p-5 space-y-3 text-xs">
-            <h3 className="text-sm font-bold text-[#1C1917]">Manage Login</h3>
-            <p><span className="text-[#7A7267]">Name:</span> {client.full_name || '—'}</p>
-            <p><span className="text-[#7A7267]">Client ID / Login email:</span> <span className="font-mono">{client.email}</span></p>
-            <p><span className="text-[#7A7267]">Role:</span> {client.role.replace('_', ' ')}</p>
-            <p><span className="text-[#7A7267]">Status:</span> {client.is_active ? 'Active' : 'Inactive'}</p>
-            <p className="text-[#7A7267]">Existing passwords cannot be viewed. Set a new temporary password to share with the client.</p>
-            {issued ? (
-              <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E5DFD5] space-y-2">
-                <p className="font-semibold">Temporary password — share securely</p>
-                <p className="font-mono">{revealed ? issued : '••••••••'}</p>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setRevealed((v) => !v)} className="px-3 py-1.5 border rounded-lg">{revealed ? 'Hide' : 'Reveal once'}</button>
-                  <button type="button" onClick={async () => { await navigator.clipboard.writeText(issued); toast.success('Copied') }} className="px-3 py-1.5 border rounded-lg">Copy</button>
+          <button
+            type="button"
+            className="absolute inset-0 bg-[#1C1B1A]/50"
+            aria-label="Close"
+            onClick={() => {
+              if (!pending) setOpen(false)
+            }}
+          />
+          <div className="relative bg-[#FCF9F2] rounded-none border border-[#CCC5BD] shadow-none w-full max-w-md overflow-hidden text-xs">
+            <div className="bg-[#F6F3EC] px-5 py-3.5 border-b border-[#CCC5BD] flex items-center justify-between">
+              <h3 className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1B1A]">Manage Login</h3>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => setOpen(false)}
+                className="text-[#7C766F] hover:text-[#1C1B1A] text-xs font-bold uppercase tracking-[0.08em]"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Name</span>
+                  <span className="mt-0.5 block text-[#1C1B1A] font-semibold">{client.full_name || '—'}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Role</span>
+                  <span className="mt-0.5 block text-[#1C1B1A] capitalize">{client.role.replace('_', ' ')}</span>
+                </div>
+                <div className="col-span-2">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Client ID / Login email</span>
+                  <span className="mt-0.5 block font-mono text-[#1C1B1A]">{client.email}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Status</span>
+                  <span className="mt-0.5 block text-[#1C1B1A]">{client.is_active ? 'Active' : 'Inactive'}</span>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-2">
-                <input
-                  type="password"
-                  minLength={8}
-                  autoComplete="new-password"
-                  placeholder="Temporary password (min 8)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={pending}
-                  className="w-full border rounded-lg px-3 py-2"
-                />
-                <div className="flex gap-2">
-                  <button type="button" disabled={pending || password.length < 8} aria-busy={pending && mode === 'set' || undefined} onClick={() => submit(false)} className="px-3 py-2 font-semibold text-white bg-[#624B32] rounded-lg disabled:opacity-50">
-                    {pending && mode === 'set' ? <span className="inline-flex items-center gap-2"><Spinner />Saving…</span> : 'Set temporary password'}
-                  </button>
-                  <button type="button" disabled={pending} aria-busy={pending && mode === 'generate' || undefined} onClick={() => submit(true)} className="px-3 py-2 border rounded-lg disabled:opacity-50">
-                    {pending && mode === 'generate' ? <span className="inline-flex items-center gap-2"><Spinner />Generating…</span> : 'Generate password'}
-                  </button>
+              <p className="text-[11px] text-[#4A4640] leading-relaxed">
+                Existing passwords cannot be viewed. Set a new temporary password to share with the client.
+              </p>
+              {issued ? (
+                <div className="p-3.5 rounded-none bg-[#F6F3EC] border border-[#CCC5BD] space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#1C1B1A]">
+                    Temporary password — share securely
+                  </p>
+                  <p className="font-mono text-sm text-[#1C1B1A]">{revealed ? issued : '••••••••'}</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRevealed((v) => !v)}
+                      className="px-3 py-1.5 border border-[#1C1B1A] bg-transparent text-[#1C1B1A] hover:bg-[#F6F3EC] rounded-none text-xs font-bold uppercase tracking-[0.08em] transition-colors"
+                    >
+                      {revealed ? 'Hide' : 'Reveal once'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(issued)
+                        toast.success('Copied')
+                      }}
+                      className="px-3 py-1.5 border border-[#1C1B1A] bg-transparent text-[#1C1B1A] hover:bg-[#F6F3EC] rounded-none text-xs font-bold uppercase tracking-[0.08em] transition-colors"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-            <button type="button" disabled={pending} onClick={() => setOpen(false)} className="w-full py-2 border rounded-lg disabled:opacity-50">Close</button>
+              ) : (
+                <div className="space-y-3">
+                  <input
+                    type="password"
+                    minLength={8}
+                    autoComplete="new-password"
+                    placeholder="Temporary password (min 8)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={pending}
+                    className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 font-mono"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={pending || password.length < 8}
+                      aria-busy={pending && mode === 'set' || undefined}
+                      onClick={() => submit(false)}
+                      className="px-3.5 py-2 font-bold uppercase tracking-[0.08em] text-xs text-[#FCF9F2] bg-[#1C1B1A] hover:bg-[#9E4300] rounded-none disabled:opacity-50 transition-colors shadow-none"
+                    >
+                      {pending && mode === 'set' ? (
+                        <span className="inline-flex items-center gap-2"><Spinner />Saving…</span>
+                      ) : (
+                        'Set temporary password'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      aria-busy={pending && mode === 'generate' || undefined}
+                      onClick={() => submit(true)}
+                      className="px-3.5 py-2 border border-[#1C1B1A] text-[#1C1B1A] hover:bg-[#F6F3EC] rounded-none text-xs font-bold uppercase tracking-[0.08em] disabled:opacity-50 transition-colors"
+                    >
+                      {pending && mode === 'generate' ? (
+                        <span className="inline-flex items-center gap-2"><Spinner />Generating…</span>
+                      ) : (
+                        'Generate password'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => setOpen(false)}
+                className="w-full py-2 border border-[#CCC5BD] text-[#4A4640] hover:bg-[#F6F3EC] rounded-none text-xs font-bold uppercase tracking-[0.08em] disabled:opacity-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

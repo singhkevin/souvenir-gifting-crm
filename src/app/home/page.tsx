@@ -28,7 +28,7 @@ export default async function HomeAliasPage({
 }) {
   const params = await searchParams
   return (
-    <SiteShell categoryVariant="compact">
+    <SiteShell>
       <Suspense fallback={<RetailHomeSkeleton />}>
         <PublicHome searchParams={params} basePath="/home" />
       </Suspense>

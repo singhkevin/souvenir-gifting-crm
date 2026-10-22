@@ -12,6 +12,7 @@ import { toggleOfferingSelection } from '@/app/portal/catalogue/actions'
 import { budgetBadge, clampQuoteQty, quoteEstimate, type BudgetBadge } from '@/lib/portal/catalog-quote'
 import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { formatCurrency } from '@/lib/utils'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export type CatalogQuoteItem = {
   id: string
@@ -119,13 +120,17 @@ export function CatalogQuoteBoard({
   }
 
   return (
-    <div className="pb-24 lg:pb-0">
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="space-y-8">
+    <div className="pb-24 lg:pb-0 min-w-0">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
+        <div className="space-y-10 min-w-0">
           {groups.map((group) => (
-            <section key={group.title || 'catalog'}>
-              {group.title ? <h2 className="text-sm font-semibold text-gray-900">{group.title}</h2> : null}
-              <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 ${group.title ? 'mt-4' : ''}`}>
+            <section key={group.title || 'catalog'} className="space-y-4">
+              {group.title ? (
+                <div className="border-b border-[#CCC5BD] pb-2">
+                  <h2 className="font-serif text-2xl text-[#1C1C18]">{group.title}</h2>
+                </div>
+              ) : null}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {group.items.map((item) => (
                   <CatalogQuoteCard
                     key={item.id}
@@ -142,53 +147,55 @@ export function CatalogQuoteBoard({
           ))}
         </div>
 
+        {/* Desktop Sticky Basket */}
         <aside className="sticky top-20 hidden max-h-[calc(100dvh-6rem)] overflow-y-auto lg:block">
           <QuoteBasket {...basketProps} />
         </aside>
       </div>
 
+      {/* Mobile Floating Drawer Trigger */}
       <>
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#E5DFD5] bg-white px-3 py-3 shadow-[0_-8px_24px_rgba(36,28,18,0.06)] lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#CCC5BD] bg-[#FCF9F2] px-4 py-3 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            className="flex min-h-12 w-full items-center justify-between gap-3 bg-[#9E4300] px-4 text-xs font-bold uppercase tracking-[0.12em] text-white rounded-none"
+            aria-expanded={drawerOpen}
+          >
+            <span>Quote · {lines.length} {lines.length === 1 ? 'item' : 'items'}</span>
+            <span className="font-mono">{estimateLabel(estimate, lines.length)}</span>
+          </button>
+        </div>
+
+        {drawerOpen ? (
+          <div className="fixed inset-0 z-[60] lg:hidden">
             <button
               type="button"
-              onClick={() => setDrawerOpen(true)}
-              className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-white"
-              aria-expanded={drawerOpen}
+              aria-label="Close quote"
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setDrawerOpen(false)}
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Quote"
+              className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto border-t border-[#CCC5BD] bg-[#FCF9F2] p-4 rounded-none"
             >
-              <span>Quote · {lines.length} {lines.length === 1 ? 'item' : 'items'}</span>
-              <span>{estimateLabel(estimate, lines.length)}</span>
-            </button>
-          </div>
-
-          {drawerOpen ? (
-            <div className="fixed inset-0 z-[60] lg:hidden">
-              <button
-                type="button"
-                aria-label="Close quote"
-                className="absolute inset-0 bg-black/40"
-                onClick={() => setDrawerOpen(false)}
-              />
-              <div
-                role="dialog"
-                aria-modal="true"
-                aria-label="Quote"
-                className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-2xl bg-white p-4 shadow-xl"
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <h2 className="text-base font-semibold text-gray-900">Your quote</h2>
-                  <button
-                    type="button"
-                    aria-label="Close quote"
-                    onClick={() => setDrawerOpen(false)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F6F4F1] text-[#5C6570]"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                <QuoteBasket {...basketProps} />
+              <div className="mb-4 flex items-center justify-between gap-3 border-b border-[#CCC5BD] pb-3">
+                <h2 className="font-serif text-xl text-[#1C1C18]">Your quote</h2>
+                <button
+                  type="button"
+                  aria-label="Close quote"
+                  onClick={() => setDrawerOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center border border-[#CCC5BD] bg-white text-[#1C1C18] rounded-none hover:bg-[#F6F3EC]"
+                >
+                  <X size={16} />
+                </button>
               </div>
+              <QuoteBasket {...basketProps} />
             </div>
-          ) : null}
+          </div>
+        ) : null}
       </>
     </div>
   )
@@ -227,33 +234,37 @@ function CatalogQuoteCard({
   }
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <article className="flex flex-col border border-[#CCC5BD] bg-white rounded-none">
       <div className="relative">
         <Link href={`/portal/gifts/${item.id}`} className="block">
-          <ProductImage src={item.imageUrl} alt={item.name} size="md" />
+          <ProductImage src={item.imageUrl} alt={item.name} size="md" className="rounded-none border-b border-[#CCC5BD]" />
         </Link>
         <ShortlistHeart item={item} />
       </div>
       <div className="flex flex-1 flex-col p-4">
         {item.eyebrow ? (
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#806A50]">{item.eyebrow}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">{item.eyebrow}</p>
         ) : null}
         <Link href={`/portal/gifts/${item.id}`}>
-          <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-[#806A50]">{item.name}</h3>
+          <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-[#1C1C18] hover:text-[#9E4300] transition-colors">
+            {item.name}
+          </h3>
         </Link>
         {item.description ? (
-          <p className="mt-1 line-clamp-2 text-xs text-gray-500">{item.description}</p>
+          <p className="mt-1 line-clamp-2 text-xs text-[#4A4640]">{item.description}</p>
         ) : null}
         {item.includes.length > 1 ? (
-          <p className="mt-1 line-clamp-2 text-[11px] text-gray-500">Includes {item.includes.join(', ')}</p>
+          <p className="mt-1 line-clamp-2 text-[11px] text-[#7C766F]">Includes {item.includes.join(', ')}</p>
         ) : null}
 
-        <div className="mt-auto space-y-3 border-t border-gray-100 pt-3">
-          <div>
-            <p className="text-base font-semibold text-gray-900">
-              {item.price == null ? 'Price on request' : formatCurrency(item.price)}
-            </p>
-            <p className="text-[10px] text-gray-400">Per person · MOQ {item.moq}</p>
+        <div className="mt-auto space-y-3 pt-4 border-t border-[#CCC5BD]">
+          <div className="flex items-baseline justify-between gap-2">
+            <div>
+              <p className="font-mono text-base font-semibold text-[#1C1C18]">
+                {item.price == null ? 'Price on request' : formatCurrency(item.price)}
+              </p>
+              <p className="font-mono text-[10px] text-[#7C766F]">Per person · MOQ {item.moq}</p>
+            </div>
             {badge ? <BudgetPill badge={badge} /> : null}
           </div>
 
@@ -269,10 +280,10 @@ function CatalogQuoteCard({
               onClick={() => (added ? onRemove(item.id) : onAdd(item, qty))}
               aria-pressed={added}
               aria-label={added ? `Remove ${item.name} from quote` : `Add ${item.name} to quote`}
-              className={`inline-flex min-h-10 min-w-0 flex-1 items-center justify-center rounded-lg px-3 text-xs font-semibold ${
+              className={`inline-flex min-h-10 min-w-0 flex-1 items-center justify-center px-3 text-xs font-bold uppercase tracking-[0.12em] rounded-none transition-colors ${
                 added
-                  ? 'border border-[#806A50] bg-[#806A50]/10 text-[#806A50]'
-                  : 'bg-[#806A50] text-white hover:bg-[#9C8567]'
+                  ? 'border border-[#9E4300] bg-[#FFDBCB]/30 text-[#9E4300]'
+                  : 'bg-[#1C1B1A] text-white hover:bg-[#9E4300]'
               }`}
             >
               {added ? 'Added' : 'Add to quote'}
@@ -288,8 +299,10 @@ function BudgetPill({ badge }: { badge: BudgetBadge }) {
   const within = badge === 'within'
   return (
     <span
-      className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-        within ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'
+      className={`inline-block px-2 py-0.5 text-[10px]  uppercase tracking-wider rounded-none border ${
+        within
+          ? 'border-[#3A4537] bg-[#DAE6D3] text-[#3A4537]'
+          : 'border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300]'
       }`}
     >
       {within ? 'Within budget' : 'Over budget'}
@@ -315,13 +328,13 @@ function QtyStepper({
   }, [qty])
 
   return (
-    <div className="flex h-10 shrink-0 items-center rounded-lg border border-[#E5DFD5] bg-white">
+    <div className="flex h-10 shrink-0 items-center border border-[#CCC5BD] bg-[#F1EEE7] rounded-none">
       <button
         type="button"
         aria-label={`Decrease quantity for ${label}`}
         disabled={qty <= moq}
         onClick={() => onCommit(qty - 1)}
-        className="flex h-10 w-8 items-center justify-center text-gray-600 disabled:text-gray-300"
+        className="flex h-10 w-8 items-center justify-center text-[#1C1C18] hover:bg-[#EBE8E1] disabled:text-[#CCC5BD] transition-colors"
       >
         <Minus size={14} />
       </button>
@@ -337,14 +350,14 @@ function QtyStepper({
           if (parsed >= moq) onCommit(parsed)
         }}
         onBlur={() => onCommit(text ? Number.parseInt(text, 10) : moq)}
-        className="w-12 border-0 bg-transparent text-center text-sm text-gray-900 outline-none"
+        className="w-12 border-0 bg-transparent text-center font-mono text-xs text-[#1C1C18] outline-none"
       />
       <button
         type="button"
         aria-label={`Increase quantity for ${label}`}
         disabled={qty >= 100000}
         onClick={() => onCommit(qty + 1)}
-        className="flex h-10 w-8 items-center justify-center text-gray-600 disabled:text-gray-300"
+        className="flex h-10 w-8 items-center justify-center text-[#1C1C18] hover:bg-[#EBE8E1] disabled:text-[#CCC5BD] transition-colors"
       >
         <Plus size={14} />
       </button>
@@ -385,11 +398,11 @@ function ShortlistHeart({ item }: { item: CatalogQuoteItem }) {
       disabled={pending}
       aria-pressed={saved}
       aria-label={saved ? `Remove ${item.name} from quote basket` : `Save ${item.name} to quote basket`}
-      className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 shadow-sm transition-colors disabled:opacity-60 ${
-        saved ? 'text-[#806A50]' : 'text-gray-500 hover:text-[#806A50]'
+      className={`absolute right-2 top-2 flex h-8 w-8 items-center justify-center border border-[#CCC5BD] bg-white/95 transition-colors rounded-none disabled:opacity-60 ${
+        saved ? 'text-[#9E4300]' : 'text-[#7C766F] hover:text-[#9E4300]'
       }`}
     >
-      <Heart size={16} className={saved ? 'fill-current' : ''} />
+      <Heart size={15} className={saved ? 'fill-current' : ''} />
     </button>
   )
 }
@@ -418,37 +431,43 @@ function QuoteBasket({
   onSubmit: () => void
 }) {
   return (
-    <section className="rounded-2xl border border-[#E5DFD5] bg-white p-4 sm:p-5">
-      <h2 className="text-base font-semibold text-[#1C1917]">Your quote</h2>
-      <p className="mt-1 text-xs text-[#5A5248]">
-        Quantities start at the minimum order. One request covers everything added here.
-      </p>
+    <section className="border border-[#CCC5BD] bg-[#FCF9F2] p-5 rounded-none space-y-4">
+      <div>
+        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
+          Selection
+        </span>
+        <h2 className="font-serif text-xl text-[#1C1C18]">Your quote</h2>
+        <p className="mt-1 text-xs text-[#4A4640]">
+          Quantities start at the minimum order. One request covers everything added here.
+        </p>
+      </div>
 
       {lines.length === 0 ? (
-        <p className="mt-4 rounded-lg bg-[#FAF7F2] px-3 py-4 text-sm text-[#5A5248]">
+        <div className="border border-[#CCC5BD] bg-[#F6F3EC] p-4 text-center text-xs text-[#7C766F] rounded-none">
           No gifts added yet.
-        </p>
+        </div>
       ) : (
-        <ul className="mt-4 divide-y divide-[#E8E4DE]">
+        <ul className="border border-[#CCC5BD] bg-white rounded-none divide-y divide-[#CCC5BD]">
           {lines.map(({ item, quantity }) => (
-            <li key={item.id} className="py-3">
+            <li key={item.id} className="p-3 space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <p className="min-w-0 text-sm font-medium text-[#1C1917]">
-                  <span className="line-clamp-2">{item.name}</span>
-                  <span className="mt-0.5 block text-xs font-normal text-[#7A7267]">
+                <ProductThumb src={item.imageUrl} alt={item.name} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-[#1C1C18] line-clamp-2">{item.name}</p>
+                  <p className="font-mono text-[10px] text-[#7C766F] mt-0.5">
                     {item.price == null ? 'Price on request' : formatCurrency(item.price)} per person
-                  </span>
-                </p>
+                  </p>
+                </div>
                 <button
                   type="button"
                   aria-label={`Remove ${item.name}`}
                   onClick={() => onRemove(item.id)}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-400 hover:bg-red-50 hover:text-red-600"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center text-[#7C766F] hover:text-[#BA1A1A] transition-colors"
                 >
                   <Trash2 size={14} />
                 </button>
               </div>
-              <div className="mt-2">
+              <div className="pt-1">
                 <QtyStepper
                   qty={quantity}
                   moq={item.moq}
@@ -461,39 +480,55 @@ function QuoteBasket({
         </ul>
       )}
 
-      <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-[#E8E4DE] pt-3">
-        <span className="text-sm text-[#5A5248]">Estimated total</span>
-        <span className="text-base font-semibold text-[#1C1917]">{estimateLabel(estimate, lines.length)}</span>
+      {/* Estimation Block */}
+      <div className="border border-[#CCC5BD] bg-white p-3 rounded-none space-y-1">
+        <div className="flex items-baseline justify-between text-xs">
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+            Estimated total
+          </span>
+          <span className="font-mono font-bold text-base text-[#1C1C18]">
+            {estimateLabel(estimate, lines.length)}
+          </span>
+        </div>
+        {estimate.unpriced > 0 && lines.length > 0 && estimate.unpriced < lines.length ? (
+          <p className="text-[10px] text-[#7C766F]">Some prices are confirmed on the quotation.</p>
+        ) : null}
       </div>
-      {estimate.unpriced > 0 && lines.length > 0 && estimate.unpriced < lines.length ? (
-        <p className="mt-1 text-[11px] text-[#7A7267]">Some prices are confirmed on the quotation.</p>
-      ) : null}
 
-      <label className="mt-4 block text-sm">
-        <span className="mb-1 block font-medium text-[#1C1917]">Delivery date</span>
-        <input
-          type="date"
-          value={deadline}
-          onChange={(event) => onDeadline(event.target.value)}
-          className="min-h-11 w-full rounded-lg border border-[#E8E4DE] px-3"
-        />
-      </label>
-      <label className="mt-3 block text-sm">
-        <span className="mb-1 block font-medium text-[#1C1917]">Notes</span>
-        <textarea
-          value={notes}
-          onChange={(event) => onNotes(event.target.value)}
-          rows={3}
-          placeholder="Branding, delivery city, or anything else we should know"
-          className="w-full rounded-lg border border-[#E8E4DE] px-3 py-2"
-        />
-      </label>
+      {/* Inputs */}
+      <div className="space-y-3">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
+            Delivery date
+          </label>
+          <input
+            type="date"
+            value={deadline}
+            onChange={(event) => onDeadline(event.target.value)}
+            className="w-full bg-[#F1EEE7] border border-[#CCC5BD] px-3 py-2 text-xs font-mono text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
+            Notes
+          </label>
+          <textarea
+            value={notes}
+            onChange={(event) => onNotes(event.target.value)}
+            rows={3}
+            placeholder="Branding, delivery city, or anything else we should know"
+            className="w-full bg-[#F1EEE7] border border-[#CCC5BD] px-3 py-2 text-xs text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none placeholder:text-[#7C766F]"
+          />
+        </div>
+      </div>
+
+      {/* Submit Button */}
       <button
         type="button"
         onClick={onSubmit}
         disabled={pending || lines.length === 0}
         aria-busy={pending || undefined}
-        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-[#806A50] px-5 text-sm font-semibold text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] bg-[#9E4300] hover:bg-[#FF8843] text-white rounded-none disabled:opacity-50 transition-colors"
       >
         {pending ? (
           <span className="inline-flex items-center justify-center gap-2">

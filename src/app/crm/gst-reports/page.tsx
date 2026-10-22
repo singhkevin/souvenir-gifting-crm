@@ -134,41 +134,41 @@ export default async function GstReportsPage({
         to={params.to || ''}
         clearHref="/crm/gst-reports"
         submitLabel="Apply period"
-        className="rounded-2xl border border-[#E5DFD5] bg-white p-3 sm:p-4"
+        className="border border-[#E5DFD5] bg-white p-3 sm:p-4"
       />
 
       {error && (
-        <div className="p-3 rounded-xl bg-red-50 text-red-700 text-xs border border-red-200">
+        <div className="p-3 bg-red-50 text-red-700 text-xs border border-red-200">
           GST invoices could not be loaded. {error.message}
         </div>
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Total Taxable Value</p>
           <p className="text-2xl font-bold">{formatCurrency(taxableTotal)}</p>
           <p className="text-[10px] text-[#7A7267] mt-1">From linked quotations only</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Total GST</p>
           <p className="text-2xl font-bold">{formatCurrency(gstTotal)}</p>
           <p className="text-[10px] text-[#7A7267] mt-1">{withStoredGst} invoice{withStoredGst === 1 ? '' : 's'} with stored tax</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">CGST</p>
           <p className="text-2xl font-bold">—</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">SGST</p>
           <p className="text-2xl font-bold">—</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">IGST</p>
           <p className="text-2xl font-bold">—</p>
         </div>
       </div>
 
-      <div className="bg-white p-5 rounded-2xl border border-[#E5DFD5] text-xs space-y-2">
+      <div className="bg-white p-5 border border-[#E5DFD5] text-xs space-y-2">
         <h2 className="font-bold text-sm text-[#1C1917]">GST Summary</h2>
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
           <div><span className="text-[#7A7267]">Taxable amount</span><p className="font-semibold">{formatCurrency(taxableTotal)}</p></div>
@@ -186,7 +186,7 @@ export default async function GstReportsPage({
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E5DFD5] overflow-x-auto">
+      <div className="bg-white border border-[#E5DFD5] overflow-x-auto">
         <div className="px-4 py-3 border-b">
           <h2 className="font-bold text-sm">Invoice-wise GST Report</h2>
         </div>
@@ -235,7 +235,7 @@ export default async function GstReportsPage({
         </table>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E5DFD5] overflow-x-auto">
+      <div className="bg-white border border-[#E5DFD5] overflow-x-auto">
         <div className="px-4 py-3 border-b">
           <h2 className="font-bold text-sm">GST by Customer</h2>
         </div>

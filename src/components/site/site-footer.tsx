@@ -1,8 +1,9 @@
-import Image from 'next/image'
 import Link from 'next/link'
-import { appName, marketingHostLabel, marketingSiteUrl } from '@/lib/brand'
+import { appName, appShortName, marketingHostLabel, marketingSiteUrl } from '@/lib/brand'
 import { BUDGET_BANDS } from '@/lib/catalogue/collections'
+import { siteContent } from '@/config/siteContent'
 import { whatsAppHref } from '@/lib/contact/public-phone'
+import { BrandLogo } from '@/components/brand/brand-logo'
 
 export function SiteFooter({
   workspaceHref,
@@ -13,94 +14,163 @@ export function SiteFooter({
   workspaceLabel?: string | null
   phone?: string | null
 }) {
+  const currentYear = new Date().getFullYear()
+  const displayPhone = phone || siteContent.phone
   const marketingUrl = marketingSiteUrl()
   const marketingHost = marketingHostLabel(marketingUrl)
   const whatsApp = phone ? whatsAppHref(phone) : null
+
   return (
-    <footer className="mt-0 border-t border-[#715a3e] bg-[#382c1e] text-[#f4dfca]">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:gap-10 sm:px-6 sm:py-14 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
-        <div className="md:col-span-2 lg:col-span-1">
-          <div className="inline-block rounded bg-white px-2 py-1">
-            <Image src="/logo.png" alt={appName()} width={196} height={85} className="h-16 w-auto" />
-          </div>
-          <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#d7c3af]">
-            Your destination for curated corporate gifts — catalogue, quotation and fulfilment in one place.
+    <footer className="w-full border-t border-[#CCC5BD] bg-[#F6F3EC] px-4 sm:px-8 lg:px-16 py-12 lg:py-16 text-[#1C1C18]">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 pb-12 border-b border-[#CCC5BD]">
+        {/* Col 1: Brand & Overview */}
+        <div className="space-y-4">
+          <Link href="/home" className="inline-block">
+            <BrandLogo className="h-8 w-auto object-contain" />
+          </Link>
+          <p className="sv2-body-sm text-[#4A4640]">
+            {appName()} — Gifts, hampers, and keepsakes for personal celebrations, teams, and clients across India.
           </p>
-          {phone ? (
-            <p className="mt-4 text-sm text-[#d7c3af]">
-              <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="hover:text-white">{phone}</a>
-              {whatsApp ? (
-                <>
-                  {' · '}
-                  <a href={whatsApp} className="hover:text-white">WhatsApp</a>
-                </>
-              ) : null}
-            </p>
-          ) : null}
-        </div>
-
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ffe088]">Shop</p>
-          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#d7c3af]">
-            <Link href="/catalogue" className="hover:text-white">
-              Catalogue
-            </Link>
-            <Link href="/collections" className="hover:text-white">
-              Collections
-            </Link>
-            <Link href="/categories" className="hover:text-white">
-              Categories
-            </Link>
-            <Link href="/collections#occasions" className="hover:text-white">
-              Shop by Occasion
-            </Link>
-            <Link href="/request-quote" className="hover:text-white">
-              Request a Quote
-            </Link>
+          <div className="sv2-mono-sm text-[#7C766F] space-y-1 pt-1">
+            <div>GSTIN: {siteContent.gstin}</div>
+            <div>CIN: {siteContent.cin}</div>
           </div>
         </div>
 
+        {/* Col 2: Locations & Contact */}
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ffe088]">About us</p>
-          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#d7c3af]">
-            <Link href="/about" className="hover:text-white">
-              About
-            </Link>
+          <h4 className="sv2-label text-[#1C1C18] mb-3">
+            ADDRESS &amp; CONTACT
+          </h4>
+          <div className="space-y-3 sv2-body-sm text-[#4A4640]">
+            <div>
+              <strong className="text-[#1C1C18] block font-medium">Registered Office</strong>
+              <span>{siteContent.registeredAddress}</span>
+            </div>
+            <div>
+              <strong className="text-[#1C1C18] block font-medium">Studio &amp; Fulfilment</strong>
+              <span>{siteContent.studioAddress}</span>
+            </div>
+            <div className="pt-1 sv2-mono-sm text-[#7C766F] space-y-1">
+              <div>
+                Phone:{' '}
+                {phone ? (
+                  <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="text-[#1C1C18] hover:text-[#9E4300]">
+                    {phone}
+                  </a>
+                ) : (
+                  <span>{displayPhone}</span>
+                )}
+              </div>
+              <div>
+                WhatsApp:{' '}
+                {whatsApp ? (
+                  <a href={whatsApp} target="_blank" rel="noopener noreferrer" className="text-[#1C1C18] hover:text-[#9E4300]">
+                    {displayPhone}
+                  </a>
+                ) : (
+                  <span>{siteContent.whatsapp}</span>
+                )}
+              </div>
+              <div>Email: {siteContent.email}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Col 3: Shop & Collections */}
+        <div>
+          <h4 className="sv2-label text-[#1C1C18] mb-3">
+            SHOP &amp; COLLECTIONS
+          </h4>
+          <ul className="space-y-2 sv2-body-sm text-[#4A4640]">
+            <li>
+              <Link href="/catalogue" className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors">
+                Catalogue
+              </Link>
+            </li>
+            <li>
+              <Link href="/collections" className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors">
+                Collections
+              </Link>
+            </li>
+            <li>
+              <Link href="/categories" className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors">
+                Categories
+              </Link>
+            </li>
+            <li>
+              <Link href="/collections#occasions" className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors">
+                Shop by Occasion
+              </Link>
+            </li>
+            <li>
+              <Link href="/request-quote" className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors">
+                Request a Quote
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        {/* Col 4: About & Price Bands */}
+        <div>
+          <h4 className="sv2-label text-[#1C1C18] mb-3">
+            ASSISTANCE &amp; PRICING
+          </h4>
+          <ul className="space-y-2 sv2-body-sm text-[#4A4640]">
+            <li>
+              <Link href="/about" className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors">
+                About {appShortName()}
+              </Link>
+            </li>
+            <li>
+              <Link href="/business" className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors">
+                Corporate Desk (/business)
+              </Link>
+            </li>
             {workspaceHref && workspaceLabel ? (
-              <Link href={workspaceHref} className="hover:text-white">
-                {workspaceLabel}
-              </Link>
+              <li>
+                <Link href={workspaceHref} className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors">
+                  {workspaceLabel}
+                </Link>
+              </li>
             ) : (
-              <Link href="/login" className="hover:text-white">
-                Team Login
-              </Link>
+              <li>
+                <Link href="/login" className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors">
+                  Account / Team Login
+                </Link>
+              </li>
             )}
-          </div>
-        </div>
-
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ffe088]">Shop by price</p>
-          <div className="mt-4 flex flex-col gap-2.5 text-sm text-[#d7c3af]">
             {BUDGET_BANDS.map((band) => (
-              <Link key={band.id} href={`/catalogue?budget=${encodeURIComponent(band.id)}`} className="hover:text-white">
-                {band.label}
-              </Link>
+              <li key={band.id}>
+                <Link
+                  href={`/catalogue?budget=${encodeURIComponent(band.id)}`}
+                  className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors"
+                >
+                  {band.label}
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
 
-      <div className="border-t border-[#715a3e]/60">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-[#d7c3af] sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>© {new Date().getFullYear()} {appName()}. All rights reserved.</p>
-          <p className="flex flex-wrap gap-x-3">
-            <span>Corporate gifting for teams, clients and brands.</span>
-            {marketingUrl && marketingHost ? (
-              <a href={marketingUrl} className="hover:text-white">
+      {/* Copyright & Integrity Bar */}
+      <div className="max-w-7xl mx-auto pt-4 flex flex-col sm:flex-row items-center justify-between sv2-body-sm text-xs text-[#7C766F] gap-2">
+        <p>
+          &copy; {currentYear} {appName()}. All rights reserved.
+        </p>
+        <div className="flex items-center gap-4 sv2-mono-sm">
+          <span>{siteContent.utilityBar.gstNote}</span>
+          <span className="hidden md:inline">|</span>
+          <span className="hidden md:inline">GSTIN: {siteContent.gstin}</span>
+          {marketingUrl && marketingHost ? (
+            <>
+              <span className="hidden md:inline">|</span>
+              <a href={marketingUrl} className="hover:text-[#1C1C18]">
                 {marketingHost}
               </a>
-            ) : null}
-          </p>
+            </>
+          ) : null}
         </div>
       </div>
     </footer>

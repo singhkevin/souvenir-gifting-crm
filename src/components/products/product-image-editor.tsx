@@ -54,9 +54,9 @@ export function ProductImageEditor({
 
   return (
     <div className="space-y-3">
-      <ProductImage src={preview || imageUrl} alt={name} size="lg" className="rounded-xl border border-gray-200" />
+      <ProductImage src={preview || imageUrl} alt={name} size="lg" className="border border-gray-200" />
       <div className="flex flex-wrap gap-2">
-        <label className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 cursor-pointer">
+        <label className="px-3 py-1.5 text-xs font-semibold border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 cursor-pointer">
           {pending && which === 'upload' ? (
             <span className="inline-flex items-center gap-2"><Spinner />Uploading…</span>
           ) : imageUrl ? 'Replace image' : 'Upload image'}
@@ -73,7 +73,7 @@ export function ProductImageEditor({
             type="button"
             onClick={onRemove}
             disabled={pending}
-            className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 text-red-700 hover:bg-red-50 disabled:opacity-60"
+            className="px-3 py-1.5 text-xs font-semibold border border-gray-200 text-red-700 hover:bg-red-50 disabled:opacity-60"
           >
             {pending && which === 'remove' ? (
               <span className="inline-flex items-center gap-2"><Spinner />Removing…</span>

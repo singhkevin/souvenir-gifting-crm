@@ -7,11 +7,13 @@ import { useAction } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { liveMarginPercent, marginWarningText, marginWarnings, syncCostingFields } from '@/lib/quotes/flow'
 import type { SupplierOffer } from '@/lib/pricing/offers'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 type Line = {
   id: string
   name: string
   sku: string | null
+  imageUrl?: string | null
   quantity: number
   unitPrice: number
   catalogCost?: number | null
@@ -82,29 +84,33 @@ export function QuotationCosting({
   })
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-      <div>
-        <h2 className="text-sm font-bold text-gray-900">Supplier cost and sell price</h2>
-        <p className="mt-1 text-xs text-gray-500">
+    <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none shadow-none overflow-hidden space-y-0">
+      <div className="bg-[#F6F3EC] px-4 py-3 border-b border-[#CCC5BD]">
+        <h2 className="font-[family-name:var(--font-newsreader)] text-lg md:text-xl font-normal text-[#1C1C18]">
+          Supplier Cost &amp; Sell Price
+        </h2>
+        <p className="mt-1 text-xs text-[#4A4640]">
           Change cost, margin, or sell price. The other two update together and save on the line.
           The client sees only the sell price.
         </p>
       </div>
-      {lines.map((line) => (
-        <CostLine
-          key={line.id}
-          quotationId={quotationId}
-          line={line}
-          offers={offers.filter((offer) => offer.product_id === line.productId)}
-          bestId={bestByItem[line.id] || null}
-          defaultMargin={defaultMargin}
-          editable={editable}
-          busy={pending}
-          draft={drafts[line.id]}
-          onDraft={(draft) => setDrafts((current) => ({ ...current, [line.id]: draft }))}
-          run={run}
-        />
-      ))}
+      <div className="p-4 space-y-4">
+        {lines.map((line) => (
+          <CostLine
+            key={line.id}
+            quotationId={quotationId}
+            line={line}
+            offers={offers.filter((offer) => offer.product_id === line.productId)}
+            bestId={bestByItem[line.id] || null}
+            defaultMargin={defaultMargin}
+            editable={editable}
+            busy={pending}
+            draft={drafts[line.id]}
+            onDraft={(draft) => setDrafts((current) => ({ ...current, [line.id]: draft }))}
+            run={run}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -174,28 +180,41 @@ function CostLine({
     })
   }
 
+  const cardBorderBg = warnings.some((code) => code === 'above_sell')
+    ? 'border-[#BA1A1A]/40 bg-[#FBEDEB]'
+    : warnings.length
+    ? 'border-[#9E4300]/30 bg-[#FFB690]/20'
+    : 'border-[#CCC5BD] bg-[#FCF9F2]'
+
   return (
-    <div className={`rounded-lg border p-3 text-xs space-y-3 ${warnings.some((code) => code === 'above_sell') ? 'border-red-300 bg-red-50/40' : warnings.length ? 'border-amber-300 bg-amber-50/40' : 'border-gray-100'}`}>
+    <div className={`rounded-none border p-4 text-xs space-y-3.5 ${cardBorderBg}`}>
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-semibold text-gray-900">{line.name}</p>
-          <p className="font-mono text-[10px] text-gray-400">{line.sku} · qty {line.quantity}</p>
+        <ProductThumb src={line.imageUrl} alt={line.name} />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm text-[#1C1C18]">{line.name}</p>
+          <p className="font-mono text-xs text-[#7C766F] mt-0.5">{line.sku} · qty {line.quantity}</p>
         </div>
-        <div className="text-right text-gray-700">
-          {saving || busy ? <span className="inline-flex items-center gap-1"><Spinner />Saving</span> : <span>Saved with the line</span>}
-          <p>Margin {marginLive == null ? '—' : `${marginLive}%`}</p>
+        <div className="text-right text-[#4A4640]">
+          {saving || busy ? (
+            <span className="inline-flex items-center gap-1.5 text-xs text-[#9E4300] font-mono">
+              <Spinner />Saving
+            </span>
+          ) : (
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Saved with the line</span>
+          )}
+          <p className="text-xs font-mono font-semibold text-[#1C1C18] mt-0.5">Margin {marginLive == null ? '—' : `${marginLive}%`}</p>
         </div>
       </div>
       {warnings.length > 0 && (
-        <ul className={warnings.includes('above_sell') ? 'text-red-800' : 'text-amber-800'}>
+        <ul className={`text-xs space-y-0.5 p-2 rounded-none border ${warnings.includes('above_sell') ? 'border-[#BA1A1A]/40 bg-[#FBEDEB] text-[#BA1A1A]' : 'border-[#9E4300]/30 bg-[#FFB690]/20 text-[#9E4300]'}`}>
           {warnings.map((code) => <li key={code}>{marginWarningText(code)}</li>)}
         </ul>
       )}
       {offers.length === 0 ? (
-        <p className="text-gray-500">No supplier offers on this product. Enter a negotiated cost.</p>
+        <p className="text-[#7C766F] italic">No supplier offers on this product. Enter a negotiated cost.</p>
       ) : (
         <label className="block">
-          Supplier offer
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Supplier offer</span>
           <select
             value={draft.offerId}
             disabled={!editable}
@@ -213,7 +232,7 @@ function CostLine({
               onDraft(savedDraft)
               save(savedDraft)
             }}
-            className="mt-1 w-full rounded border px-2 py-1.5"
+            className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 disabled:opacity-60"
           >
             <option value="">Negotiated cost</option>
             {offers.map((offer) => (
@@ -228,18 +247,44 @@ function CostLine({
           </select>
         </label>
       )}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <label>
-          Cost
-          <input type="number" min="0" step="0.01" value={draft.cost} disabled={!editable} onChange={(event) => edit('cost', event.target.value)} onBlur={() => save()} className="mt-1 w-full rounded border px-2 py-1.5" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <label className="block">
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Cost (₹)</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={draft.cost}
+            disabled={!editable}
+            onChange={(event) => edit('cost', event.target.value)}
+            onBlur={() => save()}
+            className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 disabled:opacity-60"
+          />
         </label>
-        <label>
-          Margin %
-          <input type="number" step="0.01" value={draft.margin} disabled={!editable || costValue == null || costValue <= 0} onChange={(event) => edit('margin', event.target.value)} onBlur={() => save()} className="mt-1 w-full rounded border px-2 py-1.5" />
+        <label className="block">
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Margin %</span>
+          <input
+            type="number"
+            step="0.01"
+            value={draft.margin}
+            disabled={!editable || costValue == null || costValue <= 0}
+            onChange={(event) => edit('margin', event.target.value)}
+            onBlur={() => save()}
+            className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 disabled:opacity-60"
+          />
         </label>
-        <label>
-          Sell price
-          <input type="number" min="0" step="0.01" value={draft.unit} disabled={!editable} onChange={(event) => edit('sell', event.target.value)} onBlur={() => save()} className="mt-1 w-full rounded border px-2 py-1.5" />
+        <label className="block">
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Sell price (₹)</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={draft.unit}
+            disabled={!editable}
+            onChange={(event) => edit('sell', event.target.value)}
+            onBlur={() => save()}
+            className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 disabled:opacity-60"
+          />
         </label>
       </div>
     </div>

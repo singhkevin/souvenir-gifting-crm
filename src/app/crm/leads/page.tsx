@@ -1,14 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatCurrency, formatDate, LEAD_STAGE_LABELS, oneRelation, asRows } from '@/lib/utils'
-import { TrendingUp, Plus, User } from 'lucide-react'
+import { Plus, User } from 'lucide-react'
 
 const STAGE_COLORS: Record<string, string> = {
-  cold: 'bg-gray-100 text-gray-700',
-  warm: 'bg-blue-100 text-blue-700',
-  hot: 'bg-orange-100 text-orange-700',
-  client: 'bg-green-100 text-green-700',
-  regular_client: 'bg-emerald-100 text-emerald-700',
+  cold: 'border border-[#CCC5BD] text-[#4A4640] bg-transparent',
+  warm: 'bg-[#FFB690]/30 text-[#9E4300] border border-[#9E4300]/30',
+  hot: 'bg-[#FFB690]/40 text-[#9E4300] border border-[#9E4300]/40',
+  client: 'bg-[#DAE6D3] text-[#3A4537] border border-[#3A4537]/20',
+  regular_client: 'bg-[#DAE6D3] text-[#3A4537] border border-[#3A4537]/30',
 }
 
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
@@ -59,24 +59,51 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 border-b border-[#CCC5BD] pb-5 sm:flex-row sm:items-end sm:justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>Leads</h1>
-          <p className="mt-0.5 text-sm" style={{ color: 'var(--color-text-secondary)' }}>{leadRows.length} leads total</p>
+          <div className="flex items-baseline gap-3">
+            <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+              Leads
+            </h1>
+            <span className="font-mono text-xs text-[#7C766F]">[ {leadRows.length} ]</span>
+          </div>
+          <p className="mt-1 text-xs text-[#4A4640]">{leadRows.length} leads total</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="flex overflow-hidden rounded-lg border border-[var(--color-border)]">
-            <Link href="?view=kanban" className={`min-h-10 px-3 py-2 text-sm font-medium transition-colors ${view === 'kanban' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'}`}>Kanban</Link>
-            <Link href="?view=table" className={`min-h-10 px-3 py-2 text-sm font-medium transition-colors ${view === 'table' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-muted)]'}`}>Table</Link>
+          <div className="flex rounded-none border border-[#CCC5BD] bg-[#FCF9F2]">
+            <Link
+              href="?view=kanban"
+              className={`px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                view === 'kanban'
+                  ? 'bg-[#1C1B1A] text-[#FCF9F2]'
+                  : 'text-[#4A4640] hover:bg-[#F6F3EC]'
+              }`}
+            >
+              Kanban
+            </Link>
+            <Link
+              href="?view=table"
+              className={`px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors ${
+                view === 'table'
+                  ? 'bg-[#1C1B1A] text-[#FCF9F2]'
+                  : 'text-[#4A4640] hover:bg-[#F6F3EC]'
+              }`}
+            >
+              Table
+            </Link>
           </div>
-          <Link href="/crm/leads/new" className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white sm:flex-none" style={{ background: 'var(--color-primary)' }}>
-            <Plus size={16} /> Add Lead
+          <Link
+            href="/crm/leads/new"
+            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-none bg-[#1C1B1A] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
+          >
+            <Plus size={14} /> Add Lead
           </Link>
         </div>
       </div>
 
       {leadsError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-4 rounded-none border border-[#BA1A1A]/40 bg-[#BA1A1A]/10 px-4 py-3 text-xs text-[#BA1A1A]">
           Leads could not be loaded from the database. {leadsError.message}
         </div>
       )}
@@ -110,18 +137,33 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           ]}
         />
       </div>
-      <div className="mb-6 hidden md:block">
+      <div className="mb-6 hidden md:block bg-[#FCF9F2] border border-[#CCC5BD] p-3 sm:p-4 rounded-none">
         <form className="flex flex-wrap items-center gap-3">
           <input type="hidden" name="view" value={view} />
-          <select name="stage" defaultValue={params.stage || ''} className="min-h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm">
+          <select
+            name="stage"
+            defaultValue={params.stage || ''}
+            className="min-h-9 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-1.5 text-sm text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+          >
             <option value="">All Stages</option>
-            {stages.map(s => <option key={s} value={s}>{LEAD_STAGE_LABELS[s]}</option>)}
+            {stages.map((s) => (
+              <option key={s} value={s}>{LEAD_STAGE_LABELS[s]}</option>
+            ))}
           </select>
-          <select name="owner" defaultValue={params.owner || ''} className="min-h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm">
+          <select
+            name="owner"
+            defaultValue={params.owner || ''}
+            className="min-h-9 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-1.5 text-sm text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+          >
             <option value="">All Owners</option>
-            {owners?.map(o => <option key={o.id} value={o.id}>{o.full_name}</option>)}
+            {owners?.map((o) => (
+              <option key={o.id} value={o.id}>{o.full_name}</option>
+            ))}
           </select>
-          <button type="submit" className="min-h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm hover:bg-[var(--color-muted)]">
+          <button
+            type="submit"
+            className="min-h-9 rounded-none border border-[#1C1B1A] bg-transparent px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#1C1B1A] hover:bg-[#F6F3EC] transition-colors"
+          >
             Filter
           </button>
         </form>
@@ -129,80 +171,108 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
       {view === 'kanban' ? (
         <div className="flex gap-4 overflow-x-auto pb-4">
-          {stages.map(stage => {
+          {stages.map((stage) => {
             const stageLeads = groupedLeads[stage] || []
             return (
-              <div key={stage} className="w-[min(16.5rem,78vw)] flex-shrink-0 sm:w-72">
-                <div className="flex items-center justify-between mb-3">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STAGE_COLORS[stage]}`}>
+              <div key={stage} className="w-[min(16.5rem,78vw)] flex-shrink-0 sm:w-72 bg-[#FCF9F2] border border-[#CCC5BD] p-3 rounded-none">
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#CCC5BD]">
+                  <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] rounded-none ${STAGE_COLORS[stage]}`}>
                     {LEAD_STAGE_LABELS[stage]}
                   </span>
-                  <span className="text-xs text-[var(--color-muted-fg)] font-medium">{stageLeads.length}</span>
+                  <span className="font-mono text-xs text-[#7C766F]">[ {stageLeads.length} ]</span>
                 </div>
                 <div className="space-y-3">
                   {stageLeads.length === 0 ? (
-                    <div className="bg-[var(--color-muted)] rounded-lg p-4 text-center text-sm text-[var(--color-muted-fg)]">No leads</div>
-                  ) : stageLeads.map((lead: LeadRow) => {
-                    const company = oneRelation(lead.company)
-                    const contact = oneRelation(lead.contact)
-                    return (
-                    <Link key={lead.id} href={`/crm/leads/${lead.id}`} className="block bg-white border border-[var(--color-border)] rounded-lg p-4 hover:shadow-sm transition-shadow">
-                      <div className="flex items-start justify-between mb-2">
-                        <span className="font-medium text-sm text-[var(--color-text)]">{company?.name || 'Unknown Company'}</span>
-                      </div>
-                      {contact?.full_name && (
-                        <p className="text-xs text-[var(--color-muted-fg)] flex items-center gap-1 mb-2">
-                          <User size={12} /> {contact.full_name}
-                          {contact.designation && ` · ${contact.designation}`}
-                        </p>
-                      )}
-                      {lead.estimated_value && (
-                        <p className="text-sm font-semibold text-[var(--color-primary)]">{formatCurrency(lead.estimated_value)}</p>
-                      )}
-                      <p className="text-xs text-[var(--color-muted-fg)] mt-2">{formatDate(lead.created_at)}</p>
-                    </Link>
-                    )
-                  })}
+                    <div className="rounded-none border border-dashed border-[#CCC5BD] p-4 text-center text-xs text-[#7C766F] bg-[#F6F3EC]">
+                      No leads
+                    </div>
+                  ) : (
+                    stageLeads.map((lead: LeadRow) => {
+                      const company = oneRelation(lead.company)
+                      const contact = oneRelation(lead.contact)
+                      return (
+                        <Link
+                          key={lead.id}
+                          href={`/crm/leads/${lead.id}`}
+                          className="block bg-[#FCF9F2] border border-[#CCC5BD] rounded-none p-3.5 hover:bg-[#F6F3EC] transition-colors"
+                        >
+                          <div className="flex items-start justify-between mb-1.5">
+                            <span className="font-semibold text-sm text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
+                              {company?.name || 'Unknown Company'}
+                            </span>
+                          </div>
+                          {contact?.full_name && (
+                            <p className="text-xs text-[#4A4640] flex items-center gap-1 mb-2">
+                              <User size={12} className="text-[#7C766F]" /> {contact.full_name}
+                              {contact.designation && ` · ${contact.designation}`}
+                            </p>
+                          )}
+                          {lead.estimated_value ? (
+                            <p className="font-mono text-sm font-semibold text-[#1C1B1A]">
+                              {formatCurrency(lead.estimated_value)}
+                            </p>
+                          ) : null}
+                          <p className="font-mono text-[11px] text-[#7C766F] mt-2">
+                            {formatDate(lead.created_at)}
+                          </p>
+                        </Link>
+                      )
+                    })
+                  )}
                 </div>
               </div>
             )
           })}
         </div>
       ) : (
-        <div className="bg-white border border-[var(--color-border)] rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--color-muted)]">
+        <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none overflow-x-auto">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead className="bg-[#F6F3EC] border-b border-[#CCC5BD] text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-muted-fg)] uppercase tracking-wide">Company</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-muted-fg)] uppercase tracking-wide">Contact</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-muted-fg)] uppercase tracking-wide">Stage</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-muted-fg)] uppercase tracking-wide">Owner</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-[var(--color-muted-fg)] uppercase tracking-wide">Value</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-[var(--color-muted-fg)] uppercase tracking-wide">Follow-up</th>
+                <th className="py-3 px-4 font-bold text-left">Company</th>
+                <th className="py-3 px-4 font-bold text-left">Contact</th>
+                <th className="py-3 px-4 font-bold text-left">Stage</th>
+                <th className="py-3 px-4 font-bold text-left">Owner</th>
+                <th className="py-3 px-4 font-bold text-right">Value</th>
+                <th className="py-3 px-4 font-bold text-left">Follow-up</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#CCC5BD]">
               {leadRows.length === 0 ? (
-                <tr><td colSpan={6} className="text-center py-12 text-[var(--color-muted-fg)]">No leads found.</td></tr>
-              ) : leadRows.map((lead: LeadRow) => {
-                const company = oneRelation(lead.company)
-                const contact = oneRelation(lead.contact)
-                const owner = oneRelation(lead.owner)
-                return (
-                <tr key={lead.id} className="border-t border-[var(--color-border)] hover:bg-[var(--color-muted)] transition-colors">
-                  <td className="px-4 py-3 font-medium">
-                    <Link href={`/crm/leads/${lead.id}`} className="hover:text-[var(--color-primary)]">{company?.name}</Link>
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-sm text-[#7C766F]">
+                    No leads found.
                   </td>
-                  <td className="px-4 py-3 text-[var(--color-text-secondary)]">{contact?.full_name || '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STAGE_COLORS[lead.stage]}`}>{LEAD_STAGE_LABELS[lead.stage]}</span>
-                  </td>
-                  <td className="px-4 py-3 text-[var(--color-text-secondary)]">{owner?.full_name || '—'}</td>
-                  <td className="px-4 py-3 text-right font-medium">{lead.estimated_value ? formatCurrency(lead.estimated_value) : '—'}</td>
-                  <td className="px-4 py-3 text-[var(--color-text-secondary)]">{lead.next_follow_up_at ? formatDate(lead.next_follow_up_at) : '—'}</td>
                 </tr>
-                )
-              })}
+              ) : (
+                leadRows.map((lead: LeadRow) => {
+                  const company = oneRelation(lead.company)
+                  const contact = oneRelation(lead.contact)
+                  const owner = oneRelation(lead.owner)
+                  return (
+                    <tr key={lead.id} className="hover:bg-[#F6F3EC] transition-colors">
+                      <td className="py-2.5 px-4 font-semibold text-sm">
+                        <Link href={`/crm/leads/${lead.id}`} className="text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
+                          {company?.name}
+                        </Link>
+                      </td>
+                      <td className="py-2.5 px-4 text-sm text-[#4A4640]">{contact?.full_name || '—'}</td>
+                      <td className="py-2.5 px-4">
+                        <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] rounded-none ${STAGE_COLORS[lead.stage] || 'border border-[#CCC5BD] text-[#4A4640]'}`}>
+                          {LEAD_STAGE_LABELS[lead.stage]}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-4 text-sm text-[#4A4640]">{owner?.full_name || '—'}</td>
+                      <td className="py-2.5 px-4 text-right font-mono text-sm text-[#1C1B1A]">
+                        {lead.estimated_value ? formatCurrency(lead.estimated_value) : '—'}
+                      </td>
+                      <td className="py-2.5 px-4 font-mono text-xs text-[#4A4640]">
+                        {lead.next_follow_up_at ? formatDate(lead.next_follow_up_at) : '—'}
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
             </tbody>
           </table>
         </div>

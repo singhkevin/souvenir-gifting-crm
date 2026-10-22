@@ -37,28 +37,34 @@ export function SendQuoteDialog({
           clearError()
           setOpen(true)
         }}
-        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+        className="px-4 py-2 bg-[#1C1B1A] hover:bg-[#9E4300] text-[#FCF9F2] rounded-none text-xs font-bold uppercase tracking-[0.12em] transition-colors shadow-none inline-flex items-center justify-center"
       >
         Send to client
       </button>
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md space-y-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="send-quote-title">
-            <h2 id="send-quote-title" className="text-base font-bold text-gray-900">Send to client</h2>
-            <div className="space-y-2 text-xs text-gray-600">
-              <p>Total incl. GST: <span className="font-semibold text-gray-900">{formatCurrency(total)}</span></p>
-              <p>Valid until: <span className="font-semibold text-gray-900">{validUntil ? formatDate(validUntil) : 'Not set'}</span></p>
-              <p>
-                Portal link:{' '}
-                <a href={clientUrl} className="break-all font-medium text-[#624B32] underline">{clientUrl}</a>
-              </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md space-y-4 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6 shadow-none" role="dialog" aria-modal="true" aria-labelledby="send-quote-title">
+            <h2 id="send-quote-title" className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1C18]">Send to Client</h2>
+            <div className="space-y-2 border border-[#CCC5BD] bg-[#F6F3EC] p-3 text-xs text-[#4A4640]">
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Total incl. GST</span>
+                <span className="font-mono font-semibold text-[#1C1C18]">{formatCurrency(total)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Valid until</span>
+                <span className="text-[#1C1C18]">{validUntil ? formatDate(validUntil) : 'Not set'}</span>
+              </div>
+              <div className="pt-2 border-t border-[#CCC5BD]">
+                <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Portal link</span>
+                <a href={clientUrl} className="break-all font-mono text-[11px] text-[#9E4300] underline hover:text-[#7A3400] transition-colors">{clientUrl}</a>
+              </div>
             </div>
-            <label className="block text-xs font-medium text-gray-700">
-              Recipient
+            <label className="block">
+              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Recipient</span>
               <select
                 value={recipientKey}
                 onChange={(event) => setRecipientKey(event.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-200 px-2 py-1.5"
+                className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
               >
                 <option value="">Choose a recipient</option>
                 {recipients.map((recipient) => (
@@ -67,13 +73,18 @@ export function SendQuoteDialog({
               </select>
             </label>
             {warnings.length > 0 && (
-              <ul className="space-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <ul className="space-y-1 rounded-none border border-[#9E4300]/30 bg-[#FFB690]/20 px-3 py-2 text-xs text-[#9E4300]">
                 {warnings.map((warning) => <li key={warning}>{warning}</li>)}
               </ul>
             )}
-            {error ? <p className="text-xs text-red-700" role="alert">{error}</p> : null}
-            <div className="flex justify-end gap-2">
-              <button type="button" disabled={pending} onClick={() => setOpen(false)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold">
+            {error ? <p className="text-xs text-[#BA1A1A] bg-[#FBEDEB] border border-[#BA1A1A]/40 px-3 py-2 rounded-none" role="alert">{error}</p> : null}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => setOpen(false)}
+                className="rounded-none border border-[#1C1B1A] bg-transparent px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#1C1B1A] hover:bg-[#1C1B1A] hover:text-[#FCF9F2] transition-colors disabled:opacity-50"
+              >
                 Cancel
               </button>
               <button
@@ -86,7 +97,7 @@ export function SendQuoteDialog({
                     setOpen(false)
                   },
                 })}
-                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                className="rounded-none bg-[#1C1B1A] hover:bg-[#9E4300] px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors disabled:opacity-50"
               >
                 {pending ? <span className="inline-flex items-center gap-2"><Spinner />Sending…</span> : 'Send'}
               </button>

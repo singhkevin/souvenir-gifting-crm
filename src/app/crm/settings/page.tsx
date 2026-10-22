@@ -14,7 +14,7 @@ export default async function SettingsPage() {
   if (profile?.role !== 'admin') {
     return (
       <div>
-        <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg">
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4">
           <h2 className="font-bold mb-1">Access Denied</h2>
           <p className="text-sm">You must be an administrator to view this page.</p>
         </div>
@@ -34,18 +34,18 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6">Organization Settings</h1>
-      <ActionForm action={updateOrgSettings} className="bg-white p-6 rounded-lg border space-y-4 text-sm">
+      <ActionForm action={updateOrgSettings} className="bg-white p-6 border space-y-4 text-sm">
         <label className="block">
           <span className="text-gray-500 text-xs">Organisation name</span>
-          <input name="organisation_name" defaultValue={settings?.organisation_name || appName()} className="w-full border rounded-lg px-3 py-2 mt-1" />
+          <input name="organisation_name" defaultValue={settings?.organisation_name || appName()} className="w-full border px-3 py-2 mt-1" />
         </label>
         <label className="block">
           <span className="text-gray-500 text-xs">Default tax percent</span>
-          <input name="default_tax_percent" type="number" step="0.01" defaultValue={settings?.default_tax_percent || 18} className="w-full border rounded-lg px-3 py-2 mt-1" />
+          <input name="default_tax_percent" type="number" step="0.01" defaultValue={settings?.default_tax_percent || 18} className="w-full border px-3 py-2 mt-1" />
         </label>
         <label className="block">
           <span className="text-gray-500 text-xs">Currency</span>
-          <input name="currency" defaultValue={settings?.currency || 'INR'} className="w-full border rounded-lg px-3 py-2 mt-1" />
+          <input name="currency" defaultValue={settings?.currency || 'INR'} className="w-full border px-3 py-2 mt-1" />
         </label>
         <label className="block">
           <span className="text-gray-500 text-xs">Public contact phone</span>
@@ -53,92 +53,19 @@ export default async function SettingsPage() {
             name="public_contact_phone"
             defaultValue={settings?.public_contact_phone || ''}
             placeholder="Business number shown in the public footer and WhatsApp"
-            className="w-full border rounded-lg px-3 py-2 mt-1"
+            className="w-full border px-3 py-2 mt-1"
           />
           <span className="mt-1 block text-[11px] text-gray-500">
             Leave blank to hide the number. PUBLIC_CONTACT_PHONE overrides this when it is set on the server.
           </span>
         </label>
 
-        <div className="border-t pt-4 space-y-4">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900">Sell-price margins (%)</h2>
-            <p className="text-xs text-gray-500 mt-1">
-              The store shows the product retail price. A company sees its special price, then a catalog line price, then the retail price plus that company’s margin.
-              These percentages remain for internal costing. They are not the customer price.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <label className="block">
-              <span className="text-gray-500 text-xs">Global fallback %</span>
-              <input
-                name="default_margin_percent"
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={settings?.default_margin_percent ?? 35}
-                className="w-full border rounded-lg px-3 py-2 mt-1"
-              />
-            </label>
-            <label className="block">
-              <span className="text-gray-500 text-xs">Public / B2C %</span>
-              <input
-                name="b2c_margin_percent"
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={settings?.b2c_margin_percent ?? 40}
-                className="w-full border rounded-lg px-3 py-2 mt-1"
-              />
-            </label>
-            <label className="block">
-              <span className="text-gray-500 text-xs">Corporate / B2B default %</span>
-              <input
-                name="b2b_margin_percent"
-                type="number"
-                step="0.01"
-                min="0"
-                defaultValue={settings?.b2b_margin_percent ?? 35}
-                className="w-full border rounded-lg px-3 py-2 mt-1"
-              />
-            </label>
-          </div>
-        </div>
-
         <div className="border-t pt-4 space-y-3">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-900">Best supplier cost</h2>
-            <p className="text-xs text-gray-500 mt-1">
-              When a surface uses best cost, its sell price starts from the lowest eligible supplier offer
-              (in stock when required, MOQ within the quantity, unless a preferred offer is pinned).
-              Clients only see the sell price, or a request for quotation when the price is hidden.
-            </p>
-          </div>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="best_cost_require_in_stock" defaultChecked={settings?.best_cost_require_in_stock !== false} />
-            Require the offer to be in stock
-          </label>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {[
-              ['crm', 'CRM quotations'],
-              ['portal', 'B2B portal'],
-              ['microsite', 'Company microsite'],
-              ['store', 'Public store'],
-              ['business', 'Business portal'],
-            ].map(([key, label]) => (
-              <div key={key} className="rounded-lg border border-gray-200 p-3 space-y-2">
-                <p className="text-xs font-semibold text-gray-900">{label}</p>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" name={`${key}_use_best_cost`} defaultChecked={Boolean(settings?.[`${key}_use_best_cost`])} />
-                  Use best cost for margin
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" name={`${key}_show_sell_price`} defaultChecked={settings?.[`${key}_show_sell_price`] !== false} />
-                  Show derived sell price
-                </label>
-              </div>
-            ))}
-          </div>
+          <h2 className="text-sm font-semibold text-gray-900">Prices</h2>
+          <p className="text-xs text-gray-500">
+            Cost, portal rules, fixed prices and company prices are managed in Pricing. This page keeps the organisation name, tax default and business registration settings.
+          </p>
+          <a href="/crm/pricing" className="inline-flex text-sm font-medium text-[#806A50] underline">Open Pricing</a>
         </div>
 
         <div className="border-t pt-4 space-y-3">
@@ -151,12 +78,12 @@ export default async function SettingsPage() {
               min="1"
               max="90"
               defaultValue={settings?.quote_validity_days ?? 14}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
+              className="mt-1 w-full border px-3 py-2"
             />
           </label>
           <label className="block">
             <span className="text-gray-500 text-xs">Default owner for new business accounts</span>
-            <select name="business_default_owner_id" defaultValue={settings?.business_default_owner_id || ''} className="mt-1 w-full rounded-lg border px-3 py-2">
+            <select name="business_default_owner_id" defaultValue={settings?.business_default_owner_id || ''} className="mt-1 w-full border px-3 py-2">
               <option value="">Least-loaded salesperson</option>
               {(owners || []).map((owner) => (
                 <option key={owner.id} value={owner.id}>
@@ -167,10 +94,28 @@ export default async function SettingsPage() {
           </label>
         </div>
 
-        <SubmitButton className="px-4 py-2 bg-[#806A50] text-white rounded-lg font-medium text-sm" pendingLabel="Saving…">Save settings</SubmitButton>
+        <div className="border-t pt-4 space-y-3">
+          <h2 className="text-sm font-semibold text-gray-900">Store orders</h2>
+          <label className="block">
+            <span className="text-gray-500 text-xs">Default owner for public store orders</span>
+            <select name="store_default_owner_id" defaultValue={settings?.store_default_owner_id || ''} className="mt-1 w-full border px-3 py-2">
+              <option value="">First active admin</option>
+              {(owners || []).map((owner) => (
+                <option key={owner.id} value={owner.id}>
+                  {owner.full_name || owner.email} ({owner.role})
+                </option>
+              ))}
+            </select>
+            <span className="mt-1 block text-[11px] text-gray-500">
+              Guest checkouts are assigned to this person. Leave blank to keep the first active admin.
+            </span>
+          </label>
+        </div>
+
+        <SubmitButton className="px-4 py-2 bg-[#806A50] text-white font-medium text-sm" pendingLabel="Saving…">Save settings</SubmitButton>
       </ActionForm>
 
-      <div className="mt-6 rounded-lg border bg-white p-6 text-sm">
+      <div className="mt-6 border bg-white p-6 text-sm">
         <h2 className="font-semibold text-gray-900">Work-email allowlist</h2>
         <p className="mt-1 text-xs text-gray-500">
           Business registration blocks free inboxes such as Gmail, Yahoo, and Outlook. Add a domain here to allow it.
@@ -197,13 +142,13 @@ export default async function SettingsPage() {
         <ActionForm action={addEmailDomainAllowlist} className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
           <label className="block text-xs text-gray-500">
             Domain
-            <input name="domain" placeholder="acme.com" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+            <input name="domain" placeholder="acme.com" className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
           <label className="block text-xs text-gray-500">
             Note
-            <input name="note" placeholder="Optional" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+            <input name="note" placeholder="Optional" className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
-          <SubmitButton className="rounded-lg bg-[#806A50] px-3 py-2 text-sm text-white" pendingLabel="Adding…">Add domain</SubmitButton>
+          <SubmitButton className="bg-[#806A50] px-3 py-2 text-sm text-white" pendingLabel="Adding…">Add domain</SubmitButton>
         </ActionForm>
       </div>
     </div>

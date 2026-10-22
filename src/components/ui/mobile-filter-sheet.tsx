@@ -33,7 +33,7 @@ export function MobileFilterSheetOption({
     <button
       type="button"
       onClick={onSelect}
-      className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-3.5 text-left transition-colors ${
+      className={`flex w-full items-center justify-between gap-3  px-3 py-3.5 text-left transition-colors ${
         active ? 'bg-[#806A50] text-white' : 'text-[#1B2430] hover:bg-[#F6F4F1]'
       }`}
     >
@@ -93,7 +93,7 @@ export function MobileFilterSheetShell({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 max-h-[85vh] overflow-hidden rounded-t-2xl bg-white shadow-[0_-12px_40px_rgba(27,36,48,0.18)]"
+        className="relative z-10 max-h-[85vh] overflow-hidden bg-white"
       >
         <div className="border-b border-[#E8E4DE] px-4 pb-3 pt-3">
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#D6CEBE]" />
@@ -110,7 +110,7 @@ export function MobileFilterSheetShell({
               type="button"
               aria-label="Close"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F6F4F1] text-[#806A50]"
+              className="flex h-10 w-10 items-center justify-center bg-[#F6F4F1] text-[#806A50]"
             >
               <X size={18} />
             </button>
@@ -141,7 +141,7 @@ export function MobileFilterTrigger({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`w-full rounded-md border border-[#E8E4DE] bg-[#F6F4F1] px-3.5 py-3 text-left ${
+      className={`w-full  border border-[#E8E4DE] bg-[#F6F4F1] px-3.5 py-3 text-left ${
         disabled ? 'cursor-not-allowed opacity-60' : ''
       }`}
     >
@@ -245,7 +245,7 @@ export function MobileFilterBar({
             <select
               value={field.value}
               onChange={(event) => select(field.key, event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm text-[#1B2430]"
+              className="min-h-11 w-full border border-[#E8E4DE] bg-white px-3 py-2 text-sm text-[#1B2430]"
             >
               {field.options.map((option) => (
                 <option key={`${field.key}-${option.value || 'empty'}`} value={option.value}>
@@ -306,7 +306,7 @@ export function MobileDateRangeFilter({
               {clearHref ? (
                 <a
                   href={clearHref}
-                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#E8E4DE] bg-white px-3 text-sm font-semibold text-[#1B2430]"
+                  className="inline-flex min-h-11 flex-1 items-center justify-center border border-[#E8E4DE] bg-white px-3 text-sm font-semibold text-[#1B2430]"
                   onClick={() => setOpen(false)}
                 >
                   Clear
@@ -315,7 +315,7 @@ export function MobileDateRangeFilter({
               <button
                 type="submit"
                 form={`mobile-date-range-${formId}`}
-                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#806A50] px-3 text-sm font-semibold text-white"
+                className="inline-flex min-h-11 flex-1 items-center justify-center bg-[#806A50] px-3 text-sm font-semibold text-white"
               >
                 {submitLabel}
               </button>
@@ -332,7 +332,7 @@ export function MobileDateRangeFilter({
                 type="date"
                 name="from"
                 defaultValue={from}
-                className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-[#F6F4F1] px-3 text-base text-[#1B2430]"
+                className="min-h-11 w-full border border-[#E8E4DE] bg-[#F6F4F1] px-3 text-base text-[#1B2430]"
               />
             </label>
             <label className="block space-y-1.5">
@@ -341,7 +341,7 @@ export function MobileDateRangeFilter({
                 type="date"
                 name="to"
                 defaultValue={to}
-                className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-[#F6F4F1] px-3 text-base text-[#1B2430]"
+                className="min-h-11 w-full border border-[#E8E4DE] bg-[#F6F4F1] px-3 text-base text-[#1B2430]"
               />
             </label>
           </form>
@@ -362,7 +362,7 @@ export function MobileDateRangeFilter({
               type="date"
               name="from"
               defaultValue={from}
-              className="block min-h-10 rounded-lg border bg-white px-2 py-1.5"
+              className="block min-h-10 border bg-white px-2 py-1.5"
             />
           </label>
           <label className="space-y-1">
@@ -371,17 +371,17 @@ export function MobileDateRangeFilter({
               type="date"
               name="to"
               defaultValue={to}
-              className="block min-h-10 rounded-lg border bg-white px-2 py-1.5"
+              className="block min-h-10 border bg-white px-2 py-1.5"
             />
           </label>
           <button
             type="submit"
-            className="min-h-10 rounded-lg bg-[#806A50] px-3 py-1.5 font-semibold text-white hover:text-white"
+            className="min-h-10 bg-[#806A50] px-3 py-1.5 font-semibold text-white hover:text-white"
           >
             {submitLabel}
           </button>
           {clearHref && (from || to) ? (
-            <a href={clearHref} className="inline-flex min-h-10 items-center rounded-lg border px-3 py-1.5">
+            <a href={clearHref} className="inline-flex min-h-10 items-center border px-3 py-1.5">
               Clear
             </a>
           ) : null}
@@ -464,7 +464,7 @@ export function MobileSheetSelect({
           required={required}
           disabled={disabled}
           onChange={(event) => setValue(event.target.value)}
-          className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+          className="min-h-11 w-full border border-[#E8E4DE] bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
         >
           {hasEmptyOption ? null : (
             <option value="">{emptyLabel}</option>
@@ -595,7 +595,7 @@ export function SheetDateField({
             <div className="flex gap-2">
               <button
                 type="button"
-                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#E8E4DE] bg-white px-3 text-sm font-semibold text-[#1B2430]"
+                className="inline-flex min-h-11 flex-1 items-center justify-center border border-[#E8E4DE] bg-white px-3 text-sm font-semibold text-[#1B2430]"
                 onClick={() => {
                   setValue('')
                   setOpen(false)
@@ -605,7 +605,7 @@ export function SheetDateField({
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#806A50] px-3 text-sm font-semibold text-white"
+                className="inline-flex min-h-11 flex-1 items-center justify-center bg-[#806A50] px-3 text-sm font-semibold text-white"
                 onClick={() => {
                   const today = new Date()
                   const next = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
@@ -622,7 +622,7 @@ export function SheetDateField({
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F6F4F1] text-[#806A50]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center bg-[#F6F4F1] text-[#806A50]"
                 onClick={() => {
                   const next = shiftMonth(viewYear, viewMonth, -1)
                   setViewYear(next.year)
@@ -637,7 +637,7 @@ export function SheetDateField({
                   value={viewMonth}
                   onChange={(event) => setViewMonth(Number(event.target.value))}
                   aria-label="Select month"
-                  className="min-w-0 rounded-lg border border-[#E8E4DE] bg-white px-2 py-1.5 text-sm font-semibold text-[#1B2430]"
+                  className="min-w-0 border border-[#E8E4DE] bg-white px-2 py-1.5 text-sm font-semibold text-[#1B2430]"
                 >
                   {MONTH_NAMES.map((name, index) => (
                     <option key={name} value={index + 1}>
@@ -649,7 +649,7 @@ export function SheetDateField({
                   value={viewYear}
                   onChange={(event) => setViewYear(Number(event.target.value))}
                   aria-label="Select year"
-                  className="min-w-0 rounded-lg border border-[#E8E4DE] bg-white px-2 py-1.5 text-sm font-semibold text-[#1B2430]"
+                  className="min-w-0 border border-[#E8E4DE] bg-white px-2 py-1.5 text-sm font-semibold text-[#1B2430]"
                 >
                   {yearOptions.map((year) => (
                     <option key={year} value={year}>
@@ -660,7 +660,7 @@ export function SheetDateField({
               </div>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F6F4F1] text-[#806A50]"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center bg-[#F6F4F1] text-[#806A50]"
                 onClick={() => {
                   const next = shiftMonth(viewYear, viewMonth, 1)
                   setViewYear(next.year)
@@ -695,7 +695,7 @@ export function SheetDateField({
                     type="button"
                     disabled={disabled}
                     onClick={() => pickDay(day)}
-                    className={`inline-flex min-h-11 items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                    className={`inline-flex min-h-11 items-center justify-center  text-sm font-medium transition-colors ${
                       active
                         ? 'bg-[#806A50] text-white'
                         : disabled
@@ -722,7 +722,7 @@ export function SheetDateField({
           min={min}
           max={max}
           onChange={(event) => setValue(event.target.value)}
-          className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
+          className="min-h-11 w-full border border-[#E8E4DE] bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
         />
       </label>
     </div>

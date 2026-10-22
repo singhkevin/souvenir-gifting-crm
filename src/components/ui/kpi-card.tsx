@@ -25,10 +25,10 @@ export function KpiCard({ label, value, icon: Icon, trend, color = 'primary', cl
   const iconStyle = colorStyles[color];
 
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 p-5 shadow-sm ${className}`}>
+    <div className={`bg-white border border-gray-200 p-5 ${className}`}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-gray-500 truncate">{label}</p>
-        <div className={`p-2 rounded-lg ${iconStyle}`}>
+        <div className={`p-2 ${iconStyle}`}>
           <Icon className="w-5 h-5" />
         </div>
       </div>

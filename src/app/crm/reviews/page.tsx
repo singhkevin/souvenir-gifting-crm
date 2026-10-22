@@ -28,7 +28,7 @@ export default async function ReviewsPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Client Reviews</h1>
 
-      <ActionForm action={createReview} className="bg-white border rounded-2xl p-4 grid md:grid-cols-2 gap-3 text-xs" resetOnSuccess>
+      <ActionForm action={createReview} className="bg-white border p-4 grid md:grid-cols-2 gap-3 text-xs" resetOnSuccess>
         <MobileSheetSelect
           name="company_id"
           label="Company"
@@ -60,11 +60,11 @@ export default async function ReviewsPage() {
             label: `${n} star${n === 1 ? '' : 's'}`,
           }))}
         />
-        <input name="feedback" placeholder="Feedback" className="border rounded-lg px-2 py-2" />
-        <SubmitButton className="bg-[#806A50] text-[#FFFFFF] rounded-lg font-semibold md:col-span-2 py-2" pendingLabel="Logging…">Log review</SubmitButton>
+        <input name="feedback" placeholder="Feedback" className="border px-2 py-2" />
+        <SubmitButton className="bg-[#806A50] text-[#FFFFFF] font-semibold md:col-span-2 py-2" pendingLabel="Logging…">Log review</SubmitButton>
       </ActionForm>
 
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="bg-white border overflow-hidden">
         {reviews && reviews.length > 0 ? (
           <table className="w-full text-left">
             <thead>
@@ -106,8 +106,8 @@ export default async function ReviewsPage() {
                             label: `${n} stars`,
                           }))}
                         />
-                        <input name="feedback" defaultValue={review.feedback || ''} className="border rounded px-2 py-1" />
-                        <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
+                        <input name="feedback" defaultValue={review.feedback || ''} className="border px-2 py-1" />
+                        <SubmitButton className="inline-flex min-h-9 items-center justify-center bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
                       </ActionForm>
                       <ConfirmAction
                         title="Delete review?"

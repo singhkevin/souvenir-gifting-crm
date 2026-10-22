@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { BrandName } from '@/components/brand/brand-name'
+import { BrandLogo } from '@/components/brand/brand-logo'
 import { PortalFinderForm } from '@/components/site/portal-finder-form'
 import { finderDestinations } from '@/lib/domain-routing'
 
@@ -13,7 +13,7 @@ export function PortalFinder({ notice = '' }: { notice?: string }) {
   return (
     <div className="min-h-[100dvh] bg-[#F6F4F1] text-[#1B2430]">
       <div className="mx-auto grid min-h-[100dvh] max-w-6xl items-center gap-8 px-4 py-10 lg:grid-cols-2 lg:px-8">
-        <div className="relative hidden overflow-hidden rounded-3xl lg:block">
+        <div className="relative hidden overflow-hidden lg:block">
           <Image
             src="/site/hero-composition.webp"
             alt="Corporate gifts arranged for a client programme"
@@ -28,14 +28,14 @@ export function PortalFinder({ notice = '' }: { notice?: string }) {
           </div>
         </div>
         <div>
-          <BrandName as="h1" className="font-serif text-4xl tracking-tight text-[#1C1917]" />
+          <BrandLogo className="h-12 w-auto object-contain" />
           <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7A7267]">
             Find your portal
           </p>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-[#5A5248]">
             Enter the company code from your portal address. We only open an exact match.
           </p>
-          <div className="mt-6 overflow-hidden rounded-3xl border border-[#E5DFD5] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] lg:hidden">
+          <div className="mt-6 overflow-hidden border border-[#E5DFD5] bg-white lg:hidden">
             <Image
               src="/site/hero-composition.webp"
               alt=""
@@ -45,9 +45,9 @@ export function PortalFinder({ notice = '' }: { notice?: string }) {
               className="h-44 w-full object-cover"
             />
           </div>
-          <div className="mt-6 rounded-2xl border border-[#E5DFD5] bg-white px-6 py-8 sm:px-8">
+          <div className="mt-6 border border-[#E5DFD5] bg-white px-6 py-8 sm:px-8">
             {notice === 'login' ? (
-              <p className="mb-6 rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] px-3 py-3 text-xs leading-relaxed text-[#5A5248]">
+              <p className="mb-6 border border-[#E5DFD5] bg-[#FAF7F2] px-3 py-3 text-xs leading-relaxed text-[#5A5248]">
                 Staff sign in at{' '}
                 <a href={links.adminLogin} className="font-semibold text-[#624B32] hover:underline">{adminHost}</a>
                 . Shopping continues at{' '}
@@ -58,7 +58,7 @@ export function PortalFinder({ notice = '' }: { notice?: string }) {
           </div>
           <a
             href={ENQUIRY_URL}
-            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[#806A50] px-5 text-xs font-semibold uppercase tracking-[0.14em] text-white"
+            className="mt-4 inline-flex min-h-11 items-center justify-center bg-[#806A50] px-5 text-xs font-semibold uppercase tracking-[0.14em] text-white"
           >
             Corporate gifting enquiry
           </a>

@@ -56,24 +56,24 @@ export function QuoteModal({
           <button
             type="button"
             aria-label="Close"
-            className="absolute inset-0 bg-black/45"
+            className="absolute inset-0 bg-[#1C1B1A]/60"
             onClick={close}
           />
           <div
             role="dialog"
             aria-modal="true"
-            className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-md bg-white p-6 shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:p-8"
+            className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto border border-[#CCC5BD] bg-[#FCF9F2] p-6 sm:p-8 text-[#1C1C18]"
           >
-            <div className="mb-5 flex items-start justify-between gap-4">
+            <div className="mb-5 flex items-start justify-between gap-4 border-b border-[#CCC5BD] pb-4">
               <div>
-                <p className="store-eyebrow">Request a quote</p>
-                <h2 className="mt-1 font-serif text-2xl text-[#1B2430]">Tell us about the programme.</h2>
+                <p className="font-sans text-xs uppercase tracking-wider font-semibold text-[#9E4300]">Request a Quote</p>
+                <h2 className="mt-1 font-serif text-2xl font-normal text-[#1C1C18]">Tell us about the programme.</h2>
               </div>
               <button
                 type="button"
                 aria-label="Close"
                 onClick={close}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F6F4F1] text-[#5C6570] hover:bg-[#EFE9E0]"
+                className="flex h-8 w-8 shrink-0 items-center justify-center border border-[#CCC5BD] bg-[#F6F3EC] text-[#1C1C18] hover:bg-[#FCF9F2]"
               >
                 <X size={16} />
               </button>

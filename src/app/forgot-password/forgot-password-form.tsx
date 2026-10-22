@@ -36,8 +36,8 @@ export function ForgotPasswordForm() {
   return (
     <AuthShell title="Forgot password" subtitle="Enter your login email. We will send a reset link if an account exists.">
       <form onSubmit={onSubmit} className="space-y-5">
-        {error && <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">{error}</div>}
-        {message && <div className="p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">{message}</div>}
+        {error && <div className="p-3 bg-red-50 text-red-700 text-xs border border-red-200">{error}</div>}
+        {message && <div className="p-3 bg-green-50 text-green-800 text-xs border border-green-200">{message}</div>}
         <div>
           <label className="block text-xs font-semibold text-[#5A5248] mb-1.5 uppercase tracking-wider">Email</label>
           <div className="relative">
@@ -49,7 +49,7 @@ export function ForgotPasswordForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="block w-full pl-10 pr-3 py-2.5 bg-[#FAF7F2] border border-[#E5DFD5] rounded-xl text-xs"
+              className="block w-full pl-10 pr-3 py-2.5 bg-[#FAF7F2] border border-[#E5DFD5] text-xs"
               placeholder="Enter your email"
             />
           </div>
@@ -57,7 +57,7 @@ export function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center items-center py-3 px-4 rounded-xl text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] disabled:opacity-50"
+          className="w-full flex justify-center items-center py-3 px-4 text-xs font-semibold text-[#FFFFFF] bg-[#806A50] hover:bg-[#9C8567] disabled:opacity-50"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send reset link'}
         </button>

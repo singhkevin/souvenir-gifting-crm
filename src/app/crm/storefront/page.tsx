@@ -21,15 +21,15 @@ export default async function StorefrontAdminPage() {
         <p className="mt-1 text-sm text-gray-500">Brand logos and occasion tags for the public shop. Product details stay on the product page.</p>
       </div>
       {brandError ? (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <p className="border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           Apply the storefront migration before saving logos.
         </p>
       ) : null}
-      <ActionForm action={saveBrandLogo} className="space-y-3 rounded-xl border bg-white p-4">
+      <ActionForm action={saveBrandLogo} className="space-y-3 border bg-white p-4">
         <h2 className="text-sm font-semibold">Brand logo</h2>
         <label className="block text-xs text-gray-500">
           Brand
-          <select name="brand_id" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" required>
+          <select name="brand_id" className="mt-1 w-full border px-3 py-2 text-sm" required>
             <option value="">Choose</option>
             {brandRows.map((brand) => (
               <option key={brand.id} value={brand.id}>{brand.name}</option>
@@ -38,17 +38,17 @@ export default async function StorefrontAdminPage() {
         </label>
         <label className="block text-xs text-gray-500">
           Logo URL or site path
-          <input name="logo_url" placeholder="/logo.png or https://…" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+          <input name="logo_url" placeholder="/logo.png or https://…" className="mt-1 w-full border px-3 py-2 text-sm" />
         </label>
-        <SubmitButton className="rounded-lg bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
+        <SubmitButton className="bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
           Save logo
         </SubmitButton>
       </ActionForm>
-      <ActionForm action={saveProductOccasions} className="space-y-3 rounded-xl border bg-white p-4">
+      <ActionForm action={saveProductOccasions} className="space-y-3 border bg-white p-4">
         <h2 className="text-sm font-semibold">Occasion tags</h2>
         <label className="block text-xs text-gray-500">
           Product
-          <select name="product_id" className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" required>
+          <select name="product_id" className="mt-1 w-full border px-3 py-2 text-sm" required>
             <option value="">Choose</option>
             {(products || []).map((product) => (
               <option key={product.id} value={product.id}>{product.name} · {product.sku}</option>
@@ -63,7 +63,7 @@ export default async function StorefrontAdminPage() {
             </label>
           ))}
         </div>
-        <SubmitButton className="rounded-lg bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
+        <SubmitButton className="bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Saving…">
           Save occasions
         </SubmitButton>
       </ActionForm>

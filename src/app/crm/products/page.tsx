@@ -2,11 +2,14 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Plus, Search, Upload } from 'lucide-react'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
-import { isUuid } from '@/lib/utils'
+import { isUuid, formatCurrency, oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
 import { readProductCost } from '@/lib/pricing/product-costs'
-import { ProductsBrowser } from '@/components/products/products-browser'
+import { resolveListedPrices } from '@/lib/pricing/server'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
+import { ProductImage } from '@/components/ui/product-image'
+import { ChannelBadges } from '@/components/products/channel-badges'
+import { channelSummary } from '@/lib/products/channel-visibility'
 
 const PAGE_SIZE = 50
 
@@ -19,7 +22,7 @@ export default async function ProductsPage({
   const showCost = canSeeCosts(profile.role)
   const params = await searchParams
   const search = (params.q || '').replace(/[,()*]/g, ' ').trim()
-  // Default to active so CRM matches the public frontend keep-set; use ?status=all for archived rows.
+  // Default to active so CRM matches the public frontend keep-set; use ?status=all for inactive rows.
   const statusFilter = params.status || 'active'
   const accessFilter = params.access ?? ''
   const categoryFilter = isUuid(params.category) ? params.category! : ''
@@ -54,6 +57,12 @@ export default async function ProductsPage({
     supabase.from('categories').select('id, name'),
   ])
 
+  // Calculated Retail (store) price; products.price is frozen legacy data.
+  const retailPrices = await resolveListedPrices((products || []).map((p) => ({ id: p.id })), 'store', null, null)
+  const retailOf = (id: string) => {
+    const price = retailPrices?.get(id)?.price
+    return price == null ? 'On quote' : formatCurrency(price)
+  }
   const categories = sortProductCategories(categoryRows || [])
   const total = count || 0
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -75,53 +84,55 @@ export default async function ProductsPage({
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Product Catalogue</h1>
-          <p className="mt-0.5 text-xs text-gray-500">
-            Every product carries a unique SKU and its own client visibility. {total} in this view.
+          <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+            Product Catalogue
+          </h1>
+          <p className="mt-1 text-xs text-[#4A4640]">
+            Every product carries a unique SKU and its own retail, business and corporate visibility. <span className="font-mono">{total}</span> in this view.
           </p>
         </div>
         {['admin', 'sales'].includes(profile.role) && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/crm/products/import"
-            className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-800 shadow-sm transition-colors hover:bg-gray-50 sm:flex-none"
-          >
-            <Upload size={14} /> Import CSV
-          </Link>
-          <Link
-            href="/crm/products/new"
-            className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#624B32] px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#704812] hover:text-white sm:flex-none"
-          >
-            <Plus size={14} /> Add Product
-          </Link>
-        </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/crm/products/import"
+              className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-none border border-[#1C1B1A] bg-transparent px-3.5 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#1C1B1A] transition-colors hover:bg-[#F6F3EC]"
+            >
+              <Upload size={14} /> Import CSV
+            </Link>
+            <Link
+              href="/crm/products/new"
+              className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-none bg-[#1C1B1A] px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
+            >
+              <Plus size={14} /> Add Product
+            </Link>
+          </div>
         )}
       </div>
 
       {params.removed === 'deleted' && (
-        <div className="p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
+        <div className="rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] p-3 text-xs text-[#3A4537]">
           Product removed.
         </div>
       )}
 
-      <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
+      <div className="space-y-3 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3 sm:p-4">
         <form className="flex w-full gap-2">
           {accessFilter ? <input type="hidden" name="access" value={accessFilter} /> : null}
           {categoryFilter ? <input type="hidden" name="category" value={categoryFilter} /> : null}
           {statusFilter !== 'active' ? <input type="hidden" name="status" value={statusFilter} /> : null}
           <div className="relative min-w-0 flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7C766F]" />
             <input
               type="text"
               name="q"
               defaultValue={search}
               placeholder="Search by name or SKU..."
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-[#624B32] sm:py-1.5 sm:text-xs"
+              className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] py-2 pl-9 pr-3 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
             />
           </div>
           <button
             type="submit"
-            className="min-h-10 shrink-0 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 transition-colors hover:bg-gray-200"
+            className="shrink-0 rounded-none bg-[#1C1B1A] px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
           >
             Search
           </button>
@@ -149,14 +160,14 @@ export default async function ProductsPage({
             },
             {
               key: 'access',
-              label: 'Visibility',
+              label: 'Corporate visibility',
               value: accessFilter,
               emptyLabel: 'Any',
               options: [
                 { value: '', label: 'Any' },
-                { value: 'all', label: 'All Clients' },
-                { value: 'selected', label: 'Selected Clients' },
-                { value: 'none', label: 'Internal Only' },
+                { value: 'all', label: 'All companies' },
+                { value: 'selected', label: 'Selected companies' },
+                { value: 'none', label: 'None' },
               ],
             },
             {
@@ -173,25 +184,198 @@ export default async function ProductsPage({
         />
       </div>
 
-      <ProductsBrowser
-        products={(products || []).map((row) => ({ ...row, ...readProductCost(row) }))}
-        showCost={showCost}
-      />
+      {/* Desktop Master Inventory Table */}
+      <div className="hidden overflow-x-auto rounded-none border border-[#CCC5BD] bg-[#FCF9F2] md:block">
+        <table className="w-full min-w-[900px] border-collapse text-left">
+          <thead>
+            <tr className="border-b border-[#CCC5BD] bg-[#F6F3EC]">
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Thumbnail &amp; SKU</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Product</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Brand</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Category</th>
+              <th className="px-3.5 py-2.5 text-center text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">MOQ</th>
+              {showCost && (
+                <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Cost (₹)</th>
+              )}
+              <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Retail price</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Shows on</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#CCC5BD] text-xs text-[#1C1B1A]">
+            {products && products.length > 0 ? (
+              products.map((p) => {
+                const brand = oneRelation(p.brand)
+                const category = oneRelation(p.category)
+                const companyCount = p.company_product_access?.[0]?.count || 0
+                const cost = readProductCost(p)
+
+                return (
+                  <tr key={p.id} className="transition-colors hover:bg-[#F6F3EC]">
+                    <td className="px-3.5 py-2.5">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 shrink-0 overflow-hidden border border-[#CCC5BD] bg-[#F6F3EC]">
+                          <ProductImage src={p.image_url} alt={p.name} size="sm" fit="cover" className="h-full w-full rounded-none" />
+                        </div>
+                        <span className="font-mono text-xs font-medium text-[#1C1B1A]">{p.sku}</span>
+                      </div>
+                    </td>
+                    <td className="px-3.5 py-2.5">
+                      <Link
+                        href={`/crm/products/${p.id}`}
+                        className="font-semibold text-[#1C1B1A] transition-colors hover:text-[#9E4300]"
+                      >
+                        {p.name}
+                      </Link>
+                    </td>
+                    <td className="px-3.5 py-2.5 text-[#4A4640]">{brand?.name || '—'}</td>
+                    <td className="px-3.5 py-2.5 text-[#4A4640]">{category?.name || '—'}</td>
+                    <td className="px-3.5 py-2.5 text-center font-mono text-[#1C1B1A]">
+                      {p.moq ? `${p.moq} units` : "—"}
+                    </td>
+                    {showCost && (
+                      <td className="px-3.5 py-2.5 text-right font-mono text-[#4A4640]">
+                        {formatCurrency(cost.supplier_cost)}
+                      </td>
+                    )}
+                    <td className="px-3.5 py-2.5 text-right font-mono font-medium text-[#1C1B1A]">
+                      {retailOf(p.id)}
+                    </td>
+                    <td className="px-3.5 py-2.5">
+                      <ChannelBadges summary={channelSummary(p, companyCount)} />
+                    </td>
+                    <td className="px-3.5 py-2.5">
+                      {p.status === 'active' ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> active
+                        </span>
+                      ) : p.status === 'discontinued' ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#BA1A1A]/10 px-2 py-0.5 text-[11px] uppercase text-[#BA1A1A]">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#BA1A1A]" /> discontinued
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[11px] uppercase text-[#4A4640]">
+                          {p.status}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })
+            ) : (
+              <tr>
+                <td colSpan={showCost ? 9 : 8} className="p-8 text-center text-xs text-[#7C766F]">
+                  No products found matching your filters.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Card List */}
+      <div className="space-y-3 md:hidden">
+        {products && products.length > 0 ? (
+          products.map((p) => {
+            const brand = oneRelation(p.brand)
+            const category = oneRelation(p.category)
+            const companyCount = p.company_product_access?.[0]?.count || 0
+            const cost = readProductCost(p)
+
+            return (
+              <article key={p.id} className="space-y-2.5 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3.5">
+                <div className="flex items-start gap-3">
+                  <div className="h-12 w-12 shrink-0 overflow-hidden border border-[#CCC5BD] bg-[#F6F3EC]">
+                    <ProductImage src={p.image_url} alt={p.name} size="sm" fit="cover" className="h-full w-full rounded-none" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/crm/products/${p.id}`}
+                      className="line-clamp-2 text-sm font-semibold text-[#1C1B1A] hover:text-[#9E4300]"
+                    >
+                      {p.name}
+                    </Link>
+                    <p className="mt-0.5 font-mono text-[11px] text-[#7C766F]">{p.sku}</p>
+                  </div>
+                  <div className="shrink-0">
+                    {p.status === 'active' ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[10px] uppercase text-[#3A4537]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#4A4640]">
+                        {p.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 border-t border-[#CCC5BD] pt-2 text-xs text-[#4A4640]">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Category: </span>
+                    {category?.name || '—'}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Brand: </span>
+                    {brand?.name || '—'}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Retail: </span>
+                    <span className="font-mono font-semibold text-[#1C1B1A]">{retailOf(p.id)}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">MOQ: </span>
+                    <span className="font-mono text-[#1C1B1A]">{p.moq ? `${p.moq} units` : "—"}</span>
+                  </div>
+                  {showCost && (
+                    <div className="col-span-2">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Cost: </span>
+                      <span className="font-mono text-[#4A4640]">{formatCurrency(cost.supplier_cost)}</span>
+                    </div>
+                  )}
+                  <div className="col-span-2 pt-1">
+                    <ChannelBadges summary={channelSummary(p, companyCount)} />
+                  </div>
+                </div>
+
+                <div className="border-t border-[#CCC5BD] pt-2">
+                  <Link
+                    href={`/crm/products/${p.id}`}
+                    className="text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A] hover:text-[#9E4300]"
+                  >
+                    View / Edit →
+                  </Link>
+                </div>
+              </article>
+            )
+          })
+        ) : (
+          <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-8 text-center text-xs text-[#7C766F]">
+            No products found matching your filters.
+          </div>
+        )}
+      </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between border-t border-[#CCC5BD] pt-4">
           {currentPage > 1 ? (
-            <Link href={buildHref({ page: String(currentPage - 1) })} className="text-xs font-medium text-[var(--color-primary)] hover:underline">
+            <Link
+              href={buildHref({ page: String(currentPage - 1) })}
+              className="text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A] transition-colors hover:text-[#9E4300]"
+            >
               ← Previous
             </Link>
           ) : (
             <span />
           )}
-          <span className="text-xs text-gray-500">
-            Page {currentPage} of {totalPages} · {total} products
+          <span className="text-xs text-[#7C766F]">
+            Page <span className="font-mono">{currentPage}</span> of <span className="font-mono">{totalPages}</span> · <span className="font-mono">{total}</span> products
           </span>
           {currentPage < totalPages ? (
-            <Link href={buildHref({ page: String(currentPage + 1) })} className="text-xs font-medium text-[var(--color-primary)] hover:underline">
+            <Link
+              href={buildHref({ page: String(currentPage + 1) })}
+              className="text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A] transition-colors hover:text-[#9E4300]"
+            >
               Next →
             </Link>
           ) : (

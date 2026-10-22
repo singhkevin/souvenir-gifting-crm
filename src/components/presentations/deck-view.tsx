@@ -23,7 +23,7 @@ export function DeckView({
 }) {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <section className="rounded-2xl bg-[#F6F4F1] px-6 py-10">
+      <section className="bg-[#F6F4F1] px-6 py-10">
         {organisation ? (
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#806A50]">{organisation}</p>
         ) : null}
@@ -32,8 +32,8 @@ export function DeckView({
         {notes ? <p className="mt-4 max-w-xl text-sm text-[#5C6570]">{notes}</p> : null}
       </section>
       {items.map((item, index) => (
-        <article key={`${item.title}-${index}`} className="grid gap-4 rounded-2xl border border-[#E8E4DE] bg-white p-4 sm:grid-cols-[16rem_minmax(0,1fr)]">
-          <div className="aspect-square overflow-hidden rounded-xl bg-[#F6F4F1]">
+        <article key={`${item.title}-${index}`} className="grid gap-4 border border-[#E8E4DE] bg-white p-4 sm:grid-cols-[16rem_minmax(0,1fr)]">
+          <div className="aspect-square overflow-hidden bg-[#F6F4F1]">
             <ProductImage src={item.imageUrl} alt={item.title} size="md" fit="contain" className="h-full w-full bg-transparent" />
           </div>
           <div>
@@ -52,7 +52,7 @@ export function DeckView({
           </div>
         </article>
       ))}
-      <section className="rounded-2xl bg-[#241C12] px-6 py-8 text-white">
+      <section className="bg-[#241C12] px-6 py-8 text-white">
         <p className="font-serif text-3xl">{organisation || 'Thank you'}</p>
         <p className="mt-3 text-sm text-[#E8E4DE]">
           {phone ? `Contact ${phone}` : 'Contact the team through the public website.'}

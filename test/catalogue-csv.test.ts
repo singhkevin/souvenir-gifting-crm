@@ -32,9 +32,10 @@ test('quantity maps to stock and MOQ keeps order-quantity aliases only', () => {
 
 test('cost, variant, and status columns are import fields', () => {
   const source = fs.readFileSync('src/app/crm/products/CatalogueCsvImporter.tsx', 'utf8')
-  for (const key of ['internal_margin', 'internal_notes', 'variant_sku', 'extra_price', 'supplier_cost']) {
+  for (const key of ['internal_notes', 'variant_sku', 'extra_price', 'supplier_cost']) {
     assert.equal(source.includes(`key: '${key}'`), true, key)
   }
+  assert.equal(source.includes(`key: 'internal_margin'`), false)
   assert.equal(autoMapHeaders(['Product margin', 'Internal notes', 'Variant SKU', 'Extra price']).internal_margin, 'Product margin')
   assert.equal(autoMapHeaders(['Internal notes']).internal_notes, 'Internal notes')
   assert.equal(autoMapHeaders(['Variant SKU']).variant_sku, 'Variant SKU')

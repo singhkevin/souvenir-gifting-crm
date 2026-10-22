@@ -21,11 +21,11 @@ export default async function NewCompanyPage() {
       <BackButton href="/crm/companies" label="Back to companies" />
       <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6 mt-4">Add New Company</h1>
 
-      <ActionForm action={createCompany} className="bg-white p-6 rounded-lg border border-[var(--color-border)] shadow-sm flex flex-col gap-6">
+      <ActionForm action={createCompany} className="bg-white p-6 border border-[var(--color-border)] flex flex-col gap-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium mb-1">Company Name *</label>
-            <input type="text" name="name" required className="w-full p-2 border border-[var(--color-border)] rounded" />
+            <input type="text" name="name" required className="w-full p-2 border border-[var(--color-border)]" />
           </div>
           <MobileSheetSelect
             name="industry"
@@ -46,7 +46,7 @@ export default async function NewCompanyPage() {
 
         <div>
           <label className="block text-sm font-medium mb-1">Website</label>
-          <input type="url" name="website" placeholder="https://" className="w-full p-2 border border-[var(--color-border)] rounded" />
+          <input type="url" name="website" placeholder="https://" className="w-full p-2 border border-[var(--color-border)]" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -58,7 +58,7 @@ export default async function NewCompanyPage() {
               step="0.01"
               min="0"
               placeholder="Leave empty for org B2B default"
-              className="w-full p-2 border border-[var(--color-border)] rounded"
+              className="w-full p-2 border border-[var(--color-border)]"
             />
           </div>
           <div>
@@ -67,7 +67,7 @@ export default async function NewCompanyPage() {
               type="text"
               name="allowed_email_domains"
               placeholder="acme.com, acme.co.in"
-              className="w-full p-2 border border-[var(--color-border)] rounded"
+              className="w-full p-2 border border-[var(--color-border)]"
             />
             <p className="text-[11px] text-gray-500 mt-1">Optional. When set, portal logins must use these domains.</p>
           </div>
@@ -77,7 +77,7 @@ export default async function NewCompanyPage() {
               type="text"
               name="portal_slug"
               placeholder="acme"
-              className="w-full p-2 border border-[var(--color-border)] rounded"
+              className="w-full p-2 border border-[var(--color-border)]"
             />
             <p className="text-[11px] text-gray-500 mt-1">
               Optional. {portalAddressHelp('your-slug')}
@@ -92,21 +92,21 @@ export default async function NewCompanyPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label className="block text-sm font-medium mb-1">City</label>
-            <input type="text" name="city" className="w-full p-2 border border-[var(--color-border)] rounded" />
+            <input type="text" name="city" className="w-full p-2 border border-[var(--color-border)]" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">State</label>
-            <input type="text" name="state" className="w-full p-2 border border-[var(--color-border)] rounded" />
+            <input type="text" name="state" className="w-full p-2 border border-[var(--color-border)]" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Country</label>
-            <input type="text" name="country" defaultValue="India" className="w-full p-2 border border-[var(--color-border)] rounded" />
+            <input type="text" name="country" defaultValue="India" className="w-full p-2 border border-[var(--color-border)]" />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-1">Address</label>
-          <textarea name="address" rows={3} className="w-full p-2 border border-[var(--color-border)] rounded" />
+          <textarea name="address" rows={3} className="w-full p-2 border border-[var(--color-border)]" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -144,7 +144,7 @@ export default async function NewCompanyPage() {
 
         <div>
           <label className="block text-sm font-medium mb-1">Trial ends</label>
-          <input type="datetime-local" name="trial_ends_at" className="w-full p-2 border border-[var(--color-border)] rounded" />
+          <input type="datetime-local" name="trial_ends_at" className="w-full p-2 border border-[var(--color-border)]" />
           <p className="text-[11px] text-gray-500 mt-1">Optional. Used when portal status is Trial.</p>
         </div>
 
@@ -156,14 +156,14 @@ export default async function NewCompanyPage() {
 
         <div>
           <label className="block text-sm font-medium mb-1">Notes</label>
-          <textarea name="notes" rows={3} className="w-full p-2 border border-[var(--color-border)] rounded" />
+          <textarea name="notes" rows={3} className="w-full p-2 border border-[var(--color-border)]" />
         </div>
 
         <div className="flex justify-end gap-3 mt-4">
-          <a href="/crm/companies" className="px-4 py-2 border border-gray-300 rounded text-gray-700 font-medium hover:bg-gray-50">
+          <a href="/crm/companies" className="px-4 py-2 border border-gray-300 text-gray-700 font-medium hover:bg-gray-50">
             Cancel
           </a>
-          <button type="submit" className="px-6 py-2 bg-[var(--color-primary)] text-white hover:text-white rounded font-medium hover:opacity-90">
+          <button type="submit" className="px-6 py-2 bg-[var(--color-primary)] text-white hover:text-white font-medium hover:opacity-90">
             Create Company
           </button>
         </div>

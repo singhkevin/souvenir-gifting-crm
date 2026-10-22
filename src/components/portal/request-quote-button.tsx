@@ -13,13 +13,16 @@ export function RequestQuoteButton({
   className,
 }: {
   product: CatalogueShortlistItem
-  className: string
+  className?: string
 }) {
   const router = useRouter()
   return (
     <button
       type="button"
-      className={className}
+      className={
+        className ||
+        'inline-flex items-center justify-center rounded-none bg-[#000000] px-5 py-2.5 sv2-label text-[11px] text-white transition-colors hover:bg-[#9E4300]'
+      }
       onClick={(event) => {
         event.preventDefault()
         event.stopPropagation()

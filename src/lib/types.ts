@@ -220,6 +220,10 @@ export interface Product {
   internal_notes: string | null
   visibility: string | null
   catalogue_access: string
+  /** Retail store switch. Undefined until 20261022_channel_visibility.sql is applied. */
+  show_in_store?: boolean | null
+  /** Business portal switch. Undefined until 20261022_channel_visibility.sql is applied. */
+  show_in_business?: boolean | null
   supplier_id: string | null
   created_at: string
   updated_at: string

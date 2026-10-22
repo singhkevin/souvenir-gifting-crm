@@ -32,10 +32,10 @@ export default async function AnnouncementsPage() {
       </div>
 
       {canPost && (
-        <ActionForm action={createAnnouncement} className="bg-white rounded-lg border border-[var(--color-border)] p-4 mb-6 space-y-3" resetOnSuccess>
-          <input name="title" required placeholder="Announcement title" className="w-full border rounded-lg px-3 py-2 text-sm" />
-          <textarea name="body" required rows={3} placeholder="Message" className="w-full border rounded-lg px-3 py-2 text-sm" />
-          <SubmitButton className="px-4 py-2 bg-[var(--color-primary)] text-white hover:text-white rounded font-medium hover:opacity-90 text-sm" pendingLabel="Saving…">
+        <ActionForm action={createAnnouncement} className="bg-white border border-[var(--color-border)] p-4 mb-6 space-y-3" resetOnSuccess>
+          <input name="title" required placeholder="Announcement title" className="w-full border px-3 py-2 text-sm" />
+          <textarea name="body" required rows={3} placeholder="Message" className="w-full border px-3 py-2 text-sm" />
+          <SubmitButton className="px-4 py-2 bg-[var(--color-primary)] text-white hover:text-white font-medium hover:opacity-90 text-sm" pendingLabel="Saving…">
             Post announcement
           </SubmitButton>
         </ActionForm>
@@ -45,10 +45,10 @@ export default async function AnnouncementsPage() {
         {announcementRows.map((ann: AnnouncementRow) => {
           const author = oneRelation(ann.author)
           return (
-          <div key={ann.id} className="bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-6 shadow-sm">
+          <div key={ann.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] p-6">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-xl font-bold text-gray-900">{ann.title}</h2>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1">
                 {formatDateTime(ann.created_at)}
               </span>
             </div>
@@ -57,9 +57,9 @@ export default async function AnnouncementsPage() {
               <div className="space-y-3 mb-4">
                 <ActionForm action={updateAnnouncement} className="grid gap-2">
                   <input type="hidden" name="id" value={ann.id} />
-                  <input name="title" defaultValue={ann.title} required className="w-full border rounded-lg px-3 py-2 text-sm" />
-                  <textarea name="body" defaultValue={ann.body} required rows={3} className="w-full border rounded-lg px-3 py-2 text-sm" />
-                  <SubmitButton className="justify-self-start px-3 py-1.5 text-xs font-semibold rounded-lg border" pendingLabel="Saving…">Save</SubmitButton>
+                  <input name="title" defaultValue={ann.title} required className="w-full border px-3 py-2 text-sm" />
+                  <textarea name="body" defaultValue={ann.body} required rows={3} className="w-full border px-3 py-2 text-sm" />
+                  <SubmitButton className="justify-self-start px-3 py-1.5 text-xs font-semibold border" pendingLabel="Saving…">Save</SubmitButton>
                 </ActionForm>
                 <ConfirmAction
                   title="Delete announcement?"
@@ -79,7 +79,7 @@ export default async function AnnouncementsPage() {
           )
         })}
         {announcementRows.length === 0 && (
-          <div className="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="text-center p-8 bg-gray-50 border border-gray-200">
             <p className="text-gray-500">No announcements yet.</p>
           </div>
         )}

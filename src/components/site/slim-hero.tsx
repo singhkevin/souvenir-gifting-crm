@@ -12,7 +12,7 @@ export function SlimHero() {
             Browse the catalogue
           </Link>
         </div>
-        <div className="hidden h-24 w-40 overflow-hidden rounded-md sm:block">
+        <div className="hidden h-24 w-40 overflow-hidden sm:block">
           <Image src="/site/home-welcome-kit.webp" alt="" width={160} height={96} className="h-full w-full object-cover" />
         </div>
       </div>

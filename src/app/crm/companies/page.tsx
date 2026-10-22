@@ -26,16 +26,16 @@ type CompanyRow = {
 function portalDotClass(status: string | undefined) {
   switch (status) {
     case 'live':
-      return 'bg-green-500'
+      return 'bg-emerald-600'
     case 'failed':
     case 'blocked':
-      return 'bg-red-500'
+      return 'bg-[#BA1A1A]'
     case 'queued':
     case 'parking':
     case 'verifying':
-      return 'bg-amber-400'
+      return 'bg-[#9E4300]'
     default:
-      return 'bg-gray-300'
+      return 'bg-[#CCC5BD]'
   }
 }
 
@@ -86,36 +86,53 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 border-b border-[#CCC5BD] pb-5 sm:flex-row sm:items-end sm:justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-[var(--color-text)]">Companies</h1>
-          <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+          <div className="flex items-baseline gap-3">
+            <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+              Companies
+            </h1>
+            <span className="font-mono text-xs text-[#7C766F]">[ {companyRows.length} ]</span>
+          </div>
+          <p className="mt-1 text-xs text-[#4A4640]">
             Manage your corporate clients, contacts and account information.
           </p>
         </div>
         <Link
           href="/crm/companies/new"
-          className="inline-flex min-h-10 w-full items-center justify-center self-start rounded-md bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 hover:text-white sm:w-auto"
+          className="inline-flex min-h-10 items-center justify-center rounded-none bg-[#1C1B1A] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
         >
-          Add Company
+          + Add Company
         </Link>
       </div>
 
       {removed === 'deleted' && (
-        <div className="mb-4 p-3 bg-green-50 text-green-800 text-xs rounded-xl border border-green-200">
+        <div className="mb-4 px-4 py-3 bg-[#DAE6D3] text-[#3A4537] text-xs border border-[#3A4537]/20 rounded-none">
           Company removed.
         </div>
       )}
 
-      <div className="mb-6 space-y-3">
+      {/* Action Toolbar & Filters */}
+      <div className="mb-6 space-y-3 bg-[#FCF9F2] border border-[#CCC5BD] p-3 sm:p-4 rounded-none">
         <form className="flex gap-2">
           {status ? <input type="hidden" name="status" value={status} /> : null}
           {accountType ? <input type="hidden" name="type" value={accountType} /> : null}
           <div className="relative min-w-0 flex-1 sm:max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input name="q" defaultValue={q} placeholder="Search companies..." className="w-full rounded-md border py-2.5 pl-10 pr-4 text-base sm:py-2 sm:text-sm" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7C766F]" size={16} />
+            <input
+              name="q"
+              defaultValue={q}
+              placeholder="Search companies..."
+              className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] py-2 pl-9 pr-4 text-sm text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+            />
           </div>
-          <button type="submit" className="min-h-10 shrink-0 rounded-md border bg-gray-100 px-4 py-2">Search</button>
+          <button
+            type="submit"
+            className="min-h-9 shrink-0 rounded-none border border-[#1C1B1A] bg-transparent px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#1C1B1A] transition-colors hover:bg-[#F6F3EC]"
+          >
+            Search
+          </button>
         </form>
         <MobileFilterBar
           pathname="/crm/companies"
@@ -147,75 +164,164 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
         />
       </div>
 
-      <div className="bg-white border rounded-lg overflow-x-auto">
-        {companyRows.length > 0 ? (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b">
-                <th className="p-4 font-semibold text-gray-600">Company</th>
-                <th className="p-4 font-semibold text-gray-600">Industry</th>
-                <th className="p-4 font-semibold text-gray-600">City</th>
-                <th className="p-4 font-semibold text-gray-600">Owner</th>
-                <th className="p-4 font-semibold text-gray-600">Status</th>
-                <th className="p-4 font-semibold text-gray-600">Created</th>
-                <th className="p-4 font-semibold text-gray-600">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {companyRows.map((c: CompanyRow) => {
-                const owner = oneRelation(c.owner)
-                return (
-                <tr key={c.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4">
-                    <Link href={`/crm/companies/${c.id}`} className="flex items-center gap-3 hover:text-[var(--color-primary)]">
+      {companyRows.length > 0 ? (
+        <>
+          {/* Mobile Card List */}
+          <div className="space-y-3 md:hidden">
+            {companyRows.map((c: CompanyRow) => {
+              const owner = oneRelation(c.owner)
+              return (
+                <div key={c.id} className="bg-[#FCF9F2] border border-[#CCC5BD] p-4 rounded-none space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <Link href={`/crm/companies/${c.id}`} className="flex items-center gap-3 text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
                       <CompanyAvatar name={c.name} logoPath={c.logo_path} size="md" />
-                      <span className="font-medium inline-flex items-center gap-2">
-                        {c.name}
+                      <div>
+                        <div className="font-semibold text-sm leading-tight inline-flex items-center gap-1.5">
+                          {c.name}
+                          {c.portal_slug ? (
+                            <span
+                              title={wildcardDns
+                                ? `Portal live on wildcard DNS: ${c.portal_slug}`
+                                : `Portal ${hostStatusByCompany.get(c.id) || 'pending'}: ${c.portal_slug}`}
+                              className={`inline-block h-2 w-2 rounded-full ${wildcardDns ? 'bg-emerald-600' : portalDotClass(hostStatusByCompany.get(c.id))}`}
+                            />
+                          ) : null}
+                        </div>
                         {c.account_type === 'business' ? (
-                          <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-900">
-                            Business{c.business_verification ? ` · ${c.business_verification}` : ''}
-                          </span>
+                          <div className="mt-1">
+                            <span className="inline-block rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9E4300]">
+                              Business{c.business_verification ? ` · ${c.business_verification}` : ''}
+                            </span>
+                          </div>
                         ) : null}
-                        {c.portal_slug ? (
-                          <span
-                            title={wildcardDns
-                              ? `Portal live on wildcard DNS: ${c.portal_slug}`
-                              : `Portal ${hostStatusByCompany.get(c.id) || 'pending'}: ${c.portal_slug}`}
-                            className={`inline-block h-2 w-2 rounded-full ${wildcardDns ? 'bg-green-500' : portalDotClass(hostStatusByCompany.get(c.id))}`}
-                          />
-                        ) : null}
-                      </span>
+                      </div>
                     </Link>
-                  </td>
-                  <td className="p-4 text-gray-600">{c.industry || '-'}</td>
-                  <td className="p-4 text-gray-600">{c.city || '-'}</td>
-                  <td className="p-4 text-gray-600">{owner?.full_name || '—'}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${c.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {c.status}
+                    <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] rounded-none ${
+                      c.status === 'active'
+                        ? 'bg-[#DAE6D3] text-[#3A4537] border border-[#3A4537]/20'
+                        : 'border border-[#CCC5BD] text-[#4A4640] bg-transparent'
+                    }`}>
+                      {c.status || 'Inactive'}
                     </span>
-                  </td>
-                  <td className="p-4 text-gray-500">{formatDate(c.created_at)}</td>
-                  <td className="p-4">
-                    <Link href={`/crm/companies/${c.id}`} className="text-blue-600 hover:underline">View</Link>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#CCC5BD] text-[#4A4640]">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Industry</span>
+                      <span>{c.industry || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">City</span>
+                      <span>{c.city || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Owner</span>
+                      <span>{owner?.full_name || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Created</span>
+                      <span className="font-mono">{formatDate(c.created_at)}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-[#CCC5BD] flex items-center justify-end gap-3">
+                    <Link href={`/crm/companies/${c.id}`} className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
+                      View
+                    </Link>
                     {(profile.role === 'admin' || profile.role === 'sales') && (
                       <>
-                        {' · '}
-                        <Link href={`/crm/companies/${c.id}?tab=overview`} className="text-blue-600 hover:underline">Edit</Link>
+                        <span className="text-[#CCC5BD]">·</span>
+                        <Link href={`/crm/companies/${c.id}?tab=overview`} className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
+                          Edit
+                        </Link>
                       </>
                     )}
-                  </td>
-                </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        ) : (
-          <div className="p-12 text-center text-gray-500">
-            No companies yet. Add your first company to get started.
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        )}
-      </div>
+
+          {/* Desktop Table */}
+          <div className="hidden md:block bg-[#FCF9F2] border border-[#CCC5BD] rounded-none overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#F6F3EC] border-b border-[#CCC5BD] text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+                  <th className="py-3 px-4 font-bold text-left">Company</th>
+                  <th className="py-3 px-4 font-bold text-left">Industry</th>
+                  <th className="py-3 px-4 font-bold text-left">City</th>
+                  <th className="py-3 px-4 font-bold text-left">Owner</th>
+                  <th className="py-3 px-4 font-bold text-left">Status</th>
+                  <th className="py-3 px-4 font-bold text-left">Created</th>
+                  <th className="py-3 px-4 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {companyRows.map((c: CompanyRow) => {
+                  const owner = oneRelation(c.owner)
+                  return (
+                    <tr key={c.id} className="border-b border-[#CCC5BD] hover:bg-[#F6F3EC] transition-colors">
+                      <td className="py-2.5 px-4">
+                        <Link href={`/crm/companies/${c.id}`} className="flex items-center gap-3 text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
+                          <CompanyAvatar name={c.name} logoPath={c.logo_path} size="md" />
+                          <span className="font-semibold text-sm inline-flex items-center gap-2">
+                            {c.name}
+                            {c.account_type === 'business' ? (
+                              <span className="rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9E4300]">
+                                Business{c.business_verification ? ` · ${c.business_verification}` : ''}
+                              </span>
+                            ) : null}
+                            {c.portal_slug ? (
+                              <span
+                                title={wildcardDns
+                                  ? `Portal live on wildcard DNS: ${c.portal_slug}`
+                                  : `Portal ${hostStatusByCompany.get(c.id) || 'pending'}: ${c.portal_slug}`}
+                                className={`inline-block h-2 w-2 rounded-full ${wildcardDns ? 'bg-emerald-600' : portalDotClass(hostStatusByCompany.get(c.id))}`}
+                              />
+                            ) : null}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="py-2.5 px-4 text-sm text-[#4A4640]">{c.industry || '—'}</td>
+                      <td className="py-2.5 px-4 text-sm text-[#4A4640]">{c.city || '—'}</td>
+                      <td className="py-2.5 px-4 text-sm text-[#4A4640]">{owner?.full_name || '—'}</td>
+                      <td className="py-2.5 px-4">
+                        <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] rounded-none ${
+                          c.status === 'active'
+                            ? 'bg-[#DAE6D3] text-[#3A4537] border border-[#3A4537]/20'
+                            : 'border border-[#CCC5BD] text-[#4A4640] bg-transparent'
+                        }`}>
+                          {c.status || 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-4 font-mono text-xs text-[#7C766F]">{formatDate(c.created_at)}</td>
+                      <td className="py-2.5 px-4 text-right whitespace-nowrap">
+                        <Link href={`/crm/companies/${c.id}`} className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
+                          View
+                        </Link>
+                        {(profile.role === 'admin' || profile.role === 'sales') && (
+                          <>
+                            {' '}
+                            <span className="text-[#CCC5BD]">·</span>
+                            {' '}
+                            <Link href={`/crm/companies/${c.id}?tab=overview`} className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#1C1B1A] hover:text-[#9E4300] transition-colors">
+                              Edit
+                            </Link>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <div className="p-12 text-center text-sm text-[#7C766F] bg-[#FCF9F2] border border-[#CCC5BD] rounded-none">
+          No companies yet. Add your first company to get started.
+        </div>
+      )}
     </div>
   );
 }

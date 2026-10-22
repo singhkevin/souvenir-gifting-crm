@@ -30,17 +30,23 @@ export default async function QuoteBasketPage() {
   )
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+    <div className="space-y-8 sm:space-y-10">
+      {/* Header */}
+      <div className="flex flex-col gap-4 border-b border-[#CCC5BD] pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Quote basket</h1>
-          <p className="mt-2 text-sm text-gray-600 sm:text-base">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#9E4300]">
+            REQUISITION BASKET
+          </div>
+          <h1 className="font-[family-name:var(--font-newsreader)] text-3xl font-normal tracking-tight text-[#1C1C18] sm:text-4xl">
+            Quote basket
+          </h1>
+          <p className="mt-1 text-sm text-[#4A4640] sm:text-base">
             Items you&apos;re considering. Send them as one quote request.
           </p>
         </div>
         <Link
           href="/portal/quotes/new"
-          className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-white hover:bg-[#9C8567] sm:w-auto"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-none bg-[#9E4300] px-6 py-3 sv2-label text-[12px] tracking-wider text-white transition-colors hover:bg-[#FF8843] sm:w-auto"
         >
           Request quotation
         </Link>
@@ -50,45 +56,68 @@ export default async function QuoteBasketPage() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">From your catalogs</h2>
-          <p className="mt-1 text-sm text-gray-500">Gifts saved from a catalog.</p>
+          <div className="flex items-center gap-2.5">
+            <span className="border border-[#CCC5BD] bg-[#F1EEE7] px-2.5 py-1 text-[11px] uppercase tracking-wider text-[#9E4300]">
+              CATALOG GIFTS
+            </span>
+            <h2 className="font-[family-name:var(--font-newsreader)] text-2xl font-normal tracking-tight text-[#1C1C18] sm:text-3xl">
+              From your catalogs
+            </h2>
+          </div>
+          <p className="mt-1 text-sm text-[#4A4640]">Gifts saved from a catalog.</p>
         </div>
 
         {campaignRows.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-            <p className="text-sm text-gray-500">No catalog gifts saved yet.</p>
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-8 text-center sm:p-12">
+            <p className="text-xs uppercase tracking-wider text-[#7C766F]">
+              No catalog gifts saved yet.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/portal/gifts"
-                className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-4 text-sm font-semibold text-white hover:bg-[#9C8567]"
+                className="inline-flex min-h-10 items-center justify-center rounded-none bg-[#000000] px-5 py-2.5 sv2-label text-[11px] text-white transition-colors hover:bg-[#9E4300]"
               >
                 Browse gifts
               </Link>
               <Link
                 href="/portal/gifts?tab=catalogs"
-                className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-4 text-sm font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
+                className="inline-flex min-h-10 items-center justify-center rounded-none border border-[#CCC5BD] bg-transparent px-5 py-2.5 sv2-label text-[11px] text-[#1C1C18] transition-colors hover:border-[#1C1B1A] hover:bg-[#F6F3EC]"
               >
                 View catalogs
               </Link>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {campaignRows.map((row) => {
               const offering = Array.isArray(row.offering) ? row.offering[0] : row.offering
-              const campaign = offering && !Array.isArray(offering.campaign) ? offering.campaign : offering?.campaign?.[0]
+              const campaign =
+                offering && !Array.isArray(offering.campaign) ? offering.campaign : offering?.campaign?.[0]
               if (!offering) return null
               return (
-                <div key={row.id} className="flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="md" />
-                  <div className="flex flex-1 flex-col space-y-3 p-4">
-                    <p className="text-[10px] uppercase tracking-wider text-[#806A50]">{campaign?.name}</p>
-                    <Link href={`/portal/gifts/${offering.id}`}>
-                      <h3 className="text-md font-bold text-gray-900 hover:text-[#806A50]">{offering.display_name}</h3>
-                    </Link>
-                    <p className="text-sm text-gray-600">
-                      {formatCurrency(prices.get(offering.id) ?? offering.selling_price)} · qty {row.quantity || 1}
-                    </p>
+                <div
+                  key={row.id}
+                  className="flex flex-col justify-between overflow-hidden rounded-none border border-[#CCC5BD] bg-[#FCF9F2]"
+                >
+                  <div className="border-b border-[#CCC5BD]">
+                    <ProductImage src={offering.client_image_url} alt={offering.display_name || 'Gift'} size="md" />
+                  </div>
+                  <div className="flex flex-1 flex-col justify-between space-y-4 p-5">
+                    <div>
+                      {campaign?.name ? (
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[#9E4300]">
+                          {campaign.name}
+                        </p>
+                      ) : null}
+                      <Link href={`/portal/gifts/${offering.id}`} className="group block">
+                        <h3 className="font-[family-name:var(--font-newsreader)] text-lg font-normal text-[#1C1C18] transition-colors group-hover:text-[#9E4300] sm:text-xl">
+                          {offering.display_name}
+                        </h3>
+                      </Link>
+                      <p className="mt-2 font-[family-name:var(--font-mono)] text-xs text-[#4A4640] sm:text-sm">
+                        {formatCurrency(prices.get(offering.id) ?? offering.selling_price)} · qty {row.quantity || 1}
+                      </p>
+                    </div>
                     <ActionForm action={toggleOfferingSelectionForm} successMessage="Removed">
                       <input type="hidden" name="campaign_id" value={row.campaign_id} />
                       <input type="hidden" name="campaign_product_id" value={row.campaign_product_id} />
@@ -96,7 +125,7 @@ export default async function QuoteBasketPage() {
                       <input type="hidden" name="remove" value="1" />
                       <SubmitButton
                         pendingLabel="Removing…"
-                        className="inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-red-200 bg-white px-3 text-xs font-semibold text-red-700"
+                        className="inline-flex min-h-10 w-full items-center justify-center rounded-none border border-[#CCC5BD] bg-transparent px-3 py-2 sv2-label text-[11px] text-[#BA1A1A] transition-colors hover:border-[#BA1A1A] hover:bg-[#FFDAD6]/30"
                       >
                         Remove
                       </SubmitButton>

@@ -11,6 +11,9 @@ import { directOrderSchemaHint } from '@/lib/catalogue/purchase-path'
 import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { withIdempotency } from '@/lib/idempotency'
+import { legacyPriceForInsert, resolveCsvCost } from '@/lib/products/cost-price'
+import { parseCostSource, type CostSource } from '@/lib/pricing/cost-basis'
+import { CHANNEL_MIGRATION, channelColumnsMissing, legacyChannelDefault, parseChannelCell } from '@/lib/products/channel-visibility'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const IMAGE_BUCKET = 'product-images'
@@ -183,13 +186,15 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     description: string | null
     category_id: string | null
     supplier_id: string | null
-    price: number
     supplier_cost: number | null
+    cost_source: CostSource | null
     moq: number
     hsn_code: string | null
     image_url: string | null
     imageFile: File | null
     catalogue_access: 'all' | 'selected' | 'none'
+    show_in_store: boolean
+    show_in_business: boolean
     companyIds: string[]
     colour: string | null
     size: string | null
@@ -200,7 +205,6 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     status: string
     stock_qty: number
     fulfillment_mode: 'auto' | 'buy' | 'rfq'
-    internal_margin: number | null
     internal_notes: string | null
   }
 
@@ -229,11 +233,6 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       failures.push({ row: rowNumber, sku, reason: 'SKU already exists' })
       return
     }
-    const price = Number(cell(row, 'price'))
-    if (!Number.isFinite(price) || price < 0) {
-      failures.push({ row: rowNumber, sku, reason: 'Price must be a number 0 or greater' })
-      return
-    }
     const companyNames = splitCompanyNames(cell(row, 'companies'))
     const companyIds: string[] = []
     for (const companyName of companyNames) {
@@ -247,6 +246,14 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     const catalogue_access = parseAccess(cell(row, 'catalogue_access'), companyNames, profile.role === 'admin')
     if (catalogue_access === 'selected' && companyIds.length === 0) {
       failures.push({ row: rowNumber, sku, reason: 'Selected visibility requires at least one company' })
+      return
+    }
+    // Retail and Business are admin-only, like corporate visibility. Blank keeps the legacy rule.
+    const isAdmin = profile.role === 'admin'
+    const storeCell = parseChannelCell(isAdmin ? cell(row, 'show_in_store') : '', catalogue_access)
+    const businessCell = parseChannelCell(isAdmin ? cell(row, 'show_in_business') : '', catalogue_access)
+    if (!storeCell.ok || !businessCell.ok) {
+      failures.push({ row: rowNumber, sku, reason: 'Retail and Business must be yes or no' })
       return
     }
 
@@ -299,23 +306,30 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       return
     }
     let supplier_cost: number | null = null
-    let internal_margin: number | null = null
+    let cost_source: CostSource | null = null
     let internal_notes: string | null = null
     if (allowCosts) {
       const supplierCost = parseOptionalNumber(cell(row, 'supplier_cost'))
       if (!supplierCost.ok) {
-        failures.push({ row: rowNumber, sku, reason: 'Supplier cost must be a number' })
-        return
-      }
-      const margin = parseOptionalNumber(cell(row, 'internal_margin'))
-      if (!margin.ok || (margin.value != null && margin.value < 0)) {
-        failures.push({ row: rowNumber, sku, reason: 'Product margin must be a number 0 or greater' })
+        failures.push({ row: rowNumber, sku, reason: 'Cost price must be a number' })
         return
       }
       supplier_cost = supplierCost.value
-      internal_margin = margin.value
       internal_notes = cell(row, 'internal_notes') || null
+      const source = parseCostSource(cell(row, 'cost_source'))
+      if (!source.ok) {
+        failures.push({ row: rowNumber, sku, reason: source.error })
+        return
+      }
+      cost_source = cell(row, 'cost_source') ? source.value : null
     }
+    // Cost price is the one price on a product. An old price column is read as the cost.
+    const costed = resolveCsvCost({ cost: supplier_cost, priceRaw: cell(row, 'price'), allowCosts })
+    if (!costed.ok) {
+      failures.push({ row: rowNumber, sku, reason: costed.reason })
+      return
+    }
+    supplier_cost = costed.cost
 
     batchSkus.add(sku)
     prepared.push({
@@ -325,13 +339,15 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       description: cell(row, 'description') || null,
       category_id,
       supplier_id,
-      price,
       supplier_cost,
+      cost_source,
       moq: Math.max(1, parseInt(cell(row, 'moq') || '1', 10) || 1),
       hsn_code: cell(row, 'hsn_code') || null,
       image_url: imageUrl || null,
       imageFile: matchedFile,
       catalogue_access,
+      show_in_store: storeCell.value,
+      show_in_business: businessCell.value,
       companyIds: profile.role === 'admin' ? [...new Set(companyIds)] : [],
       colour: cell(row, 'colour') || null,
       size: cell(row, 'size') || null,
@@ -342,7 +358,6 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       status: statusResult.status,
       stock_qty,
       fulfillment_mode,
-      internal_margin,
       internal_notes,
     })
   })
@@ -360,26 +375,41 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
           ? 'selected_companies'
           : 'internal_only'
 
-    const { data: product, error } = await supabase
-      .from('products')
-      .insert({
-        name: item.name,
-        sku: item.sku,
-        description: item.description,
-        category_id: item.category_id,
-        supplier_id: item.supplier_id,
-        price: item.price,
-        moq: item.moq,
-        stock_qty: item.stock_qty,
-        fulfillment_mode: item.fulfillment_mode,
-        hsn_code: item.hsn_code,
-        image_url: item.image_url,
-        status: item.status,
-        catalogue_access: item.catalogue_access,
-        visibility,
-      })
-      .select('id')
-      .single()
+    const productRow: Record<string, unknown> = {
+      name: item.name,
+      sku: item.sku,
+      description: item.description,
+      category_id: item.category_id,
+      supplier_id: item.supplier_id,
+      // Frozen legacy column; nothing prices from it.
+      price: legacyPriceForInsert(item.supplier_cost),
+      moq: item.moq,
+      stock_qty: item.stock_qty,
+      fulfillment_mode: item.fulfillment_mode,
+      hsn_code: item.hsn_code,
+      image_url: item.image_url,
+      status: item.status,
+      catalogue_access: item.catalogue_access,
+      visibility,
+    }
+    productRow.show_in_store = item.show_in_store
+    productRow.show_in_business = item.show_in_business
+    let insertResult = await supabase.from('products').insert(productRow).select('id').single()
+    if (insertResult.error && channelColumnsMissing(insertResult.error.message)) {
+      const legacy = legacyChannelDefault(item.catalogue_access)
+      if (item.show_in_store !== legacy || item.show_in_business !== legacy) {
+        failures.push({
+          row: item.rowNumber,
+          sku: item.sku,
+          reason: `Separate Retail and Business values need ${CHANNEL_MIGRATION}`,
+        })
+        continue
+      }
+      delete productRow.show_in_store
+      delete productRow.show_in_business
+      insertResult = await supabase.from('products').insert(productRow).select('id').single()
+    }
+    const { data: product, error } = insertResult
 
     if (error || !product) {
       failures.push({
@@ -390,9 +420,9 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       continue
     }
 
-    const costPayload: { supplier_cost?: number | null; internal_margin?: number | null; internal_notes?: string | null } = {}
+    const costPayload: { supplier_cost?: number | null; internal_notes?: string | null; cost_source?: CostSource } = {}
     if (item.supplier_cost != null) costPayload.supplier_cost = item.supplier_cost
-    if (item.internal_margin != null) costPayload.internal_margin = item.internal_margin
+    if (item.cost_source && item.cost_source !== 'portal_default') costPayload.cost_source = item.cost_source
     if (item.internal_notes) costPayload.internal_notes = item.internal_notes
     if (Object.keys(costPayload).length > 0) {
       const { error: costError } = await upsertProductCost(supabase, product.id, costPayload)

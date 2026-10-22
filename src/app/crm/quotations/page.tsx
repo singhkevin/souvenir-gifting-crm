@@ -5,14 +5,6 @@ import { requireStaff, applyOwnerScope } from '@/lib/auth'
 import { FileText } from 'lucide-react'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
-const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-800',
-  sent: 'bg-blue-100 text-blue-800',
-  accepted: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
-  expired: 'bg-amber-100 text-amber-800',
-}
-
 const STATUSES = ['all', 'draft', 'sent', 'accepted', 'rejected', 'expired']
 
 type QuotationRow = {
@@ -30,6 +22,36 @@ type QuotationRow = {
 function one<T>(value: T | T[] | null): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
+}
+
+function QuotationStatusChip({ status }: { status: string | null }) {
+  const s = status || 'draft'
+  if (s === 'accepted') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> accepted
+      </span>
+    )
+  }
+  if (s === 'sent') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 text-[11px] uppercase text-[#9E4300]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#9E4300]" /> sent
+      </span>
+    )
+  }
+  if (s === 'rejected' || s === 'expired') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#BA1A1A]/10 px-2 py-0.5 text-[11px] uppercase text-[#BA1A1A]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#BA1A1A]" /> {s}
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[11px] uppercase text-[#4A4640]">
+      {s}
+    </span>
+  )
 }
 
 export default async function QuotationsPage(props: {
@@ -68,38 +90,43 @@ export default async function QuotationsPage(props: {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[#806A50]">Quotations</h1>
-          <p className="text-xs text-gray-500 mt-1">
-            {totalCount || 0} total · {conversion}% accepted · {formatCurrency(pipelineValue)} in this view
+          <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+            Quotations
+          </h1>
+          <p className="mt-1 text-xs text-[#4A4640]">
+            <span className="font-mono">{totalCount || 0}</span> total · <span className="font-mono">{conversion}%</span> accepted · <span className="font-mono">{formatCurrency(pipelineValue)}</span> in this view
           </p>
         </div>
         <Link
           href="/crm/requirements"
-          className="bg-[#806A50] text-[#FFFFFF] px-4 py-2 rounded-lg text-xs font-semibold inline-flex items-center gap-2"
+          className="inline-flex min-h-9 items-center justify-center gap-2 rounded-none bg-[#1C1B1A] px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
         >
           <FileText size={14} /> Open a requirement to quote
         </Link>
       </div>
 
       {error && (
-        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+        <div className="rounded-none border border-[#BA1A1A]/40 bg-[#BA1A1A]/10 p-3 text-xs text-[#BA1A1A]">
           Could not load quotations: {error.message}
-        </p>
+        </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-3 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3 sm:p-4">
         <form action="/crm/quotations" className="flex gap-2">
           <input type="hidden" name="status" value={status} />
           <input type="hidden" name="owner" value={owner} />
           <input
             name="q"
             defaultValue={q}
-            placeholder="Search quote number"
-            className="min-h-10 min-w-0 flex-1 rounded-lg border px-3 py-2 text-sm"
+            placeholder="Search quote number..."
+            className="min-h-9 min-w-0 flex-1 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
           />
-          <button type="submit" className="min-h-10 shrink-0 rounded-lg border bg-gray-100 px-3 text-xs font-semibold">
+          <button
+            type="submit"
+            className="min-h-9 shrink-0 rounded-none bg-[#1C1B1A] px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
+          >
             Search
           </button>
         </form>
@@ -130,13 +157,15 @@ export default async function QuotationsPage(props: {
           />
         </div>
 
-        <div className="hidden flex-wrap items-center gap-2 border-b pb-2 md:flex">
+        <div className="hidden flex-wrap items-center gap-1.5 border-t border-[#CCC5BD] pt-3 md:flex">
           {STATUSES.map((s) => (
             <Link
               key={s}
               href={`/crm/quotations?status=${s}${owner !== 'all' ? `&owner=${owner}` : ''}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium capitalize ${
-                status === s ? 'bg-[#806A50] text-[#FFFFFF]' : 'text-gray-500 hover:bg-gray-100'
+              className={`rounded-none px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${
+                status === s
+                  ? 'bg-[#1C1B1A] text-[#FCF9F2]'
+                  : 'border border-[#CCC5BD] text-[#4A4640] hover:bg-[#F6F3EC]'
               }`}
             >
               {s}
@@ -144,8 +173,10 @@ export default async function QuotationsPage(props: {
           ))}
           <Link
             href={`/crm/quotations?status=${status}&owner=${owner === 'mine' ? 'all' : 'mine'}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
-            className={`ml-auto rounded-full px-3 py-1.5 text-xs font-medium ${
-              owner === 'mine' ? 'bg-[#806A50] text-[#FFFFFF]' : 'text-gray-500 hover:bg-gray-100'
+            className={`ml-auto rounded-none px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${
+              owner === 'mine'
+                ? 'bg-[#1C1B1A] text-[#FCF9F2]'
+                : 'border border-[#CCC5BD] text-[#4A4640] hover:bg-[#F6F3EC]'
             }`}
           >
             My quotations
@@ -153,20 +184,21 @@ export default async function QuotationsPage(props: {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border overflow-x-auto">
-        <table className="w-full text-left text-xs min-w-[720px]">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="p-4 font-medium text-gray-500">Quote #</th>
-              <th className="p-4 font-medium text-gray-500">Company</th>
-              <th className="p-4 font-medium text-gray-500">Requirement</th>
-              <th className="p-4 font-medium text-gray-500 text-right">Total</th>
-              <th className="p-4 font-medium text-gray-500">Status</th>
-              <th className="p-4 font-medium text-gray-500">Valid until</th>
-              <th className="p-4 font-medium text-gray-500">Owner</th>
+      {/* Desktop Quotations Table */}
+      <div className="hidden overflow-x-auto rounded-none border border-[#CCC5BD] bg-[#FCF9F2] md:block">
+        <table className="w-full min-w-[720px] border-collapse text-left">
+          <thead>
+            <tr className="border-b border-[#CCC5BD] bg-[#F6F3EC]">
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Quote #</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Company</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Requirement</th>
+              <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Total (₹)</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Status</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Valid Until</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Owner</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-[#CCC5BD] text-xs text-[#1C1B1A]">
             {rows.map((quote) => {
               const company = one(quote.company)
               const requirement = one(quote.requirement)
@@ -175,58 +207,142 @@ export default async function QuotationsPage(props: {
                 quote.valid_until &&
                 new Date(quote.valid_until) < new Date() &&
                 !['accepted', 'rejected'].includes(quote.status || '')
+
               return (
-                <tr key={quote.id} className="hover:bg-gray-50">
-                  <td className="p-4">
-                    <Link href={`/crm/quotations/${quote.id}`} className="text-[#806A50] hover:underline font-semibold font-mono">
+                <tr key={quote.id} className="transition-colors hover:bg-[#F6F3EC]">
+                  <td className="px-3.5 py-2.5">
+                    <Link
+                      href={`/crm/quotations/${quote.id}`}
+                      className="font-mono font-medium text-[#1C1B1A] transition-colors hover:text-[#9E4300]"
+                    >
                       {quote.quotation_number || quote.id.slice(0, 8)}
                     </Link>
                   </td>
-                  <td className="p-4">
+                  <td className="px-3.5 py-2.5">
                     {company ? (
-                      <Link href={`/crm/companies/${company.id}`} className="hover:underline">
+                      <Link
+                        href={`/crm/companies/${company.id}`}
+                        className="text-[#1C1B1A] transition-colors hover:text-[#9E4300]"
+                      >
                         {company.name}
                       </Link>
                     ) : (
-                      '—'
+                      <span className="text-[#7C766F]">—</span>
                     )}
                   </td>
-                  <td className="p-4">
+                  <td className="px-3.5 py-2.5">
                     {requirement ? (
-                      <Link href={`/crm/requirements/${requirement.id}`} className="hover:underline">
+                      <Link
+                        href={`/crm/requirements/${requirement.id}`}
+                        className="text-[#1C1B1A] transition-colors hover:text-[#9E4300]"
+                      >
                         {requirement.name}
                       </Link>
                     ) : (
-                      '—'
+                      <span className="text-[#7C766F]">—</span>
                     )}
                   </td>
-                  <td className="p-4 font-semibold text-right">{formatCurrency(quote.total)}</td>
-                  <td className="p-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-[10px] font-semibold uppercase ${
-                        STATUS_COLORS[quote.status || ''] || 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {quote.status || 'draft'}
+                  <td className="px-3.5 py-2.5 text-right font-mono font-medium text-[#1C1B1A]">
+                    {formatCurrency(quote.total)}
+                  </td>
+                  <td className="px-3.5 py-2.5">
+                    <QuotationStatusChip status={quote.status} />
+                  </td>
+                  <td className="px-3.5 py-2.5">
+                    <span className={`font-mono ${expired ? 'font-semibold text-[#BA1A1A]' : 'text-[#4A4640]'}`}>
+                      {formatDate(quote.valid_until)}
+                      {expired ? ' · lapsed' : ''}
                     </span>
                   </td>
-                  <td className={`p-4 ${expired ? 'text-red-600 font-semibold' : 'text-gray-600'}`}>
-                    {formatDate(quote.valid_until)}
-                    {expired ? ' · lapsed' : ''}
-                  </td>
-                  <td className="p-4 text-gray-600">{quoteOwner?.full_name || '—'}</td>
+                  <td className="px-3.5 py-2.5 text-[#4A4640]">{quoteOwner?.full_name || '—'}</td>
                 </tr>
               )
             })}
             {rows.length === 0 && !error && (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-gray-500">
+                <td colSpan={7} className="p-8 text-center text-xs text-[#7C766F]">
                   No quotations match this view. Quotations are raised from a requirement.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card List */}
+      <div className="space-y-3 md:hidden">
+        {rows.length > 0 ? (
+          rows.map((quote) => {
+            const company = one(quote.company)
+            const requirement = one(quote.requirement)
+            const quoteOwner = one(quote.owner)
+            const expired =
+              quote.valid_until &&
+              new Date(quote.valid_until) < new Date() &&
+              !['accepted', 'rejected'].includes(quote.status || '')
+
+            return (
+              <article key={quote.id} className="space-y-2 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <Link
+                    href={`/crm/quotations/${quote.id}`}
+                    className="font-mono text-xs font-semibold text-[#1C1B1A] hover:text-[#9E4300]"
+                  >
+                    {quote.quotation_number || quote.id.slice(0, 8)}
+                  </Link>
+                  <QuotationStatusChip status={quote.status} />
+                </div>
+
+                <div className="font-mono text-sm font-semibold text-[#1C1B1A]">
+                  {formatCurrency(quote.total)}
+                </div>
+
+                <div className="space-y-1 border-t border-[#CCC5BD] pt-2 text-xs text-[#4A4640]">
+                  {company && (
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Company: </span>
+                      <Link href={`/crm/companies/${company.id}`} className="hover:text-[#9E4300]">
+                        {company.name}
+                      </Link>
+                    </div>
+                  )}
+                  {requirement && (
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Requirement: </span>
+                      <Link href={`/crm/requirements/${requirement.id}`} className="hover:text-[#9E4300]">
+                        {requirement.name}
+                      </Link>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Valid: </span>
+                    <span className={`font-mono ${expired ? 'font-semibold text-[#BA1A1A]' : ''}`}>
+                      {formatDate(quote.valid_until)}
+                      {expired ? ' · lapsed' : ''}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Owner: </span>
+                    {quoteOwner?.full_name || '—'}
+                  </div>
+                </div>
+
+                <div className="border-t border-[#CCC5BD] pt-2">
+                  <Link
+                    href={`/crm/quotations/${quote.id}`}
+                    className="text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A] hover:text-[#9E4300]"
+                  >
+                    View Quote →
+                  </Link>
+                </div>
+              </article>
+            )
+          })
+        ) : !error ? (
+          <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-8 text-center text-xs text-[#7C766F]">
+            No quotations match this view. Quotations are raised from a requirement.
+          </div>
+        ) : null}
       </div>
     </div>
   )

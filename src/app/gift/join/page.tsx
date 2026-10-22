@@ -50,7 +50,7 @@ export default async function GiftJoinPage({
           <h2 className="font-serif text-2xl">Example choice screen</h2>
           <GiftChooser selectionId="preview" selectionName="Welcome gift" items={EXAMPLE_ITEMS} />
         </div>
-        <div className="space-y-3 rounded-2xl border border-[#E8E4DE] bg-white p-4">
+        <div className="space-y-3 border border-[#E8E4DE] bg-white p-4">
           <h2 className="font-serif text-2xl">Example staff shortlist</h2>
           <GiftItemPicker
             products={[
@@ -66,7 +66,7 @@ export default async function GiftJoinPage({
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return (
-      <div className="rounded-2xl border border-[#E8E4DE] bg-white p-6">
+      <div className="border border-[#E8E4DE] bg-white p-6">
         <h1 className="font-serif text-3xl">Employee gift selection</h1>
         <p className="mt-3 text-sm text-[#5C6570]">Database configuration is missing, so sign-up is unavailable.</p>
       </div>
@@ -80,7 +80,7 @@ export default async function GiftJoinPage({
   const company = await resolveGiftCompany(companySlug)
   if (!company) {
     return (
-      <div className="rounded-2xl border border-[#E8E4DE] bg-white p-6">
+      <div className="border border-[#E8E4DE] bg-white p-6">
         <h1 className="font-serif text-3xl">Employee gift selection</h1>
         <p className="mt-3 text-sm text-[#5C6570]">
           Open the link from your company portal, for example your-company.giftingstore.online/gift/join.
@@ -110,22 +110,22 @@ function JoinForms({
         <p className="mt-2 text-sm text-[#5C6570]">Sign up with {domainLine}. Gmail and other public emails are blocked.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <ActionForm action={signInGiftEmployee} className="space-y-3 rounded-2xl border border-[#E8E4DE] bg-white p-4">
+        <ActionForm action={signInGiftEmployee} className="space-y-3 border border-[#E8E4DE] bg-white p-4">
           <h2 className="font-medium">Sign in</h2>
-          <input name="email" type="email" required placeholder="Email" className="w-full rounded-lg border px-3 py-2 text-sm" />
-          <input name="password" type="password" required placeholder="Password" className="w-full rounded-lg border px-3 py-2 text-sm" />
-          <SubmitButton className="rounded-lg bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Signing in…">
+          <input name="email" type="email" required placeholder="Email" className="w-full border px-3 py-2 text-sm" />
+          <input name="password" type="password" required placeholder="Password" className="w-full border px-3 py-2 text-sm" />
+          <SubmitButton className="bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Signing in…">
             Sign in
           </SubmitButton>
         </ActionForm>
-        <ActionForm action={signUpGiftEmployee} className="space-y-3 rounded-2xl border border-[#E8E4DE] bg-white p-4">
+        <ActionForm action={signUpGiftEmployee} className="space-y-3 border border-[#E8E4DE] bg-white p-4">
           <h2 className="font-medium">Create account</h2>
           <input type="hidden" name="company_slug" value={slug} />
-          <input name="full_name" required placeholder="Your name" className="w-full rounded-lg border px-3 py-2 text-sm" />
-          <input name="email" type="email" required placeholder="Work email" className="w-full rounded-lg border px-3 py-2 text-sm" />
-          <input name="password" type="password" required placeholder="Password" className="w-full rounded-lg border px-3 py-2 text-sm" />
-          <input name="confirm_password" type="password" required placeholder="Confirm password" className="w-full rounded-lg border px-3 py-2 text-sm" />
-          <SubmitButton className="rounded-lg bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Creating…">
+          <input name="full_name" required placeholder="Your name" className="w-full border px-3 py-2 text-sm" />
+          <input name="email" type="email" required placeholder="Work email" className="w-full border px-3 py-2 text-sm" />
+          <input name="password" type="password" required placeholder="Password" className="w-full border px-3 py-2 text-sm" />
+          <input name="confirm_password" type="password" required placeholder="Confirm password" className="w-full border px-3 py-2 text-sm" />
+          <SubmitButton className="bg-[#241C12] px-4 py-2 text-sm font-semibold text-white" pendingLabel="Creating…">
             Create account
           </SubmitButton>
         </ActionForm>

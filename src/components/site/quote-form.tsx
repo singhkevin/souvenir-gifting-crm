@@ -5,8 +5,9 @@ import { submitPublicQuote } from '@/app/request-quote/actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { BrandName } from '@/components/brand/brand-name'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
-export type QuoteFormItem = { id: string; name: string; sku?: string; quantity: number }
+export type QuoteFormItem = { id: string; name: string; sku?: string; quantity: number; image_url?: string | null }
 
 export function QuoteForm({
   productId,
@@ -23,58 +24,74 @@ export function QuoteForm({
   onSuccess?: () => void
 }) {
   const [success, setSuccess] = useState(false)
+  const [quotedName, setQuotedName] = useState<string | null>(null)
 
   if (success) {
+    const subject = quotedName || productName || null
     return (
-      <div className="px-2 py-8 text-center">
-        <p className="font-serif text-2xl text-[#1B2430]">Thank you.</p>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-[#5C6570]">
-          We have received your enquiry. A <BrandName /> account manager will follow up with a quotation.
+      <div className="px-2 py-8 text-center space-y-3">
+        <p className="font-serif text-2xl text-[#1C1C18]">Thank you.</p>
+        <p className="mx-auto max-w-md sv2-body-sm text-[#4A4640]">
+          {subject ? (
+            <>
+              We have received your quote request for <strong className="font-medium text-[#1C1C18]">{subject}</strong>.
+            </>
+          ) : (
+            'We have received your enquiry.'
+          )}{' '}
+          A <BrandName /> representative will follow up with your quotation.
         </p>
       </div>
     )
   }
 
   const field =
-    'mt-2 w-full border-b border-[#E8E4DE] bg-transparent py-2 text-sm outline-none focus:border-[#806A50]'
-  const label = 'text-[10px] font-medium uppercase tracking-[0.16em] text-[#5C6570]'
+    'mt-1.5 w-full border border-[#CCC5BD] bg-[#F6F3EC] px-3.5 py-2.5 sv2-body-sm text-[#1C1C18] outline-none focus:border-[#000000] transition-colors'
+  const label = 'block sv2-label text-[10px] text-[#4A4640]'
 
   return (
     <ActionForm
       action={submitPublicQuote}
-      className="space-y-5"
+      className="space-y-4"
       successMessage="Enquiry sent"
       refresh={false}
-      onSuccess={() => {
+      onSuccess={(result) => {
+        const name = (result as { productName?: string | null } | null)?.productName
+        if (name) setQuotedName(name)
         setSuccess(true)
         onSuccess?.()
       }}
     >
       {portalHref ? (
-        <p className="text-sm text-[#5C6570]">
-          You already have a client portal.{' '}
-          <a href={portalHref} className="underline underline-offset-4">
-            Share a requirement there
+        <p className="sv2-body-sm text-xs text-[#7C766F]">
+          You have an active client portal.{' '}
+          <a href={portalHref} className="text-[#9E4300] underline underline-offset-4">
+            Share requirements on your portal
           </a>{' '}
           if you prefer.
         </p>
       ) : null}
       {items && items.length ? (
-        <div className="space-y-1.5 rounded-md border border-[#E8E4DE] bg-[#FAF7F2] p-3">
+        <div className="space-y-2 border border-[#CCC5BD] bg-[#F6F3EC] p-3">
           <p className={label}>Enquiring about {items.length} product{items.length === 1 ? '' : 's'}</p>
-          <ul className="space-y-1 text-sm text-[#1B2430]">
+          <ul className="space-y-1 sv2-body-sm text-xs text-[#1C1C18]">
             {items.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-2">
-                <span className="min-w-0 truncate">{item.name}</span>
-                <span className="shrink-0 text-[#5C6570]">x {item.quantity}</span>
+              <li key={item.id} className="flex items-center justify-between gap-2 border-b border-[#CCC5BD]/40 pb-1 last:border-0 last:pb-0">
+                <span className="flex min-w-0 items-center gap-2">
+                  <ProductThumb src={item.image_url} alt={item.name} size={32} />
+                  <span className="min-w-0 truncate">{item.name}</span>
+                </span>
+                <span className="shrink-0 sv2-mono-sm font-semibold text-[#7C766F]">&times; {item.quantity}</span>
               </li>
             ))}
           </ul>
         </div>
       ) : productName ? (
-        <p className="text-sm text-[#5C6570]">
-          Enquiring about <span className="font-medium text-[#1B2430]">{productName}</span>
-        </p>
+        <div className="p-3 border border-[#CCC5BD] bg-[#F6F3EC]">
+          <p className="sv2-body-sm text-xs text-[#7C766F]">
+            Enquiring about: <strong className="text-[#1C1C18] font-medium">{productName}</strong>
+          </p>
+        </div>
       ) : null}
       {items && items.length ? (
         <input
@@ -88,37 +105,39 @@ export function QuoteForm({
       <input type="text" name="fax" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
       <label className="block">
-        <span className={label}>Name</span>
-        <input required name="full_name" className={field} />
+        <span className={label}>Full Name *</span>
+        <input required name="full_name" placeholder="e.g. Siddharth Rao" className={field} />
       </label>
       <label className="block">
-        <span className={label}>Work email</span>
-        <input required type="email" name="email" className={field} />
+        <span className={label}>Work Email *</span>
+        <input required type="email" name="email" placeholder="e.g. siddharth@company.com" className={field} />
       </label>
       <label className="block">
-        <span className={label}>Company</span>
-        <input required name="company_name" className={field} />
+        <span className={label}>Company / Organisation *</span>
+        <input required name="company_name" placeholder="e.g. Acme Enterprises" className={field} />
       </label>
       <label className="block">
-        <span className={label}>Phone</span>
-        <input name="phone" className={field} />
+        <span className={label}>Mobile Number (Optional)</span>
+        <input name="phone" placeholder="e.g. +91 98000 00000" className={field} />
       </label>
       {items && items.length ? null : (
         <label className="block">
-          <span className={label}>Estimated quantity</span>
-          <input name="quantity" className={field} />
+          <span className={label}>Estimated Quantity (Units)</span>
+          <input name="quantity" placeholder="e.g. 50" className={field} />
         </label>
       )}
       <label className="block">
-        <span className={label}>Tell us about the occasion</span>
-        <textarea required name="message" rows={4} className={field} />
+        <span className={label}>Tell us about the occasion / delivery timeline *</span>
+        <textarea required name="message" rows={3} placeholder="Occasion, cities, required delivery date, or branding requirements..." className={field} />
       </label>
-      <SubmitButton
-        pendingLabel="Sending…"
-        className="mt-4 inline-flex min-w-[12rem] items-center justify-center bg-[#806A50] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#FFFFFF]"
-      >
-        Send enquiry
-      </SubmitButton>
+      <div className="pt-2">
+        <SubmitButton
+          pendingLabel="Sending enquiry…"
+          className="w-full sm:w-auto inline-flex items-center justify-center bg-[#000000] hover:bg-[#9E4300] px-8 py-3.5 sv2-label text-white tracking-wider transition-colors"
+        >
+          Send Enquiry
+        </SubmitButton>
+      </div>
     </ActionForm>
   )
 }

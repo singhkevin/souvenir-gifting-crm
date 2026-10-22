@@ -22,19 +22,19 @@ export default async function ReceivablesPage() {
     <div>
       <h1 className="mb-6 text-2xl font-bold text-[var(--color-primary)]">Accounts Receivable</h1>
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
+        <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-3 sm:p-4">
           <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Total Outstanding</p>
           <p className="mt-1 break-words text-base font-semibold sm:text-xl">{formatCurrency(outstanding)}</p>
         </div>
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
+        <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-3 sm:p-4">
           <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Due This Month</p>
           <p className="mt-1 break-words text-base font-semibold text-blue-600 sm:text-xl">{formatCurrency(dueThisMonth)}</p>
         </div>
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
+        <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-3 sm:p-4">
           <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Overdue</p>
           <p className="mt-1 break-words text-base font-semibold text-red-600 sm:text-xl">{formatCurrency(overdue)}</p>
         </div>
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
+        <div className="border border-[var(--color-border)] bg-[var(--color-surface)] p-3 sm:p-4">
           <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Paid This Month</p>
           <p className="mt-1 break-words text-base font-semibold text-green-600 sm:text-xl">{formatCurrency(paidThisMonth)}</p>
         </div>
@@ -45,7 +45,7 @@ export default async function ReceivablesPage() {
           const company = oneRelation(invoice.companies)
           const overdueRow = invoice.due_date && new Date(invoice.due_date) < new Date()
           return (
-            <article key={invoice.id} className="space-y-3 rounded-xl border border-[#E8E4DE] bg-white p-4">
+            <article key={invoice.id} className="space-y-3 border border-[#E8E4DE] bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-gray-900">{company?.name}</p>
@@ -53,7 +53,7 @@ export default async function ReceivablesPage() {
                     Due {formatDate(invoice.due_date)}
                   </p>
                 </div>
-                <span className={`shrink-0 rounded px-2 py-1 text-[10px] font-medium ${
+                <span className={`shrink-0  px-2 py-1 text-[10px] font-medium ${
                   invoice.status === 'partially_paid' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                 }`}>
                   {String(invoice.status || '').replace('_', ' ')}
@@ -62,7 +62,7 @@ export default async function ReceivablesPage() {
               <p className="text-base font-semibold text-gray-900">{formatCurrency(invoice.amount)}</p>
               <Link
                 href={`/crm/invoices/${invoice.id}`}
-                className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
+                className="inline-flex min-h-10 w-full items-center justify-center bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
               >
                 View {invoice.invoice_number}
               </Link>
@@ -70,11 +70,11 @@ export default async function ReceivablesPage() {
           )
         })}
         {(!invoices || invoices.length === 0) && (
-          <div className="rounded-xl border bg-white p-6 text-center text-sm text-[var(--color-text-secondary)]">No open receivables.</div>
+          <div className="border bg-white p-6 text-center text-sm text-[var(--color-text-secondary)]">No open receivables.</div>
         )}
       </div>
       
-      <div className="hidden overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
+      <div className="hidden overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] md:block">
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-[var(--color-border)] bg-gray-50">
@@ -94,7 +94,7 @@ export default async function ReceivablesPage() {
                 <td className="p-3 text-sm">
                   <Link
                     href={`/crm/invoices/${invoice.id}`}
-                    className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
+                    className="inline-flex min-h-9 items-center justify-center border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50] hover:bg-[#FAF7F2]"
                   >
                     {invoice.invoice_number}
                   </Link>
@@ -104,7 +104,7 @@ export default async function ReceivablesPage() {
                   {formatDate(invoice.due_date)}
                 </td>
                 <td className="p-3 text-sm">
-                  <span className={`rounded px-2 py-1 text-xs font-medium ${
+                  <span className={` px-2 py-1 text-xs font-medium ${
                     invoice.status === 'partially_paid' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                   }`}>
                     {String(invoice.status || '').replace('_', ' ')}

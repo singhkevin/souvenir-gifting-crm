@@ -1,9 +1,7 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { listedUnitPrice } from '@/lib/pricing/listed'
-import { withProductCost } from '@/lib/pricing/product-costs'
-import { specialPricesForCompany } from '@/lib/pricing/server'
+import { resolveListedPrices } from '@/lib/pricing/server'
 import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
 
 /**
@@ -14,7 +12,8 @@ import { companyCanUseCatalog } from '@/lib/catalogs/rfq'
  *   1. company_product_prices (while valid_until is blank or still current), else
  *   2. campaign_products.manual_price, else
  *   3. pack / kit rows keep their stored price, else
- *   4. base price marked up by that company's margin percent.
+ *   4. portal fixed price, else effective cost marked up by the company margin, the product's
+ *      corporate margin, or the corporate default margin (no cost = price on quote).
  * campaign_products.selling_price stays as the snapshot used when the product row is missing.
  * Mirrors public.place_direct_order for the catalog surface so the price shown is the price charged.
  */
@@ -75,33 +74,28 @@ async function priceRows(
   if (!computeIds.length) return prices
 
   const productIds = [...new Set(rows.filter((row) => computeIds.includes(row.id)).map((row) => row.product_id))]
-  const [{ data: products }, companyResult, specials] = await Promise.all([
-    admin.from('products').select('id, price').in('id', productIds),
+  const [{ data: products }, companyResult] = await Promise.all([
+    admin.from('products').select('id').in('id', productIds),
     companyId
       ? admin.from('companies').select('margin_percent').eq('id', companyId).maybeSingle()
       : Promise.resolve({ data: null }),
-    specialPricesForCompany(admin, companyId, productIds),
   ])
   if (!products) return prices
   const companyMargin = num((companyResult.data as { margin_percent?: unknown } | null)?.margin_percent)
-  const byProduct = new Map(products.map((product) => [product.id as string, withProductCost(product)]))
-
-  for (const row of rows) {
-    if (!computeIds.includes(row.id)) continue
+  const byProduct = new Map(products.map((product) => [product.id as string, product]))
+  const targets = rows.flatMap((row) => {
+    if (!computeIds.includes(row.id)) return []
     const product = byProduct.get(row.product_id)
-    if (!product) continue
-    const special = specials.get(row.product_id)
-    prices.set(
-      row.id,
-      listedUnitPrice({
-        specialPrice: special?.price,
-        specialValidUntil: special?.validUntil,
-        catalogManualPrice: row.manual_price,
-        basePrice: product.price,
-        companyMarginPercent: companyMargin,
-      }),
-    )
-  }
+    if (!product) return []
+    return [{
+      id: row.id,
+      productId: row.product_id,
+      catalogManualPrice: row.manual_price,
+    }]
+  })
+  const resolved = await resolveListedPrices(targets, 'corporate', companyMargin, companyId)
+  if (!resolved) return prices
+  for (const [id, price] of resolved) prices.set(id, price.price)
   return prices
 }
 

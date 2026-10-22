@@ -26,20 +26,20 @@ export type ProductListItem = {
 function VisibilityBadge({ access, companyCount }: { access: string | null; companyCount: number }) {
   if (access === 'all') {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-800">
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-semibold bg-green-100 text-green-800">
         <Globe size={11} /> All companies
       </span>
     )
   }
   if (access === 'selected') {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 text-[#624B32]">
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-semibold bg-purple-100 text-[#624B32]">
         <Lock size={11} /> {companyCount} {companyCount === 1 ? 'company' : 'companies'}
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-700">
+    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-semibold bg-gray-100 text-gray-700">
       <EyeOff size={11} /> Internal Only
     </span>
   )
@@ -48,7 +48,7 @@ function VisibilityBadge({ access, companyCount }: { access: string | null; comp
 function StatusBadge({ status }: { status: string }) {
   return (
     <span
-      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
+      className={`px-2 py-0.5 text-[10px] font-semibold capitalize ${
         status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'
       }`}
     >
@@ -87,11 +87,11 @@ export function ProductsBrowser({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-end">
-        <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm">
+        <div className="inline-flex border border-gray-200 bg-white p-0.5">
           <button
             type="button"
             onClick={() => chooseView('grid')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5  text-xs font-semibold transition-colors ${
               view === 'grid' ? 'bg-[#624B32] text-white' : 'text-gray-600 hover:bg-gray-50'
             }`}
             aria-pressed={view === 'grid'}
@@ -101,7 +101,7 @@ export function ProductsBrowser({
           <button
             type="button"
             onClick={() => chooseView('list')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5  text-xs font-semibold transition-colors ${
               view === 'list' ? 'bg-[#624B32] text-white' : 'text-gray-600 hover:bg-gray-50'
             }`}
             aria-pressed={view === 'list'}
@@ -113,7 +113,7 @@ export function ProductsBrowser({
 
       {view === 'grid' ? (
         products.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-xs text-gray-400">
+          <div className="bg-white border border-gray-200 p-8 text-center text-xs text-gray-400">
             No products found matching your filters.
           </div>
         ) : (
@@ -125,7 +125,7 @@ export function ProductsBrowser({
                 <Link
                   key={p.id}
                   href={`/crm/products/${p.id}`}
-                  className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col hover:border-[#624B32] hover:shadow-sm transition-all"
+                  className="bg-white border border-gray-200 overflow-hidden flex flex-col hover:border-[#624B32] transition-all"
                 >
                   <div className="aspect-square bg-[#FAF7F2] border-b border-gray-100">
                     <ProductImage src={p.image_url} alt={p.name} size="md" className="min-h-0 h-full" />
@@ -139,7 +139,7 @@ export function ProductsBrowser({
                     <div className="mt-auto pt-2 space-y-2 border-t border-gray-100">
                       <p className="text-sm font-bold text-gray-900">{formatCurrency(p.price)}</p>
                       {showCost && (
-                        <p className="text-[11px] text-gray-500">Cost {formatCurrency(p.supplier_cost)}</p>
+                        <p className="text-[11px] text-gray-500">Cost price {formatCurrency(p.supplier_cost)}</p>
                       )}
                       <div className="flex flex-wrap items-center gap-1.5">
                         <StatusBadge status={p.status} />
@@ -154,14 +154,14 @@ export function ProductsBrowser({
           </div>
         )
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto shadow-sm">
+        <div className="bg-white border border-gray-200 overflow-x-auto">
           <table className="w-full text-xs min-w-[800px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Product</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Brand</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Category</th>
-                {showCost && <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Cost</th>}
+                {showCost && <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Cost price</th>}
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Price</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">MOQ</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-500 uppercase">Visibility</th>
@@ -177,8 +177,8 @@ export function ProductsBrowser({
                   <tr key={p.id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="px-4 py-3">
                       <Link href={`/crm/products/${p.id}`} className="flex items-center gap-3 group">
-                        <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-[#FAF7F2]">
-                          <ProductImage src={p.image_url} alt={p.name} size="sm" className="rounded-xl border border-gray-200" />
+                        <div className="w-14 h-14 overflow-hidden flex-shrink-0 bg-[#FAF7F2]">
+                          <ProductImage src={p.image_url} alt={p.name} size="sm" className="border border-gray-200" />
                         </div>
                         <div>
                           <p className="font-bold text-gray-900 group-hover:text-[#624B32] transition-colors">{p.name}</p>

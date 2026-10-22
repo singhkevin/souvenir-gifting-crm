@@ -81,13 +81,15 @@ export function GiftChooser({
 
       {step === 'choose' ? (
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             {items.map((row) => {
               const selected = row.id === itemId
               return (
                 <div
                   key={row.id}
-                  className={`rounded-2xl border p-3 text-left ${selected ? 'border-[#806A50] ring-1 ring-[#806A50]' : 'border-[#E8E4DE] bg-white'}`}
+                  className={`border p-4 text-left transition-colors ${
+                    selected ? 'border-[#1C1B1A] bg-[#FCF9F2] ring-1 ring-[#1C1B1A]' : 'border-[#CCC5BD] bg-[#FCF9F2] hover:border-[#1C1B1A]'
+                  }`}
                 >
                   <button
                     type="button"
@@ -98,23 +100,25 @@ export function GiftChooser({
                     }}
                     className="block w-full text-left"
                   >
-                    <div className="aspect-[4/3] overflow-hidden rounded-xl bg-[#F6F4F1]">
+                    <div className="aspect-[4/3] overflow-hidden bg-[#F1EEE7] p-4 flex items-center justify-center">
                       <ProductImage src={row.imageUrl} alt={row.title} size="md" fit="contain" className="h-full w-full bg-transparent" />
                     </div>
-                    <p className="mt-3 font-medium text-[#1B2430]">{row.title}</p>
+                    <p className="mt-3 font-serif text-lg text-[#1C1B1A]">{row.title}</p>
                     {row.memberNames.length ? (
-                      <p className="mt-1 text-xs text-[#5C6570]">{row.memberNames.join(' · ')}</p>
+                      <p className="mt-1 font-mono text-xs text-[#7C766F]">{row.memberNames.join(' · ')}</p>
                     ) : null}
                   </button>
                   {selected && row.sizeOptions.length ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-4 flex flex-wrap gap-2 border-t border-[#CCC5BD] pt-3">
                       {row.sizeOptions.map((option) => (
                         <button
                           key={option}
                           type="button"
                           aria-pressed={size === option}
                           onClick={() => setSize(option)}
-                          className={`rounded-full border px-3 py-1 text-xs ${size === option ? 'border-[#241C12] bg-[#241C12] text-white' : 'border-[#E8E4DE]'}`}
+                          className={`border px-3 py-1 font-mono text-xs transition-colors ${
+                            size === option ? 'border-[#1C1B1A] bg-[#1C1B1A] text-[#FCF9F2]' : 'border-[#CCC5BD] bg-[#FCF9F2] text-[#4A4640]'
+                          }`}
                         >
                           {option}
                         </button>
@@ -125,41 +129,58 @@ export function GiftChooser({
               )
             })}
           </div>
-          {problem ? <p className="text-sm text-red-700">{problem}</p> : null}
-          <button type="button" onClick={continueChoose} className="rounded-lg bg-[#241C12] px-4 py-2.5 text-sm font-semibold text-white">
+          {problem ? <p className="font-mono text-xs text-red-700">{problem}</p> : null}
+          <button
+            type="button"
+            onClick={continueChoose}
+            className="bg-[#000000] hover:bg-[#9E4300] px-6 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
+          >
             Continue
           </button>
         </div>
       ) : null}
 
       {step === 'details' ? (
-        <div className="space-y-3 rounded-2xl border border-[#E8E4DE] bg-white p-4">
-          <p className="text-sm text-[#5C6570]">
-            {item?.title}
-            {size ? ` · ${size}` : ''}
-          </p>
-          <Field label="Name" value={details.name} onChange={(name) => setDetails({ ...details, name })} />
-          <Field label="Phone (10 digits)" value={details.phone} onChange={(phone) => setDetails({ ...details, phone })} />
-          <Field label="Shipping address" value={details.address} onChange={(address) => setDetails({ ...details, address })} />
-          <div className="grid gap-3 sm:grid-cols-3">
+        <div className="space-y-4 border border-[#CCC5BD] bg-[#FCF9F2] p-6">
+          <div className="border-b border-[#CCC5BD] pb-3">
+            <span className="font-sans text-xs font-semibold uppercase tracking-wider text-[#9E4300] block mb-1">
+              Recipient &amp; Delivery Details
+            </span>
+            <p className="font-serif text-xl text-[#1C1B1A]">
+              {item?.title}
+              {size ? ` · Size: ${size}` : ''}
+            </p>
+          </div>
+          <Field label="Full name" value={details.name} onChange={(name) => setDetails({ ...details, name })} />
+          <Field label="Phone number (10 digits)" value={details.phone} onChange={(phone) => setDetails({ ...details, phone })} />
+          <Field label="Delivery street address" value={details.address} onChange={(address) => setDetails({ ...details, address })} />
+          <div className="grid gap-4 sm:grid-cols-3">
             <Field label="City" value={details.city} onChange={(city) => setDetails({ ...details, city })} />
             <Field label="State" value={details.state} onChange={(state) => setDetails({ ...details, state })} />
-            <Field label="PIN" value={details.pin} onChange={(pin) => setDetails({ ...details, pin })} />
+            <Field label="PIN Code" value={details.pin} onChange={(pin) => setDetails({ ...details, pin })} />
           </div>
-          {problem ? <p className="text-sm text-red-700">{problem}</p> : null}
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setStep('choose')} className="rounded-lg border px-4 py-2 text-sm">
+          {problem ? <p className="font-mono text-xs text-red-700">{problem}</p> : null}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setStep('choose')}
+              className="border border-[#CCC5BD] bg-[#FCF9F2] px-4 py-2 text-xs uppercase tracking-wider text-[#1C1B1A] hover:bg-[#F6F3EC]"
+            >
               Back
             </button>
-            <button type="button" onClick={continueDetails} className="rounded-lg bg-[#241C12] px-4 py-2.5 text-sm font-semibold text-white">
-              Review
+            <button
+              type="button"
+              onClick={continueDetails}
+              className="bg-[#000000] hover:bg-[#9E4300] px-6 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
+            >
+              Review Selection
             </button>
           </div>
         </div>
       ) : null}
 
       {step === 'confirm' && item ? (
-        <ActionForm action={submitGiftChoice} className="space-y-4 rounded-2xl border border-[#E8E4DE] bg-white p-5">
+        <ActionForm action={submitGiftChoice} className="space-y-4 border border-[#CCC5BD] bg-[#FCF9F2] p-6">
           <input type="hidden" name="selection_id" value={selectionId} />
           <input type="hidden" name="item_id" value={item.id} />
           <input type="hidden" name="size" value={size} />
@@ -169,8 +190,8 @@ export function GiftChooser({
           <input type="hidden" name="city" value={details.city} />
           <input type="hidden" name="state" value={details.state} />
           <input type="hidden" name="pin" value={details.pin} />
-          <h2 className="font-serif text-2xl">Confirm your gift</h2>
-          <dl className="space-y-2 text-sm">
+          <h2 className="font-serif text-2xl text-[#1C1B1A]">Confirm your gift</h2>
+          <dl className="space-y-2 border-t border-[#CCC5BD] pt-4 font-mono text-xs">
             <Row label="Gift" value={item.title} />
             <Row label="Size" value={size || '—'} />
             <Row label="Name" value={details.name} />
@@ -180,12 +201,19 @@ export function GiftChooser({
             <Row label="State" value={details.state} />
             <Row label="PIN" value={details.pin} />
           </dl>
-          <p className="text-sm text-[#5C6570]">This cannot be edited after you submit.</p>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setStep('details')} className="rounded-lg border px-4 py-2 text-sm">
+          <p className="font-mono text-xs text-[#7C766F]">This selection cannot be changed after submission.</p>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setStep('details')}
+              className="border border-[#CCC5BD] bg-[#FCF9F2] px-4 py-2 text-xs uppercase tracking-wider text-[#1C1B1A] hover:bg-[#F6F3EC]"
+            >
               Back
             </button>
-            <SubmitButton className="rounded-lg bg-[#241C12] px-4 py-2.5 text-sm font-semibold text-white" pendingLabel="Submitting…">
+            <SubmitButton
+              className="bg-[#000000] hover:bg-[#9E4300] px-6 py-2.5 text-xs font-bold uppercase tracking-[0.14em] text-[#FCF9F2] transition-colors"
+              pendingLabel="Submitting…"
+            >
               Submit choice
             </SubmitButton>
           </div>
@@ -197,18 +225,22 @@ export function GiftChooser({
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
-    <label className="block text-xs text-[#5C6570]">
+    <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-[#4A4640]">
       {label}
-      <input value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-lg border border-[#E8E4DE] px-3 py-2 text-sm text-[#1B2430]" />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 w-full border border-[#CCC5BD] bg-[#FCF9F2] px-3 py-2 font-sans text-sm text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none"
+      />
     </label>
   )
 }
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-4 border-b border-[#F0EBE3] py-2">
-      <dt className="text-[#5C6570]">{label}</dt>
-      <dd className="text-right font-medium text-[#1B2430]">{value}</dd>
+    <div className="flex justify-between gap-4 border-b border-[#CCC5BD] py-2">
+      <dt className="text-[#7C766F]">{label}</dt>
+      <dd className="text-right font-medium text-[#1C1B1A]">{value}</dd>
     </div>
   )
 }

@@ -12,6 +12,8 @@ import { CatalogRfqPanel } from '@/components/catalogs/CatalogRfqPanel'
 import { CatalogBuyPanel } from '@/components/catalogs/CatalogBuyPanel'
 import { purchaseOfferFromProduct } from '@/lib/catalogue/purchase-path'
 import { sharePricingCompanyId, withCompanyPrices } from '@/lib/catalogs/pricing'
+import { gstPriceNote } from '@/lib/pricing/engine'
+import { getPricingSettings } from '@/lib/pricing/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,6 +75,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
   }
   const primaries = products.filter((product) => product.pack_kit_role !== 'line')
   const budget = money(catalog.budget_per_employee)
+  const gstNote = gstPriceNote((await getPricingSettings()).portals.corporate.gstMode)
 
   return (
     <main className="min-h-screen bg-[#F4EFE6] text-[#1C1917]">
@@ -81,7 +84,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
         <h1 className="mt-2 font-serif text-4xl">{catalog.name}</h1>
         <p className="mt-2 text-sm text-[#5A5248]">
           {catalog.occasion ? `${catalog.occasion} · ` : ''}
-          Prices are client sell prices.
+          Prices are client sell prices, {gstNote}.
           {budget != null && budget > 0 ? ` Budget ${formatCurrency(budget)} per person.` : ''}
         </p>
         {catalog.expires_at && (
@@ -89,7 +92,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
         )}
 
         {primaries.length === 0 ? (
-          <p className="mt-10 rounded-2xl border border-[#E5DFD5] bg-white p-8 text-sm text-[#5A5248]">
+          <p className="mt-10 border border-[#E5DFD5] bg-white p-8 text-sm text-[#5A5248]">
             Nothing has been published on this catalog yet.
           </p>
         ) : (
@@ -101,7 +104,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
                 ? product.pack_option
                 : null
               return (
-                <article key={product.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#E5DFD5] bg-white">
+                <article key={product.id} className="flex flex-col overflow-hidden border border-[#E5DFD5] bg-white">
                   <ProductImage src={product.client_image_url} alt={product.display_name || 'Gift'} size="md" />
                   <div className="flex flex-1 flex-col gap-3 p-5">
                     {packKey && (
@@ -114,7 +117,7 @@ export default async function SharedCatalogPage({ params }: PageProps) {
                       <p className="text-xs text-[#5A5248]">{product.client_description}</p>
                     )}
                     {kit.length > 1 && (
-                      <ul className="space-y-1 rounded-lg bg-[#FAF7F2] p-2 text-[11px] text-[#5A5248]">
+                      <ul className="space-y-1 bg-[#FAF7F2] p-2 text-[11px] text-[#5A5248]">
                         {kit.map((line) => (
                           <li key={line.id} className="flex justify-between gap-2">
                             <span className="line-clamp-1">{line.display_name}</span>
@@ -193,6 +196,7 @@ async function SharePurchase({
         offerings={rows.filter((row) => row.offer.buy && row.product.product_id).map((row) => ({
           productId: row.product.product_id as string,
           name: row.product.display_name || 'Gift',
+          imageUrl: row.product.client_image_url || null,
           price: row.price,
           maxBuyQty: row.offer.maxBuyQty,
         }))}
@@ -205,6 +209,7 @@ async function SharePurchase({
           id: row.product.id,
           name: row.product.display_name || 'Gift',
           sku: row.product.sku || null,
+          imageUrl: row.product.client_image_url || null,
           price: row.price,
           moq: row.product.moq && row.product.moq > 0 ? row.product.moq : 1,
         }))}

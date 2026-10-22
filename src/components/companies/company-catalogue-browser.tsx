@@ -105,7 +105,7 @@ export function CompanyCatalogueBrowser({
 
   return (
     <div className="space-y-4">
-      <div className="bg-white p-5 rounded-xl border border-gray-200 space-y-4">
+      <div className="bg-white p-5 border border-gray-200 space-y-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h2 className="font-bold text-sm text-gray-900">Catalogue for {companyName}</h2>
@@ -143,7 +143,7 @@ export function CompanyCatalogueBrowser({
               <SubmitButton
                 pendingLabel="Assigning…"
                 disabled={pending}
-                className="inline-flex w-full items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg transition-colors whitespace-nowrap sm:w-auto"
+                className="inline-flex w-full items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] transition-colors whitespace-nowrap sm:w-auto"
               >
                 <Plus size={14} className="mr-1" /> Assign
               </SubmitButton>
@@ -159,7 +159,7 @@ export function CompanyCatalogueBrowser({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search name or SKU"
-              className="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#806A50]/30 focus:border-[#806A50]"
+              className="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#806A50]/30 focus:border-[#806A50]"
             />
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -174,7 +174,7 @@ export function CompanyCatalogueBrowser({
                 key={value}
                 type="button"
                 onClick={() => setVisibilityFilter(value)}
-                className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-lg border transition-colors ${
+                className={`px-2.5 py-1.5 text-[11px] font-semibold  border transition-colors ${
                   visibilityFilter === value
                     ? 'bg-[#806A50] text-white border-[#806A50]'
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
@@ -195,7 +195,7 @@ export function CompanyCatalogueBrowser({
                 key={value}
                 type="button"
                 onClick={() => setTypeFilter(value)}
-                className={`px-2.5 py-1.5 text-[11px] font-semibold rounded-lg border transition-colors ${
+                className={`px-2.5 py-1.5 text-[11px] font-semibold  border transition-colors ${
                   typeFilter === value
                     ? 'bg-gray-900 text-white border-gray-900'
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
@@ -208,7 +208,7 @@ export function CompanyCatalogueBrowser({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white border border-gray-200 overflow-hidden">
         <div className="hidden md:grid grid-cols-[minmax(0,1fr)_7rem_5.5rem_9rem] gap-3 px-4 py-2.5 border-b border-gray-100 bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
           <span>Product</span>
           <span>Price</span>
@@ -230,7 +230,7 @@ export function CompanyCatalogueBrowser({
                       src={row.image_url}
                       alt={row.name}
                       size="xs"
-                      className="w-10 h-10 rounded-lg border border-gray-200 shrink-0"
+                      className="w-10 h-10 border border-gray-200 shrink-0"
                     />
                     <div className="min-w-0">
                       <Link
@@ -242,7 +242,7 @@ export function CompanyCatalogueBrowser({
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-gray-400">
                         <span className="font-mono">{row.sku}</span>
                         <span
-                          className={`inline-flex px-1.5 py-0.5 rounded font-semibold ${
+                          className={`inline-flex px-1.5 py-0.5  font-semibold ${
                             row.type === 'global'
                               ? 'bg-emerald-50 text-emerald-700'
                               : 'bg-amber-50 text-amber-800'
@@ -305,7 +305,7 @@ export function CompanyCatalogueBrowser({
                                   `Shown to ${companyName}`
                                 )
                           }
-                          className={`inline-flex items-center gap-1.5 min-w-[4.75rem] justify-center px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors disabled:opacity-50 ${
+                          className={`inline-flex items-center gap-1.5 min-w-[4.75rem] justify-center px-2.5 py-1.5  text-[11px] font-semibold border transition-colors disabled:opacity-50 ${
                             row.visible
                               ? 'border-gray-200 text-gray-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700'
                               : 'border-[#806A50]/35 text-[#806A50] hover:bg-[#806A50]/10'

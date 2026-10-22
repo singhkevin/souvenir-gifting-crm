@@ -14,9 +14,11 @@ import {
 import { ProductImage } from '@/components/ui/product-image'
 import { formatCurrency } from '@/lib/utils'
 import { CartCheckout } from '@/components/site/cart-checkout'
+import { siteContent } from '@/config/siteContent'
+import { HEADER_ICON_CLASS, HeaderCountBadge } from '@/components/sv2/header-actions'
 
 export function CartDrawer({
-  iconClassName = 'text-[#241C12]',
+  iconClassName = 'text-[#1C1C18]',
   cartKey = STORE_CART_KEY,
   kind = 'store',
 }: {
@@ -69,15 +71,12 @@ export function CartDrawer({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={`Cart, ${count} item${count === 1 ? '' : 's'}`}
-        className={`group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-black/[0.06] lg:h-10 lg:w-10 ${iconClassName}`}
+        aria-label={`Bag, ${count} item${count === 1 ? '' : 's'}`}
+        title="Bag"
+        className={`${HEADER_ICON_CLASS} ${iconClassName}`}
       >
-        <ShoppingBag size={21} strokeWidth={1.75} />
-        {count > 0 ? (
-          <span className="absolute -right-1 -top-1 flex h-[19px] min-w-[19px] items-center justify-center rounded-full border-2 border-white bg-[#C0392B] px-1 text-[10px] font-bold leading-none text-white">
-            {count > 99 ? '99+' : count}
-          </span>
-        ) : null}
+        <ShoppingBag size={17} strokeWidth={1.8} aria-hidden="true" />
+        <HeaderCountBadge count={count} />
       </button>
 
       {open ? (
@@ -85,79 +84,116 @@ export function CartDrawer({
           <button
             type="button"
             aria-label="Close cart"
-            className="absolute inset-0 bg-black/45"
+            className="absolute inset-0 bg-[#1C1B1A]/60"
             onClick={closeDrawer}
           />
-          <div className="relative z-10 flex h-full w-full max-w-md flex-col bg-white shadow-[0_0_60px_rgba(0,0,0,0.25)]">
-            <div className="flex items-center justify-between gap-3 border-b border-[#E8E4DE] px-5 py-4">
-              <h2 className="font-serif text-xl text-[#1B2430]">Your cart</h2>
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={closeDrawer}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F6F4F1] text-[#5C6570] hover:bg-[#EFE9E0]"
-              >
-                <X size={16} />
-              </button>
+          <aside
+            aria-label="Retail Shopping Bag Drawer"
+            className="relative z-10 flex h-full w-full max-w-[480px] flex-col justify-between border-l border-[#CCC5BD] bg-[#FCF9F2] text-[#1C1C18]"
+          >
+            {/* Drawer Top Header */}
+            <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-6 py-4 flex-shrink-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-sans text-xs text-[#9E4300] uppercase tracking-wider font-semibold">
+                  Shopping Bag
+                </span>
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick={closeDrawer}
+                  className="flex h-7 w-7 items-center justify-center border border-[#CCC5BD] bg-[#FCF9F2] text-[#1C1C18] hover:bg-white transition-colors"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <h2 className="font-serif text-2xl font-normal text-[#1C1C18]">Your Bag ({count})</h2>
+                <span className="border border-[#3A4537]/30 bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 sv2-label text-[10px] font-semibold">
+                  Ready to Ship
+                </span>
+              </div>
+              {/* Shipping progress note */}
+              <div className="mt-3 pt-2.5 border-t border-[#CCC5BD]/60">
+                <p className="font-sans text-[11px] text-[#7C766F] tracking-wide">
+                  {siteContent.retail.packagingNote}
+                </p>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 py-4">
+            {/* Scrollable Cart Items Rail */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-[#FCF9F2]">
               {items.length === 0 ? (
                 placed ? null : (
-                <div className="flex h-full flex-col items-center justify-center text-center">
-                  <ShoppingBag size={28} className="text-[#C4B8A8]" />
-                  <p className="mt-3 text-sm text-[#5C6570]">Your cart is empty.</p>
-                  <p className="mt-1 text-xs text-[#8A929C]">
-                    {kind === 'store'
-                      ? 'Add gifts that are ready to buy. Quote-only gifts use Request a quote.'
-                      : 'Add gifts that are ready to buy. Quote-only gifts use Request quote.'}
-                  </p>
-                </div>
+                  <div className="flex h-full flex-col items-center justify-center text-center py-12">
+                    <ShoppingBag size={32} className="text-[#CCC5BD]" />
+                    <p className="mt-3 font-serif text-xl text-[#1C1C18]">Your bag is empty.</p>
+                    <p className="mt-1 sv2-body-sm text-xs text-[#7C766F] max-w-xs">
+                      {kind === 'store'
+                        ? 'Add gifts or sample items from our live retail catalogue.'
+                        : 'Add gifts that are ready to buy. Quote-only gifts use Request quote.'}
+                    </p>
+                  </div>
                 )
               ) : (
-                <ul className="space-y-4">
+                <ul className="space-y-3">
                   {items.map((item) => (
-                    <li key={item.id} className="flex gap-3">
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md catalogue-studio-field">
-                        <ProductImage
-                          src={item.image_url}
-                          alt={item.name}
-                          size="sm"
-                          fit="contain"
-                          className="h-full w-full bg-transparent"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-[#1B2430]">{item.name}</p>
-                        {item.price != null ? (
-                          <p className="mt-0.5 text-xs text-[#806A50]">{formatCurrency(item.price)}</p>
-                        ) : null}
-                        <div className="mt-2 flex items-center gap-2">
-                          <button
-                            type="button"
-                            aria-label="Decrease quantity"
-                            onClick={() => setItems(updateCartQuantity(item.id, item.quantity - 1, cartKey))}
-                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
-                          >
-                            <Minus size={12} />
-                          </button>
-                          <span className="w-6 text-center text-sm">{item.quantity}</span>
-                          <button
-                            type="button"
-                            aria-label="Increase quantity"
-                            onClick={() => setItems(updateCartQuantity(item.id, item.quantity + 1, cartKey))}
-                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
-                          >
-                            <Plus size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            aria-label="Remove from cart"
-                            onClick={() => setItems(removeFromCart(item.id, cartKey))}
-                            className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-[#8A929C] hover:bg-red-50 hover:text-red-700"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                    <li key={item.id} className="p-3.5 bg-[#F6F3EC] border border-[#CCC5BD] flex flex-col gap-2.5">
+                      <div className="flex gap-3.5">
+                        <div className="h-20 w-20 shrink-0 overflow-hidden border border-[#CCC5BD] bg-[#F1EEE7]">
+                          <ProductImage
+                            src={item.image_url}
+                            alt={item.name}
+                            size="sm"
+                            fit="contain"
+                            className="h-full w-full bg-transparent"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1 flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-serif text-[16px] leading-snug font-normal text-[#1C1C18] line-clamp-2">
+                                {item.name}
+                              </h4>
+                              <button
+                                type="button"
+                                aria-label="Remove item"
+                                onClick={() => setItems(removeFromCart(item.id, cartKey))}
+                                className="text-[#7C766F] hover:text-[#BA1A1A] p-0.5 transition-colors"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pt-2 border-t border-[#CCC5BD]/50 mt-1">
+                            {/* Stepper */}
+                            <div className="inline-flex items-center border border-[#CCC5BD] bg-[#FCF9F2]">
+                              <button
+                                type="button"
+                                aria-label="Decrease quantity"
+                                onClick={() => setItems(updateCartQuantity(item.id, item.quantity - 1, cartKey))}
+                                className="w-6 h-6 flex items-center justify-center sv2-mono-sm text-[#1C1C18] hover:bg-[#F1EEE7] transition-colors"
+                              >
+                                <Minus size={11} />
+                              </button>
+                              <span className="w-7 h-6 flex items-center justify-center sv2-mono-sm text-xs font-semibold border-x border-[#CCC5BD] text-[#1C1C18]">
+                                {item.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                aria-label="Increase quantity"
+                                onClick={() => setItems(updateCartQuantity(item.id, item.quantity + 1, cartKey))}
+                                className="w-6 h-6 flex items-center justify-center sv2-mono-sm text-[#1C1C18] hover:bg-[#F1EEE7] transition-colors"
+                              >
+                                <Plus size={11} />
+                              </button>
+                            </div>
+                            {/* Price */}
+                            <div className="text-right">
+                              <span className="sv2-mono-md font-bold text-[#1C1C18]">
+                                {item.price != null ? formatCurrency(item.price * item.quantity) : 'On quote'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </li>
@@ -166,14 +202,22 @@ export function CartDrawer({
               )}
             </div>
 
+            {/* Bottom Fixed Footer */}
             {items.length > 0 || placed ? (
-              <div className="space-y-3 border-t border-[#E8E4DE] px-5 py-4">
+              <div className="border-t border-[#CCC5BD] bg-[#F6F3EC] px-6 py-4 flex-shrink-0 space-y-3.5">
                 {items.length > 0 && subtotal > 0 ? (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#5C6570]">Estimated subtotal</span>
-                    <span className="font-semibold text-[#1B2430]">{formatCurrency(subtotal)}</span>
+                  <div className="space-y-1.5 sv2-mono-sm text-xs border-b border-[#CCC5BD] pb-3">
+                    <div className="flex justify-between text-[#4A4640]">
+                      <span>Subtotal ({count} item{count === 1 ? '' : 's'})</span>
+                      <span className="font-semibold text-[#1C1C18]">{formatCurrency(subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between items-baseline pt-1 text-[#1C1C18]">
+                      <span className="sv2-label font-bold text-[11px]">Estimated total</span>
+                      <span className="sv2-mono-lg font-bold text-[#1C1C18]">{formatCurrency(subtotal)}</span>
+                    </div>
                   </div>
                 ) : null}
+
                 <CartCheckout
                   items={items}
                   kind={kind}
@@ -185,7 +229,7 @@ export function CartDrawer({
                 />
               </div>
             ) : null}
-          </div>
+          </aside>
         </div>
       ) : null}
     </>

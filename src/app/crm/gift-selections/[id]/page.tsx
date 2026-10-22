@@ -12,6 +12,7 @@ import { countGiftChoices } from '@/lib/gifts/export'
 import { giftJoinUrl } from '@/lib/gifts/company'
 import { giftWindowOpen } from '@/lib/gifts/rules'
 import { resetGiftSubmission, updateGiftSelection } from '../actions'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +58,8 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
   const counts = countGiftChoices(
     (submissions || []).map((row) => ({ label: row.selected_label, size: row.size })),
   )
+  // Submissions store the chosen item's title; match it back to that item's picture.
+  const imageByLabel = new Map((items || []).map((item) => [item.title as string, (item.image_url as string | null) || null]))
   const open = giftWindowOpen(selection.opens_at, selection.closes_at)
   const initial = (items || []).map((item) => ({
     key: item.id,
@@ -84,8 +87,8 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
             </p>
           </div>
           <div className="flex gap-2 text-sm">
-            <a className="rounded-lg border px-3 py-2" href={`/crm/gift-selections/${id}/export?format=csv`}>CSV</a>
-            <a className="rounded-lg border px-3 py-2" href={`/crm/gift-selections/${id}/export?format=xls`}>Excel</a>
+            <a className="border px-3 py-2" href={`/crm/gift-selections/${id}/export?format=csv`}>CSV</a>
+            <a className="border px-3 py-2" href={`/crm/gift-selections/${id}/export?format=xls`}>Excel</a>
           </div>
         </div>
         <p className="mt-3 text-sm text-gray-600">
@@ -93,11 +96,11 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
         </p>
       </div>
 
-      <ActionForm action={updateGiftSelection} className="space-y-4 rounded-lg border bg-white p-4 sm:p-6">
+      <ActionForm action={updateGiftSelection} className="space-y-4 border bg-white p-4 sm:p-6">
         <input type="hidden" name="id" value={selection.id} />
         <label className="block text-xs text-gray-500">
           Name
-          <input name="name" defaultValue={selection.name} required className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+          <input name="name" defaultValue={selection.name} required className="mt-1 w-full border px-3 py-2 text-sm" />
         </label>
         <label className="block text-xs text-gray-500">
           Allowed email domains
@@ -105,17 +108,17 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
             name="allowed_email_domains"
             defaultValue={(selection.allowed_email_domains || []).join(', ')}
             required
-            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
+            className="mt-1 w-full border px-3 py-2 text-sm"
           />
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-xs text-gray-500">
             Opens (UTC)
-            <input type="datetime-local" name="opens_at" defaultValue={toLocalInput(selection.opens_at)} required className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+            <input type="datetime-local" name="opens_at" defaultValue={toLocalInput(selection.opens_at)} required className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
           <label className="block text-xs text-gray-500">
             Closes (UTC)
-            <input type="datetime-local" name="closes_at" defaultValue={toLocalInput(selection.closes_at)} required className="mt-1 w-full rounded-lg border px-3 py-2 text-sm" />
+            <input type="datetime-local" name="closes_at" defaultValue={toLocalInput(selection.closes_at)} required className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
         </div>
         {locked ? (
@@ -123,18 +126,21 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
         ) : (
           <GiftItemPicker products={(products || []) as GiftPickerProduct[]} initial={initial} />
         )}
-        <SubmitButton className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white" pendingLabel="Saving…">
+        <SubmitButton className="bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white" pendingLabel="Saving…">
           Save
         </SubmitButton>
       </ActionForm>
 
-      <section className="rounded-lg border bg-white p-4">
+      <section className="border bg-white p-4">
         <h2 className="text-sm font-semibold">Counts</h2>
         {counts.length === 0 ? <p className="mt-2 text-sm text-gray-500">No submissions yet.</p> : (
           <ul className="mt-3 divide-y text-sm">
             {counts.map((row) => (
-              <li key={`${row.label}-${row.size}`} className="flex justify-between py-2">
-                <span>{row.label}{row.size !== '—' ? ` · ${row.size}` : ''}</span>
+              <li key={`${row.label}-${row.size}`} className="flex items-center justify-between gap-3 py-2">
+                <span className="flex items-center gap-3">
+                  <ProductThumb src={imageByLabel.get(row.label)} alt={row.label} />
+                  <span>{row.label}{row.size !== '—' ? ` · ${row.size}` : ''}</span>
+                </span>
                 <span className="font-medium">{row.count}</span>
               </li>
             ))}
@@ -142,7 +148,7 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
         )}
       </section>
 
-      <section className="overflow-x-auto rounded-lg border bg-white">
+      <section className="overflow-x-auto border bg-white">
         <table className="w-full min-w-[48rem] text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>
@@ -156,7 +162,12 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
               <tr key={row.id} className="border-t align-top">
                 <td className="px-3 py-3">{row.employee_name}</td>
                 <td className="px-3 py-3">{row.employee_email}</td>
-                <td className="px-3 py-3">{row.selected_label}</td>
+                <td className="px-3 py-3">
+                  <div className="flex items-center gap-2">
+                    <ProductThumb src={imageByLabel.get(row.selected_label)} alt={row.selected_label} />
+                    <span>{row.selected_label}</span>
+                  </div>
+                </td>
                 <td className="px-3 py-3">{row.size || '—'}</td>
                 <td className="px-3 py-3">{row.address}</td>
                 <td className="px-3 py-3">{row.city}</td>

@@ -90,77 +90,120 @@ export default async function CatalogsPage({
   })
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6 p-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="font-serif text-2xl font-normal text-[#1C1917]">Client Catalogs</h1>
-        <p className="mt-1 text-xs text-[#7A7267]">Create a curated product set once, assign it to one or more companies, and share a link.</p>
+        <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+          Client Catalogs
+        </h1>
+        <p className="mt-1 text-xs text-[#4A4640]">
+          Create a product set once, assign it to one or more companies, and share a link.
+        </p>
       </div>
 
-      <CatalogForm action={createCatalog} className="space-y-3 rounded-2xl border border-[#E5DFD5] bg-white p-5 text-xs">
+      <CatalogForm action={createCatalog} className="space-y-3 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-4 text-xs">
         <div className="grid gap-3 md:grid-cols-2">
           <label className="block space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Catalog name</span>
-            <input name="name" required placeholder="e.g. Diwali 2026" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Catalog name</span>
+            <input
+              name="name"
+              required
+              placeholder="e.g. Diwali 2026"
+              className="min-h-9 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+            />
           </label>
           <label className="block space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Occasion</span>
-            <input name="occasion" placeholder="Diwali, onboarding…" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Occasion</span>
+            <input
+              name="occasion"
+              placeholder="Diwali, onboarding…"
+              className="min-h-9 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+            />
           </label>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           <label className="block space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Number of employees</span>
-            <input name="employee_quantity" type="number" min="1" defaultValue={1000} placeholder="e.g. 1000" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Number of employees</span>
+            <input
+              name="employee_quantity"
+              type="number"
+              min="1"
+              defaultValue={1000}
+              placeholder="e.g. 1000"
+              className="min-h-9 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 font-mono text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+            />
           </label>
           <label className="block space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Budget per person</span>
-            <input name="budget_per_employee" type="number" step="0.01" min="0" defaultValue={3000} placeholder="e.g. 3000" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Budget per person</span>
+            <input
+              name="budget_per_employee"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={3000}
+              placeholder="e.g. 3000"
+              className="min-h-9 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 font-mono text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+            />
           </label>
           <SheetDateField name="required_delivery_date" label="Required delivery" showDesktopLabel />
         </div>
         <CompanyMultiSelect companies={companyOptions} />
         <div className="grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
           <label className="block space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Notes</span>
-            <input name="description" placeholder="Optional notes" className="min-h-11 w-full rounded-lg border px-3 py-2" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Notes</span>
+            <input
+              name="description"
+              placeholder="Optional notes"
+              className="min-h-9 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+            />
           </label>
-          <SubmitButton pendingLabel="Creating…" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-4 py-2.5 font-semibold text-[#FFFFFF]">
+          <SubmitButton
+            pendingLabel="Creating…"
+            className="inline-flex min-h-9 items-center justify-center rounded-none bg-[#1C1B1A] px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
+          >
             Create catalog
           </SubmitButton>
         </div>
       </CatalogForm>
 
-      <form method="get" className="flex flex-col gap-2 sm:flex-row sm:items-center" role="search">
+      <form method="get" className="flex flex-col gap-2 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3 sm:flex-row sm:items-center" role="search">
         <input
           name="q"
           defaultValue={q}
-          placeholder="Search catalogs"
+          placeholder="Search catalogs..."
           aria-label="Search catalogs"
-          className="min-h-10 w-full rounded-lg border border-[#E5DFD5] bg-white px-3 py-2 text-xs sm:max-w-xs"
+          className="min-h-9 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 sm:max-w-xs"
         />
         <select
           name="company"
           defaultValue={companyFilter}
           aria-label="Filter by company"
-          className="min-h-10 rounded-lg border border-[#E5DFD5] bg-white px-2 py-2 text-xs sm:max-w-xs"
+          className="min-h-9 rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 sm:max-w-xs"
         >
           <option value="">All companies</option>
           {companyOptions.map((company) => (
             <option key={company.id} value={company.id}>{companyListLabel(company)}</option>
           ))}
         </select>
-        <button type="submit" className="min-h-10 rounded-lg border border-[#806A50] px-4 text-xs font-semibold text-[#806A50]">
+        <button
+          type="submit"
+          className="min-h-9 shrink-0 rounded-none bg-[#1C1B1A] px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
+        >
           Filter
         </button>
         {(q || companyFilter) && (
-          <Link href="/crm/catalogs" className="text-xs text-[#7A7267] underline">Clear</Link>
+          <Link
+            href="/crm/catalogs"
+            className="text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A] transition-colors hover:text-[#9E4300]"
+          >
+            Clear
+          </Link>
         )}
-        <span className="text-xs text-[#7A7267] sm:ml-auto">
-          {catalogRows.length} of {allCatalogs.length} catalog{allCatalogs.length === 1 ? '' : 's'}
+        <span className="text-xs text-[#7C766F] sm:ml-auto">
+          <span className="font-mono">{catalogRows.length}</span> of <span className="font-mono">{allCatalogs.length}</span> catalog{allCatalogs.length === 1 ? '' : 's'}
         </span>
       </form>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {catalogRows.length > 0 ? (
           catalogRows.map((catalog) => {
             const assigned = assignedByCatalog.get(catalog.id) || []
@@ -169,43 +212,53 @@ export default async function CatalogsPage({
               <Link
                 key={catalog.id}
                 href={`/crm/catalogs/${catalog.id}`}
-                className="block space-y-4 rounded-2xl border border-[#E5DFD5] bg-white p-6 transition-colors hover:border-[#806A50] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#806A50]"
+                className="group block space-y-3 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-5 transition-colors hover:border-[#1C1B1A]"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <h2 className="text-base font-bold text-[#1C1917]">{catalog.name}</h2>
-                  <span className="shrink-0 rounded-full bg-[#E1EFFE] px-2.5 py-0.5 text-[10px] font-semibold text-[#1E429F]">
+                  <h2 className="font-[family-name:var(--font-newsreader)] text-xl font-normal leading-snug text-[#1C1B1A] transition-colors group-hover:text-[#9E4300]">
+                    {catalog.name}
+                  </h2>
+                  <span className="shrink-0 rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#4A4640]">
                     {catalogStatusLabel(catalog.status)}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {assigned.length === 0 && (
-                    <span className="rounded-full border border-dashed border-[#E5DFD5] px-2 py-0.5 text-[11px] text-[#7A7267]">Unassigned</span>
+                    <span className="rounded-none border border-dashed border-[#CCC5BD] px-2 py-0.5 text-[11px] text-[#7C766F]">
+                      Unassigned
+                    </span>
                   )}
                   {assigned.slice(0, MAX_CHIPS).map((company) => (
-                    <span key={company.id} className="max-w-[10rem] truncate rounded-full bg-[#FAF7F2] px-2 py-0.5 text-[11px] text-[#5A5248]">
+                    <span key={company.id} className="max-w-[10rem] truncate rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-2 py-0.5 text-[11px] text-[#4A4640]">
                       {company.name}
                     </span>
                   ))}
                   {assigned.length > MAX_CHIPS && (
-                    <span className="rounded-full bg-[#FAF7F2] px-2 py-0.5 text-[11px] font-semibold text-[#806A50]">
+                    <span className="rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 font-mono text-[11px] font-semibold text-[#9E4300]">
                       +{assigned.length - MAX_CHIPS}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-[#5A5248]">
-                  {items} item{items === 1 ? '' : 's'} · {catalog.employee_quantity?.toLocaleString('en-IN')} employees × {formatCurrency(catalog.budget_per_employee)}
+                <p className="text-xs text-[#4A4640]">
+                  <span className="font-mono">{items}</span> item{items === 1 ? '' : 's'} · <span className="font-mono">{catalog.employee_quantity?.toLocaleString('en-IN')}</span> employees × <span className="font-mono">{formatCurrency(catalog.budget_per_employee)}</span>
                 </p>
-                <p className="text-sm font-semibold">{formatCurrency(catalog.total_budget)} total</p>
+                <p className="font-mono text-sm font-semibold text-[#1C1B1A]">
+                  {formatCurrency(catalog.total_budget)} total
+                </p>
                 {catalog.required_delivery_date && (
-                  <p className="text-[11px] text-[#7A7267]">Delivery {formatDate(catalog.required_delivery_date)}</p>
+                  <p className="text-[11px] text-[#7C766F]">
+                    Delivery <span className="font-mono">{formatDate(catalog.required_delivery_date)}</span>
+                  </p>
                 )}
               </Link>
             )
           })
         ) : (
-          <div className="col-span-full rounded-2xl border border-[#E5DFD5] bg-white p-12 text-center text-gray-500">
-            <FolderGit2 className="mx-auto mb-3 h-12 w-12 text-gray-400" />
-            <h3 className="text-base font-semibold text-gray-900">{allCatalogs.length ? 'No catalogs match' : 'No catalogs yet'}</h3>
+          <div className="col-span-full rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-12 text-center text-xs text-[#7C766F]">
+            <FolderGit2 className="mx-auto mb-3 h-10 w-10 text-[#7C766F]" />
+            <h3 className="text-sm font-semibold text-[#1C1B1A]">
+              {allCatalogs.length ? 'No catalogs match' : 'No catalogs yet'}
+            </h3>
           </div>
         )}
       </div>

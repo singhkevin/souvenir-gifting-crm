@@ -2,18 +2,19 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { oneRelation } from '@/lib/utils'
 import { sortProductCategories } from '@/lib/products/categories'
-import { surfaceUnitPrice } from '@/lib/pricing/listed'
+import { gstPriceNote } from '@/lib/pricing/engine'
 import { readProductCost } from '@/lib/pricing/product-costs'
-import { getPricingSettings } from '@/lib/pricing/server'
+import { getPricingSettings, resolveListedPrices } from '@/lib/pricing/server'
 import { type PurchaseOffer } from '@/lib/catalogue/purchase-path'
 import { occasionTagList, storefrontSampleOffer } from '@/lib/catalogue/storefront'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { CHANNEL_COLUMN, channelColumnsMissing, type Channel } from '@/lib/products/channel-visibility'
 
 const PUBLIC_PRODUCT_SELECT =
   'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)' as const
 const PUBLIC_PRODUCT_SELECT_WITH_PURCHASE =
   'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, sample_only, category:categories(id, name), brand:brands(id, name)' as const
-const PUBLIC_COST_EMBED = 'product_costs(supplier_cost, internal_margin)'
+const PUBLIC_COST_EMBED = 'product_costs(supplier_cost)'
 
 export type PublicProduct = {
   id: string
@@ -32,6 +33,7 @@ export type PublicProduct = {
   status: string
   created_at: string | null
   purchase: PurchaseOffer
+  priceNote?: string | null
 }
 
 type Named = { id: string; name: string }
@@ -55,7 +57,8 @@ function toPublicProduct(
     category?: Named | Named[] | null
     brand?: Named | Named[] | null
   },
-  sellPrice: number | null
+  sellPrice: number | null,
+  priceNote?: string | null,
 ): PublicProduct {
   return {
     id: row.id,
@@ -79,6 +82,7 @@ function toPublicProduct(
       hasSellPrice: sellPrice != null && Number.isFinite(Number(sellPrice)),
       sampleOnly: Boolean(row.sample_only),
     }),
+    priceNote: priceNote || null,
   }
 }
 
@@ -88,7 +92,6 @@ function missingPurchaseColumn(message: string | undefined) {
 
 type PublicRow = Parameters<typeof toPublicProduct>[0] & {
   supplier_cost?: number | null
-  internal_margin?: number | null
 }
 
 function attachCosts(rows: unknown[]): PublicRow[] {
@@ -98,7 +101,19 @@ function attachCosts(rows: unknown[]): PublicRow[] {
   })
 }
 
-async function loadPublicRows(client: SupabaseClient, id?: string): Promise<PublicRow[]> {
+/**
+ * Store and business portal read their own channel switch. Until
+ * 20261022_channel_visibility.sql is applied the columns do not exist and both
+ * channels keep the legacy rule (catalogue_access = 'all').
+ */
+async function channelFilter(client: SupabaseClient, channel: Channel): Promise<[string, string | boolean]> {
+  const probe = await client.from('products').select('show_in_store, show_in_business').limit(1)
+  if (probe.error && channelColumnsMissing(probe.error.message)) return ['catalogue_access', 'all']
+  return [CHANNEL_COLUMN[channel], true]
+}
+
+async function loadPublicRows(client: SupabaseClient, id?: string, channel: Channel = 'store'): Promise<PublicRow[]> {
+  const [channelColumn, channelValue] = await channelFilter(client, channel)
   const probe = await client.from('products').select('sample_only').limit(1)
   const purchaseColumns = probe.error && /sample_only/i.test(probe.error.message)
     ? PUBLIC_PRODUCT_SELECT_WITH_PURCHASE.replace(', sample_only', '')
@@ -110,7 +125,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
       .from('products')
       .select(purchaseSelect)
       .eq('status', 'active')
-      .eq('catalogue_access', 'all')
+      .eq(channelColumn, channelValue)
       .eq('id', id)
       .maybeSingle()
     if (single.error && /product_costs/i.test(single.error.message)) {
@@ -118,7 +133,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
         .from('products')
         .select(purchaseColumns)
         .eq('status', 'active')
-        .eq('catalogue_access', 'all')
+        .eq(channelColumn, channelValue)
         .eq('id', id)
         .maybeSingle()
       if (withoutCost.error && missingPurchaseColumn(withoutCost.error.message)) {
@@ -126,7 +141,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
           .from('products')
           .select(PUBLIC_PRODUCT_SELECT)
           .eq('status', 'active')
-          .eq('catalogue_access', 'all')
+          .eq(channelColumn, channelValue)
           .eq('id', id)
           .maybeSingle()
         return fallback.data ? attachCosts([fallback.data]) : []
@@ -138,7 +153,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
         .from('products')
         .select(plainSelect)
         .eq('status', 'active')
-        .eq('catalogue_access', 'all')
+        .eq(channelColumn, channelValue)
         .eq('id', id)
         .maybeSingle()
       if (fallback.error && /product_costs/i.test(fallback.error.message)) {
@@ -146,7 +161,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
           .from('products')
           .select(PUBLIC_PRODUCT_SELECT)
           .eq('status', 'active')
-          .eq('catalogue_access', 'all')
+          .eq(channelColumn, channelValue)
           .eq('id', id)
           .maybeSingle()
         return plain.data ? attachCosts([plain.data]) : []
@@ -160,21 +175,21 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
     .from('products')
     .select(purchaseSelect)
     .eq('status', 'active')
-    .eq('catalogue_access', 'all')
+    .eq(channelColumn, channelValue)
     .order('name')
   if (first.error && /product_costs/i.test(first.error.message)) {
     const withoutCost = await client
       .from('products')
       .select(purchaseColumns)
       .eq('status', 'active')
-      .eq('catalogue_access', 'all')
+      .eq(channelColumn, channelValue)
       .order('name')
     if (withoutCost.error && missingPurchaseColumn(withoutCost.error.message)) {
       const fallback = await client
         .from('products')
         .select(PUBLIC_PRODUCT_SELECT)
         .eq('status', 'active')
-        .eq('catalogue_access', 'all')
+        .eq(channelColumn, channelValue)
         .order('name')
       return attachCosts(fallback.data || [])
     }
@@ -185,14 +200,14 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
       .from('products')
       .select(plainSelect)
       .eq('status', 'active')
-      .eq('catalogue_access', 'all')
+      .eq(channelColumn, channelValue)
       .order('name')
     if (fallback.error && /product_costs/i.test(fallback.error.message)) {
       const plain = await client
         .from('products')
         .select(PUBLIC_PRODUCT_SELECT)
         .eq('status', 'active')
-        .eq('catalogue_access', 'all')
+        .eq(channelColumn, channelValue)
         .order('name')
       return attachCosts(plain.data || [])
     }
@@ -231,16 +246,23 @@ async function decorateStorefront(client: SupabaseClient, products: PublicProduc
   }))
 }
 
-export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
+/** Active products switched on for the retail store (default) or the business portal. */
+export async function getPublicCatalogueProducts(channel: Channel = 'store'): Promise<PublicProduct[]> {
   try {
     const client = await publicDbClient()
     if (!client) return []
-    const data = await loadPublicRows(client)
+    const data = await loadPublicRows(client, undefined, channel)
     if (!data.length) return []
     const settings = await getPricingSettings()
+    const rule = settings.portals.store
+    const note = settings.surfaces.store.showSellPrice ? gstPriceNote(rule.gstMode) : null
+    // Store (Retail) price: fixed price, else effective cost + product margin or store margin.
+    const resolved = settings.surfaces.store.showSellPrice
+      ? await resolveListedPrices(data.map((row) => ({ id: row.id })), 'store', null, null, settings, client)
+      : null
     const priced = !settings.surfaces.store.showSellPrice
       ? data.map((row) => toPublicProduct(row, null))
-      : data.map((row) => toPublicProduct(row, surfaceUnitPrice({ channel: 'b2c', retailPrice: row.price })))
+      : data.map((row) => toPublicProduct(row, resolved?.get(row.id)?.price ?? null, note))
     return decorateStorefront(client, priced)
   } catch {
     return []
@@ -287,7 +309,9 @@ export async function getPublicProduct(id: string): Promise<PublicProduct | null
     if (!settings.surfaces.store.showSellPrice) {
       return (await decorateStorefront(client, [toPublicProduct(data, null)]))[0] || null
     }
-    return (await decorateStorefront(client, [toPublicProduct(data, surfaceUnitPrice({ channel: 'b2c', retailPrice: data.price }))]))[0] || null
+    const resolved = await resolveListedPrices([{ id: data.id }], 'store', null, null, settings, client)
+    const price = resolved?.get(data.id)?.price ?? null
+    return (await decorateStorefront(client, [toPublicProduct(data, price, gstPriceNote(settings.portals.store.gstMode))]))[0] || null
   } catch {
     return null
   }

@@ -7,6 +7,7 @@ import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { readCatalogueShortlist } from '@/lib/portal/catalogue-shortlist'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 const PURPOSE_OPTIONS = [
   { value: 'festival', label: 'Festival (Diwali, Christmas, etc)' },
@@ -92,137 +93,275 @@ export function RequestQuotationForm() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Request quotation</h1>
-        <p className="mt-2 text-sm text-gray-600 sm:text-base">Tell us what you need, and we&apos;ll prepare a quote.</p>
+    <div className="mx-auto max-w-3xl min-w-0 space-y-8">
+      {/* Page Title */}
+      <div className="border-b border-[#CCC5BD] pb-6">
+        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">
+          Client portal · Request a quote
+        </span>
+        <h1 className="font-serif text-3xl sm:text-4xl text-[#1C1C18] tracking-tight">Request Quotation</h1>
+        <p className="mt-2 text-sm text-[#4A4640]">
+          Tell us what you need, and we&apos;ll prepare a quote.
+        </p>
       </div>
 
-      <div className="relative mb-8 flex items-center justify-between">
-        <div className="absolute left-0 right-0 top-1/2 -z-10 h-0.5 bg-gray-200"></div>
-        {[1, 2, 3].map(i => (
-          <div key={i} className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-            step >= i ? 'bg-[#806A50] text-[#FFFFFF]' : 'bg-gray-200 text-gray-500'
-          }`}>
-            {i}
-          </div>
-        ))}
+      {/* 3-Step Indicator */}
+      <div className="grid grid-cols-3 gap-2">
+        <div
+          className={`p-3 border text-left rounded-none transition-colors ${
+            step === 1
+              ? 'border-[#1C1B1A] bg-[#1C1B1A] text-white'
+              : step > 1
+              ? 'border-[#CCC5BD] bg-[#F6F3EC] text-[#1C1C18]'
+              : 'border-[#CCC5BD] bg-[#F1EEE7] text-[#7C766F]'
+          }`}
+        >
+          <span className="block font-mono text-xs font-bold">01</span>
+          <span className="block text-[10px] font-bold uppercase tracking-wider mt-0.5 truncate">
+            Requirement
+          </span>
+        </div>
+        <div
+          className={`p-3 border text-left rounded-none transition-colors ${
+            step === 2
+              ? 'border-[#1C1B1A] bg-[#1C1B1A] text-white'
+              : step > 2
+              ? 'border-[#CCC5BD] bg-[#F6F3EC] text-[#1C1C18]'
+              : 'border-[#CCC5BD] bg-[#F1EEE7] text-[#7C766F]'
+          }`}
+        >
+          <span className="block font-mono text-xs font-bold">02</span>
+          <span className="block text-[10px] font-bold uppercase tracking-wider mt-0.5 truncate">
+            Budget
+          </span>
+        </div>
+        <div
+          className={`p-3 border text-left rounded-none transition-colors ${
+            step === 3
+              ? 'border-[#1C1B1A] bg-[#1C1B1A] text-white'
+              : 'border-[#CCC5BD] bg-[#F1EEE7] text-[#7C766F]'
+          }`}
+        >
+          <span className="block font-mono text-xs font-bold">03</span>
+          <span className="block text-[10px] font-bold uppercase tracking-wider mt-0.5 truncate">
+            Gift Selection
+          </span>
+        </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+      {/* Form Card */}
+      <div className="border border-[#CCC5BD] bg-white rounded-none p-6 sm:p-8 space-y-6">
         {error && (
-          <div className="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-600">
+          <div className="border border-[#BA1A1A] bg-[#FFDAD6] p-4 text-xs text-[#BA1A1A] font-medium rounded-none">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-0" aria-busy={pending || undefined}>
+        <form onSubmit={handleSubmit} className="space-y-6" aria-busy={pending || undefined}>
           <fieldset disabled={pending} className="contents">
-          {step === 1 && (
-            <div className="space-y-6">
-              <h2 className="border-b pb-2 text-xl font-bold text-gray-900">Step 1: What do you need?</h2>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Request name</label>
-                <input type="text" name="name" required value={formData.name} onChange={handleChange} className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="e.g. Diwali Gifts 2026" />
-              </div>
-              <MobileSheetSelect
-                label="Purpose / Occasion"
-                showDesktopLabel
-                emptyLabel="Choose an occasion"
-                value={formData.purpose}
-                onChange={(purpose) => setFormData({ ...formData, purpose })}
-                options={PURPOSE_OPTIONS}
-              />
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Description (Optional)</label>
-                <textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="Any specific themes, colors, or preferences?"></textarea>
-              </div>
-            </div>
-          )}
+            {step === 1 && (
+              <div className="space-y-6">
+                <div className="border-b border-[#CCC5BD] pb-3">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
+                    Step 01 · General information
+                  </span>
+                  <h2 className="font-serif text-2xl text-[#1C1C18] mt-1">What do you need?</h2>
+                </div>
 
-          {step === 2 && (
-            <div className="space-y-6">
-              <h2 className="border-b pb-2 text-xl font-bold text-gray-900">Step 2: Budget & Logistics</h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Budget per unit ($)</label>
-                  <input type="number" name="budget_per_unit" required value={formData.budget_per_unit} onChange={handleChange} min="1" step="0.01" className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="e.g. 50" />
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">
+                    Request name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full bg-[#F1EEE7] border border-[#CCC5BD] px-3.5 py-3 text-sm text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none placeholder:text-[#7C766F]"
+                    placeholder="e.g. Diwali Gifts 2026"
+                  />
                 </div>
+
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Total Quantity</label>
-                  <input type="number" name="quantity" required value={formData.quantity} onChange={handleChange} min="1" className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="e.g. 100" />
+                  <MobileSheetSelect
+                    label="Purpose / Occasion *"
+                    showDesktopLabel
+                    emptyLabel="Select an occasion"
+                    value={formData.purpose}
+                    onChange={(purpose) => setFormData({ ...formData, purpose })}
+                    options={PURPOSE_OPTIONS}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">
+                    Description (optional)
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={4}
+                    className="w-full bg-[#F1EEE7] border border-[#CCC5BD] px-3.5 py-3 text-sm text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none placeholder:text-[#7C766F]"
+                    placeholder="Any specific themes, colors, or preferences?"
+                  />
                 </div>
               </div>
-              <SheetDateField
-                label="Required By Date"
-                value={formData.deadline}
-                onChange={(deadline) => setFormData({ ...formData, deadline })}
-                showDesktopLabel
-              />
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Delivery City</label>
-                <input type="text" name="delivery_city" required value={formData.delivery_city} onChange={handleChange} className="min-h-11 w-full rounded-lg border border-[#E8E4DE] bg-white px-3 py-2 outline-none focus:border-[#806A50] focus:ring-1 focus:ring-[#806A50]" placeholder="e.g. New York" />
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-6">
-              <h2 className="border-b pb-2 text-xl font-bold text-gray-900">Step 3: Products and quantities</h2>
-              <p className="text-sm text-gray-600">Enter a quantity for each gift in your quote basket.</p>
-              
-              {shortlistedProducts.length === 0 ? (
-                <div className="rounded-lg bg-gray-50 p-4 text-center text-sm text-gray-500">
-                  Your quote basket is empty. We&apos;ll suggest options based on your description and budget.
-                </div>
-              ) : (
-                <ul className="divide-y rounded-lg border">
-                  {shortlistedProducts.map(p => (
-                    <li key={p.sku || p.id} className="flex flex-col gap-2 bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <div className="text-sm font-medium">{p.name}</div>
-                        <div className="text-xs text-gray-500">{p.sku}</div>
-                      </div>
-                      <label className="flex items-center gap-2 text-xs text-gray-600">
-                        Qty
-                        <input
-                          type="number"
-                          min={1}
-                          step={1}
-                          value={lineQty[p.sku] ?? (formData.quantity || '1')}
-                          onChange={(event) => setLineQty((current) => ({ ...current, [p.sku]: event.target.value }))}
-                          className="min-h-10 w-24 rounded-lg border border-[#E8E4DE] bg-white px-2"
-                        />
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          <div className="mt-8 flex flex-col-reverse gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:justify-between">
-            {step > 1 ? (
-              <button type="button" onClick={() => setStep(step - 1)} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-                Back
-              </button>
-            ) : (
-              <div className="hidden sm:block"></div>
             )}
-            
-            <button type="submit" disabled={pending} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#806A50] px-6 text-sm font-semibold text-[#FFFFFF] transition-colors hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-50">
-              {step < 3 ? (
-                'Next Step'
-              ) : pending ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner />
-                  Submitting…
-                </span>
+
+            {step === 2 && (
+              <div className="space-y-6">
+                <div className="border-b border-[#CCC5BD] pb-3">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
+                    Step 02 · Budget and delivery
+                  </span>
+                  <h2 className="font-serif text-2xl text-[#1C1C18] mt-1">Budget & Logistics</h2>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">
+                      Target Budget Per Unit (INR) *
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-3 font-mono text-sm text-[#7C766F]">₹</span>
+                      <input
+                        type="number"
+                        name="budget_per_unit"
+                        required
+                        value={formData.budget_per_unit}
+                        onChange={handleChange}
+                        min="1"
+                        step="0.01"
+                        className="w-full bg-[#F1EEE7] border border-[#CCC5BD] pl-8 pr-3.5 py-3 text-sm font-mono text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none placeholder:text-[#7C766F]"
+                        placeholder="e.g. 50"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">
+                      Total quantity *
+                    </label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      required
+                      value={formData.quantity}
+                      onChange={handleChange}
+                      min="1"
+                      className="w-full bg-[#F1EEE7] border border-[#CCC5BD] px-3.5 py-3 text-sm font-mono text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none placeholder:text-[#7C766F]"
+                      placeholder="e.g. 100"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <SheetDateField
+                    label="Required Delivery Date *"
+                    value={formData.deadline}
+                    onChange={(deadline) => setFormData({ ...formData, deadline })}
+                    showDesktopLabel
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">
+                    Delivery city *
+                  </label>
+                  <input
+                    type="text"
+                    name="delivery_city"
+                    required
+                    value={formData.delivery_city}
+                    onChange={handleChange}
+                    className="w-full bg-[#F1EEE7] border border-[#CCC5BD] px-3.5 py-3 text-sm text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none placeholder:text-[#7C766F]"
+                    placeholder="e.g. New York"
+                  />
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-6">
+                <div className="border-b border-[#CCC5BD] pb-3">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
+                    Step 03 · Gift selection
+                  </span>
+                  <h2 className="font-serif text-2xl text-[#1C1C18] mt-1">Products & Quantities</h2>
+                  <p className="mt-1 text-xs text-[#4A4640]">
+                    Enter a quantity for each gift in your quote basket.
+                  </p>
+                </div>
+                
+                {shortlistedProducts.length === 0 ? (
+                  <div className="border border-[#CCC5BD] bg-[#F6F3EC] p-6 text-center text-xs text-[#7C766F] rounded-none">
+                    Your quote basket is empty. You can still send the request.
+                  </div>
+                ) : (
+                  <div className="border border-[#CCC5BD] bg-white rounded-none divide-y divide-[#CCC5BD]">
+                    {shortlistedProducts.map((p) => (
+                      <div
+                        key={p.sku || p.id}
+                        className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between hover:bg-[#F6F3EC] transition-colors"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <ProductThumb src={p.image_url} alt={p.name} />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-[#1C1C18]">{p.name}</p>
+                            <p className="font-mono text-[10px] text-[#7C766F] mt-0.5">SKU: {p.sku}</p>
+                          </div>
+                        </div>
+                        <label className="flex items-center gap-2 text-xs text-[#7C766F]">
+                          <span className="font-bold uppercase tracking-wider text-[10px]">Qty:</span>
+                          <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={lineQty[p.sku] ?? (formData.quantity || '1')}
+                            onChange={(event) => setLineQty((current) => ({ ...current, [p.sku]: event.target.value }))}
+                            className="w-24 bg-[#F1EEE7] border border-[#CCC5BD] px-2.5 py-1.5 font-mono text-xs text-center text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none"
+                          />
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Navigation Buttons */}
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-6 border-t border-[#CCC5BD]">
+              {step > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep(step - 1)}
+                  className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] border border-[#CCC5BD] text-[#1C1C18] bg-white hover:bg-[#F6F3EC] rounded-none transition-colors"
+                >
+                  Back
+                </button>
               ) : (
-                'Request quotation'
+                <div className="hidden sm:block"></div>
               )}
-            </button>
-          </div>
+              
+              <button
+                type="submit"
+                disabled={pending}
+                className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center px-8 py-3 text-xs font-bold uppercase tracking-[0.12em] bg-[#9E4300] hover:bg-[#FF8843] text-white rounded-none transition-colors disabled:opacity-50"
+              >
+                {step < 3 ? (
+                  'Next step →'
+                ) : pending ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Spinner />
+                    Submitting…
+                  </span>
+                ) : (
+                  'Request quotation'
+                )}
+              </button>
+            </div>
           </fieldset>
         </form>
       </div>

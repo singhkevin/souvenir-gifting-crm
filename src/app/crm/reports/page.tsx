@@ -121,15 +121,15 @@ export default async function ReportsPage({
       {tab === 'sales' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Total Booked Revenue</p>
               <p className="text-2xl font-bold text-green-700">{formatCurrency(totalRevenue)}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Total Leads</p>
               <p className="text-2xl font-bold">{leads?.length || 0}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Conversion Rate (Est)</p>
               <p className="text-2xl font-bold text-blue-600">
                 {leads?.length
@@ -144,13 +144,13 @@ export default async function ReportsPage({
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white p-6 border border-gray-200">
             <h3 className="font-bold mb-4">Leads by Stage</h3>
             <div className="w-full max-w-md">
               {Object.entries(leadsByStage).map(([stage, count]) => (
                 <div key={stage} className="flex items-center mb-2">
                   <div className="w-32 text-sm capitalize text-gray-600">{stage.replace('_', ' ')}</div>
-                  <div className="flex-1 bg-gray-100 rounded h-4 overflow-hidden">
+                  <div className="flex-1 bg-gray-100 h-4 overflow-hidden">
                     <div
                       className="bg-[var(--color-primary)] h-full"
                       style={{ width: `${(Number(count) / (leads?.length || 1)) * 100}%` }}
@@ -170,15 +170,15 @@ export default async function ReportsPage({
       {tab === 'orders' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Total Orders</p>
               <p className="text-2xl font-bold">{orders?.length || 0}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Active Pipeline</p>
               <p className="text-2xl font-bold text-amber-600">{activeOrdersCount}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Delivered</p>
               <p className="text-2xl font-bold text-green-700">
                 {orders?.filter((o) => o.status === 'delivered').length || 0}
@@ -186,13 +186,13 @@ export default async function ReportsPage({
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white p-6 border border-gray-200">
             <h3 className="font-bold mb-4">Order value by month</h3>
             <div className="flex items-end gap-3 h-40">
               {monthBuckets.map((m) => (
                 <div key={m.key} className="flex-1 flex flex-col items-center justify-end h-full">
                   <div
-                    className="w-full bg-[var(--color-primary)] rounded-t"
+                    className="w-full bg-[var(--color-primary)]"
                     style={{ height: `${Math.max((m.value / maxMonth) * 100, m.value ? 4 : 0)}%` }}
                     title={formatCurrency(m.value)}
                   />
@@ -202,7 +202,7 @@ export default async function ReportsPage({
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
+          <div className="bg-white p-6 border border-gray-200">
             <h3 className="font-bold mb-4">Orders by status</h3>
             <div className="w-full max-w-lg">
               {ORDER_STATUSES.map((status) => {
@@ -210,7 +210,7 @@ export default async function ReportsPage({
                 return (
                   <div key={status} className="flex items-center mb-2">
                     <div className="w-48 text-sm text-gray-600">{ORDER_STATUS_LABELS[status]}</div>
-                    <div className="flex-1 bg-gray-100 rounded h-4 overflow-hidden">
+                    <div className="flex-1 bg-gray-100 h-4 overflow-hidden">
                       <div
                         className="bg-[var(--color-primary)] h-full"
                         style={{ width: `${(count / (orders?.length || 1)) * 100}%` }}
@@ -228,15 +228,15 @@ export default async function ReportsPage({
       {tab === 'finance' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Total Invoiced</p>
               <p className="text-2xl font-bold">{formatCurrency(totalInvoiced)}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Total Collected</p>
               <p className="text-2xl font-bold text-green-600">{formatCurrency(collected)}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Outstanding</p>
               <p className="text-2xl font-bold text-red-600">{formatCurrency(totalInvoiced - collected)}</p>
             </div>
@@ -247,19 +247,19 @@ export default async function ReportsPage({
       {tab === 'samples' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">In Office</p>
               <p className="text-2xl font-bold">{totalInOffice}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">With Client</p>
               <p className="text-2xl font-bold text-blue-600">{totalWithClient}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Pending Supplier</p>
               <p className="text-2xl font-bold text-amber-600">{totalPending}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Stock Value</p>
               <p className="text-2xl font-bold">{formatCurrency(sampleValue)}</p>
             </div>
@@ -268,7 +268,7 @@ export default async function ReportsPage({
             <p className="text-sm text-gray-500">Full SKU-level sample stock lives on the Sample Stock page.</p>
             <Link
               href="/crm/samples"
-              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]"
+              className="inline-flex min-h-9 items-center justify-center border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]"
             >
               Open sample stock
             </Link>
@@ -278,15 +278,15 @@ export default async function ReportsPage({
       {tab === 'gst' && canSeeFinance(profile.role) && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Total Invoiced</p>
               <p className="text-2xl font-bold">{formatCurrency(totalInvoiced)}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Collected</p>
               <p className="text-2xl font-bold text-green-600">{formatCurrency(collected)}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white p-4 border border-gray-200">
               <p className="text-sm text-gray-500 mb-1">Invoices</p>
               <p className="text-2xl font-bold">{invoices?.length || 0}</p>
             </div>
@@ -298,7 +298,7 @@ export default async function ReportsPage({
             </p>
             <Link
               href="/crm/gst-reports"
-              className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
+              className="inline-flex min-h-9 items-center justify-center bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]"
             >
               Open GST reports
             </Link>

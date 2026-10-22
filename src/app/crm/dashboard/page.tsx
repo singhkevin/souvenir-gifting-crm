@@ -8,15 +8,58 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { MobileDateRangeFilter } from '@/components/ui/mobile-filter-sheet'
 
-function Card({ label, value, href, warn, detail }: { label: string; value: string | number; href?: string; warn?: boolean; detail?: string }) {
+function Card({
+  label,
+  value,
+  href,
+  warn,
+  detail,
+}: {
+  label: string
+  value: string | number
+  href?: string
+  warn?: boolean
+  detail?: string
+}) {
+  const isMono = typeof value === 'number' || /^[₹\d%]/.test(String(value))
   const inner = (
-    <div className={`rounded-xl border p-3 sm:p-4 ${warn ? 'bg-red-50 border-red-100' : 'bg-white border-[#E5DFD5]'}`}>
-      <span className="text-[10px] font-semibold tracking-wider text-[#7A7267] uppercase">{label}</span>
-      <p className="font-serif text-lg text-[#1C1917] mt-1.5 sm:mt-2 sm:text-xl break-words">{value}</p>
-      {detail ? <p className="mt-1 text-[10px] leading-snug text-[#7A7267]">{detail}</p> : null}
+    <div
+      className={`h-full bg-[#FCF9F2] border border-[#CCC5BD] p-3.5 sm:p-4 rounded-none flex flex-col justify-between gap-2 transition-colors group-hover:bg-[#F6F3EC] ${
+        warn ? 'border-l-[3px] border-l-[#9E4300]' : ''
+      }`}
+    >
+      <span
+        className={`text-[11px] font-bold uppercase tracking-[0.12em] ${
+          warn ? 'text-[#9E4300]' : 'text-[#7C766F]'
+        }`}
+      >
+        {label}
+      </span>
+      <div className="flex items-baseline justify-between gap-2 flex-wrap">
+        <p
+          className={`${
+            isMono
+              ? 'font-mono text-2xl sm:text-[28px] font-semibold tracking-tight'
+              : 'text-lg sm:text-xl font-medium'
+          } text-[#1C1B1A] break-words`}
+        >
+          {value}
+        </p>
+        {detail ? (
+          <span className="font-mono text-[11px] text-[#7C766F] truncate max-w-full">
+            {detail}
+          </span>
+        ) : null}
+      </div>
     </div>
   )
-  return href ? <Link href={href} className="block hover:border-[#806A50]">{inner}</Link> : inner
+  return href ? (
+    <Link href={href} className="group block h-full">
+      {inner}
+    </Link>
+  ) : (
+    inner
+  )
 }
 
 type DashOrder = {
@@ -257,57 +300,95 @@ export default async function DashboardPage({
     profile.role === 'accounts' ? 'Invoices, collections and payables' : 'What do I need to do?'
 
   const ActivityFeed = () => (
-    <div className="bg-white rounded-xl border border-[#E5DFD5] p-5">
-      <div className="flex justify-between items-center mb-3">
-        <h2 className="font-serif text-lg">Activity</h2>
-        {(profile.role === 'admin' || profile.role === 'management') && (
-          <Link href="/crm/audit-log" className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Full audit log</Link>
-        )}
+    <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none flex flex-col">
+      <div className="px-5 py-3.5 border-b border-[#CCC5BD] flex items-center justify-between bg-[#F6F3EC]">
+        <h2 className="font-[family-name:var(--font-newsreader)] text-lg sm:text-xl font-normal text-[#1C1B1A]">
+          Activity
+        </h2>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+            {activityRows.length} RECENT
+          </span>
+          {(profile.role === 'admin' || profile.role === 'management') && (
+            <Link
+              href="/crm/audit-log"
+              className="inline-flex items-center justify-center rounded-none border border-[#1C1B1A] bg-transparent px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#1C1B1A] transition-colors hover:bg-[#F6F3EC]"
+            >
+              Full audit log
+            </Link>
+          )}
+        </div>
       </div>
-      <div className="space-y-2 max-h-96 overflow-y-auto">
+      <div className="divide-y divide-[#CCC5BD] max-h-96 overflow-y-auto">
         {activityRows.map((row) => {
           const actor = Array.isArray(row.profile) ? row.profile[0] : row.profile
           const href = entityHref(row.entity, row.entity_id)
           const inner = (
-            <>
-              <p className="text-sm text-[#1C1917]">
+            <div className="flex flex-col gap-0.5">
+              <p className="text-sm text-[#1C1B1A]">
                 <span className="font-semibold">{actor?.full_name || 'System'}</span>{' '}
-                {describeAudit(row.action, row.entity || 'record')}
-                {row.entity_id ? <span className="font-mono text-[11px] text-[#7A7267]"> #{String(row.entity_id).slice(0, 8)}</span> : null}
+                <span className="text-[#4A4640]">{describeAudit(row.action, row.entity || 'record')}</span>
+                {row.entity_id ? (
+                  <span className="font-mono text-[11px] text-[#7C766F]">
+                    {' '}#{String(row.entity_id).slice(0, 8)}
+                  </span>
+                ) : null}
               </p>
-              <p className="text-[11px] text-[#7A7267]">{formatDateTime(row.created_at)}</p>
-            </>
+              <p className="font-mono text-[11px] text-[#7C766F]">{formatDateTime(row.created_at)}</p>
+            </div>
           )
           return href ? (
-            <Link key={row.id} href={href} className="block p-2 rounded-lg hover:bg-[#FAF7F2]">{inner}</Link>
+            <Link
+              key={row.id}
+              href={href}
+              className="block px-5 py-3 transition-colors hover:bg-[#F6F3EC]"
+            >
+              {inner}
+            </Link>
           ) : (
-            <div key={row.id} className="p-2">{inner}</div>
+            <div key={row.id} className="px-5 py-3">
+              {inner}
+            </div>
           )
         })}
-        {activityRows.length === 0 && <p className="text-sm text-gray-500">No recent activity.</p>}
+        {activityRows.length === 0 && (
+          <div className="p-5 text-sm text-[#7C766F]">No recent activity.</div>
+        )}
       </div>
     </div>
   )
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div
+      className="space-y-6 sm:space-y-8 text-[#1C1B1A]"
+    >
+      {/* Page Title Row */}
+      <div className="flex flex-col gap-4 border-b border-[#CCC5BD] pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-serif text-2xl text-[#1C1917] sm:text-3xl">Good day, {greeting}</h1>
-          <p className="mt-1 text-xs text-[#7A7267]">{roleTitle}</p>
+          <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+            Good day, {greeting}
+          </h1>
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+            {roleTitle}
+          </p>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex flex-wrap items-center gap-3">
           {(profile.role === 'admin' || profile.role === 'sales') && (
             <Link
               href="/crm/products/add"
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#806A50] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#9C8567] sm:w-auto"
+              className="inline-flex items-center justify-center gap-1.5 rounded-none bg-[#1C1B1A] px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
             >
-              <Plus size={16} />
+              <Plus size={14} />
               Add Product
             </Link>
           )}
           {(profile.role === 'admin' || profile.role === 'management') && (
-            <MobileDateRangeFilter from={from || ''} to={to || ''} submitLabel="Filter" className="w-full sm:w-auto" />
+            <MobileDateRangeFilter
+              from={from || ''}
+              to={to || ''}
+              submitLabel="Filter"
+              className="w-full sm:w-auto"
+            />
           )}
         </div>
       </div>
@@ -315,8 +396,10 @@ export default async function DashboardPage({
       {(profile.role === 'admin' || profile.role === 'management') && (
         <>
           <section>
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[#7A7267] mb-3">Business overview</h2>
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 lg:grid-cols-6">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-3">
+              Business overview
+            </h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               <Card label="Total leads" value={leadRows.length} href="/crm/leads" />
               <Card label="New leads" value={newLeads.length} href="/crm/leads" />
               <Card label="Active leads" value={activeLeads.length} href="/crm/leads" />
@@ -347,88 +430,164 @@ export default async function DashboardPage({
           </section>
 
           {profile.role === 'management' && (
-            <div className="bg-white rounded-xl border p-5">
-              <h2 className="font-serif text-lg mb-3">Exceptions</h2>
-              <p className="text-sm">Delayed: {delayed.length} · At risk: {atRisk.length} · Unassigned: {unassigned.length} · Lost requirements: {lost}</p>
-              <Link href="/crm/order-management?health=delayed" className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-white hover:bg-[#9C8567] hover:text-white">Open delayed orders</Link>
+            <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none">
+              <div className="px-5 py-3.5 border-b border-[#CCC5BD] flex items-center justify-between bg-[#F6F3EC]">
+                <h2 className="font-[family-name:var(--font-newsreader)] text-lg sm:text-xl font-normal text-[#1C1B1A]">
+                  Exceptions
+                </h2>
+                <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                  {delayed.length} DELAYED
+                </span>
+              </div>
+              <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <p className="text-sm text-[#4A4640]">
+                  Delayed: <span className="font-mono font-semibold text-[#1C1B1A]">{delayed.length}</span> · At risk: <span className="font-mono font-semibold text-[#1C1B1A]">{atRisk.length}</span> · Unassigned: <span className="font-mono font-semibold text-[#1C1B1A]">{unassigned.length}</span> · Lost requirements: <span className="font-mono font-semibold text-[#1C1B1A]">{lost}</span>
+                </p>
+                <Link
+                  href="/crm/order-management?health=delayed"
+                  className="inline-flex items-center justify-center rounded-none bg-[#1C1B1A] px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300] shrink-0"
+                >
+                  Open delayed orders
+                </Link>
+              </div>
             </div>
           )}
 
-          <div className="rounded-xl border bg-white p-4 sm:p-6">
-            <div className="mb-4 flex justify-between">
-              <h2 className="font-serif text-lg">Order pipeline</h2>
-              <Link href="/crm/order-management?view=kanban" className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Kanban</Link>
+          <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none">
+            <div className="px-5 py-3.5 border-b border-[#CCC5BD] flex items-center justify-between bg-[#F6F3EC]">
+              <h2 className="font-[family-name:var(--font-newsreader)] text-lg sm:text-xl font-normal text-[#1C1B1A]">
+                Order pipeline
+              </h2>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                  {orderRows.length} ORDERS
+                </span>
+                <Link
+                  href="/crm/order-management?view=kanban"
+                  className="inline-flex items-center justify-center rounded-none border border-[#1C1B1A] bg-transparent px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#1C1B1A] transition-colors hover:bg-[#F6F3EC]"
+                >
+                  Kanban
+                </Link>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 lg:grid-cols-6">
-              {byStage.map((s) => (
-                <Link key={s.st} href={`/crm/order-management?stage=${s.st}`} className="rounded-xl border bg-[#FAF7F2] p-2.5 hover:border-[#806A50] sm:p-3">
-                  <p className="text-[11px] text-[#7A7267]">{ORDER_STATUS_LABELS[s.st]}</p>
-                  <p className="mt-1 text-lg font-semibold sm:text-xl">{s.n}</p>
-                  <p className="text-[10px] text-[#7A7267] sm:text-[11px]">{formatCurrency(s.value)} · {s.overdue} overdue</p>
-                </Link>
-              ))}
-              {canSeeFinance(profile.role) && financeStages.map((s) => (
-                <Link key={s.key} href={s.href} className="rounded-xl border bg-[#FAF7F2] p-2.5 hover:border-[#806A50] sm:p-3">
-                  <p className="text-[11px] text-[#7A7267]">{s.label}</p>
-                  <p className="mt-1 text-lg font-semibold sm:text-xl">{s.n}</p>
-                  <p className="text-[10px] text-[#7A7267] sm:text-[11px]">{formatCurrency(s.value)}</p>
-                </Link>
-              ))}
+            <div className="p-4 sm:p-6">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                {byStage.map((s) => (
+                  <Link
+                    key={s.st}
+                    href={`/crm/order-management?stage=${s.st}`}
+                    className="group block bg-[#F6F3EC] border border-[#CCC5BD] p-3 rounded-none transition-colors hover:border-[#1C1B1A] hover:bg-white"
+                  >
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] truncate">
+                      {ORDER_STATUS_LABELS[s.st]}
+                    </p>
+                    <p className="mt-1 font-mono text-xl sm:text-2xl font-semibold text-[#1C1B1A]">
+                      {s.n}
+                    </p>
+                    <p className="mt-1 text-[11px] font-mono text-[#7C766F] truncate">
+                      {formatCurrency(s.value)} · <span className={s.overdue > 0 ? 'text-[#9E4300] font-bold' : ''}>{s.overdue} overdue</span>
+                    </p>
+                  </Link>
+                ))}
+                {canSeeFinance(profile.role) && financeStages.map((s) => (
+                  <Link
+                    key={s.key}
+                    href={s.href}
+                    className="group block bg-[#F6F3EC] border border-[#CCC5BD] p-3 rounded-none transition-colors hover:border-[#1C1B1A] hover:bg-white"
+                  >
+                    <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] truncate">
+                      {s.label}
+                    </p>
+                    <p className="mt-1 font-mono text-xl sm:text-2xl font-semibold text-[#1C1B1A]">
+                      {s.n}
+                    </p>
+                    <p className="mt-1 text-[11px] font-mono text-[#7C766F] truncate">
+                      {formatCurrency(s.value)}
+                    </p>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
 
           {profile.role === 'admin' && (
             <>
-              <div className="bg-white rounded-xl border p-6">
-                <h2 className="font-serif text-lg mb-3">Departments</h2>
-                <div className="grid md:grid-cols-3 gap-3">
-                  {deptStats.map((d) => (
-                    <Link
-                      key={d.id}
-                      href={`/crm/order-management?department=${d.id}`}
-                      className="rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-3 transition-colors hover:border-[#806A50] hover:bg-white"
-                    >
-                      <p className="text-sm font-semibold">{d.name}</p>
-                      <p className="text-[11px] text-[#7A7267] mt-1">Active {d.active} · Overdue {d.overdue} · Unassigned {d.unassigned} · Done {d.completed}</p>
-                    </Link>
-                  ))}
+              <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none">
+                <div className="px-5 py-3.5 border-b border-[#CCC5BD] flex items-center justify-between bg-[#F6F3EC]">
+                  <h2 className="font-[family-name:var(--font-newsreader)] text-lg sm:text-xl font-normal text-[#1C1B1A]">
+                    Departments
+                  </h2>
+                  <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                    {deptStats.length} DEPARTMENTS
+                  </span>
+                </div>
+                <div className="p-4 sm:p-6">
+                  <div className="grid md:grid-cols-3 gap-3">
+                    {deptStats.map((d) => (
+                      <Link
+                        key={d.id}
+                        href={`/crm/order-management?department=${d.id}`}
+                        className="group block bg-[#F6F3EC] border border-[#CCC5BD] p-3.5 rounded-none transition-colors hover:border-[#1C1B1A] hover:bg-white"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-[#1C1B1A]">{d.name}</p>
+                          {d.overdue > 0 && (
+                            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 bg-[#FFB690]/30 text-[#9E4300] border border-[#9E4300]/30 rounded-none">
+                              {d.overdue} OVERDUE
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] font-mono text-[#7C766F] mt-2 leading-relaxed">
+                          Active <span className="font-semibold text-[#1C1B1A]">{d.active}</span> · Overdue <span className={`font-semibold ${d.overdue ? 'text-[#9E4300]' : 'text-[#1C1B1A]'}`}>{d.overdue}</span> · Unassigned <span className="font-semibold text-[#1C1B1A]">{d.unassigned}</span> · Done <span className="font-semibold text-[#1C1B1A]">{d.completed}</span>
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div className="overflow-x-auto rounded-xl border bg-white">
-                <div className="p-4 sm:p-6">
-                  <h2 className="mb-4 font-serif text-lg">Team performance</h2>
+
+              <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none">
+                <div className="px-5 py-3.5 border-b border-[#CCC5BD] flex items-center justify-between bg-[#F6F3EC]">
+                  <h2 className="font-[family-name:var(--font-newsreader)] text-lg sm:text-xl font-normal text-[#1C1B1A]">
+                    Team performance
+                  </h2>
+                  <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                    {people.length} MEMBERS
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
                   <table className="w-full min-w-[920px] border-collapse text-left text-xs">
                     <thead>
-                      <tr className="border-b border-[#E8E4DE] text-[#7A7267]">
-                        <th className="whitespace-nowrap py-3 pr-4 font-medium">Employee</th>
-                        <th className="whitespace-nowrap px-3 py-3 font-medium">Role</th>
-                        <th className="whitespace-nowrap px-3 py-3 font-medium">Leads</th>
-                        <th className="whitespace-nowrap px-3 py-3 font-medium">Converted</th>
-                        <th className="whitespace-nowrap px-3 py-3 font-medium">Requirements</th>
-                        <th className="whitespace-nowrap px-3 py-3 font-medium">Quotations</th>
-                        <th className="whitespace-nowrap px-3 py-3 font-medium">Orders</th>
-                        <th className="whitespace-nowrap px-3 py-3 font-medium">Order value</th>
-                        <th className="whitespace-nowrap px-3 py-3 font-medium">Pending tasks</th>
-                        <th className="whitespace-nowrap px-3 py-3 font-medium">Overdue</th>
-                        <th className="whitespace-nowrap py-3 pl-3 font-medium">Completed</th>
+                      <tr className="border-b border-[#CCC5BD] bg-[#F6F3EC] text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+                        <th className="whitespace-nowrap py-3 px-4 font-bold">Employee</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-bold">Role</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-bold text-right">Leads</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-bold text-right">Converted</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-bold text-right">Requirements</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-bold text-right">Quotations</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-bold text-right">Orders</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-bold text-right">Order value</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-bold text-right">Pending tasks</th>
+                        <th className="whitespace-nowrap px-3 py-3 font-bold text-right">Overdue</th>
+                        <th className="whitespace-nowrap py-3 px-4 font-bold text-right">Completed</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-[#CCC5BD] text-[#1C1B1A]">
                       {people.map((p) => (
-                        <tr key={p.id} className="border-t border-[#EFE9E0]">
-                          <td className="whitespace-nowrap py-3 pr-4 font-medium text-[#1C1917]">{p.full_name}</td>
-                          <td className="whitespace-nowrap px-3 py-3 capitalize">{p.role}</td>
-                          <td className="whitespace-nowrap px-3 py-3">{p.leads}</td>
-                          <td className="whitespace-nowrap px-3 py-3">{p.converted}</td>
-                          <td className="whitespace-nowrap px-3 py-3">{p.reqs}</td>
-                          <td className="whitespace-nowrap px-3 py-3">{p.quotes}</td>
-                          <td className="whitespace-nowrap px-3 py-3">{p.assigned}</td>
-                          <td className="whitespace-nowrap px-3 py-3">{formatCurrency(p.orderValue)}</td>
-                          <td className="whitespace-nowrap px-3 py-3">{p.pending}</td>
-                          <td className={`whitespace-nowrap px-3 py-3 ${p.overdue ? 'font-semibold text-red-700' : ''}`}>
+                        <tr key={p.id} className="hover:bg-[#F6F3EC] transition-colors">
+                          <td className="whitespace-nowrap py-3 px-4 font-medium text-[#1C1B1A]">{p.full_name}</td>
+                          <td className="whitespace-nowrap px-3 py-3 capitalize text-[#4A4640]">{p.role}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-right font-mono">{p.leads}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-right font-mono">{p.converted}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-right font-mono">{p.reqs}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-right font-mono">{p.quotes}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-right font-mono">{p.assigned}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-right font-mono font-medium">{formatCurrency(p.orderValue)}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-right font-mono">{p.pending}</td>
+                          <td className={`whitespace-nowrap px-3 py-3 text-right font-mono ${p.overdue ? 'font-semibold text-[#9E4300]' : ''}`}>
                             {p.overdue}
                           </td>
-                          <td className="whitespace-nowrap py-3 pl-3">{p.completed}</td>
+                          <td className="whitespace-nowrap py-3 px-4 text-right font-mono">{p.completed}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -443,8 +602,8 @@ export default async function DashboardPage({
       )}
 
       {profile.role === 'sales' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="space-y-6 sm:space-y-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             <Card label="My leads" value={leadRows.length} href="/crm/leads" />
             <Card label="My requirements" value={openReqs.length} href="/crm/requirements" />
             <Card label="My quotations" value={quoteRows.length} href="/crm/quotations?owner=mine" />
@@ -456,14 +615,37 @@ export default async function DashboardPage({
             <Card label="My work" value="Open" href="/crm/my-work" />
             <Card label="Follow-ups" value={(followUps.data || []).length} href="/crm/activities" />
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-xl border p-5">
-              <h2 className="font-serif text-lg mb-2">Upcoming follow-ups</h2>
-              {(followUps.data || []).map((a) => (
-                <p key={a.id} className="text-sm py-1">{a.type} · {a.title}</p>
-              ))}
-              {(!followUps.data || followUps.data.length === 0) && <p className="text-sm text-gray-500">No follow-ups due.</p>}
-              <Link href="/crm/activities" className="mt-2 inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]">Activity feed</Link>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none flex flex-col">
+              <div className="px-5 py-3.5 border-b border-[#CCC5BD] flex items-center justify-between bg-[#F6F3EC]">
+                <h2 className="font-[family-name:var(--font-newsreader)] text-lg sm:text-xl font-normal text-[#1C1B1A]">
+                  Upcoming follow-ups
+                </h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-bold text-[#9E4300] tracking-wider uppercase">
+                    {(followUps.data || []).length} DUE
+                  </span>
+                  <Link
+                    href="/crm/activities"
+                    className="inline-flex items-center justify-center rounded-none border border-[#1C1B1A] bg-transparent px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#1C1B1A] transition-colors hover:bg-[#F6F3EC]"
+                  >
+                    Activity feed
+                  </Link>
+                </div>
+              </div>
+              <div className="divide-y divide-[#CCC5BD] max-h-96 overflow-y-auto">
+                {(followUps.data || []).map((a) => (
+                  <div key={a.id} className="px-5 py-3 flex items-center justify-between gap-3 hover:bg-[#F6F3EC] transition-colors">
+                    <span className="text-sm text-[#1C1B1A] font-medium">{a.title}</span>
+                    <span className="text-[11px] font-medium uppercase px-2 py-0.5 border border-[#CCC5BD] text-[#4A4640] rounded-none bg-transparent shrink-0">
+                      {a.type}
+                    </span>
+                  </div>
+                ))}
+                {(!followUps.data || followUps.data.length === 0) && (
+                  <div className="p-5 text-sm text-[#7C766F]">No follow-ups due.</div>
+                )}
+              </div>
             </div>
             <ActivityFeed />
           </div>
@@ -471,8 +653,8 @@ export default async function DashboardPage({
       )}
 
       {profile.role === 'operations' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="space-y-6 sm:space-y-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             <Card label="Assigned to me" value={inProgress.filter((o) => o.assigned_to === profile.id).length} href="/crm/my-work" />
             <Card label="Department work" value={inProgress.filter((o) => o.current_department_id === profile.department_id).length} href="/crm/department" />
             <Card label="Delayed" value={delayed.length} href="/crm/order-management?health=delayed" warn={delayed.length > 0} />
@@ -490,8 +672,8 @@ export default async function DashboardPage({
       )}
 
       {profile.role === 'accounts' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="space-y-6 sm:space-y-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             <Card label="Ready to invoice" value={readyToInvoice} href="/crm/orders" />
             <Card label="Invoices" value={invoiceRows.length} href="/crm/invoices" />
             <Card label="Unpaid" value={unpaid.length} href="/crm/receivables" />

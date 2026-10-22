@@ -4,6 +4,35 @@ import Link from 'next/link'
 import { requireStaff } from '@/lib/auth'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
+function InvoiceStatusChip({ status }: { status: string }) {
+  if (status === 'paid') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> paid
+      </span>
+    )
+  }
+  if (status === 'partially_paid' || status === 'sent') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 text-[11px] uppercase text-[#9E4300]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#9E4300]" /> {status.replace('_', ' ')}
+      </span>
+    )
+  }
+  if (status === 'overdue') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-[#BA1A1A]/40 bg-[#BA1A1A]/10 px-2 py-0.5 text-[11px] uppercase text-[#BA1A1A]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#BA1A1A]" /> overdue
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[11px] uppercase text-[#4A4640]">
+      {status}
+    </span>
+  )
+}
+
 export default async function InvoicesPage({
   searchParams,
 }: {
@@ -29,23 +58,28 @@ export default async function InvoicesPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[var(--color-primary)]">Invoices</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-[family-name:var(--font-newsreader)] text-[32px] leading-[40px] font-normal tracking-tight text-[#1C1B1A]">
+          Invoices
+        </h1>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
-          <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Total Issued</p>
-          <p className="mt-1 break-words text-base font-semibold sm:text-xl">{formatCurrency(totalIssued)}</p>
+        <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3.5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Total Issued</p>
+          <p className="mt-1 break-words font-mono text-lg font-semibold text-[#1C1B1A]">{formatCurrency(totalIssued)}</p>
         </div>
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
-          <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Total Paid</p>
-          <p className="mt-1 break-words text-base font-semibold text-green-600 sm:text-xl">{formatCurrency(totalPaid)}</p>
+        <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3.5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Total Paid</p>
+          <p className="mt-1 break-words font-mono text-lg font-semibold text-[#3A4537]">{formatCurrency(totalPaid)}</p>
         </div>
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
-          <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Outstanding</p>
-          <p className="mt-1 break-words text-base font-semibold text-amber-600 sm:text-xl">{formatCurrency(outstanding)}</p>
+        <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3.5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Outstanding</p>
+          <p className="mt-1 break-words font-mono text-lg font-semibold text-[#9E4300]">{formatCurrency(outstanding)}</p>
         </div>
-        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-4">
-          <p className="text-xs text-[var(--color-text-secondary)] sm:text-sm">Overdue</p>
-          <p className="mt-1 break-words text-base font-semibold text-red-600 sm:text-xl">{formatCurrency(overdue)}</p>
+        <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3.5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Overdue</p>
+          <p className="mt-1 break-words font-mono text-lg font-semibold text-[#BA1A1A]">{formatCurrency(overdue)}</p>
         </div>
       </div>
 
@@ -69,52 +103,117 @@ export default async function InvoicesPage({
         ]}
       />
       
-      <div className="overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+      {/* Desktop Invoices Table */}
+      <div className="hidden overflow-x-auto rounded-none border border-[#CCC5BD] bg-[#FCF9F2] md:block">
         <table className="w-full min-w-[640px] border-collapse text-left">
           <thead>
-            <tr className="border-b border-[var(--color-border)] bg-gray-50">
-              <th className="p-3 font-medium text-sm text-[var(--color-text-secondary)]">Invoice #</th>
-              <th className="p-3 font-medium text-sm text-[var(--color-text-secondary)]">Company</th>
-              <th className="p-3 font-medium text-sm text-[var(--color-text-secondary)]">Order #</th>
-              <th className="p-3 font-medium text-sm text-[var(--color-text-secondary)]">Amount</th>
-              <th className="p-3 font-medium text-sm text-[var(--color-text-secondary)]">Due Date</th>
-              <th className="p-3 font-medium text-sm text-[var(--color-text-secondary)]">Status</th>
+            <tr className="border-b border-[#CCC5BD] bg-[#F6F3EC]">
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Invoice #</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Company</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Order #</th>
+              <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Amount (₹)</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Due Date</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Status</th>
             </tr>
           </thead>
-          <tbody>
-            {invoices?.map(invoice => {
+          <tbody className="divide-y divide-[#CCC5BD] text-xs text-[#1C1B1A]">
+            {invoices?.map((invoice) => {
               const company = oneRelation(invoice.companies)
               const order = oneRelation(invoice.orders)
+              const isOverdue = invoice.due_date && new Date(invoice.due_date) < new Date() && invoice.status !== 'paid'
+
               return (
-              <tr key={invoice.id} className="border-b border-[var(--color-border)] hover:bg-gray-50">
-                <td className="p-3 text-sm">
-                  <Link href={`/crm/invoices/${invoice.id}`} className="text-blue-600 hover:underline">{invoice.invoice_number}</Link>
-                </td>
-                <td className="p-3 text-sm">{company?.name}</td>
-                <td className="p-3 text-sm">{order?.order_number}</td>
-                <td className="p-3 text-sm">{formatCurrency(invoice.amount)}</td>
-                <td className={`p-3 text-sm ${invoice.due_date && new Date(invoice.due_date) < new Date() && invoice.status !== 'paid' ? 'text-red-600 font-medium' : ''}`}>
-                  {formatDate(invoice.due_date)}
-                </td>
-                <td className="p-3 text-sm">
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
-                    invoice.status === 'partially_paid' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {invoice.status}
-                  </span>
-                </td>
-              </tr>
+                <tr key={invoice.id} className={`transition-colors hover:bg-[#F6F3EC] ${isOverdue ? 'bg-[#BA1A1A]/5' : ''}`}>
+                  <td className="px-3.5 py-2.5">
+                    <Link
+                      href={`/crm/invoices/${invoice.id}`}
+                      className="font-mono font-medium text-[#1C1B1A] transition-colors hover:text-[#9E4300]"
+                    >
+                      {invoice.invoice_number}
+                    </Link>
+                  </td>
+                  <td className="px-3.5 py-2.5 text-[#1C1B1A]">{company?.name || '—'}</td>
+                  <td className="px-3.5 py-2.5 font-mono text-[#4A4640]">{order?.order_number || '—'}</td>
+                  <td className="px-3.5 py-2.5 text-right font-mono font-medium text-[#1C1B1A]">{formatCurrency(invoice.amount)}</td>
+                  <td className="px-3.5 py-2.5">
+                    <span className={`font-mono ${isOverdue ? 'font-semibold text-[#BA1A1A]' : 'text-[#4A4640]'}`}>
+                      {formatDate(invoice.due_date)}
+                    </span>
+                  </td>
+                  <td className="px-3.5 py-2.5">
+                    <InvoiceStatusChip status={invoice.status} />
+                  </td>
+                </tr>
               )
             })}
             {(!invoices || invoices.length === 0) && (
               <tr>
-                <td colSpan={6} className="p-4 text-center text-[var(--color-text-secondary)]">No invoices found.</td>
+                <td colSpan={6} className="p-8 text-center text-xs text-[#7C766F]">
+                  No invoices found.
+                </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card List */}
+      <div className="space-y-3 md:hidden">
+        {invoices && invoices.length > 0 ? (
+          invoices.map((invoice) => {
+            const company = oneRelation(invoice.companies)
+            const order = oneRelation(invoice.orders)
+            const isOverdue = invoice.due_date && new Date(invoice.due_date) < new Date() && invoice.status !== 'paid'
+
+            return (
+              <article key={invoice.id} className="space-y-2 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <Link
+                    href={`/crm/invoices/${invoice.id}`}
+                    className="font-mono text-xs font-semibold text-[#1C1B1A] hover:text-[#9E4300]"
+                  >
+                    {invoice.invoice_number}
+                  </Link>
+                  <InvoiceStatusChip status={invoice.status} />
+                </div>
+
+                <div className="font-mono text-sm font-semibold text-[#1C1B1A]">
+                  {formatCurrency(invoice.amount)}
+                </div>
+
+                <div className="space-y-1 border-t border-[#CCC5BD] pt-2 text-xs text-[#4A4640]">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Company: </span>
+                    {company?.name || '—'}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Order: </span>
+                    <span className="font-mono">{order?.order_number || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Due Date: </span>
+                    <span className={`font-mono ${isOverdue ? 'font-semibold text-[#BA1A1A]' : ''}`}>
+                      {formatDate(invoice.due_date)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-[#CCC5BD] pt-2">
+                  <Link
+                    href={`/crm/invoices/${invoice.id}`}
+                    className="text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A] hover:text-[#9E4300]"
+                  >
+                    View Invoice →
+                  </Link>
+                </div>
+              </article>
+            )
+          })
+        ) : (
+          <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-8 text-center text-xs text-[#7C766F]">
+            No invoices found.
+          </div>
+        )}
       </div>
     </div>
   )

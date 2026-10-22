@@ -8,10 +8,10 @@ import {
   Package, Image as ImageIcon, FileText, ShoppingBag, KanbanSquare,
   Truck, Printer, Package2, Receipt, CreditCard, ArrowDownToLine,
   BarChart3, Activity, UserCog, Settings, ShieldCheck, LogOut,
-  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift
+  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift, Tags, LayoutTemplate
 } from 'lucide-react';
 import { signOut } from '@/app/login/actions';
-import { BrandName } from '@/components/brand/brand-name';
+import { BrandLogo } from '@/components/brand/brand-logo';
 import type { Role } from '@/lib/types';
 
 interface SidebarProps {
@@ -55,6 +55,7 @@ const navGroups: NavGroup[] = [
       { label: 'Products', href: '/crm/products', matchPrefix: '/crm/products', icon: Package },
       { label: 'Mockup Storage', href: '/crm/mockups', matchPrefix: '/crm/mockups', icon: ImageIcon },
       { label: 'Quotations', href: '/crm/quotations', matchPrefix: '/crm/quotations', icon: FileText },
+      { label: 'Pricing', href: '/crm/pricing', matchPrefix: '/crm/pricing', icon: Tags },
       { label: 'Orders', href: '/crm/orders', matchPrefix: '/crm/orders', icon: ShoppingBag },
       { label: 'Samples', href: '/crm/samples', matchPrefix: '/crm/samples', icon: Package2 },
       { label: 'Catalogs', href: '/crm/catalogs', matchPrefix: '/crm/catalogs', icon: FolderGit2 },
@@ -94,6 +95,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'accounts', 'management'],
     items: [
       { label: 'Invoices', href: '/crm/invoices', matchPrefix: '/crm/invoices', icon: Receipt },
+      { label: 'Pricing', href: '/crm/pricing', matchPrefix: '/crm/pricing', icon: Tags },
       { label: 'Payments', href: '/crm/payments', matchPrefix: '/crm/payments', icon: CreditCard },
       { label: 'Receivables', href: '/crm/receivables', matchPrefix: '/crm/receivables', icon: ArrowDownToLine },
       { label: 'Payables', href: '/crm/payables', matchPrefix: '/crm/payables', icon: Landmark },
@@ -124,6 +126,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin'],
     items: [
       { label: 'My Team', href: '/crm/team', matchPrefix: '/crm/team', icon: UserCog },
+      { label: 'Catalogue setup', href: '/crm/catalogue-setup/homepage', matchPrefix: '/crm/catalogue-setup', icon: LayoutTemplate },
       { label: 'Settings', href: '/crm/settings', matchPrefix: '/crm/settings', icon: Settings },
     ]
   }
@@ -184,76 +187,89 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
   }, [])
 
   return (
-    <aside className="flex h-full max-h-screen min-h-0 w-64 flex-shrink-0 select-none flex-col border-r border-[#33261A] bg-[#241C12] text-[#C9BFAE]">
-      <div className="flex shrink-0 items-start justify-between gap-2 border-b border-[#3A2C1B] px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
-        <Link href="/crm/dashboard" onClick={onNavigate} className="group block min-w-0">
-          <BrandName
-            as="h1"
-            className="font-serif text-xl font-normal leading-tight tracking-tight text-[#FAF7F2] transition-colors group-hover:text-white sm:text-2xl"
-          />
-          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#A8967A]">
-            Corporate Gifting CRM
-          </p>
+    <aside className="flex h-full max-h-screen min-h-0 w-64 flex-shrink-0 select-none flex-col rounded-none border-r border-white/10 bg-[#1C1B1A] text-[#FCF9F2]/70 shadow-none">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-white/10 px-5 sm:px-6">
+        <Link
+          href="/crm/dashboard"
+          onClick={onNavigate}
+          className="group flex items-center gap-2 min-w-0"
+        >
+          <BrandLogo tone="light" className="h-6 w-auto shrink-0 object-contain sm:h-7" />
+          <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.12em] text-[#FFB690]">
+            CRM
+          </span>
         </Link>
         {showClose ? (
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#FAF7F2] hover:bg-[#2F2313]"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-white/10 text-[#FCF9F2]/70 hover:bg-white/5 hover:text-[#FCF9F2] transition-colors"
             aria-label="Close navigation"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         ) : null}
       </div>
 
       <nav
         ref={navRef}
-        className="min-h-0 flex-1 space-y-5 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4"
+        className="min-h-0 flex-1 space-y-4 overflow-x-hidden overflow-y-auto overscroll-contain px-2 py-3"
       >
         {visibleGroups.map((group) => (
-            <div key={group.label} className="space-y-1">
-              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#8A7860]">
-                {group.label}
-              </div>
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const isActive = pathname === item.href || (item.matchPrefix !== '/crm/dashboard' && pathname.startsWith(item.matchPrefix));
-                  return (
-                    <Link
-                      key={`${item.href}-${item.label}`}
-                      href={item.href}
-                      ref={isActive ? activeRef : undefined}
-                      onClick={onNavigate}
-                      className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all ${
-                        isActive
-                          ? 'bg-[#FFD001] font-semibold text-[#241C12] shadow-sm'
-                          : 'text-[#BEAE92] hover:bg-[#2F2313] hover:text-[#FAF7F2]'
-                      }`}
-                    >
-                      <item.icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#241C12]' : 'text-[#9C8A70]'}`} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+          <div key={group.label} className="space-y-0.5">
+            <div className="px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+              {group.label}
             </div>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href || (item.matchPrefix !== '/crm/dashboard' && pathname.startsWith(item.matchPrefix));
+                return (
+                  <Link
+                    key={`${item.href}-${item.label}`}
+                    href={item.href}
+                    ref={isActive ? activeRef : undefined}
+                    onClick={onNavigate}
+                    className={`group flex min-h-9 items-center gap-3 rounded-none px-3 py-2 text-[13px] font-medium transition-colors duration-150 ${
+                      isActive
+                        ? 'border-l-[3px] border-[#9E4300] bg-white/5 text-[#FCF9F2]'
+                        : 'border-l-[3px] border-transparent text-[#FCF9F2]/70 hover:bg-white/5 hover:text-[#FCF9F2]'
+                    }`}
+                  >
+                    <item.icon
+                      className={`h-4 w-4 shrink-0 transition-colors ${
+                        isActive ? 'text-[#FCF9F2]' : 'text-[#7C766F] group-hover:text-[#FCF9F2]'
+                      }`}
+                    />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         ))}
       </nav>
 
-      <div className="shrink-0 border-t border-[#3A2C1B] bg-[#1A130B] p-4">
-        <div className="mb-2 min-w-0">
-          <p className="truncate text-sm font-medium text-[#FAF7F2]">{displayName}</p>
-          <p className="truncate text-xs text-[#9C8A70]">{user?.email || roleName}</p>
-          <p className="text-[11px] text-[#8A7860]">{roleName}</p>
+      <div className="shrink-0 border-t border-white/10 bg-[#1C1B1A] p-4">
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-none bg-[#9E4300] text-xs font-bold text-[#FCF9F2]">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-xs font-semibold text-[#FCF9F2] leading-tight">{displayName}</p>
+              <p className="truncate text-[11px] text-[#7C766F] leading-tight">{user?.email || roleName}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-none border border-transparent text-[#FCF9F2]/70 hover:bg-white/5 hover:text-[#FCF9F2] transition-colors"
+            title="Sign out"
+            aria-label="Sign out"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
-        <button
-          onClick={() => signOut()}
-          className="flex min-h-10 items-center gap-2 pt-1 text-xs text-[#C9BFAE] transition-colors hover:text-white"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          <span>Sign out</span>
-        </button>
       </div>
     </aside>
   );

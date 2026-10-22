@@ -17,6 +17,7 @@ export type KanbanCard = {
   companyName: string
   assigneeName: string
   departmentName: string
+  sourceLabel?: string
 }
 
 export function OrderKanban({
@@ -44,7 +45,7 @@ export function OrderKanban({
 
   return (
     <div className="space-y-3">
-      {error && <p role="alert" className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
+      {error && <p role="alert" className="text-xs text-red-700 bg-red-50 border border-red-100 px-3 py-2">{error}</p>}
       {pending && <p role="status" className="text-[11px] text-[#7A7267]">Updating stage…</p>}
       <div className="overflow-x-auto pb-2">
         <div className="flex gap-3 min-w-max">
@@ -53,7 +54,7 @@ export function OrderKanban({
             return (
               <div
                 key={column}
-                className="w-64 flex-shrink-0 bg-[#FAF7F2] rounded-2xl border border-[#E5DFD5] p-2"
+                className="w-64 flex-shrink-0 bg-[#FAF7F2] border border-[#E5DFD5] p-2"
                 onDragOver={(e) => {
                   if (canDrag) e.preventDefault()
                 }}
@@ -74,7 +75,7 @@ export function OrderKanban({
                       draggable={canDrag && !pending}
                       onDragStart={(e) => e.dataTransfer.setData('text/order-id', card.id)}
                       aria-busy={pending && movingId === card.id ? true : undefined}
-                      className={`bg-white rounded-xl border border-[#EFE9E0] p-3 ${canDrag && !pending ? 'cursor-grab' : ''} ${pending && movingId === card.id ? 'opacity-60 animate-pulse' : ''}`}
+                      className={`bg-white border border-[#EFE9E0] p-3 ${canDrag && !pending ? 'cursor-grab' : ''} ${pending && movingId === card.id ? 'opacity-60 animate-pulse' : ''}`}
                     >
                       <Link href={`/crm/orders/${card.id}`} className="font-mono text-xs font-semibold text-[#806A50] hover:underline">
                         {card.order_number}
@@ -83,8 +84,15 @@ export function OrderKanban({
                       <p className="text-xs font-medium mt-1">{formatCurrency(card.order_value)}</p>
                       <p className="text-[11px] text-[#7A7267] mt-1">{card.assigneeName} · {card.departmentName}</p>
                       <p className="text-[11px] text-[#7A7267]">Due {formatDate(card.expected_delivery_date)}</p>
-                      <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-semibold ${HEALTH_STYLES[card.health]}`}>
-                        {HEALTH_LABELS[card.health]}
+                      <span className="mt-2 inline-flex flex-wrap items-center gap-1">
+                        {card.sourceLabel ? (
+                          <span className="px-2 py-0.5 border border-[#CCC5BD] text-[10px] font-medium bg-[#F6F3EC] text-[#4A4640]">
+                            {card.sourceLabel}
+                          </span>
+                        ) : null}
+                        <span className={`inline-block px-2 py-0.5 text-[10px] font-semibold ${HEALTH_STYLES[card.health]}`}>
+                          {HEALTH_LABELS[card.health]}
+                        </span>
                       </span>
                     </article>
                   ))}

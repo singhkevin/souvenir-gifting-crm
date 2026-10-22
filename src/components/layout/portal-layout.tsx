@@ -4,9 +4,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, PackageSearch, Heart, FileText, ShoppingBag, LayoutDashboard } from 'lucide-react';
-import { BrandName } from '@/components/brand/brand-name';
 import { signOut } from '@/app/login/actions';
 import { CompanyAvatar } from '../ui/avatar';
+import { BrandLogo } from '@/components/brand/brand-logo';
 
 interface PortalLayoutProps {
   children: React.ReactNode;
@@ -65,19 +65,13 @@ const navItems: PortalNavItem[] = [
   },
 ];
 
-const SCROLL_KEY = 'giffter.portal.nav.scrollTop'
-
-function linkClass(active: boolean) {
-  return `inline-flex h-10 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors xl:px-2.5 min-[1440px]:px-3 min-[1440px]:text-sm ${
-    active ? 'bg-primary/5 text-primary' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-  }`
-}
+const SCROLL_KEY = 'giffter.portal.nav.scrollTop';
 
 export function PortalLayout({ children, user }: PortalLayoutProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navRef = useRef<HTMLDivElement | null>(null)
-  const activeRef = useRef<HTMLAnchorElement | null>(null)
+  const navRef = useRef<HTMLDivElement | null>(null);
+  const activeRef = useRef<HTMLAnchorElement | null>(null);
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -94,51 +88,69 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
   }, [mobileMenuOpen]);
 
   useEffect(() => {
-    const nav = navRef.current
-    if (!nav) return
-    const saved = Number.parseInt(sessionStorage.getItem(SCROLL_KEY) || '', 10)
-    if (Number.isFinite(saved) && saved > 0) nav.scrollTop = saved
+    const nav = navRef.current;
+    if (!nav) return;
+    const saved = Number.parseInt(sessionStorage.getItem(SCROLL_KEY) || '', 10);
+    if (Number.isFinite(saved) && saved > 0) nav.scrollTop = saved;
     if (mobileMenuOpen) {
       requestAnimationFrame(() => {
         activeRef.current && (() => {
-          const nav = navRef.current
-          const el = activeRef.current
-          if (!nav || !el) return
-          const navRect = nav.getBoundingClientRect()
-          const elRect = el.getBoundingClientRect()
-          if (elRect.top < navRect.top) nav.scrollTop -= navRect.top - elRect.top
-          else if (elRect.bottom > navRect.bottom) nav.scrollTop += elRect.bottom - navRect.bottom
-        })()
-      })
+          const el = activeRef.current;
+          if (!nav || !el) return;
+          const navRect = nav.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          if (elRect.top < navRect.top) nav.scrollTop -= navRect.top - elRect.top;
+          else if (elRect.bottom > navRect.bottom) nav.scrollTop += elRect.bottom - navRect.bottom;
+        })();
+      });
     }
-  }, [pathname, mobileMenuOpen])
+  }, [pathname, mobileMenuOpen]);
 
   useEffect(() => {
-    const nav = navRef.current
-    if (!nav) return
-    const onScroll = () => sessionStorage.setItem(SCROLL_KEY, String(nav.scrollTop))
-    nav.addEventListener('scroll', onScroll, { passive: true })
-    return () => nav.removeEventListener('scroll', onScroll)
-  }, [])
+    const nav = navRef.current;
+    if (!nav) return;
+    const onScroll = () => sessionStorage.setItem(SCROLL_KEY, String(nav.scrollTop));
+    nav.addEventListener('scroll', onScroll, { passive: true });
+    return () => nav.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#F4EFE6]">
-      <header className="sticky top-0 z-50 border-b border-[#E5DFD5] bg-white">
-        <div className="grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 px-3 sm:h-16 sm:gap-x-3 sm:px-4 lg:px-6">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary font-serif text-lg font-normal text-[#FFFFFF]">
-              S
-            </div>
-            <BrandName className="block max-w-[6.5rem] truncate text-sm tracking-tight text-primary sm:max-w-[9rem] lg:max-w-[8rem] xl:max-w-[11rem] xl:text-base min-[1440px]:max-w-[18rem] min-[1440px]:text-lg" />
+    <div className="flex min-h-[100dvh] flex-col bg-[#FCF9F2] text-[#1C1C18]">
+      {/* Sticky Cream Header */}
+      <header className="sticky top-0 z-50 border-b border-[#CCC5BD] bg-[#FCF9F2]">
+        <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-3 px-4 sm:h-16 sm:px-6 lg:px-8">
+          {/* Co-branded wordmark: brand + divider + Company Name */}
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <Link href="/portal" className="flex min-w-0 items-center gap-2.5 sm:gap-3 transition-opacity hover:opacity-90">
+              <BrandLogo className="h-7 w-auto shrink-0 object-contain sm:h-9" />
+              <span className="h-4 w-px shrink-0 bg-[#CCC5BD]" aria-hidden="true" />
+              <span className="max-w-[110px] truncate text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] sm:max-w-[180px] md:max-w-[240px] min-[1440px]:max-w-[320px]">
+                {user?.company_name || 'Your Company'}
+              </span>
+            </Link>
           </div>
 
-          <nav aria-label="Portal" className="hidden min-w-0 items-center gap-0.5 lg:flex xl:gap-1">
+          {/* Nav links: Jakarta 14px with active one underlined/black, saffron accents */}
+          <nav aria-label="Portal" className="hidden min-w-0 items-center gap-4 lg:flex xl:gap-6">
             {navItems.map((item) => {
-              const active = item.active(pathname)
-              const Icon = item.icon
+              const active = item.active(pathname);
+              const Icon = item.icon;
               return (
-                <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className={linkClass(active)}>
-                  <Icon className={`h-3.5 w-3.5 shrink-0 ${active ? 'text-primary' : 'text-gray-400'}`} />
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`group inline-flex shrink-0 items-center gap-1.5 border-b-2 py-1 font-[family-name:var(--font-jakarta)] text-[14px] leading-5 transition-colors ${
+                    active
+                      ? 'border-[#1C1C18] font-semibold text-[#1C1C18]'
+                      : 'border-transparent text-[#4A4640] hover:text-[#9E4300]'
+                  }`}
+                >
+                  <Icon
+                    className={`h-4 w-4 shrink-0 transition-colors ${
+                      active ? 'text-[#9E4300]' : 'text-[#7C766F] group-hover:text-[#9E4300]'
+                    }`}
+                  />
                   {item.shortLabel ? (
                     <>
                       <span className="whitespace-nowrap xl:hidden">{item.shortLabel}</span>
@@ -148,41 +160,58 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
                     <span className="whitespace-nowrap">{item.label}</span>
                   )}
                 </Link>
-              )
+              );
             })}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          {/* Right Header: User info, Logout, Mobile toggle */}
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {user ? (
-              <div className="hidden min-w-0 items-center gap-2 border-l border-gray-200 pl-2 lg:flex">
-                <div className="min-w-0 max-w-[5.5rem] text-right xl:max-w-[8rem] min-[1440px]:max-w-[12rem]">
-                  <p className="truncate text-sm font-medium leading-tight text-gray-900" title={user.name}>{user.name}</p>
-                  <p className="truncate text-xs leading-tight text-gray-500" title={user.company_name}>{user.company_name}</p>
+              <div className="hidden min-w-0 items-center gap-3 border-l border-[#CCC5BD] pl-3 sm:flex">
+                <div className="min-w-0 max-w-[6rem] text-right xl:max-w-[10rem]">
+                  <p className="truncate sv2-label text-[11px] text-[#1C1C18]" title={user.name}>
+                    {user.name}
+                  </p>
+                  <p
+                    className="truncate font-[family-name:var(--font-mono)] text-[10px] text-[#7C766F]"
+                    title={user.company_name}
+                  >
+                    {user.company_name}
+                  </p>
                 </div>
-                <CompanyAvatar name={user.name} logoPath={user.avatar_url} size="md" />
+                <CompanyAvatar
+                  name={user.name}
+                  logoPath={user.avatar_url}
+                  size="md"
+                  className="rounded-none border border-[#CCC5BD]"
+                />
               </div>
             ) : null}
+
             <button
               type="button"
               onClick={() => signOut()}
-              className="hidden h-10 w-10 items-center justify-center rounded-lg border border-[#E5DFD5] text-gray-600 transition-colors hover:bg-red-50 hover:text-red-600 lg:inline-flex"
+              className="hidden h-9 w-9 items-center justify-center rounded-none border border-[#CCC5BD] bg-transparent text-[#4A4640] transition-colors hover:border-[#1C1B1A] hover:bg-[#F6F3EC] hover:text-[#BA1A1A] lg:inline-flex"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut className="h-4 w-4" />
             </button>
+
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-none border border-[#CCC5BD] bg-transparent text-[#1C1C18] transition-colors hover:bg-[#F6F3EC] lg:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-controls="portal-nav-drawer"
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
+              {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
             </button>
           </div>
         </div>
 
+        {/* Mobile Navigation Drawer */}
         <div
           id="portal-nav-drawer"
           className={`fixed inset-0 top-14 z-40 sm:top-16 lg:hidden ${mobileMenuOpen ? '' : 'pointer-events-none'}`}
@@ -191,49 +220,66 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
           <button
             type="button"
             tabIndex={mobileMenuOpen ? 0 : -1}
-            className={`absolute inset-0 bg-black/30 transition-opacity ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 bg-black/40 transition-opacity ${mobileMenuOpen ? 'opacity-100' : 'opacity-0'}`}
             aria-label="Close menu"
             onClick={() => setMobileMenuOpen(false)}
           />
           <div
-            className={`relative max-h-[calc(100dvh-3.5rem)] overflow-hidden border-b border-gray-200 bg-white shadow-lg transition-transform duration-200 sm:max-h-[calc(100dvh-4rem)] ${
+            className={`relative max-h-[calc(100dvh-3.5rem)] overflow-hidden rounded-none border-b border-[#CCC5BD] bg-[#FCF9F2] transition-transform duration-200 sm:max-h-[calc(100dvh-4rem)] ${
               mobileMenuOpen ? 'translate-y-0' : '-translate-y-2 opacity-0'
             }`}
           >
-            <div ref={navRef} className="max-h-[calc(100dvh-3.5rem)] space-y-1 overflow-y-auto overscroll-contain px-2 py-3 sm:max-h-[calc(100dvh-4rem)] sm:px-3">
+            <div
+              ref={navRef}
+              className="max-h-[calc(100dvh-3.5rem)] space-y-1 overflow-y-auto overscroll-contain px-3 py-4 sm:max-h-[calc(100dvh-4rem)]"
+            >
               {navItems.map((item) => {
-                const active = item.active(pathname)
-                const Icon = item.icon
+                const active = item.active(pathname);
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     ref={active ? activeRef : undefined}
                     aria-current={active ? 'page' : undefined}
-                    className={`flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium ${
-                      active ? 'bg-primary/5 text-primary' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    className={`flex min-h-11 items-center gap-3 border-l-2 px-3 py-2.5 text-sm font-medium transition-colors ${
+                      active
+                        ? 'border-[#9E4300] bg-[#F6F3EC] font-semibold text-[#1C1C18]'
+                        : 'border-transparent text-[#4A4640] hover:bg-[#F6F3EC] hover:text-[#1C1C18]'
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Icon className={`h-5 w-5 ${active ? 'text-primary' : 'text-gray-400'}`} />
+                    <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-[#9E4300]' : 'text-[#7C766F]'}`} />
                     {item.label}
                   </Link>
-                )
+                );
               })}
               <button
                 type="button"
                 onClick={() => signOut()}
-                className="flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-red-600 hover:bg-red-50"
+                className="flex min-h-11 w-full items-center gap-3 border-l-2 border-transparent px-3 py-2.5 text-sm font-medium text-[#BA1A1A] transition-colors hover:bg-[#F6F3EC]"
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-4 w-4" />
                 Logout
               </button>
               {user ? (
-                <div className="mt-2 flex items-center gap-3 border-t border-gray-200 px-3 py-4">
-                  <CompanyAvatar name={user.name} logoPath={user.avatar_url} size="md" />
+                <div className="mt-3 flex items-center gap-3 border-t border-[#CCC5BD] px-3 pt-4 pb-2">
+                  <CompanyAvatar
+                    name={user.name}
+                    logoPath={user.avatar_url}
+                    size="md"
+                    className="rounded-none border border-[#CCC5BD]"
+                  />
                   <div className="min-w-0">
-                    <div className="truncate text-base font-medium text-gray-800" title={user.name}>{user.name}</div>
-                    <div className="truncate text-sm font-medium text-gray-500" title={user.company_name}>{user.company_name}</div>
+                    <div className="truncate sv2-label text-[11px] text-[#1C1C18]" title={user.name}>
+                      {user.name}
+                    </div>
+                    <div
+                      className="truncate font-[family-name:var(--font-mono)] text-[10px] text-[#7C766F]"
+                      title={user.company_name}
+                    >
+                      {user.company_name}
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -242,7 +288,8 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-3 py-4 sm:p-6 lg:p-8">
+      {/* Main Content Area */}
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         {children}
       </main>
     </div>

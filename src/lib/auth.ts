@@ -45,6 +45,14 @@ export function canSeeCosts(role: Role) {
   return role === "admin" || role === "accounts" || role === "management"
 }
 
+export function canEditPricing(role: Role) {
+  return role === "admin" || role === "accounts"
+}
+
+export function canViewPricing(role: Role) {
+  return role === "admin" || role === "accounts" || role === "management" || role === "sales"
+}
+
 export function canChangeOrderStage(role: Role) {
   return role === "admin" || role === "operations"
 }

@@ -7,11 +7,13 @@ import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { estimateTickedLines } from '@/lib/quotes/flow'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export type QuotationDecisionLine = {
   id: string
   name: string
   sku: string | null
+  imageUrl?: string | null
   quantity: number
   unitPrice: number
   lineTotal: number
@@ -89,82 +91,97 @@ export function QuotationActions({
   )
 
   return (
-    <div className="mt-8 border-t border-gray-200 pt-8">
-      <h3 className="mb-1 text-lg font-semibold text-gray-900">Your decision</h3>
-      <p className="mb-4 text-sm text-gray-600">
-        Accept the lines you want. Confirming creates an order for those lines only. Declined lines stay on this quote.
-      </p>
+    <div className="space-y-6 pt-2">
+      <div>
+        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300] mb-1">
+          Quotation · Review
+        </span>
+        <h3 className="font-serif text-2xl text-[#1C1C18]">Your decision</h3>
+        <p className="mt-1 text-sm text-[#4A4640]">
+          Accept the lines you want. Confirming creates an order for those lines only. Declined lines stay on this quote.
+        </p>
+      </div>
 
-      <ul className="divide-y rounded-xl border border-gray-200">
+      {/* Decision Lines Checklist */}
+      <div className="border border-[#CCC5BD] bg-white rounded-none divide-y divide-[#CCC5BD]">
         {items.map((item) => (
-          <li key={item.id} className="flex items-start gap-3 p-3">
+          <div key={item.id} className="flex items-start gap-3 p-4 hover:bg-[#F6F3EC] transition-colors">
             <input
               type="checkbox"
-              className="mt-1"
+              className="mt-1 h-4 w-4 rounded-none border border-[#CCC5BD] text-[#1C1B1A] focus:ring-0 accent-[#1C1B1A]"
               checked={Boolean(checked[item.id])}
               onChange={() => setChecked((current) => ({ ...current, [item.id]: !current[item.id] }))}
               disabled={pending}
               aria-label={`Accept ${item.name}`}
             />
+            <ProductThumb src={item.imageUrl} alt={item.name} />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-gray-900">{item.name}</p>
-              {item.sku && <p className="font-mono text-[10px] text-gray-400">{item.sku}</p>}
-              <p className="mt-1 text-xs text-gray-500">
-                {item.quantity} × {formatCurrency(item.unitPrice)}
+              <p className="text-sm font-semibold text-[#1C1C18]">{item.name}</p>
+              {item.sku && <p className="font-mono text-[10px] text-[#7C766F] mt-0.5">SKU: {item.sku}</p>}
+              <p className="font-mono text-xs text-[#7C766F] mt-1">
+                {item.quantity} units × {formatCurrency(item.unitPrice)}
               </p>
             </div>
-            <p className="text-right text-sm font-semibold text-gray-900">
-              {formatCurrency(item.lineTotal)}
-              <span className="block text-[10px] font-normal text-gray-400">ex-GST</span>
-            </p>
-          </li>
+            <div className="text-right shrink-0">
+              <p className="font-mono text-sm font-semibold text-[#1C1C18]">
+                {formatCurrency(item.lineTotal)}
+              </p>
+              <span className="block text-[10px] font-mono text-[#7C766F]">ex-GST</span>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
 
-      <div className="mt-4 space-y-1 text-xs text-gray-600 sm:ml-auto sm:w-72">
-        <div className="flex justify-between">
-          <span>Accepted subtotal ex-GST</span>
-          <span>{formatCurrency(estimate.subtotal)}</span>
+      {/* Estimate Summary Box */}
+      <div className="border border-[#CCC5BD] bg-white p-4 rounded-none space-y-2 text-xs sm:ml-auto sm:w-80">
+        <div className="flex justify-between text-[#4A4640]">
+          <span>Accepted subtotal (ex-GST):</span>
+          <span className="font-mono font-medium text-[#1C1C18]">{formatCurrency(estimate.subtotal)}</span>
         </div>
         {discountPercent > 0 && (
-          <div className="flex justify-between text-green-700">
-            <span>Discount ({discountPercent}%) once</span>
-            <span>-{formatCurrency(estimate.discount)}</span>
+          <div className="flex justify-between text-[#9E4300] font-medium">
+            <span>Discount ({discountPercent}%):</span>
+            <span className="font-mono">-{formatCurrency(estimate.discount)}</span>
           </div>
         )}
-        <div className="flex justify-between">
-          <span>GST ({taxPercent || 0}%) once</span>
-          <span>{formatCurrency(estimate.tax)}</span>
+        <div className="flex justify-between text-[#4A4640]">
+          <span>GST ({taxPercent || 0}%):</span>
+          <span className="font-mono font-medium text-[#1C1C18]">{formatCurrency(estimate.tax)}</span>
         </div>
-        <div className="flex justify-between border-t border-gray-200 pt-1 text-sm font-semibold text-gray-900">
-          <span>Total incl. GST</span>
-          <span>{formatCurrency(estimate.total)}</span>
+        <div className="flex justify-between border-t border-[#CCC5BD] pt-2 text-sm font-bold text-[#1C1C18]">
+          <span className="uppercase tracking-wider text-xs">Total incl. GST:</span>
+          <span className="font-mono">{formatCurrency(estimate.total)}</span>
         </div>
-        <p className="pt-1 text-[11px] text-gray-500">
+        <p className="pt-1 text-[10px] text-[#7C766F]">
           Line amounts are ex-GST. Discount is taken once, then GST is added once.
           {validUntil ? ` Valid until ${formatDate(validUntil)}.` : ''}
         </p>
       </div>
 
-      <label className="mb-4 mt-4 block text-sm font-medium text-gray-700">
-        Note (optional)
+      {/* Decision Note Field */}
+      <div>
+        <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">
+          Note (optional)
+        </label>
         <textarea
           value={comment}
           onChange={(event) => setComment(event.target.value)}
-          className="mt-1 w-full rounded-md border p-2 outline-none focus:ring-[#806A50]"
+          className="w-full bg-[#F1EEE7] border border-[#CCC5BD] p-3 text-sm text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none placeholder:text-[#7C766F]"
+          placeholder="Anything the team should know"
           rows={3}
           disabled={pending}
         />
-      </label>
+      </div>
 
+      {/* Decision Buttons */}
       {rejecting ? (
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             type="button"
             onClick={() => handleRespond('rejected')}
             disabled={pending}
             aria-busy={pending || undefined}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] bg-[#BA1A1A] hover:bg-[#93000A] text-white rounded-none disabled:opacity-50 transition-colors"
           >
             {pending && responding === 'rejected' ? busyLabel('Rejecting…') : 'Confirm rejection'}
           </button>
@@ -172,19 +189,19 @@ export function QuotationActions({
             type="button"
             onClick={() => setRejecting(false)}
             disabled={pending}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-600 hover:bg-gray-50"
+            className="inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] border border-[#CCC5BD] text-[#1C1C18] bg-white hover:bg-[#F6F3EC] rounded-none disabled:opacity-50 transition-colors"
           >
             Cancel
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
           <button
             type="button"
             onClick={() => handleRespond('accepted')}
             disabled={pending || accepted.length === 0}
             aria-busy={pending || undefined}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-green-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] bg-[#9E4300] hover:bg-[#FF8843] text-white rounded-none disabled:opacity-50 transition-colors"
           >
             {pending && responding === 'accepted' ? busyLabel('Accepting…') : 'Confirm and create order'}
           </button>
@@ -192,7 +209,7 @@ export function QuotationActions({
             type="button"
             onClick={() => handleRespond('rejected')}
             disabled={pending}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-6 py-2 font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] border border-[#BA1A1A] text-[#BA1A1A] bg-transparent hover:bg-[#FFDAD6]/30 rounded-none disabled:opacity-50 transition-colors"
           >
             Decline quote
           </button>
@@ -200,16 +217,20 @@ export function QuotationActions({
             type="button"
             onClick={() => setChanging(true)}
             disabled={pending}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-amber-200 bg-white px-6 py-2 font-semibold text-amber-900 hover:bg-amber-50"
+            className="inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] border border-[#1C1B1A] text-[#1C1B1A] bg-transparent hover:bg-[#F6F3EC] rounded-none disabled:opacity-50 transition-colors"
           >
             Request changes
           </button>
         </div>
       )}
+
+      {/* Changes Request Box */}
       {changing && (
-        <div className="mt-4 space-y-3">
-          <p className="text-sm text-amber-900">Add what should change in the note above, then send the request.</p>
-          <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="p-4 bg-[#FFDBCB]/30 border-l-4 border-l-[#9E4300] space-y-3 rounded-none">
+          <p className="text-xs text-[#1C1C18] font-medium">
+            Add what should change in the note above, then send the request.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="button"
               disabled={pending || !comment.trim()}
@@ -223,7 +244,7 @@ export function QuotationActions({
                   },
                 })
               }}
-              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-amber-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
+              className="inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] bg-[#1C1B1A] hover:bg-[#9E4300] text-white rounded-none disabled:opacity-50 transition-colors"
             >
               {pending && responding === 'changes' ? busyLabel('Sending…') : 'Send request'}
             </button>
@@ -231,7 +252,7 @@ export function QuotationActions({
               type="button"
               disabled={pending}
               onClick={() => setChanging(false)}
-              className="inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-600"
+              className="inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] border border-[#CCC5BD] text-[#1C1C18] bg-white hover:bg-[#F6F3EC] rounded-none transition-colors"
             >
               Cancel
             </button>

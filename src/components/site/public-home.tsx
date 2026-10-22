@@ -1,10 +1,16 @@
 import Link from 'next/link'
+import { Gift, MapPinned, PackageSearch, PenLine, Truck } from 'lucide-react'
+import { ProductImage } from '@/components/ui/product-image'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { RetailHero } from '@/components/site/retail-hero'
 import { BrandLogoRow, ProductSection, RetailOccasionBento } from '@/components/site/stitch-sections'
 import { StorefrontCatalog } from '@/components/site/storefront-catalog'
 import { readCatalogueFilters } from '@/lib/catalogue/catalogue-query'
-import { curateTrendingProducts, retailHeroSlides } from '@/lib/catalogue/curate'
+import { HomepagePreviewBanner } from '@/components/site/homepage-preview-banner'
+import { headingParts, plainHeading } from '@/lib/homepage/heading'
+import { resolveHomepage } from '@/lib/homepage/resolve'
+import { resolveHomepageView } from '@/lib/homepage/view'
+import type { PackagingContent, PackagingIcon } from '@/lib/homepage/types'
 import { getPublicBrands, getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
 import type { PublicProduct } from '@/lib/catalogue/products'
 
@@ -12,9 +18,89 @@ function storePrice(product: PublicProduct) {
   return product.price
 }
 
-function withImage(products: PublicProduct[]) {
-  const pictured = products.filter((product) => product.image_url)
-  return pictured.length ? pictured : products
+const PACKAGING_ICONS: Record<PackagingIcon, typeof Gift> = {
+  gift: Gift,
+  pen: PenLine,
+  truck: Truck,
+  map: MapPinned,
+  search: PackageSearch,
+}
+
+/** Tailwind needs literal class names. */
+const RAIL_COLUMNS: Record<4 | 5 | 6, string> = {
+  4: 'lg:grid-cols-4',
+  5: 'lg:grid-cols-5',
+  6: 'lg:grid-cols-6',
+}
+
+function PackagingSection({
+  content,
+  photos,
+}: {
+  content: PackagingContent
+  photos: { key: string; src: string; alt: string }[]
+}) {
+  return (
+    <section className="border-b border-[#CCC5BD] bg-[#F6F3EC] py-12 sm:py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 border-b border-[#CCC5BD] pb-4">
+          <span aria-hidden="true" className="mb-3 block h-0.5 w-10 bg-[#9E4300]" />
+          {content.eyebrow ? (
+            <span className="font-sans text-xs uppercase tracking-wider font-semibold text-[#9E4300] block mb-1">{content.eyebrow}</span>
+          ) : null}
+          <h2 className="font-serif sv2-headline-md font-normal text-[#1C1C18]">
+            {headingParts(content.heading).map((part, index) =>
+              part.accent ? (
+                <span key={index} className="italic text-[#9E4300]">
+                  {part.text}
+                </span>
+              ) : (
+                part.text
+              ),
+            )}
+          </h2>
+          {content.subtext ? <p className="mt-2 max-w-xl sv2-body-sm text-[#4A4640]">{content.subtext}</p> : null}
+        </div>
+        {photos.length === 2 ? (
+          <div className="mb-6 grid grid-cols-2 gap-px border border-[#CCC5BD] bg-[#CCC5BD]">
+            {photos.map((photo) => (
+              <div key={photo.key} className="relative aspect-[16/9] overflow-hidden bg-[#FCF9F2]">
+                <ProductImage src={photo.src} alt={photo.alt} fit="cover" className="absolute inset-0 h-full w-full bg-transparent" />
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {content.tiles.length ? (
+          <div className={`grid grid-cols-1 gap-px border border-[#CCC5BD] bg-[#CCC5BD] sm:grid-cols-2 ${TILE_COLUMNS[content.tiles.length] || 'lg:grid-cols-5'}`}>
+            {content.tiles.map((tile, index) => {
+              const Icon = PACKAGING_ICONS[tile.icon] || Gift
+              const lead = index === 0
+              return (
+                <div
+                  key={tile.title}
+                  className={`flex flex-col gap-3 p-6 ${lead ? 'bg-[#1C1B1A] text-[#FCF9F2]' : 'bg-[#FCF9F2] text-[#1C1C18]'}`}
+                >
+                  <Icon size={22} strokeWidth={1.5} aria-hidden="true" className={lead ? 'text-[#FFB690]' : 'text-[#9E4300]'} />
+                  <h3 className={`font-serif text-lg font-normal leading-snug ${lead ? 'text-[#FCF9F2]' : 'text-[#1C1C18]'}`}>
+                    {tile.title}
+                  </h3>
+                  <p className={`sv2-body-sm ${lead ? 'text-[#CCC5BD]' : 'text-[#4A4640]'}`}>{tile.description}</p>
+                </div>
+              )
+            })}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  )
+}
+
+const TILE_COLUMNS: Record<number, string> = {
+  1: 'lg:grid-cols-1',
+  2: 'lg:grid-cols-2',
+  3: 'lg:grid-cols-3',
+  4: 'lg:grid-cols-4',
+  5: 'lg:grid-cols-5',
 }
 
 export async function PublicHome({
@@ -37,88 +123,97 @@ export async function PublicHome({
     : loadedBrands
   const categories = await getPublicCategories()
 
-  const heroSlides = retailHeroSlides(products).map((slide) =>
-    slide.map((product) => ({ id: product.id, name: product.name, image_url: product.image_url })),
-  )
-  const bestsellers = withImage(curateTrendingProducts(products, 5)).slice(0, 5)
-  const under999 = [...products]
-    .filter((product) => product.price != null && product.price > 0 && product.price < 999)
-    .sort((a, b) => (a.price || 0) - (b.price || 0))
-  const underRail = withImage(under999).slice(0, 6)
-  const festivePool = products.filter(
-    (product) =>
-      product.occasion_tags.includes('festive') ||
-      product.category_name === 'Hampers & Gift Sets' ||
-      /festive|diwali|hamper/i.test(product.name),
-  )
-  const festive = withImage(festivePool).slice(0, 4)
+  const view = await resolveHomepageView(searchParams)
+  const resolved = resolveHomepage(view.config, view.collections, products, {
+    date: view.date,
+    includeDraftCollections: view.preview,
+  })
 
   return (
-    <div className="bg-[#fff8f4] text-[#221a10]">
-      <RetailHero slides={heroSlides} />
-
-      <RetailOccasionBento products={products} priceOf={storePrice} />
-
-      <ProductSection
-        eyebrow="Most requested"
-        title="Corporate bestsellers"
-        actionHref="/catalogue?sort=newest"
-        action="View all"
-        products={bestsellers}
-        priceOf={storePrice}
-        columns="lg:grid-cols-5"
-        tone="retail"
-      />
-
-      <BrandLogoRow brands={brands} eyebrow="Merchandise partners" title="Authorised brand alliances" tone="retail" />
-
-      <ProductSection
-        eyebrow="Everyday"
-        title="Merchandise under ₹999"
-        actionHref="/catalogue?priceMax=998"
-        action="View all"
-        products={underRail}
-        priceOf={storePrice}
-        columns="lg:grid-cols-6"
-        tone="retail"
-      />
-
-      <ProductSection
-        eyebrow="Seasonal"
-        title="Diwali & bespoke festive hampers"
-        actionHref="/collections/festival-gifting"
-        action="View all"
-        products={festive}
-        priceOf={storePrice}
-        dark
-        columns="lg:grid-cols-4"
-        tone="retail"
-      />
-
-      <StorefrontCatalog
-        products={products}
-        categories={categories}
-        brands={brands}
-        filters={filters}
-        basePath={basePath}
-        heading="Live procurement catalogue"
-        intro="Filter the live catalogue by category, brand, price and occasion."
-        priceOf={storePrice}
-        limit={8}
-        tone="retail"
-      />
+    <div className="bg-[#FCF9F2] text-[#1C1C18]">
+      {view.preview ? <HomepagePreviewBanner date={view.date} source={view.source} /> : null}
+      {resolved.map((section) => {
+        switch (section.type) {
+          case 'hero':
+            return (
+              <RetailHero
+                key={section.key}
+                content={section.content}
+                slides={section.slides.map((slide) =>
+                  slide.map((product) => ({ id: product.id, name: product.name, image_url: product.image_url })),
+                )}
+              />
+            )
+          case 'occasion_grid':
+            return (
+              <RetailOccasionBento
+                key={section.key}
+                products={products}
+                priceOf={storePrice}
+                content={section.content}
+                cards={section.cards}
+              />
+            )
+          case 'product_rail':
+            return (
+              <ProductSection
+                key={section.key}
+                eyebrow={section.content.eyebrow}
+                title={section.content.heading}
+                actionHref={section.content.ctaHref}
+                action={section.content.ctaLabel}
+                products={section.products}
+                priceOf={storePrice}
+                dark={section.content.dark}
+                columns={RAIL_COLUMNS[section.content.columns]}
+                tone="retail"
+              />
+            )
+          case 'brand_row':
+            return (
+              <BrandLogoRow
+                key={section.key}
+                brands={brands}
+                eyebrow={section.content.eyebrow}
+                title={section.content.heading}
+                subtext={section.content.subtext || ''}
+                actionHref={section.content.ctaHref}
+                action={section.content.ctaLabel}
+                tone="retail"
+              />
+            )
+          case 'packaging':
+            return <PackagingSection key={section.key} content={section.content} photos={section.photos} />
+          case 'catalogue_grid':
+            return (
+              <StorefrontCatalog
+                key={section.key}
+                products={products}
+                categories={categories}
+                brands={brands}
+                filters={filters}
+                basePath={basePath}
+                heading={plainHeading(section.content.heading)}
+                intro={section.content.subtext || ''}
+                priceOf={storePrice}
+                limit={section.content.itemCount}
+                tone="retail"
+              />
+            )
+        }
+      })}
 
       {preview ? (
-        <section className="bg-[#fff8f4] py-8">
+        <section className="bg-[#FCF9F2] py-8 border-t border-[#CCC5BD]">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 sm:px-6 lg:px-8">
-            <p className="text-sm text-[#4d453e]">In stock</p>
+            <p className="sv2-body-sm text-[#4A4640]">In stock</p>
             <AddToCartButton
               maxQuantity={1}
               label="Buy 1 sample"
               product={{ id: '33333333-3333-4333-8333-333333333333', sku: 'BTL-1', name: 'Steel bottle', price: 450, image_url: '/site/home-festive-cane.webp' }}
-              className="inline-flex bg-[#382c1e] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
+              className="inline-flex bg-[#000000] px-5 py-2.5 sv2-label text-white uppercase tracking-wider"
             />
-            <Link href="/request-quote" className="inline-flex border border-[#d0c5bb] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#22180b]">
+            <Link href="/request-quote" className="inline-flex border border-[#CCC5BD] px-5 py-2.5 sv2-label text-[#1C1C18] uppercase tracking-wider hover:border-[#000000]">
               Request a Quote
             </Link>
           </div>

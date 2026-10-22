@@ -27,7 +27,7 @@ export async function TenantGateShell({
         <p className="mt-3 text-sm text-[#57534E] leading-relaxed">{body}</p>
         <Link
           href={href}
-          className="inline-block mt-6 px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#806A50] text-white hover:bg-[#9C8567] hover:text-white transition-colors"
+          className="inline-block mt-6 px-4 py-2.5 text-sm font-semibold bg-[#806A50] text-white hover:bg-[#9C8567] hover:text-white transition-colors"
         >
           {label}
         </Link>

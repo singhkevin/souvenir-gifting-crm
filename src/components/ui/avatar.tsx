@@ -61,7 +61,7 @@ export function CompanyAvatar({ name, logoPath, size = 'md', className = '' }: C
 
   return (
     <div
-      className={`relative flex-shrink-0 rounded-md overflow-hidden flex items-center justify-center font-semibold text-[var(--color-text)] ${sClass} ${className}`}
+      className={`relative flex-shrink-0 overflow-hidden flex items-center justify-center font-semibold text-[var(--color-text)] ${sClass} ${className}`}
       style={{ backgroundColor: showImage ? 'transparent' : stringToColor(name || '') }}
     >
       {showImage ? (

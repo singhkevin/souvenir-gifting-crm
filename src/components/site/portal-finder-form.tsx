@@ -50,18 +50,18 @@ export function PortalFinderForm() {
           required
           maxLength={200}
           placeholder="company code"
-          className="block w-full rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] px-3 py-3 text-base text-[#1C1917] placeholder:text-[#A8A29E] focus:border-[#806A50] focus:outline-none focus:ring-1 focus:ring-[#806A50] sm:py-2.5 sm:text-sm"
+          className="block w-full border border-[#E5DFD5] bg-[#FAF7F2] px-3 py-3 text-base text-[#1C1917] placeholder:text-[#A8A29E] focus:border-[#806A50] focus:outline-none focus:ring-1 focus:ring-[#806A50] sm:py-2.5 sm:text-sm"
         />
       </label>
       <button
         type="submit"
         disabled={pending}
-        className="flex w-full items-center justify-center rounded-xl bg-[#806A50] px-4 py-3 text-xs font-semibold text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex w-full items-center justify-center bg-[#806A50] px-4 py-3 text-xs font-semibold text-white hover:bg-[#9C8567] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Open portal'}
       </button>
       {message ? (
-        <p className="rounded-xl border border-[#E5DFD5] bg-[#FAF7F2] px-3 py-3 text-xs leading-relaxed text-[#5A5248]" role="status">
+        <p className="border border-[#E5DFD5] bg-[#FAF7F2] px-3 py-3 text-xs leading-relaxed text-[#5A5248]" role="status">
           {message}
         </p>
       ) : null}

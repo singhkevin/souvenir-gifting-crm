@@ -5,14 +5,17 @@ import { landingPathForRole } from '@/lib/safe-next'
 import { resolveHost } from '@/lib/portal-host'
 import { SiteHeader } from '@/components/site/site-header'
 import { SiteFooter } from '@/components/site/site-footer'
-import { CategoryIconStrip } from '@/components/site/category-icon-strip'
+import { CategoryNav } from '@/components/sv2/category-nav'
 import { WhatsAppButton } from '@/components/site/whatsapp-button'
+import { UtilityBar } from '@/components/sv2/utility-bar'
 import { getPublicCatalogueProducts, getPublicCategories } from '@/lib/catalogue/products'
 import { homeCategoryTiles } from '@/lib/catalogue/curate'
 import { STORE_NAV_CATEGORIES, storeNavCategoryHref } from '@/lib/catalogue/store-nav'
 import { slugify } from '@/lib/utils'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolvePublicContactPhone } from '@/lib/contact/public-phone'
+import { newsreader, plusJakarta, jetbrainsMono } from '@/lib/fonts'
+import '@/app/sv2.css'
 
 async function publicContactPhone() {
   const fromEnv = process.env.PUBLIC_CONTACT_PHONE
@@ -23,13 +26,7 @@ async function publicContactPhone() {
   return resolvePublicContactPhone(fromEnv, data.public_contact_phone as string | null)
 }
 
-export async function SiteShell({
-  children,
-  categoryVariant = 'cards',
-}: {
-  children: React.ReactNode
-  categoryVariant?: 'cards' | 'compact'
-}) {
+export async function SiteShell({ children }: { children: React.ReactNode }) {
   const profile = await getProfile()
   const headerStore = await headers()
   const hostKind = resolveHost(headerStore.get('x-forwarded-host') || headerStore.get('host')).kind
@@ -46,6 +43,7 @@ export async function SiteShell({
     id: product.id,
     name: product.name,
     category_name: product.category_name,
+    image_url: product.image_url || null,
     href: `/catalogue/${product.id}`,
   }))
   const categoryLinks = homeCategoryTiles(categories, 6).map((category) => ({
@@ -60,11 +58,10 @@ export async function SiteShell({
   }))
 
   return (
-    <div className="storefront min-h-screen bg-[#fff8f4] text-[#221a10]">
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      />
+    <div
+      className={`sv2 ${newsreader.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} min-h-screen bg-[#FCF9F2] text-[#1C1C18]`}
+    >
+      <UtilityBar phone={phone} />
       <SiteHeader
         workspaceHref={workspaceHref}
         workspaceLabel={workspaceLabel}
@@ -73,7 +70,7 @@ export async function SiteShell({
         businessHref={isBusiness ? '/business/dashboard' : '/business'}
         hideAudience={hostKind === 'tenant'}
       >
-        <CategoryIconStrip items={navCategories} variant={categoryVariant} />
+        <CategoryNav items={navCategories} />
       </SiteHeader>
       <main>{children}</main>
       <SiteFooter workspaceHref={workspaceHref} workspaceLabel={workspaceLabel} phone={phone} />

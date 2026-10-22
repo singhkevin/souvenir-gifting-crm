@@ -32,14 +32,14 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
     <div className="max-w-4xl mx-auto space-y-6">
       <BackButton href="/crm/invoices" label="Back to Invoices" />
 
-      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-white p-6 border border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="p-1.5 bg-[#806A50]/10 text-[#806A50] rounded-lg">
+            <span className="p-1.5 bg-[#806A50]/10 text-[#806A50]">
               <Receipt size={16} />
             </span>
             <span className="font-mono text-xs font-bold text-gray-500">{invoice.invoice_number}</span>
-            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
+            <span className={`px-2.5 py-0.5 text-[10px] font-semibold capitalize ${
               invoice.status === 'paid' ? 'bg-green-100 text-green-800' :
               invoice.status === 'partially_paid' ? 'bg-blue-100 text-blue-800' :
               invoice.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700'
@@ -57,7 +57,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           )}
         </div>
 
-        <div className="flex items-center gap-6 bg-purple-50/50 p-4 rounded-xl border border-purple-100">
+        <div className="flex items-center gap-6 bg-purple-50/50 p-4 border border-purple-100">
           <div>
             <p className="text-[10px] uppercase font-bold text-gray-400">Total Amount</p>
             <p className="text-xl font-bold text-[#806A50]">{formatCurrency(invoice.amount)}</p>
@@ -72,13 +72,13 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-5 rounded-xl border border-gray-200 text-xs space-y-2.5">
+        <div className="bg-white p-5 border border-gray-200 text-xs space-y-2.5">
           <h3 className="font-bold text-gray-900 pb-2 border-b">Invoice Timeline</h3>
           <div><span className="text-gray-500 w-24 inline-block">Invoice Date:</span> {formatDate(invoice.invoice_date)}</div>
           <div><span className="text-gray-500 w-24 inline-block">Due Date:</span> <span className="font-semibold text-gray-900">{formatDate(invoice.due_date)}</span></div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 text-xs space-y-2.5">
+        <div className="bg-white p-5 border border-gray-200 text-xs space-y-2.5">
           <h3 className="font-bold text-gray-900 pb-2 border-b">Payment Summary</h3>
           <div><span className="text-gray-500 w-24 inline-block">Amount Paid:</span> <span className="font-semibold text-green-700">{formatCurrency(totalPaid)}</span></div>
           <div><span className="text-gray-500 w-24 inline-block">Status:</span> <span className="capitalize">{invoice.status?.replace('_', ' ')}</span></div>
@@ -86,7 +86,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+        <div className="md:col-span-2 bg-white border border-gray-200 overflow-hidden">
           <div className="p-4 border-b border-gray-100 flex justify-between items-center">
             <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Payments Collected</h2>
             <span className="text-xs text-gray-400">{payments?.length || 0} recorded</span>
@@ -122,7 +122,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
         </div>
 
         {balanceDue > 0 && (
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+          <div className="bg-white p-5 border border-gray-200 space-y-4">
             <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
               <CreditCard size={14} className="text-[#806A50]" /> Record Payment
             </h2>
@@ -138,7 +138,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
               />
               
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">Amount (?) *</label>
+                <label className="block font-semibold text-gray-700 mb-1">Amount (&#8377;) *</label>
                 <input
                   type="number"
                   name="amount"
@@ -146,7 +146,7 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                   max={balanceDue}
                   required
                   defaultValue={balanceDue}
-                  className="w-full px-3 py-1.5 border border-gray-200 rounded-lg font-bold"
+                  className="w-full px-3 py-1.5 border border-gray-200 font-bold"
                 />
               </div>
 
@@ -171,12 +171,12 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
                   type="text"
                   name="reference"
                   placeholder="e.g. UTR12345678"
-                  className="w-full px-3 py-1.5 border border-gray-200 rounded-lg"
+                  className="w-full px-3 py-1.5 border border-gray-200"
                 />
               </div>
 
               <SubmitButton
-                className="w-full py-2 bg-[#806A50] hover:bg-[#624b32] text-white rounded-lg font-semibold transition-colors shadow-sm mt-2"
+                className="w-full py-2 bg-[#806A50] hover:bg-[#624b32] text-white font-semibold transition-colors mt-2"
                pendingLabel="Saving…">
                 Save Payment
               </SubmitButton>

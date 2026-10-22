@@ -57,33 +57,33 @@ export default async function DepartmentPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border"><p className="text-xs text-[#7A7267]">Active orders</p><p className="text-2xl font-semibold mt-1">{active.length}</p></div>
-        <div className="bg-white p-4 rounded-2xl border"><p className="text-xs text-[#7A7267]">Due today</p><p className="text-2xl font-semibold mt-1">{dueToday.length}</p></div>
-        <div className="bg-white p-4 rounded-2xl border"><p className="text-xs text-[#7A7267]">Overdue</p><p className="text-2xl font-semibold mt-1 text-red-700">{overdue.length}</p></div>
-        <div className="bg-white p-4 rounded-2xl border"><p className="text-xs text-[#7A7267]">Completed</p><p className="text-2xl font-semibold mt-1">{completed.length}</p></div>
+        <div className="bg-white p-4 border"><p className="text-xs text-[#7A7267]">Active orders</p><p className="text-2xl font-semibold mt-1">{active.length}</p></div>
+        <div className="bg-white p-4 border"><p className="text-xs text-[#7A7267]">Due today</p><p className="text-2xl font-semibold mt-1">{dueToday.length}</p></div>
+        <div className="bg-white p-4 border"><p className="text-xs text-[#7A7267]">Overdue</p><p className="text-2xl font-semibold mt-1 text-red-700">{overdue.length}</p></div>
+        <div className="bg-white p-4 border"><p className="text-xs text-[#7A7267]">Completed</p><p className="text-2xl font-semibold mt-1">{completed.length}</p></div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl border p-5">
+        <div className="bg-white border p-5">
           <h2 className="font-serif text-lg mb-3">Department orders</h2>
           <div className="space-y-2">
             {active.slice(0, 12).map((o) => {
               const company = Array.isArray(o.company) ? o.company[0] : o.company
               const health = orderHealth(o.status, o.expected_delivery_date, o.stage_due_at)
               return (
-                <Link key={o.id} href={`/crm/orders/${o.id}`} className="flex justify-between items-center p-2 rounded-lg hover:bg-[#FAF7F2]">
+                <Link key={o.id} href={`/crm/orders/${o.id}`} className="flex justify-between items-center p-2 hover:bg-[#FAF7F2]">
                   <div>
                     <p className="text-sm font-mono font-semibold">{o.order_number}</p>
                     <p className="text-[11px] text-[#7A7267]">{company?.name} · {ORDER_STATUS_LABELS[o.status] || o.status} · {formatCurrency(o.order_value)}</p>
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${HEALTH_STYLES[health]}`}>{HEALTH_LABELS[health]}</span>
+                  <span className={`text-[10px] px-2 py-0.5 ${HEALTH_STYLES[health]}`}>{HEALTH_LABELS[health]}</span>
                 </Link>
               )
             })}
             {active.length === 0 && <p className="text-sm text-gray-500">No active department orders.</p>}
           </div>
         </div>
-        <div className="bg-white rounded-2xl border p-5 space-y-4">
+        <div className="bg-white border p-5 space-y-4">
           <div>
             <h2 className="font-serif text-lg mb-3">People</h2>
             <ul className="text-sm space-y-1">

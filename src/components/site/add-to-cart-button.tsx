@@ -132,7 +132,7 @@ export function AddToCartButton({
               <div
                 role="dialog"
                 aria-modal="true"
-                className="relative z-10 w-full max-w-xs rounded-md bg-white p-5 shadow-[0_20px_60px_rgba(0,0,0,0.25)]"
+                className="relative z-10 w-full max-w-xs bg-white p-5"
               >
                 <button
                   type="button"
@@ -142,13 +142,13 @@ export function AddToCartButton({
                     event.stopPropagation()
                     setOpen(false)
                   }}
-                  className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-[#F6F4F1] text-[#5C6570] hover:bg-[#EFE9E0]"
+                  className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center bg-[#F6F4F1] text-[#5C6570] hover:bg-[#EFE9E0]"
                 >
                   <X size={14} />
                 </button>
 
                 <div className="flex items-center gap-3 pr-6">
-                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md catalogue-studio-field">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden catalogue-studio-field">
                     <ProductImage
                       src={product.image_url}
                       alt={product.name}
@@ -175,7 +175,7 @@ export function AddToCartButton({
                       event.stopPropagation()
                       setQtyValue(qty - 1)
                     }}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
                   >
                     <Minus size={14} />
                   </button>
@@ -193,7 +193,7 @@ export function AddToCartButton({
                       if (digits) setQty(Math.max(1, parseInt(digits, 10)))
                     }}
                     onBlur={() => setQtyValue(Number(qtyDraft) || 1)}
-                    className="w-16 shrink-0 rounded-md border border-[#E5DFD5] bg-white py-1.5 text-center text-lg text-[#1B2430] outline-none focus:border-[#806A50] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    className="w-16 shrink-0 border border-[#E5DFD5] bg-white py-1.5 text-center text-lg text-[#1B2430] outline-none focus:border-[#806A50] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   />
                   <button
                     type="button"
@@ -203,7 +203,7 @@ export function AddToCartButton({
                       event.stopPropagation()
                       setQtyValue(qty + 1)
                     }}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#E5DFD5] text-[#5C6570] hover:bg-[#FAF7F2]"
                   >
                     <Plus size={14} />
                   </button>

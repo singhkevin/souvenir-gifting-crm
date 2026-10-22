@@ -18,6 +18,36 @@ function fileHref(path: string | null) {
   return path
 }
 
+function OrderStatusChip({ status }: { status: string }) {
+  const label = CLIENT_STATUS_LABELS[status] || status
+  if (['delivered', 'fulfilled'].includes(status)) {
+    return (
+      <span className="inline-block border border-[#3A4537] bg-[#DAE6D3] text-[#3A4537] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
+        {label}
+      </span>
+    )
+  }
+  if (['cancelled', 'rejected'].includes(status)) {
+    return (
+      <span className="inline-block border border-[#BA1A1A] bg-[#FFDAD6] text-[#BA1A1A] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
+        {label}
+      </span>
+    )
+  }
+  if (['client_approval', 'production', 'mockup', 'dispatch'].includes(status)) {
+    return (
+      <span className="inline-block border border-[#9E4300] bg-[#FFDBCB]/40 text-[#9E4300] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
+        {label}
+      </span>
+    )
+  }
+  return (
+    <span className="inline-block border border-[#CCC5BD] bg-[#F1EEE7] text-[#1C1C18] px-2.5 py-0.5 text-[10px] uppercase tracking-wider rounded-none">
+      {label}
+    </span>
+  )
+}
+
 export default async function PortalOrderDetailPage({
   params,
   searchParams,
@@ -85,119 +115,176 @@ export default async function PortalOrderDetailPage({
   }))
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <BackButton href="/portal/orders" label="Back to orders" />
+    <div className="max-w-5xl mx-auto space-y-6 min-w-0">
+      <div className="flex items-center justify-between border-b border-[#CCC5BD] pb-4">
+        <BackButton
+          href="/portal/orders"
+          label="Back to orders"
+          className="text-xs uppercase tracking-wider text-[#4A4640] hover:text-[#9E4300]"
+        />
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-xs text-[#7C766F]">{order.order_number}</span>
+          <OrderStatusChip status={order.status} />
+        </div>
+      </div>
+
       {approvalError && (
-        <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700">{approvalError}</p>
+        <p className="border border-[#BA1A1A] bg-[#FFDAD6] px-4 py-3 text-xs text-[#BA1A1A] rounded-none font-medium">
+          {approvalError}
+        </p>
       )}
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between gap-4">
-          <div>
-            <p className="font-mono text-xs text-gray-500">{order.order_number}</p>
-            <h1 className="text-2xl font-bold text-gray-900 mt-1">
-              {campaign?.name || 'My order'}
-            </h1>
-            {campaign?.employee_quantity && (
-              <p className="text-xs text-gray-500 mt-1">{campaign.employee_quantity.toLocaleString('en-IN')} employees</p>
-            )}
-            <p className="text-sm mt-2 font-medium text-[#806A50]">
-              Current status: {CLIENT_STATUS_LABELS[order.status] || order.status}
-            </p>
-            {quotation?.quotation_number && (
-              <p className="text-xs text-gray-500 mt-1">
-                Quote {quotation.quotation_number}
-                {quotation.total != null ? ` · ${formatCurrency(quotation.total)}` : ''}
+      {/* Main Order Container */}
+      <div className="border border-[#CCC5BD] bg-white rounded-none divide-y divide-[#CCC5BD]">
+        {/* Header Summary */}
+        <div className="p-6 bg-[#FCF9F2] space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <div className="min-w-0 space-y-1">
+              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+                Order · {order.order_number}
+              </span>
+              <h1 className="font-serif text-3xl sm:text-4xl text-[#1C1C18] tracking-tight">
+                {campaign?.name || order.order_number}
+              </h1>
+              {campaign?.employee_quantity && (
+                <p className="text-xs text-[#4A4640]">
+                  Recipients: <span className="font-mono font-medium text-[#1C1C18]">{campaign.employee_quantity.toLocaleString('en-IN')} units</span>
+                </p>
+              )}
+              {quotation?.quotation_number && (
+                <p className="text-xs text-[#7C766F]">
+                  Quote:{' '}
+                  <span className="font-mono font-medium text-[#1C1C18]">{quotation.quotation_number}</span>
+                  {quotation.total != null ? ` · ${formatCurrency(quotation.total)}` : ''}
+                </p>
+              )}
+            </div>
+            <div className="sm:text-right shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-[#CCC5BD]">
+              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+                Total Order Value
+              </span>
+              <p className="font-mono text-2xl sm:text-3xl font-bold text-[#1C1C18]">
+                {formatCurrency(order.order_value)}
               </p>
-            )}
+              <p className="font-mono text-xs text-[#7C766F] mt-1">
+                Expected: {formatDate(order.expected_delivery_date)}
+              </p>
+            </div>
           </div>
-          <div className="sm:text-right">
-            <p className="text-[10px] uppercase font-bold text-gray-400">Order value</p>
-            <p className="text-2xl font-bold text-[#806A50]">{formatCurrency(order.order_value)}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Expected delivery: {formatDate(order.expected_delivery_date)}</p>
+
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#CCC5BD] text-xs">
+            <div className="border border-[#CCC5BD] bg-white p-3 rounded-none">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-[#7C766F]">Status</span>
+              <span className="font-mono font-semibold text-[#1C1C18] block mt-0.5">
+                {CLIENT_STATUS_LABELS[order.status] || order.status}
+              </span>
+            </div>
+            <div className="border border-[#CCC5BD] bg-white p-3 rounded-none">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-[#7C766F]">Invoice</span>
+              <span className="font-mono font-semibold text-[#1C1C18] block mt-0.5">
+                {paymentLabel(invoice?.status)}
+              </span>
+            </div>
+            <div className="border border-[#CCC5BD] bg-white p-3 rounded-none">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-[#7C766F]">Created</span>
+              <span className="font-mono text-[#1C1C18] block mt-0.5">
+                {formatDate(order.created_at)}
+              </span>
+            </div>
+            <div className="border border-[#CCC5BD] bg-white p-3 rounded-none">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-[#7C766F]">Dispatch</span>
+              <span className="font-mono text-[#1C1C18] block mt-0.5">
+                {order.dispatch_date ? formatDate(order.dispatch_date) : 'Pending'}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="p-6 border-b space-y-4">
-          <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Timeline</h3>
-          <OrderLifecycleBar status={order.status} variant="client" showActors={false} />
+        {/* Timeline Section */}
+        <div className="p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-[#CCC5BD] pb-2">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
+              Timeline
+            </span>
+            <span className="font-mono text-xs text-[#7C766F]">
+              Current: {CLIENT_STATUS_LABELS[order.status] || order.status}
+            </span>
+          </div>
+          <div className="border border-[#CCC5BD] p-4 bg-[#FCF9F2] rounded-none">
+            <OrderLifecycleBar status={order.status} variant="client" showActors={false} />
+          </div>
         </div>
 
-        <div className="space-y-4 border-b p-6">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">Documents</h3>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-gray-500">Invoices</p>
-            {(invoices || []).length === 0 ? (
-              <p className="text-sm text-gray-500">No invoices for this order yet.</p>
-            ) : (
-              <ul className="space-y-2">
-                {(invoices || []).map((invoice) => (
-                  <li key={invoice.id} className="flex flex-col gap-1 rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="font-mono text-sm font-medium text-gray-900">{invoice.invoice_number}</p>
-                      <p className="text-xs text-gray-500">{formatDate(invoice.invoice_date)} · due {formatDate(invoice.due_date)}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-gray-900">{formatCurrency(invoice.amount)} · <span className="font-medium capitalize">{invoice.status}</span></p>
-                  </li>
-                ))}
-              </ul>
-            )}
+        {/* Dispatch & Courier Information */}
+        {order.tracking_number ? (
+          <div className="p-6 bg-[#DAE6D3]/30 border-b border-[#CCC5BD]">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-none border border-[#3A4537] bg-[#DAE6D3] flex items-center justify-center shrink-0">
+                <Truck size={16} className="text-[#3A4537]" />
+              </div>
+              <div className="text-xs">
+                <p className="font-bold text-[#1C1C18] uppercase tracking-wider text-[11px]">Dispatched</p>
+                <p className="text-[#4A4640] mt-0.5">
+                  Courier:{' '}
+                  <span className="font-medium text-[#1C1C18]">{courier?.name || 'Carrier'}</span>
+                  {' · '}
+                  AWB:{' '}
+                  <span className="font-mono font-bold text-[#1C1C18]">{order.tracking_number}</span>
+                </p>
+              </div>
+            </div>
           </div>
-          {showMockups ? (
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-gray-500">Shared mockups</p>
-            {(mockups || []).length === 0 ? (
-              <p className="text-sm text-gray-500">No mockups shared yet.</p>
-            ) : (
-              <ul className="space-y-2">
-                {(mockups || []).map((mockup) => {
-                  const href = fileHref(mockup.storage_path)
-                  return (
-                    <li key={mockup.id} className="flex flex-col gap-2 rounded-xl border border-[#E8E4DE] bg-[#FAF7F2] p-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{mockup.file_name || 'Mockup'}</p>
-                        <p className="text-xs text-gray-500">{mockup.mime_type} · {formatDate(mockup.created_at)}</p>
-                      </div>
-                      {href ? (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-3 text-xs font-semibold text-[#806A50]"
-                        >
-                          Open
-                        </a>
-                      ) : null}
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </div>
-          ) : null}
-        </div>
+        ) : null}
 
+        {/* Client approval Box (If Active) */}
         {order.status === 'client_approval' && (
-          <div className="space-y-3 border-b p-6">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">Client approval</h3>
-            {order.client_approval_status === 'approved' ? (
-              <p className="text-sm text-emerald-800">
-                You approved this order{order.client_approval_note ? `: ${order.client_approval_note}` : '.'} Production can start once the team advances it.
-              </p>
-            ) : (
-              <p className="text-sm text-gray-600">Review the shared mockup, then approve it or ask for changes.</p>
-            )}
-            <ActionForm action={decideOrderApproval} className="space-y-3">
+          <div className="p-6 space-y-4 bg-[#FFDBCB]/20 border-l-4 border-l-[#9E4300]">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
+                Action needed · Mockup approval
+              </span>
+              <h2 className="font-serif text-2xl text-[#1C1C18] mt-1">Client approval</h2>
+              {order.client_approval_status === 'approved' ? (
+                <p className="text-sm text-[#3A4537] mt-1 font-medium">
+                  You approved this order{order.client_approval_note ? `: ${order.client_approval_note}` : '.'} Production can start once the team advances it.
+                </p>
+              ) : (
+                <p className="text-sm text-[#4A4640] mt-1">
+                  Review the shared mockup, then approve it or ask for changes.
+                </p>
+              )}
+            </div>
+
+            <ActionForm action={decideOrderApproval} className="space-y-4">
               <input type="hidden" name="order_id" value={order.id} />
-              <label className="block space-y-1 text-xs text-gray-500">
-                Note (optional)
-                <textarea name="note" rows={3} maxLength={2000} className="w-full rounded-lg border px-3 py-2 text-sm text-gray-900" placeholder="Anything the team should know" />
-              </label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <SubmitButton name="decision" value="approved" className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[#806A50] px-4 text-xs font-semibold text-white" pendingLabel="Approving…">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">
+                  Note (optional)
+                </label>
+                <textarea
+                  name="note"
+                  rows={3}
+                  maxLength={2000}
+                  className="w-full bg-[#F1EEE7] border border-[#CCC5BD] p-3 text-sm text-[#1C1C18] rounded-none focus:border-[#1C1B1A] focus:outline-none placeholder:text-[#7C766F]"
+                  placeholder="Anything the team should know"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <SubmitButton
+                  name="decision"
+                  value="approved"
+                  className="inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] bg-[#1C1B1A] hover:bg-[#9E4300] text-white rounded-none transition-colors"
+                  pendingLabel="Approving…"
+                >
                   Approve
                 </SubmitButton>
-                <SubmitButton name="decision" value="changes_requested" className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#E5DFD5] bg-white px-4 text-xs font-semibold text-[#806A50]" pendingLabel="Saving…">
+                <SubmitButton
+                  name="decision"
+                  value="changes_requested"
+                  className="inline-flex min-h-11 items-center justify-center px-6 py-2.5 text-xs font-bold uppercase tracking-[0.12em] border border-[#1C1B1A] text-[#1C1B1A] bg-transparent hover:bg-[#F6F3EC] rounded-none transition-colors"
+                  pendingLabel="Saving…"
+                >
                   Request changes
                 </SubmitButton>
               </div>
@@ -205,73 +292,168 @@ export default async function PortalOrderDetailPage({
           </div>
         )}
 
+        {/* Changes requested Banner */}
         {order.status === 'mockup' && order.client_approval_status === 'changes_requested' && (
-          <div className="border-b px-6 py-4">
-            <p className="text-sm text-amber-900">
-              You asked for changes{order.client_approval_note ? `: ${order.client_approval_note}` : '.'} The team will share an updated mockup.
+          <div className="p-4 bg-[#FFDBCB]/30 border-l-4 border-l-[#9E4300] text-sm text-[#1C1C18]">
+            <span className="font-bold uppercase tracking-wider text-[11px] text-[#9E4300] block mb-1">
+              Changes requested
+            </span>
+            <p>
+              You asked for changes{order.client_approval_note ? `: "${order.client_approval_note}"` : '.'} The team will share an updated mockup.
             </p>
           </div>
         )}
 
-        <div className="px-6 pb-4 space-y-2 text-xs text-gray-600">
-          <p>Invoice: {paymentLabel(invoice?.status)}</p>
-          {order.dispatch_date ? <p>Dispatched {formatDate(order.dispatch_date)}</p> : null}
-          {order.tracking_number ? (
-            <div className="bg-emerald-50 p-4 rounded-xl flex items-center gap-3 text-xs text-gray-800">
-              <Truck size={16} />
-              <div>
-                Dispatched via {courier?.name || 'courier'} · AWB {order.tracking_number}
-              </div>
+        {/* Documents Section: Invoices & Mockups */}
+        <div className="p-6 space-y-6">
+          <div className="border-b border-[#CCC5BD] pb-2 flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+              Documents
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Invoices */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#1C1C18]">Invoices</h3>
+              {(invoices || []).length === 0 ? (
+                <div className="border border-[#CCC5BD] bg-[#F6F3EC] p-4 text-xs text-[#7C766F] rounded-none">
+                  No invoices for this order yet.
+                </div>
+              ) : (
+                <ul className="border border-[#CCC5BD] bg-white rounded-none divide-y divide-[#CCC5BD]">
+                  {(invoices || []).map((inv) => (
+                    <li key={inv.id} className="p-3 flex items-center justify-between text-xs hover:bg-[#F6F3EC] transition-colors">
+                      <div>
+                        <p className="font-mono font-semibold text-[#1C1C18]">{inv.invoice_number}</p>
+                        <p className="font-mono text-[11px] text-[#7C766F]">
+                          {formatDate(inv.invoice_date)} · due {formatDate(inv.due_date)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-mono font-semibold text-[#1C1C18]">{formatCurrency(inv.amount)}</p>
+                        <p className="text-[10px] uppercase text-[#7C766F]">{inv.status}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          ) : (
-            <p>Tracking: not available yet</p>
-          )}
+
+            {/* Shared mockups */}
+            {showMockups ? (
+              <div className="space-y-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#1C1C18]">Shared mockups</h3>
+                {(mockups || []).length === 0 ? (
+                  <div className="border border-[#CCC5BD] bg-[#F6F3EC] p-4 text-xs text-[#7C766F] rounded-none">
+                    No mockups shared yet.
+                  </div>
+                ) : (
+                  <ul className="border border-[#CCC5BD] bg-white rounded-none divide-y divide-[#CCC5BD]">
+                    {(mockups || []).map((mockup) => {
+                      const href = fileHref(mockup.storage_path)
+                      return (
+                        <li key={mockup.id} className="p-3 flex items-center justify-between text-xs hover:bg-[#F6F3EC] transition-colors">
+                          <div className="min-w-0 pr-2">
+                            <p className="font-medium text-[#1C1C18] truncate">{mockup.file_name || 'Mockup'}</p>
+                            <p className="font-mono text-[11px] text-[#7C766F]">
+                              {mockup.mime_type} · {formatDate(mockup.created_at)}
+                            </p>
+                          </div>
+                          {href ? (
+                            <a
+                              href={href}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center justify-center px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] border border-[#CCC5BD] bg-[#FCF9F2] text-[#1C1C18] hover:bg-[#1C1B1A] hover:text-white transition-colors rounded-none shrink-0"
+                            >
+                              Open
+                            </a>
+                          ) : null}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        <div className="p-6">
-          <h3 className="text-xs font-bold uppercase mb-3">Items</h3>
-          <table className="w-full text-xs">
-            <thead><tr className="text-left text-gray-500">
-              <th className="py-2">Product</th><th>Qty</th><th className="text-right">Unit</th><th className="text-right">Amount</th>
-            </tr></thead>
-            <tbody>
-              {items.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-8 text-center text-gray-500">No products on this order yet.</td>
+        {/* Consignment Items Table */}
+        <div className="p-6 space-y-4">
+          <div className="border-b border-[#CCC5BD] pb-2 flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+              Items ({items.length})
+            </span>
+          </div>
+
+          <div className="border border-[#CCC5BD] bg-white rounded-none overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs min-w-[560px]">
+              <thead>
+                <tr className="border-b border-[#CCC5BD] bg-[#F6F3EC] text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
+                  <th className="py-3 px-4">Product</th>
+                  <th className="py-3 px-4 text-right">Units</th>
+                  <th className="py-3 px-4 text-right">Unit</th>
+                  <th className="py-3 px-4 text-right">Amount</th>
                 </tr>
-              ) : (
-                items.map((item) => {
-                  const name = item.product?.name || item.description || 'Product'
-                  const canOpen = Boolean(item.product?.id && item.product.status === 'active')
-                  return (
-                  <tr key={item.id} className="border-t">
-                    <td className="py-2">
-                      <div className="flex items-center gap-2">
-                        <ProductImage src={item.product?.image_url} alt={name} size="xs" className="rounded" />
-                        <div>
-                          {canOpen ? (
-                            <Link
-                              href={`/portal/gifts/${item.product!.id}`}
-                              className="font-medium text-gray-900 hover:text-[#806A50] hover:underline"
-                            >
-                              {name}
-                            </Link>
-                          ) : (
-                            <p>{name}</p>
-                          )}
-                          {item.product?.sku ? <p className="font-mono text-[10px] text-gray-400">{item.product.sku}</p> : null}
-                        </div>
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-[#CCC5BD]">
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-xs text-[#7C766F] bg-[#FCF9F2]">
+                      No products on this order yet.
                     </td>
-                    <td>{item.quantity}</td>
-                    <td className="text-right">{formatCurrency(item.unit_price)}</td>
-                    <td className="text-right">{formatCurrency(item.line_total ?? item.unit_price)}</td>
                   </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  items.map((item) => {
+                    const name = item.product?.name || item.description || 'Product'
+                    const canOpen = Boolean(item.product?.id && item.product.status === 'active')
+                    return (
+                      <tr key={item.id} className="hover:bg-[#F6F3EC] transition-colors">
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <ProductImage
+                              src={item.product?.image_url}
+                              alt={name}
+                              size="xs"
+                              className="rounded-none border border-[#CCC5BD] shrink-0"
+                            />
+                            <div className="min-w-0">
+                              {canOpen ? (
+                                <Link
+                                  href={`/portal/gifts/${item.product!.id}`}
+                                  className="font-medium text-[#1C1C18] hover:text-[#9E4300] transition-colors"
+                                >
+                                  {name}
+                                </Link>
+                              ) : (
+                                <p className="font-medium text-[#1C1C18]">{name}</p>
+                              )}
+                              {item.product?.sku && (
+                                <p className="font-mono text-[10px] text-[#7C766F] mt-0.5">
+                                  SKU: {item.product.sku}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono text-[#1C1C18]">
+                          {item.quantity}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono text-[#4A4640]">
+                          {formatCurrency(item.unit_price)}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-semibold text-[#1C1C18]">
+                          {formatCurrency(item.line_total ?? item.unit_price)}
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

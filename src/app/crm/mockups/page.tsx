@@ -50,9 +50,9 @@ export default async function MockupsPage() {
         <p className="text-xs text-[#7A7267] mt-1">Attach mockup files to a requirement or order. Shared mockups are visible in the client portal.</p>
       </div>
 
-      <ActionForm action={registerMockup} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3" resetOnSuccess>
-        <input name="file_url" required placeholder="File URL" className="rounded-lg border px-2 py-2" />
-        <input name="file_name" placeholder="File name" className="rounded-lg border px-2 py-2" />
+      <ActionForm action={registerMockup} className="grid gap-3 border bg-white p-4 text-xs md:grid-cols-3" resetOnSuccess>
+        <input name="file_url" required placeholder="File URL" className="border px-2 py-2" />
+        <input name="file_name" placeholder="File name" className="border px-2 py-2" />
         <MobileSheetSelect
           name="mime_type"
           label="File type"
@@ -93,10 +93,10 @@ export default async function MockupsPage() {
             { value: 'client', label: 'Share with client' },
           ]}
         />
-        <SubmitButton className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] md:col-span-3" pendingLabel="Registering…">Register mockup</SubmitButton>
+        <SubmitButton className="bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] md:col-span-3" pendingLabel="Registering…">Register mockup</SubmitButton>
       </ActionForm>
 
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="bg-white border overflow-hidden">
         {mockupRows.length > 0 ? (
           <table className="w-full text-left">
             <thead>
@@ -155,7 +155,7 @@ export default async function MockupsPage() {
                             { value: 'rejected', label: 'Rejected' },
                           ]}
                         />
-                        <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
+                        <SubmitButton className="inline-flex min-h-9 items-center justify-center bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
                       </ActionForm>
                       <ConfirmAction
                         title="Delete mockup?"

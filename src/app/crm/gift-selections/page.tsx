@@ -34,16 +34,16 @@ export default async function GiftSelectionsPage() {
           <h1 className="text-2xl font-bold text-[var(--color-primary)]">Gift selection</h1>
           <p className="mt-1 text-sm text-gray-500">Employees on the company portal choose one shortlisted gift.</p>
         </div>
-        <Link href="/crm/gift-selections/new" className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white">
+        <Link href="/crm/gift-selections/new" className="bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white">
           New gift selection
         </Link>
       </div>
       {error ? (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <p className="border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           Gift selection tables are not available yet. Apply the migration, then refresh.
         </p>
       ) : null}
-      <div className="overflow-hidden rounded-lg border bg-white">
+      <div className="overflow-hidden border bg-white">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>

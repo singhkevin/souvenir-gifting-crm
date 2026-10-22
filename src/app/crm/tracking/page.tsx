@@ -76,7 +76,7 @@ export default async function AdminTrackingPage() {
         <Stat href="/crm/tasks" label="Overdue tasks" value={overdueTasks.length} />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white border border-gray-200 overflow-hidden">
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <h2 className="font-bold text-sm">Orders</h2>
           <Link href="/crm/order-management" className="text-xs text-[#624B32] font-semibold">Order management</Link>
@@ -106,7 +106,7 @@ export default async function AdminTrackingPage() {
                   <td className="px-4 py-2">{assignee?.full_name || 'Unassigned'}</td>
                   <td className="px-4 py-2">{ORDER_STATUS_LABELS[order.status] || order.status}</td>
                   <td className="px-4 py-2">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${HEALTH_STYLES[health]}`}>
+                    <span className={`px-2 py-0.5 text-[10px] font-semibold ${HEALTH_STYLES[health]}`}>
                       {HEALTH_LABELS[health]}
                     </span>
                   </td>
@@ -121,7 +121,7 @@ export default async function AdminTrackingPage() {
         </table>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white border border-gray-200 overflow-hidden">
         <div className="px-4 py-3 border-b flex items-center justify-between">
           <h2 className="font-bold text-sm">Tasks</h2>
           <Link href="/crm/tasks?tab=all_tasks" className="text-xs text-[#624B32] font-semibold">All tasks</Link>
@@ -162,7 +162,7 @@ export default async function AdminTrackingPage() {
                           label: member.full_name || 'Unnamed',
                         }))}
                       />
-                      <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
+                      <SubmitButton className="inline-flex min-h-9 items-center justify-center bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save</SubmitButton>
                     </ActionForm>
                     ) : (
                       assignee?.full_name || 'Unassigned'
@@ -180,12 +180,12 @@ export default async function AdminTrackingPage() {
                         defaultValue={task.status || 'open'}
                         options={TASK_STATUS_OPTIONS}
                       />
-                      <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Updating…">Update</SubmitButton>
+                      <SubmitButton className="inline-flex min-h-9 items-center justify-center bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Updating…">Update</SubmitButton>
                     </ActionForm>
                     {task.status !== 'done' && (
                       <ActionForm action={completeTask}>
                         <input type="hidden" name="id" value={task.id} />
-                        <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]" pendingLabel="Completing…">Complete</SubmitButton>
+                        <SubmitButton className="inline-flex min-h-9 items-center justify-center border border-[#806A50] px-3 text-xs font-semibold text-[#806A50] hover:bg-[#F4EFE6]" pendingLabel="Completing…">Complete</SubmitButton>
                       </ActionForm>
                     )}
                     </>
@@ -203,7 +203,7 @@ export default async function AdminTrackingPage() {
         </table>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white border border-gray-200 overflow-hidden">
         <div className="px-4 py-3 border-b">
           <h2 className="font-bold text-sm">Stage assignments</h2>
         </div>
@@ -242,11 +242,11 @@ export default async function AdminTrackingPage() {
         </table>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white border border-gray-200 p-4">
         <h2 className="font-bold text-sm mb-3">Employees</h2>
         <div className="flex flex-wrap gap-2">
           {(staff || []).map((member) => (
-            <span key={member.id} className="px-2.5 py-1 rounded-full bg-gray-50 border text-xs">
+            <span key={member.id} className="px-2.5 py-1 bg-gray-50 border text-xs">
               {member.full_name} <span className="text-gray-400 capitalize">{member.role}</span>
             </span>
           ))}
@@ -259,7 +259,7 @@ export default async function AdminTrackingPage() {
 
 function Stat({ href, label, value }: { href: string; label: string; value: number }) {
   return (
-    <Link href={href} className="bg-white border border-gray-200 rounded-xl px-3 py-3 hover:border-[#624B32]">
+    <Link href={href} className="bg-white border border-gray-200 px-3 py-3 hover:border-[#624B32]">
       <p className="text-[10px] uppercase font-semibold text-gray-400">{label}</p>
       <p className="text-xl font-bold text-gray-900">{value}</p>
     </Link>

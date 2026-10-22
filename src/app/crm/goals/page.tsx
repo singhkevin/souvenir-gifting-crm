@@ -83,8 +83,8 @@ export default async function GoalsPage() {
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Goal Tracker</h1>
 
       {(profile.role === 'admin' || profile.role === 'management') && (
-      <ActionForm action={createGoal} className="grid gap-3 rounded-2xl border bg-white p-4 text-xs md:grid-cols-3" resetOnSuccess>
-        <input name="title" required placeholder="Goal title" className="rounded-lg border px-2 py-2" />
+      <ActionForm action={createGoal} className="grid gap-3 border bg-white p-4 text-xs md:grid-cols-3" resetOnSuccess>
+        <input name="title" required placeholder="Goal title" className="border px-2 py-2" />
         <MobileSheetSelect
           name="metric"
           label="Metric"
@@ -94,7 +94,7 @@ export default async function GoalsPage() {
             { value: 'orders', label: 'Orders' },
           ]}
         />
-        <input name="target" type="number" min="1" required placeholder="Target" className="rounded-lg border px-2 py-2" />
+        <input name="target" type="number" min="1" required placeholder="Target" className="border px-2 py-2" />
         <MobileSheetSelect
           name="period_type"
           label="Period"
@@ -115,7 +115,7 @@ export default async function GoalsPage() {
             ...teamRows.map((p: TeamMember) => ({ value: p.id, label: p.full_name ?? '' })),
           ]}
         />
-        <SubmitButton className="rounded-lg bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] hover:text-[#FFFFFF] md:col-span-3" pendingLabel="Adding…">Add goal</SubmitButton>
+        <SubmitButton className="bg-[#806A50] py-2.5 font-semibold text-[#FFFFFF] hover:text-[#FFFFFF] md:col-span-3" pendingLabel="Adding…">Add goal</SubmitButton>
       </ActionForm>
       )}
 
@@ -123,7 +123,7 @@ export default async function GoalsPage() {
         {goalsWithProgress?.map((goal) => {
           const owner = Array.isArray(goal.owner) ? goal.owner[0] : goal.owner
           return (
-            <div key={goal.id} className="bg-white p-6 rounded-lg border">
+            <div key={goal.id} className="bg-white p-6 border">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h2 className="text-lg font-semibold">{goal.title}</h2>
@@ -131,14 +131,14 @@ export default async function GoalsPage() {
                     {owner?.full_name || 'Company wide'} · {goal.period_type} from {formatDate(goal.period_start)}
                   </p>
                 </div>
-                <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium uppercase">{goal.metric}</span>
+                <span className="px-2 py-1 bg-gray-100 text-xs font-medium uppercase">{goal.metric}</span>
               </div>
               {(profile.role === 'admin' || profile.role === 'management') && (
                 <div className="mb-4 space-y-2 text-xs">
                   <ActionForm action={updateGoal} className="grid md:grid-cols-2 gap-2">
                     <input type="hidden" name="id" value={goal.id} />
-                    <input name="title" defaultValue={goal.title} required className="border rounded-lg px-2 py-1" />
-                    <input name="target" type="number" min="1" defaultValue={goal.target ?? ''} required className="border rounded-lg px-2 py-1" />
+                    <input name="title" defaultValue={goal.title} required className="border px-2 py-1" />
+                    <input name="target" type="number" min="1" defaultValue={goal.target ?? ''} required className="border px-2 py-1" />
                     <MobileSheetSelect
                       name="metric"
                       label="Metric"
@@ -169,7 +169,7 @@ export default async function GoalsPage() {
                         ...teamRows.map((p: TeamMember) => ({ value: p.id, label: p.full_name ?? '' })),
                       ]}
                     />
-                    <SubmitButton className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save goal</SubmitButton>
+                    <SubmitButton className="inline-flex min-h-9 items-center justify-center bg-[#806A50] px-3 text-xs font-semibold text-[#FFFFFF] hover:bg-[#9C8567] hover:text-[#FFFFFF]" pendingLabel="Saving…">Save goal</SubmitButton>
                   </ActionForm>
                   <ConfirmAction
                     title="Delete goal?"
@@ -186,8 +186,8 @@ export default async function GoalsPage() {
                 <span>Progress</span>
                 <span>{goal.progress.toFixed(1)}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                <div className={`h-2.5 rounded-full ${goal.progress >= 100 ? 'bg-green-500' : goal.progress >= 70 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${goal.progress}%` }} />
+              <div className="w-full bg-gray-200 h-2.5 mb-4">
+                <div className={`h-2.5 ${goal.progress >= 100 ? 'bg-green-500' : goal.progress >= 70 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${goal.progress}%` }} />
               </div>
               <div className="flex justify-between text-sm">
                 <div>

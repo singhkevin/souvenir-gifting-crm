@@ -39,15 +39,15 @@ export function ProductImageField() {
     <div className="space-y-2">
       <label className="block text-xs font-semibold text-gray-700">Product photo</label>
       <div className="flex flex-col sm:flex-row gap-4 items-start">
-        <div className="w-36 h-36 rounded-xl overflow-hidden border border-gray-200 bg-[#FAF7F2] flex-shrink-0">
-          <ProductImage src={preview} alt={fileName || 'Product photo preview'} size="lg" className="w-full h-full rounded-xl" />
+        <div className="w-36 h-36 overflow-hidden border border-gray-200 bg-[#FAF7F2] flex-shrink-0">
+          <ProductImage src={preview} alt={fileName || 'Product photo preview'} size="lg" className="w-full h-full" />
         </div>
         <div className="space-y-2">
           <input
             type="file"
             name="image"
             accept="image/png,image/jpeg,image/webp"
-            className="text-xs file:mr-2 file:px-3 file:py-1.5 file:rounded-md file:border file:border-gray-200 file:bg-white file:text-xs"
+            className="text-xs file:mr-2 file:px-3 file:py-1.5 file:border file:border-gray-200 file:bg-white file:text-xs"
             onChange={(e) => onChange(e.target.files?.[0] || null)}
           />
           <p className="text-[11px] text-gray-500">

@@ -18,16 +18,16 @@ export default async function PresentationsPage() {
           <h1 className="text-2xl font-semibold text-gray-900">Presentations</h1>
           <p className="mt-1 text-sm text-gray-500">A deck of products and combos, with a PDF and a public link.</p>
         </div>
-        <Link href="/crm/presentations/new" className="rounded-lg bg-[#241C12] px-4 py-2 text-sm font-semibold text-white">
+        <Link href="/crm/presentations/new" className="bg-[#241C12] px-4 py-2 text-sm font-semibold text-white">
           New presentation
         </Link>
       </div>
       {error ? (
-        <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <p className="border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           Apply the presentations migration before using this page.
         </p>
       ) : null}
-      <div className="divide-y rounded-xl border bg-white">
+      <div className="divide-y border bg-white">
         {(data || []).length === 0 && !error ? (
           <p className="p-4 text-sm text-gray-500">No presentations yet.</p>
         ) : null}

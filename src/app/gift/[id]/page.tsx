@@ -32,11 +32,11 @@ export default async function GiftChoicePage({ params }: { params: Promise<{ id:
 
   if (submission) {
     return (
-      <div className="space-y-4 rounded-2xl border border-[#E8E4DE] bg-white p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#806A50]">Locked</p>
-        <h1 className="font-serif text-3xl">{selection.name}</h1>
-        <p className="text-sm text-[#5C6570]">Your choice is saved and cannot be edited.</p>
-        <dl className="space-y-2 text-sm">
+      <div className="space-y-4 border border-[#CCC5BD] bg-[#FCF9F2] p-6">
+        <p className="font-sans text-xs font-semibold uppercase tracking-wider text-[#9E4300]">Locked Choice</p>
+        <h1 className="font-serif text-3xl text-[#1C1B1A]">{selection.name}</h1>
+        <p className="text-sm text-[#4A4640]">Your choice is saved and cannot be edited.</p>
+        <dl className="space-y-2 border-t border-[#CCC5BD] pt-4 font-mono text-xs text-[#4A4640]">
           <Line label="Gift" value={submission.selected_label} />
           <Line label="Size" value={submission.size || '—'} />
           <Line label="Name" value={submission.employee_name} />
@@ -46,14 +46,18 @@ export default async function GiftChoicePage({ params }: { params: Promise<{ id:
           <Line label="State" value={submission.state} />
           <Line label="PIN" value={submission.pin} />
         </dl>
-        <Link href="/gift" className="inline-block text-sm text-[#806A50]">Back</Link>
+        <div className="pt-2">
+          <Link href="/gift" className="inline-block font-sans text-xs font-semibold uppercase tracking-wider text-[#9E4300] hover:underline">
+            &larr; Back to gifts
+          </Link>
+        </div>
       </div>
     )
   }
 
   if (!giftWindowOpen(selection.opens_at, selection.closes_at)) {
     return (
-      <div className="rounded-2xl border border-[#E8E4DE] bg-white p-5">
+      <div className="border border-[#E8E4DE] bg-white p-5">
         <h1 className="font-serif text-3xl">{selection.name}</h1>
         <p className="mt-2 text-sm text-[#5C6570]">This gift selection is closed.</p>
       </div>

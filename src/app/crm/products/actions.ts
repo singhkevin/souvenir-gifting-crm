@@ -11,6 +11,15 @@ import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 import { withIdempotency } from '@/lib/idempotency'
 import { canonicalCategoryLabel, findCategory } from '@/lib/products/category-plan'
+import { legacyPriceForInsert, resolveCost } from '@/lib/products/cost-price'
+import { parseCostSource } from '@/lib/pricing/cost-basis'
+import {
+  CHANNEL_MIGRATION,
+  channelColumnsMissing,
+  legacyChannelDefault,
+  legacyVisibilityLabel,
+  parseCorporateAccess,
+} from '@/lib/products/channel-visibility'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const VISIBILITY_ROLES = ['admin'] as const
@@ -48,9 +57,10 @@ async function createProductOnce(formData: FormData) {
   const brand_id = (formData.get('brand_id') as string) || null
   const supplier_id = (formData.get('supplier_id') as string) || null
   const description = (formData.get('description') as string) || null
-  const price = parseFloat(formData.get('price') as string) || 0
-  const supplier_cost = formData.get('supplier_cost') ? parseFloat(formData.get('supplier_cost') as string) : null
-  const internal_margin = formData.get('internal_margin') ? parseFloat(formData.get('internal_margin') as string) : null
+  // One number per product: the cost (supplier) price. Selling prices are calculated
+  // from the effective cost in Pricing; there is no retail override.
+  const priced = resolveCost(formData.get('supplier_cost'))
+  const costSource = parseCostSource(formData.get('cost_source'))
   const moq = parseInt(formData.get('moq') as string, 10) || 1
   const fulfillment_mode = parseFulfillmentMode(formData.get('fulfillment_mode'))
   const stockRaw = String(formData.get('stock_qty') ?? '').trim()
@@ -68,6 +78,11 @@ async function createProductOnce(formData: FormData) {
       (profile.role === 'admin' ? (formData.getAll('company_ids') as string[]) : []).filter(Boolean)
     ),
   ]
+  // Retail and Business are independent of corporate visibility. Only admin sees the
+  // switches; everyone else creates a product on every channel, as before.
+  const channelForm = profile.role === 'admin' && formData.has('channel_present')
+  const show_in_store = channelForm ? formData.get('show_in_store') === 'on' : true
+  const show_in_business = channelForm ? formData.get('show_in_business') === 'on' : true
 
   if (!name) {
     return { error: 'Product name is required' }
@@ -78,6 +93,13 @@ async function createProductOnce(formData: FormData) {
   if (!category_id) {
     return { error: 'Please select a category' }
   }
+  if (!priced.ok) {
+    return { error: priced.error }
+  }
+  if (!costSource.ok) return { error: costSource.error }
+  // Frozen legacy column (NOT NULL until 20261022_pricing_cost_basis.sql); nothing prices from it.
+  const price = legacyPriceForInsert(priced.cost)
+  const supplier_cost = priced.cost
   if (image_url && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\b/i.test(image_url)) {
     return { error: 'Image URLs cannot point to localhost. Upload a product photo instead.' }
   }
@@ -115,8 +137,21 @@ async function createProductOnce(formData: FormData) {
     status,
     catalogue_access,
     visibility: catalogue_access === 'all' ? 'catalogue' : (catalogue_access === 'selected' ? 'selected_companies' : 'internal_only'),
+    show_in_store,
+    show_in_business,
   }
   let inserted = await supabase.from('products').insert(insertRow).select('id').single()
+  if (inserted.error && channelColumnsMissing(inserted.error.message)) {
+    const legacy = legacyChannelDefault(catalogue_access)
+    if (show_in_store !== legacy || show_in_business !== legacy) {
+      return {
+        error: `Separate Retail and Business switches need ${CHANNEL_MIGRATION}. Until it is applied, Retail and Business follow "All companies".`,
+      }
+    }
+    delete insertRow.show_in_store
+    delete insertRow.show_in_business
+    inserted = await supabase.from('products').insert(insertRow).select('id').single()
+  }
   if (inserted.error && /sample_only/i.test(inserted.error.message)) {
     delete insertRow.sample_only
     inserted = await supabase.from('products').insert(insertRow).select('id').single()
@@ -129,10 +164,10 @@ async function createProductOnce(formData: FormData) {
     return { error: directOrderSchemaHint(error?.message || 'Product was not saved') }
   }
 
-  if (supplier_cost != null || internal_margin != null) {
+  {
     const { error: costError } = await upsertProductCost(supabase, product.id, {
       supplier_cost,
-      internal_margin,
+      ...(costSource.value !== 'portal_default' ? { cost_source: costSource.value } : {}),
     })
     if (costError) {
       await supabase.from('products').delete().eq('id', product.id)
@@ -140,7 +175,7 @@ async function createProductOnce(formData: FormData) {
     }
   }
 
-  if (supplier_id && supplier_cost != null) {
+  if (supplier_id) {
     const leadRaw = String(formData.get('lead_time_days') || '').trim()
     const lead = leadRaw ? Number(leadRaw) : null
     const { error: offerError } = await supabase.from('product_supplier_offers').insert({
@@ -262,25 +297,19 @@ export async function updateProduct(productId: string, formData: FormData) {
   text('subcategory_id')
   text('supplier_id')
   text('hsn_code')
-  number('price', 'price', 0)
   number('moq', 'moq', 1)
-  const costPatch: { supplier_cost?: number | null; internal_margin?: number | null } = {}
-  const readCost = (key: 'supplier_cost' | 'internal_margin', label: string) => {
-    if (!formData.has(key)) return null
-    const raw = String(formData.get(key) ?? '').trim()
-    if (!raw) {
-      costPatch[key] = null
-      return null
-    }
-    const parsed = Number(raw)
-    if (!Number.isFinite(parsed)) return `${label} must be a number`
-    costPatch[key] = parsed
-    return null
+  const costPatch: { supplier_cost?: number | null; cost_source?: 'portal_default' | 'manual' | 'preferred' | 'lowest' } = {}
+  if (formData.has('supplier_cost')) {
+    // Cost price is the one price staff enter. products.price is frozen and never written here.
+    const priced = resolveCost(formData.get('supplier_cost'))
+    if (!priced.ok) return { error: priced.error }
+    costPatch.supplier_cost = priced.cost
   }
-  const supplierCostError = readCost('supplier_cost', 'Supplier cost')
-  if (supplierCostError) return { error: supplierCostError }
-  const marginError = readCost('internal_margin', 'Product margin')
-  if (marginError) return { error: marginError }
+  if (formData.has('cost_source')) {
+    const source = parseCostSource(formData.get('cost_source'))
+    if (!source.ok) return { error: source.error }
+    costPatch.cost_source = source.value
+  }
   if (formData.has('stock_qty')) {
     const raw = String(formData.get('stock_qty') ?? '').trim()
     const stock = raw ? Number(raw) : 0
@@ -335,9 +364,16 @@ export async function updateProduct(productId: string, formData: FormData) {
     return { error: directOrderSchemaHint(error.message) }
   }
 
-  if (formData.has('supplier_cost') || formData.has('internal_margin')) {
-    const { error: costError } = await upsertProductCost(supabase, productId, costPatch)
-    if (costError) return { error: supplierSchemaHint(costError.message) }
+  if (Object.keys(costPatch).length > 0) {
+    let { error: costError } = await upsertProductCost(supabase, productId, costPatch)
+    // Before the cost-basis migration there is no cost_source column; portal default (manual) is the only behaviour then.
+    if (costError && /cost_source/i.test(costError.message) && costPatch.cost_source === 'portal_default') {
+      delete costPatch.cost_source
+      costError = Object.keys(costPatch).length ? (await upsertProductCost(supabase, productId, costPatch)).error : null
+    }
+    if (costError) {
+      return { error: /cost_source/i.test(costError.message) ? 'Cost source needs supabase/migrations/20261022_pricing_cost_basis.sql' : supplierSchemaHint(costError.message) }
+    }
   }
 
   if (update.status && update.status !== 'active') {
@@ -466,52 +502,82 @@ export async function removeProductImage(formData: FormData) {
   return { success: true }
 }
 
-export async function saveCatalogueVisibility(productId: string, mode: string, companyIds: string[]) {
+export type ChannelVisibilityInput = {
+  store: boolean
+  business: boolean
+  corporate: string
+  companyIds: string[]
+}
+
+/**
+ * Saves the three independent channel switches: retail store, business portal and
+ * corporate visibility (all / selected / none). Corporate never decides retail.
+ */
+export async function saveChannelVisibility(productId: string, input: ChannelVisibilityInput) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!VISIBILITY_ROLES.includes(profile.role as (typeof VISIBILITY_ROLES)[number])) {
-    return { error: 'Not permitted to change catalogue visibility' }
+    return { error: 'Only admin can change product visibility' }
   }
-  if (!['all', 'selected', 'none'].includes(mode)) {
-    return { error: 'Unable to update catalogue visibility. Please try again.' }
+  if (!isUuid(productId)) return { error: 'Product not found' }
+  const mode = parseCorporateAccess(input?.corporate)
+  if (!mode) return { error: 'Choose a corporate visibility option' }
+  const companyIds = [...new Set((input.companyIds || []).filter((id) => isUuid(id)))]
+  if (mode === 'selected' && companyIds.length === 0) {
+    return { error: 'Select at least one company for corporate visibility' }
   }
-  if (mode === 'selected' && (!companyIds || companyIds.length === 0)) {
-    return { error: 'Unable to update catalogue visibility. Please try again.' }
-  }
+  const store = Boolean(input.store)
+  const business = Boolean(input.business)
 
   const supabase = await createClient()
-  const visibility =
-    mode === 'all' ? 'catalogue' : mode === 'selected' ? 'selected_companies' : 'internal_only'
-
-  const { error: updateError } = await supabase
+  const base = { catalogue_access: mode, visibility: legacyVisibilityLabel(mode) }
+  let { error: updateError } = await supabase
     .from('products')
-    .update({ catalogue_access: mode, visibility })
+    .update({ ...base, show_in_store: store, show_in_business: business })
     .eq('id', productId)
-  if (updateError) return { error: 'Unable to update catalogue visibility. Please try again.' }
+  if (updateError && channelColumnsMissing(updateError.message)) {
+    // Before the migration retail and business follow corporate "All companies".
+    const legacy = legacyChannelDefault(mode)
+    if (store !== legacy || business !== legacy) {
+      return {
+        error: `Separate Retail and Business switches need ${CHANNEL_MIGRATION}. Until it is applied, Retail and Business follow "All companies".`,
+      }
+    }
+    ;({ error: updateError } = await supabase.from('products').update(base).eq('id', productId))
+  }
+  if (updateError) return { error: 'Unable to update product visibility. Please try again.' }
 
   const { error: clearError } = await supabase
     .from('company_product_access')
     .delete()
     .eq('product_id', productId)
-  if (clearError) return { error: 'Unable to update catalogue visibility. Please try again.' }
+  if (clearError) return { error: 'Unable to update product visibility. Please try again.' }
 
   if (mode === 'selected') {
-    const rows = [...new Set(companyIds)].map((company_id) => ({ product_id: productId, company_id }))
+    const rows = companyIds.map((company_id) => ({ product_id: productId, company_id }))
     const { error: insertError } = await supabase.from('company_product_access').insert(rows)
-    if (insertError) return { error: 'Unable to update catalogue visibility. Please try again.' }
+    if (insertError) return { error: 'Unable to update product visibility. Please try again.' }
   }
 
   await writeAudit(supabase, {
     action: 'assignment_change',
     entity: 'products',
     entityId: productId,
-    next: { catalogue_access: mode, companyIds: mode === 'selected' ? companyIds : [] },
+    next: {
+      show_in_store: store,
+      show_in_business: business,
+      catalogue_access: mode,
+      companyIds: mode === 'selected' ? companyIds : [],
+    },
     userId: profile.id,
   })
 
   revalidatePath(`/crm/products/${productId}`)
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
+  revalidatePath('/catalogue')
+  revalidatePath('/business')
+  revalidatePath('/')
   return { success: true }
 }
 

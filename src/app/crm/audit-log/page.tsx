@@ -44,7 +44,7 @@ export default async function AuditLogPage({
         <p className="text-xs text-[#7A7267] mt-1">Company-wide create, update, assignment and status history.</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E5DFD5] overflow-x-auto shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+      <div className="bg-white border border-[#E5DFD5] overflow-x-auto">
         <table className="w-full text-xs min-w-[900px]">
           <thead className="bg-[#FAF7F2] border-b border-[#E5DFD5]">
             <tr>

@@ -14,6 +14,7 @@ import {
   type CheckoutLineInput,
 } from '@/lib/catalogue/purchase-path'
 import { storeSampleQuantityError } from '@/lib/catalogue/storefront'
+import { pickReusableStoreContact, resolveStoreOrderOwnerId, type StoreContactMatch } from '@/lib/catalogue/store-prospect'
 import { notifyOrderPlaced } from '@/lib/email/order-emails'
 import type { OrderSource } from '@/lib/orders/source'
 
@@ -171,7 +172,7 @@ export async function placeStoreDirectOrder(input: {
 
   const fullName = clean(input.fullName)
   const email = clean(input.email).toLowerCase()
-  const companyName = clean(input.companyName)
+  const companyName = clean(input.companyName) || clean(input.fullName)
   const phone = clean(input.phone)
   if (!fullName) return { error: 'Please share your name.' }
   if (!email || !email.includes('@')) return { error: 'Please share a valid email.' }
@@ -183,59 +184,112 @@ export async function placeStoreDirectOrder(input: {
   const admin = createAdminClient()
   if (!admin) return { error: 'Unable to place this order just now. Please try again shortly.' }
 
-  const { data: owner } = await admin
-    .from('profiles')
-    .select('id')
-    .eq('role', 'admin')
-    .eq('is_active', true)
-    .limit(1)
-    .maybeSingle()
-
-  const { data: company, error: companyError } = await admin
-    .from('companies')
-    .insert({
-      name: companyName,
-      status: 'prospect',
-      owner_id: owner?.id || null,
-      notes: 'Created from a public catalogue purchase.',
-    })
-    .select('id')
-    .single()
-  if (companyError || !company) return { error: 'Unable to place this order. Please try again.' }
-
-  const { data: contact, error: contactError } = await admin
+  const ownerId = await storeOrderOwnerId(admin)
+  const lookup = await admin
     .from('contacts')
-    .insert({
-      company_id: company.id,
-      full_name: fullName,
-      email,
-      phone: phone || null,
-      contact_type: 'primary',
-      kind: 'corporate',
-      notes: 'Placed a public catalogue order.',
-    })
-    .select('id')
-    .single()
-  if (contactError || !contact) {
-    await admin.from('companies').delete().eq('id', company.id)
-    return { error: 'Unable to place this order. Please try again.' }
+    .select('id, company_id, company:companies(id, status, notes)')
+    .ilike('email', email)
+    .order('created_at', { ascending: true })
+  if (lookup.error) return { error: 'Unable to place this order. Please try again.' }
+  const reusable = pickReusableStoreContact((lookup.data || []) as StoreContactMatch[])
+
+  let companyId = reusable?.company_id ? String(reusable.company_id) : ''
+  let contactId = reusable?.id ? String(reusable.id) : ''
+  let createdCompanyId: string | null = null
+  let createdContactId: string | null = null
+  let createdLeadId: string | null = null
+
+  if (!reusable) {
+    const { data: company, error: companyError } = await admin
+      .from('companies')
+      .insert({
+        name: companyName,
+        status: 'prospect',
+        owner_id: ownerId,
+        notes: 'Created from a public catalogue purchase.',
+      })
+      .select('id')
+      .single()
+    if (companyError || !company) return { error: 'Unable to place this order. Please try again.' }
+    createdCompanyId = company.id
+    companyId = company.id
+
+    const { data: contact, error: contactError } = await admin
+      .from('contacts')
+      .insert({
+        company_id: company.id,
+        full_name: fullName,
+        email,
+        phone: phone || null,
+        contact_type: 'primary',
+        kind: 'corporate',
+        notes: 'Placed a public catalogue order.',
+      })
+      .select('id')
+      .single()
+    if (contactError || !contact) {
+      await admin.from('companies').delete().eq('id', company.id)
+      return { error: 'Unable to place this order. Please try again.' }
+    }
+    createdContactId = contact.id
+    contactId = contact.id
+
+    const { data: lead, error: leadError } = await admin
+      .from('leads')
+      .insert({
+        company_id: company.id,
+        contact_id: contact.id,
+        owner_id: ownerId,
+        source: 'website',
+        stage: 'warm',
+        notes: 'Public catalogue purchase.',
+      })
+      .select('id')
+      .single()
+    if (leadError || !lead) {
+      await admin.from('contacts').delete().eq('id', contact.id)
+      await admin.from('companies').delete().eq('id', company.id)
+      return { error: 'Unable to place this order. Please try again.' }
+    }
+    createdLeadId = lead.id
   }
 
   const placed = await callPlaceDirectOrder('service', {
-    companyId: company.id,
-    contactId: contact.id,
-    ownerId: owner?.id || null,
+    companyId,
+    contactId,
+    ownerId,
     surface: 'store',
     campaignId: null,
     lines: normalized.lines,
     source: 'store',
   })
   if (placed.error) {
-    await admin.from('contacts').delete().eq('id', contact.id)
-    await admin.from('companies').delete().eq('id', company.id)
+    if (createdLeadId) await admin.from('leads').delete().eq('id', createdLeadId)
+    if (createdContactId) await admin.from('contacts').delete().eq('id', createdContactId)
+    if (createdCompanyId) await admin.from('companies').delete().eq('id', createdCompanyId)
     return placed
   }
   return placed
+}
+
+async function storeOrderOwnerId(admin: NonNullable<ReturnType<typeof createAdminClient>>) {
+  const { data: firstAdmin } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('role', 'admin')
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle()
+  const settings = await admin.from('org_settings').select('store_default_owner_id').limit(1).maybeSingle()
+  if (settings.error) return firstAdmin?.id || null
+  const configured = settings.data?.store_default_owner_id ? String(settings.data.store_default_owner_id) : null
+  if (!configured) return firstAdmin?.id || null
+  const { data: profile } = await admin.from('profiles').select('is_active').eq('id', configured).maybeSingle()
+  return resolveStoreOrderOwnerId({
+    configuredOwnerId: configured,
+    configuredOwnerActive: profile ? Boolean(profile.is_active) : false,
+    firstAdminId: firstAdmin?.id || null,
+  })
 }
 
 async function placeSignedInBusinessOrder(

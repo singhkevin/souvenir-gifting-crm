@@ -11,20 +11,22 @@ import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'name', label: 'Product name', required: true },
   { key: 'sku', label: 'SKU', required: true },
-  { key: 'price', label: 'Price', required: true },
+  { key: 'supplier_cost', label: 'Cost price (₹, supplier price)' },
+  { key: 'cost_source', label: 'Cost source (portal_default / manual / preferred / lowest)' },
+  { key: 'price', label: 'Old price column (read as cost when cost is blank)' },
   { key: 'description', label: 'Description' },
   { key: 'category', label: 'Category' },
   { key: 'supplier', label: 'Supplier' },
   { key: 'moq', label: 'MOQ' },
   { key: 'stock_qty', label: 'Stock on hand' },
   { key: 'fulfillment_mode', label: 'Purchase path (auto / buy / rfq)' },
-  { key: 'supplier_cost', label: 'Supplier cost' },
-  { key: 'internal_margin', label: 'Product margin %' },
   { key: 'internal_notes', label: 'Internal notes' },
   { key: 'hsn_code', label: 'HSN' },
   { key: 'image_url', label: 'Image URL' },
   { key: 'image_filename', label: 'Image filename' },
-  { key: 'catalogue_access', label: 'Visibility (all / selected / none)' },
+  { key: 'show_in_store', label: 'Retail store (yes / no)' },
+  { key: 'show_in_business', label: 'Business portal (yes / no)' },
+  { key: 'catalogue_access', label: 'Corporate visibility (all / selected / none)' },
   { key: 'companies', label: 'Companies (semicolon-separated names)' },
   { key: 'colour', label: 'Colour' },
   { key: 'size', label: 'Size' },
@@ -48,7 +50,9 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
   const { key, rotate } = useIdempotencyKey()
 
   const mappedRequired = useMemo(
-    () => FIELD_LABELS.filter((f) => f.required).every((f) => mapping[f.key]),
+    () =>
+      FIELD_LABELS.filter((f) => f.required).every((f) => mapping[f.key]) &&
+      Boolean(mapping.supplier_cost || mapping.price),
     [mapping],
   )
 
@@ -74,7 +78,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
       return
     }
     if (!mappedRequired) {
-      toast.error('Map product name, SKU and price before importing')
+      toast.error('Map product name, SKU and cost price before importing')
       return
     }
     const data = new FormData()
@@ -101,19 +105,19 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
 
   return (
     <fieldset disabled={pending} aria-busy={pending || undefined} className="space-y-6 min-w-0 border-0 p-0 m-0">
-      <div className="bg-white p-6 rounded-2xl border border-gray-200 space-y-4">
+      <div className="bg-white p-6 border border-gray-200 space-y-4">
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1.5">CSV file</label>
           <input
             type="file"
             accept=".csv,text/csv"
             onChange={(e) => void onCsv(e.target.files?.[0] || null)}
-            className="text-xs file:mr-2 file:px-3 file:py-1.5 file:rounded-md file:border file:border-gray-200 file:bg-white file:text-xs"
+            className="text-xs file:mr-2 file:px-3 file:py-1.5 file:border file:border-gray-200 file:bg-white file:text-xs"
           />
           <p className="text-[11px] text-gray-500 mt-2">
-            Required columns: product name, SKU, price. Optional: description, category, supplier, MOQ,
-            stock, product margin, internal notes, visibility, companies, image URL, image filename,
-            colour, size, variant SKU, extra price, status.
+            Required columns: product name, SKU, cost price. Selling prices are calculated from cost
+            and set in Pricing. Cost source is portal_default, manual, preferred or lowest (blank = portal_default, which follows each portal rule). Optional: description, category, supplier, MOQ, stock, internal notes, retail (yes / no), business (yes / no), corporate visibility, companies, image URL, image filename,
+            colour, size, variant SKU, extra price, status. Blank retail / business follow corporate &ldquo;all&rdquo;, as before.
           </p>
         </div>
 
@@ -124,7 +128,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
             accept="image/png,image/jpeg,image/webp"
             multiple
             onChange={(e) => setImages(Array.from(e.target.files || []))}
-            className="text-xs file:mr-2 file:px-3 file:py-1.5 file:rounded-md file:border file:border-gray-200 file:bg-white file:text-xs"
+            className="text-xs file:mr-2 file:px-3 file:py-1.5 file:border file:border-gray-200 file:bg-white file:text-xs"
           />
           <p className="text-[11px] text-gray-500 mt-2">
             Match files to the CSV <span className="font-mono">image_filename</span> column. Public
@@ -137,7 +141,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
       </div>
 
       {headers.length > 0 && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 space-y-4">
+        <div className="bg-white p-6 border border-gray-200 space-y-4">
           <h2 className="text-sm font-bold text-gray-900">Column mapping</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {FIELD_LABELS.map((field) => (
@@ -160,7 +164,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
           </div>
 
           {preview.length > 0 && (
-            <div className="overflow-x-auto border border-gray-100 rounded-lg">
+            <div className="overflow-x-auto border border-gray-100">
               <table className="w-full text-[11px]">
                 <thead className="bg-gray-50">
                   <tr>
@@ -195,7 +199,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
           </label>
 
           {categoryPreview && (
-            <div className="rounded-lg border border-[#E5DFD5] bg-[#FAF7F2] p-3 text-xs text-[#1C1917] space-y-2">
+            <div className="border border-[#E5DFD5] bg-[#FAF7F2] p-3 text-xs text-[#1C1917] space-y-2">
               <p>
                 These categories will be created:{' '}
                 {categoryPreview.categories.length ? categoryPreview.categories.join(', ') : 'none'}
@@ -225,7 +229,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
                   onSuccess: (value) => setCategoryPreview(value as CataloguePreview),
                 })
               }}
-              className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg disabled:opacity-50"
+              className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] disabled:opacity-50"
             >
               {pending ? <span className="inline-flex items-center gap-2"><Spinner />Checking…</span> : 'Preview import'}
             </button>
@@ -234,7 +238,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
               type="button"
               disabled={pending || !mappedRequired}
               onClick={onImport}
-              className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] rounded-lg disabled:opacity-50"
+              className="px-6 py-2 text-xs font-semibold text-white bg-[#806A50] hover:bg-[#624b32] disabled:opacity-50"
             >
               {pending ? (
                 <span className="inline-flex items-center gap-2"><Spinner />Importing…</span>
@@ -247,7 +251,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
       )}
 
       {summary && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 space-y-3">
+        <div className="bg-white p-6 border border-gray-200 space-y-3">
           <h2 className="text-sm font-bold text-gray-900">Import summary</h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
             <SummaryStat label="Total rows" value={summary.total} />
@@ -283,7 +287,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
 
 function SummaryStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
+    <div className="border border-gray-100 bg-gray-50 px-3 py-2">
       <p className="text-[10px] uppercase font-semibold text-gray-400">{label}</p>
       <p className="text-lg font-bold text-gray-900">{value}</p>
     </div>
