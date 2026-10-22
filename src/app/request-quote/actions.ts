@@ -9,6 +9,7 @@ import { resolveAlertOwnerId } from '@/lib/alerts/owner'
 import { publicQuoteOwnerEmailHtml } from '@/lib/email/business'
 import { sendEmail } from '@/lib/email/resend'
 import { withIdempotency } from '@/lib/idempotency'
+import { channelColumnsMissing } from '@/lib/products/channel-visibility'
 import {
   buildPublicQuoteRecord,
   parseQuoteItems,
@@ -55,14 +56,18 @@ async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: stri
 
   const items = parseQuoteItems(itemsRaw)
   const lookupIds = quoteProductIds({ items, productId })
-  const { data: products } = lookupIds.length
-    ? await admin
-      .from('products')
-      .select('id, name, sku')
-      .in('id', lookupIds)
-      .eq('status', 'active')
-      .eq('catalogue_access', 'all')
-    : { data: null }
+  // Retail quote: products switched on for the retail store (legacy: catalogue_access = 'all').
+  const storeProducts = (column: string, value: string | boolean) => admin
+    .from('products')
+    .select('id, name, sku')
+    .in('id', lookupIds)
+    .eq('status', 'active')
+    .eq(column, value)
+  let lookup = lookupIds.length ? await storeProducts('show_in_store', true) : null
+  if (lookup?.error && channelColumnsMissing(lookup.error.message)) {
+    lookup = await storeProducts('catalogue_access', 'all')
+  }
+  const products = lookup?.data || null
   const lines = resolvePublicQuoteLines({
     items,
     productId,

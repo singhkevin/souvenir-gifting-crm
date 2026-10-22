@@ -8,6 +8,7 @@ import { getPricingSettings } from '@/lib/pricing/server'
 import { type PurchaseOffer } from '@/lib/catalogue/purchase-path'
 import { occasionTagList, storefrontSampleOffer } from '@/lib/catalogue/storefront'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { CHANNEL_COLUMN, channelColumnsMissing, type Channel } from '@/lib/products/channel-visibility'
 
 const PUBLIC_PRODUCT_SELECT =
   'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)' as const
@@ -100,7 +101,19 @@ function attachCosts(rows: unknown[]): PublicRow[] {
   })
 }
 
-async function loadPublicRows(client: SupabaseClient, id?: string): Promise<PublicRow[]> {
+/**
+ * Store and business portal read their own channel switch. Until
+ * 20261022_channel_visibility.sql is applied the columns do not exist and both
+ * channels keep the legacy rule (catalogue_access = 'all').
+ */
+async function channelFilter(client: SupabaseClient, channel: Channel): Promise<[string, string | boolean]> {
+  const probe = await client.from('products').select('show_in_store, show_in_business').limit(1)
+  if (probe.error && channelColumnsMissing(probe.error.message)) return ['catalogue_access', 'all']
+  return [CHANNEL_COLUMN[channel], true]
+}
+
+async function loadPublicRows(client: SupabaseClient, id?: string, channel: Channel = 'store'): Promise<PublicRow[]> {
+  const [channelColumn, channelValue] = await channelFilter(client, channel)
   const probe = await client.from('products').select('sample_only').limit(1)
   const purchaseColumns = probe.error && /sample_only/i.test(probe.error.message)
     ? PUBLIC_PRODUCT_SELECT_WITH_PURCHASE.replace(', sample_only', '')
@@ -112,7 +125,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
       .from('products')
       .select(purchaseSelect)
       .eq('status', 'active')
-      .eq('catalogue_access', 'all')
+      .eq(channelColumn, channelValue)
       .eq('id', id)
       .maybeSingle()
     if (single.error && /product_costs/i.test(single.error.message)) {
@@ -120,7 +133,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
         .from('products')
         .select(purchaseColumns)
         .eq('status', 'active')
-        .eq('catalogue_access', 'all')
+        .eq(channelColumn, channelValue)
         .eq('id', id)
         .maybeSingle()
       if (withoutCost.error && missingPurchaseColumn(withoutCost.error.message)) {
@@ -128,7 +141,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
           .from('products')
           .select(PUBLIC_PRODUCT_SELECT)
           .eq('status', 'active')
-          .eq('catalogue_access', 'all')
+          .eq(channelColumn, channelValue)
           .eq('id', id)
           .maybeSingle()
         return fallback.data ? attachCosts([fallback.data]) : []
@@ -140,7 +153,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
         .from('products')
         .select(plainSelect)
         .eq('status', 'active')
-        .eq('catalogue_access', 'all')
+        .eq(channelColumn, channelValue)
         .eq('id', id)
         .maybeSingle()
       if (fallback.error && /product_costs/i.test(fallback.error.message)) {
@@ -148,7 +161,7 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
           .from('products')
           .select(PUBLIC_PRODUCT_SELECT)
           .eq('status', 'active')
-          .eq('catalogue_access', 'all')
+          .eq(channelColumn, channelValue)
           .eq('id', id)
           .maybeSingle()
         return plain.data ? attachCosts([plain.data]) : []
@@ -162,21 +175,21 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
     .from('products')
     .select(purchaseSelect)
     .eq('status', 'active')
-    .eq('catalogue_access', 'all')
+    .eq(channelColumn, channelValue)
     .order('name')
   if (first.error && /product_costs/i.test(first.error.message)) {
     const withoutCost = await client
       .from('products')
       .select(purchaseColumns)
       .eq('status', 'active')
-      .eq('catalogue_access', 'all')
+      .eq(channelColumn, channelValue)
       .order('name')
     if (withoutCost.error && missingPurchaseColumn(withoutCost.error.message)) {
       const fallback = await client
         .from('products')
         .select(PUBLIC_PRODUCT_SELECT)
         .eq('status', 'active')
-        .eq('catalogue_access', 'all')
+        .eq(channelColumn, channelValue)
         .order('name')
       return attachCosts(fallback.data || [])
     }
@@ -187,14 +200,14 @@ async function loadPublicRows(client: SupabaseClient, id?: string): Promise<Publ
       .from('products')
       .select(plainSelect)
       .eq('status', 'active')
-      .eq('catalogue_access', 'all')
+      .eq(channelColumn, channelValue)
       .order('name')
     if (fallback.error && /product_costs/i.test(fallback.error.message)) {
       const plain = await client
         .from('products')
         .select(PUBLIC_PRODUCT_SELECT)
         .eq('status', 'active')
-        .eq('catalogue_access', 'all')
+        .eq(channelColumn, channelValue)
         .order('name')
       return attachCosts(plain.data || [])
     }
@@ -233,11 +246,12 @@ async function decorateStorefront(client: SupabaseClient, products: PublicProduc
   }))
 }
 
-export async function getPublicCatalogueProducts(): Promise<PublicProduct[]> {
+/** Active products switched on for the retail store (default) or the business portal. */
+export async function getPublicCatalogueProducts(channel: Channel = 'store'): Promise<PublicProduct[]> {
   try {
     const client = await publicDbClient()
     if (!client) return []
-    const data = await loadPublicRows(client)
+    const data = await loadPublicRows(client, undefined, channel)
     if (!data.length) return []
     const settings = await getPricingSettings()
     const rule = settings.portals.store

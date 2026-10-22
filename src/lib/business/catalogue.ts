@@ -26,7 +26,7 @@ async function approvedBusinessMargin(companyId: string | null) {
 }
 
 export async function getBusinessCatalogue(companyId: string | null): Promise<BusinessProduct[]> {
-  const products = await getPublicCatalogueProducts()
+  const products = await getPublicCatalogueProducts('business')
   const pricing = await approvedBusinessMargin(companyId)
   const settings = await getPricingSettings()
   const prices = pricing.show

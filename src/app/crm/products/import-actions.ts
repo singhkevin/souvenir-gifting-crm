@@ -12,6 +12,7 @@ import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { withIdempotency } from '@/lib/idempotency'
 import { resolveCsvRetail } from '@/lib/products/cost-price'
+import { CHANNEL_MIGRATION, channelColumnsMissing, legacyChannelDefault, parseChannelCell } from '@/lib/products/channel-visibility'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const IMAGE_BUCKET = 'product-images'
@@ -191,6 +192,8 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     image_url: string | null
     imageFile: File | null
     catalogue_access: 'all' | 'selected' | 'none'
+    show_in_store: boolean
+    show_in_business: boolean
     companyIds: string[]
     colour: string | null
     size: string | null
@@ -242,6 +245,14 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     const catalogue_access = parseAccess(cell(row, 'catalogue_access'), companyNames, profile.role === 'admin')
     if (catalogue_access === 'selected' && companyIds.length === 0) {
       failures.push({ row: rowNumber, sku, reason: 'Selected visibility requires at least one company' })
+      return
+    }
+    // Retail and Business are admin-only, like corporate visibility. Blank keeps the legacy rule.
+    const isAdmin = profile.role === 'admin'
+    const storeCell = parseChannelCell(isAdmin ? cell(row, 'show_in_store') : '', catalogue_access)
+    const businessCell = parseChannelCell(isAdmin ? cell(row, 'show_in_business') : '', catalogue_access)
+    if (!storeCell.ok || !businessCell.ok) {
+      failures.push({ row: rowNumber, sku, reason: 'Retail and Business must be yes or no' })
       return
     }
 
@@ -327,6 +338,8 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       image_url: imageUrl || null,
       imageFile: matchedFile,
       catalogue_access,
+      show_in_store: storeCell.value,
+      show_in_business: businessCell.value,
       companyIds: profile.role === 'admin' ? [...new Set(companyIds)] : [],
       colour: cell(row, 'colour') || null,
       size: cell(row, 'size') || null,
@@ -354,26 +367,40 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
           ? 'selected_companies'
           : 'internal_only'
 
-    const { data: product, error } = await supabase
-      .from('products')
-      .insert({
-        name: item.name,
-        sku: item.sku,
-        description: item.description,
-        category_id: item.category_id,
-        supplier_id: item.supplier_id,
-        price: item.price,
-        moq: item.moq,
-        stock_qty: item.stock_qty,
-        fulfillment_mode: item.fulfillment_mode,
-        hsn_code: item.hsn_code,
-        image_url: item.image_url,
-        status: item.status,
-        catalogue_access: item.catalogue_access,
-        visibility,
-      })
-      .select('id')
-      .single()
+    const productRow: Record<string, unknown> = {
+      name: item.name,
+      sku: item.sku,
+      description: item.description,
+      category_id: item.category_id,
+      supplier_id: item.supplier_id,
+      price: item.price,
+      moq: item.moq,
+      stock_qty: item.stock_qty,
+      fulfillment_mode: item.fulfillment_mode,
+      hsn_code: item.hsn_code,
+      image_url: item.image_url,
+      status: item.status,
+      catalogue_access: item.catalogue_access,
+      visibility,
+    }
+    productRow.show_in_store = item.show_in_store
+    productRow.show_in_business = item.show_in_business
+    let insertResult = await supabase.from('products').insert(productRow).select('id').single()
+    if (insertResult.error && channelColumnsMissing(insertResult.error.message)) {
+      const legacy = legacyChannelDefault(item.catalogue_access)
+      if (item.show_in_store !== legacy || item.show_in_business !== legacy) {
+        failures.push({
+          row: item.rowNumber,
+          sku: item.sku,
+          reason: `Separate Retail and Business values need ${CHANNEL_MIGRATION}`,
+        })
+        continue
+      }
+      delete productRow.show_in_store
+      delete productRow.show_in_business
+      insertResult = await supabase.from('products').insert(productRow).select('id').single()
+    }
+    const { data: product, error } = insertResult
 
     if (error || !product) {
       failures.push({

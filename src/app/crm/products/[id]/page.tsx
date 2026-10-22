@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { updateProduct, removeProduct } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
-import { Globe, Lock, EyeOff } from 'lucide-react'
 import { ProductImageEditor } from '@/components/products/product-image-editor'
 import { CatalogueVisibilityEditor } from '@/components/products/catalogue-visibility-editor'
+import { ChannelBadges } from '@/components/products/channel-badges'
+import { channelSummary, hasChannelColumns } from '@/lib/products/channel-visibility'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 import { CategoryField } from '@/components/products/category-field'
@@ -73,6 +74,7 @@ export default async function ProductDetailPage({
     product.supplier_cost != null && product.price != null && Number(product.price) !== Number(product.supplier_cost)
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
+  const channels = channelSummary(product, grantedCompanyIds.length)
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -116,21 +118,7 @@ export default async function ProductDetailPage({
                 <span className="font-mono text-xs font-semibold text-[#1C1B1A] bg-[#F6F3EC] border border-[#CCC5BD] px-2 py-0.5 rounded-none">
                   {product.sku}
                 </span>
-                {product.catalogue_access === 'all' && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] border border-[#CCC5BD] bg-[#F6F3EC] text-[#4A4640] px-2 py-0.5 rounded-none">
-                    <Globe className="w-3 h-3 text-[#9E4300]" /> All companies
-                  </span>
-                )}
-                {product.catalogue_access === 'selected' && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] border border-[#9E4300]/30 bg-[#FFB690]/30 text-[#9E4300] px-2 py-0.5 rounded-none">
-                    <Lock className="w-3 h-3" /> {accessRecords?.length || 0} companies
-                  </span>
-                )}
-                {product.catalogue_access === 'none' && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em] border border-[#CCC5BD] bg-[#F6F3EC] text-[#7C766F] px-2 py-0.5 rounded-none">
-                    <EyeOff className="w-3 h-3" /> Not in catalogues
-                  </span>
-                )}
+                <ChannelBadges summary={channels} />
                 {product.status === 'active' ? (
                   <span className="inline-flex items-center gap-1.5 rounded-none border border-[#3A4537]/20 bg-[#DAE6D3] px-2 py-0.5 text-[11px] uppercase text-[#3A4537]">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#3A4537]" /> active
@@ -407,6 +395,9 @@ export default async function ProductDetailPage({
           <CatalogueVisibilityEditor
             productId={product.id}
             initialMode={product.catalogue_access || 'all'}
+            initialStore={channels.store}
+            initialBusiness={channels.business}
+            channelsReady={hasChannelColumns(product)}
             companies={allCompanies || []}
             grantedIds={grantedCompanyIds}
           />
@@ -414,9 +405,10 @@ export default async function ProductDetailPage({
         ) : (
         <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6 space-y-3">
           <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-6 py-3.5 -mx-6 -mt-6 mb-4">
-            <h2 className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1B1A]">Catalogue visibility</h2>
+            <h2 className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1B1A]">Where this product shows</h2>
           </div>
-          <p className="text-xs text-[#7C766F]">Only admin can change which companies see this product.</p>
+          <ChannelBadges summary={channels} />
+          <p className="text-xs text-[#7C766F]">Only admin can change where this product shows.</p>
         </div>
         )}
       </div>

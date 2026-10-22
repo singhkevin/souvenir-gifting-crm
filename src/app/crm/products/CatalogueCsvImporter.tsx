@@ -23,7 +23,9 @@ const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'hsn_code', label: 'HSN' },
   { key: 'image_url', label: 'Image URL' },
   { key: 'image_filename', label: 'Image filename' },
-  { key: 'catalogue_access', label: 'Visibility (all / selected / none)' },
+  { key: 'show_in_store', label: 'Retail store (yes / no)' },
+  { key: 'show_in_business', label: 'Business portal (yes / no)' },
+  { key: 'catalogue_access', label: 'Corporate visibility (all / selected / none)' },
   { key: 'companies', label: 'Companies (semicolon-separated names)' },
   { key: 'colour', label: 'Colour' },
   { key: 'size', label: 'Size' },
@@ -113,8 +115,8 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
           />
           <p className="text-[11px] text-gray-500 mt-2">
             Required columns: product name, SKU, cost price. Retail = cost unless a price column is given; selling
-            prices are set in Pricing. Optional: description, category, supplier, MOQ, stock, internal notes, visibility, companies, image URL, image filename,
-            colour, size, variant SKU, extra price, status.
+            prices are set in Pricing. Optional: description, category, supplier, MOQ, stock, internal notes, retail (yes / no), business (yes / no), corporate visibility, companies, image URL, image filename,
+            colour, size, variant SKU, extra price, status. Blank retail / business follow corporate &ldquo;all&rdquo;, as before.
           </p>
         </div>
 

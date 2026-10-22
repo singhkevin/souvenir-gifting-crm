@@ -12,6 +12,13 @@ import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/pur
 import { withIdempotency } from '@/lib/idempotency'
 import { canonicalCategoryLabel, findCategory } from '@/lib/products/category-plan'
 import { resolveCostAndRetail } from '@/lib/products/cost-price'
+import {
+  CHANNEL_MIGRATION,
+  channelColumnsMissing,
+  legacyChannelDefault,
+  legacyVisibilityLabel,
+  parseCorporateAccess,
+} from '@/lib/products/channel-visibility'
 
 const CATALOGUE_ROLES = ['admin', 'sales'] as const
 const VISIBILITY_ROLES = ['admin'] as const
@@ -72,6 +79,11 @@ async function createProductOnce(formData: FormData) {
       (profile.role === 'admin' ? (formData.getAll('company_ids') as string[]) : []).filter(Boolean)
     ),
   ]
+  // Retail and Business are independent of corporate visibility. Only admin sees the
+  // switches; everyone else creates a product on every channel, as before.
+  const channelForm = profile.role === 'admin' && formData.has('channel_present')
+  const show_in_store = channelForm ? formData.get('show_in_store') === 'on' : true
+  const show_in_business = channelForm ? formData.get('show_in_business') === 'on' : true
 
   if (!name) {
     return { error: 'Product name is required' }
@@ -124,8 +136,21 @@ async function createProductOnce(formData: FormData) {
     status,
     catalogue_access,
     visibility: catalogue_access === 'all' ? 'catalogue' : (catalogue_access === 'selected' ? 'selected_companies' : 'internal_only'),
+    show_in_store,
+    show_in_business,
   }
   let inserted = await supabase.from('products').insert(insertRow).select('id').single()
+  if (inserted.error && channelColumnsMissing(inserted.error.message)) {
+    const legacy = legacyChannelDefault(catalogue_access)
+    if (show_in_store !== legacy || show_in_business !== legacy) {
+      return {
+        error: `Separate Retail and Business switches need ${CHANNEL_MIGRATION}. Until it is applied, Retail and Business follow "All companies".`,
+      }
+    }
+    delete insertRow.show_in_store
+    delete insertRow.show_in_business
+    inserted = await supabase.from('products').insert(insertRow).select('id').single()
+  }
   if (inserted.error && /sample_only/i.test(inserted.error.message)) {
     delete insertRow.sample_only
     inserted = await supabase.from('products').insert(insertRow).select('id').single()
@@ -471,52 +496,82 @@ export async function removeProductImage(formData: FormData) {
   return { success: true }
 }
 
-export async function saveCatalogueVisibility(productId: string, mode: string, companyIds: string[]) {
+export type ChannelVisibilityInput = {
+  store: boolean
+  business: boolean
+  corporate: string
+  companyIds: string[]
+}
+
+/**
+ * Saves the three independent channel switches: retail store, business portal and
+ * corporate visibility (all / selected / none). Corporate never decides retail.
+ */
+export async function saveChannelVisibility(productId: string, input: ChannelVisibilityInput) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!VISIBILITY_ROLES.includes(profile.role as (typeof VISIBILITY_ROLES)[number])) {
-    return { error: 'Not permitted to change catalogue visibility' }
+    return { error: 'Only admin can change product visibility' }
   }
-  if (!['all', 'selected', 'none'].includes(mode)) {
-    return { error: 'Unable to update catalogue visibility. Please try again.' }
+  if (!isUuid(productId)) return { error: 'Product not found' }
+  const mode = parseCorporateAccess(input?.corporate)
+  if (!mode) return { error: 'Choose a corporate visibility option' }
+  const companyIds = [...new Set((input.companyIds || []).filter((id) => isUuid(id)))]
+  if (mode === 'selected' && companyIds.length === 0) {
+    return { error: 'Select at least one company for corporate visibility' }
   }
-  if (mode === 'selected' && (!companyIds || companyIds.length === 0)) {
-    return { error: 'Unable to update catalogue visibility. Please try again.' }
-  }
+  const store = Boolean(input.store)
+  const business = Boolean(input.business)
 
   const supabase = await createClient()
-  const visibility =
-    mode === 'all' ? 'catalogue' : mode === 'selected' ? 'selected_companies' : 'internal_only'
-
-  const { error: updateError } = await supabase
+  const base = { catalogue_access: mode, visibility: legacyVisibilityLabel(mode) }
+  let { error: updateError } = await supabase
     .from('products')
-    .update({ catalogue_access: mode, visibility })
+    .update({ ...base, show_in_store: store, show_in_business: business })
     .eq('id', productId)
-  if (updateError) return { error: 'Unable to update catalogue visibility. Please try again.' }
+  if (updateError && channelColumnsMissing(updateError.message)) {
+    // Before the migration retail and business follow corporate "All companies".
+    const legacy = legacyChannelDefault(mode)
+    if (store !== legacy || business !== legacy) {
+      return {
+        error: `Separate Retail and Business switches need ${CHANNEL_MIGRATION}. Until it is applied, Retail and Business follow "All companies".`,
+      }
+    }
+    ;({ error: updateError } = await supabase.from('products').update(base).eq('id', productId))
+  }
+  if (updateError) return { error: 'Unable to update product visibility. Please try again.' }
 
   const { error: clearError } = await supabase
     .from('company_product_access')
     .delete()
     .eq('product_id', productId)
-  if (clearError) return { error: 'Unable to update catalogue visibility. Please try again.' }
+  if (clearError) return { error: 'Unable to update product visibility. Please try again.' }
 
   if (mode === 'selected') {
-    const rows = [...new Set(companyIds)].map((company_id) => ({ product_id: productId, company_id }))
+    const rows = companyIds.map((company_id) => ({ product_id: productId, company_id }))
     const { error: insertError } = await supabase.from('company_product_access').insert(rows)
-    if (insertError) return { error: 'Unable to update catalogue visibility. Please try again.' }
+    if (insertError) return { error: 'Unable to update product visibility. Please try again.' }
   }
 
   await writeAudit(supabase, {
     action: 'assignment_change',
     entity: 'products',
     entityId: productId,
-    next: { catalogue_access: mode, companyIds: mode === 'selected' ? companyIds : [] },
+    next: {
+      show_in_store: store,
+      show_in_business: business,
+      catalogue_access: mode,
+      companyIds: mode === 'selected' ? companyIds : [],
+    },
     userId: profile.id,
   })
 
   revalidatePath(`/crm/products/${productId}`)
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
+  revalidatePath('/catalogue')
+  revalidatePath('/business')
+  revalidatePath('/')
   return { success: true }
 }
 

@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { BrandName } from '@/components/brand/brand-name'
 import { createProduct } from '../actions'
-import { Package, Globe, Lock, EyeOff } from 'lucide-react'
+import { Package, Globe, Lock, EyeOff, Store, Briefcase, Building2 } from 'lucide-react'
+import { ChannelSwitch } from '@/components/products/catalogue-visibility-editor'
 import { ProductImageField } from '@/components/products/product-image-field'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 import { CategoryField } from '@/components/products/category-field'
@@ -245,83 +246,79 @@ export default async function NewProductPage({
           </div>
 
           {profile.role === 'admin' && (
-          <div className="border border-purple-100 bg-purple-50/30 p-5 space-y-4">
+          <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-5 space-y-5 rounded-none">
+            <input type="hidden" name="channel_present" value="1" />
             <div>
-              <h3 className="text-sm font-bold text-gray-900">Catalogue Access & Company Visibility</h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Control whether this product is public to all corporate client portals or personalized for specific companies.
+              <h3 className="font-[family-name:var(--font-newsreader)] text-lg font-normal text-[#1C1B1A]">Where this product shows</h3>
+              <p className="text-xs text-[#7C766F] mt-0.5">
+                Each channel is switched on or off on its own. Corporate visibility never hides a product from the retail store.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 cursor-pointer hover:border-[#806A50] transition-colors">
-                <input
-                  type="radio"
-                  name="catalogue_access"
-                  value="all"
-                  defaultChecked
-                  className="mt-1 text-[#806A50] focus:ring-[#806A50]"
-                />
-                <div>
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-gray-900">
-                    <Globe className="w-3.5 h-3.5 text-green-600" />
-                    All companies
-                  </div>
-                  <p className="text-[11px] text-gray-500 mt-1">
-                    Visible in every corporate client portal catalogue.
-                  </p>
-                </div>
-              </label>
-
-              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 cursor-pointer hover:border-[#806A50] transition-colors">
-                <input
-                  type="radio"
-                  name="catalogue_access"
-                  value="selected"
-                  className="mt-1 text-[#806A50] focus:ring-[#806A50]"
-                />
-                <div>
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-[#806A50]">
-                    <Lock className="w-3.5 h-3.5 text-[#806A50]" />
-                    Personalized / Specific
-                  </div>
-                  <p className="text-[11px] text-gray-500 mt-1">
-                    Only visible to selected client companies chosen below.
-                  </p>
-                </div>
-              </label>
-
-              <label className="flex items-start gap-3 p-3.5 bg-white border border-gray-200 cursor-pointer hover:border-[#806A50] transition-colors">
-                <input
-                  type="radio"
-                  name="catalogue_access"
-                  value="none"
-                  className="mt-1 text-[#806A50] focus:ring-[#806A50]"
-                />
-                <div>
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-gray-700">
-                    <EyeOff className="w-3.5 h-3.5 text-gray-400" />
-                    Internal Only
-                  </div>
-                  <p className="text-[11px] text-gray-500 mt-1">
-                    Hidden from all client portals. Available only to internal team.
-                  </p>
-                </div>
-              </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <ChannelSwitch
+                name="show_in_store"
+                checked
+                icon={<Store className="w-3.5 h-3.5 text-[#9E4300]" />}
+                title="Retail store"
+                hint="Public store, catalogue, search and homepage."
+              />
+              <ChannelSwitch
+                name="show_in_business"
+                checked
+                icon={<Briefcase className="w-3.5 h-3.5 text-[#9E4300]" />}
+                title="Business portal"
+                hint="/business, for registered non-corporate businesses."
+              />
             </div>
 
-            <div className="pt-2">
-              <label className="block text-xs font-semibold text-gray-700 mb-2">
-                Grant Access to Companies (if Personalized / Specific selected):
+            <div className="space-y-2">
+              <div>
+                <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#1C1B1A]">
+                  <Building2 className="w-3.5 h-3.5 text-[#9E4300]" /> Corporate visibility
+                </h4>
+                <p className="text-[11px] text-[#7C766F] mt-0.5">
+                  Corporate /portal, client catalogues and microsites only.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { value: 'all', label: 'All companies', hint: 'Every corporate client portal and microsite.', icon: <Globe className="w-3.5 h-3.5 text-[#3A4537]" /> },
+                  { value: 'selected', label: 'Selected companies', hint: 'Only the corporate clients ticked below.', icon: <Lock className="w-3.5 h-3.5 text-[#9E4300]" /> },
+                  { value: 'none', label: 'None', hint: 'No corporate portal or microsite.', icon: <EyeOff className="w-3.5 h-3.5 text-[#7C766F]" /> },
+                ].map((option) => (
+                  <label key={option.value} className="flex items-start gap-3 p-3.5 bg-white border border-[#CCC5BD] rounded-none cursor-pointer hover:border-[#9E4300] transition-colors">
+                    <input
+                      type="radio"
+                      name="catalogue_access"
+                      value={option.value}
+                      defaultChecked={option.value === 'all'}
+                      className="mt-1 accent-[#9E4300]"
+                    />
+                    <div>
+                      <div className="flex items-center gap-1.5 font-bold text-xs text-[#1C1B1A]">
+                        {option.icon}
+                        {option.label}
+                      </div>
+                      <p className="text-[11px] text-[#7C766F] mt-1">{option.hint}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#4A4640] mb-2">
+                Corporate clients (when Selected companies is chosen):
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 bg-white border border-gray-200">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 bg-white border border-[#CCC5BD]">
                 {companies?.map((comp) => (
-                  <label key={comp.id} className="flex items-center gap-2 p-1.5 text-xs text-gray-700 hover:bg-gray-50 cursor-pointer">
+                  <label key={comp.id} className="flex items-center gap-2 p-1.5 text-xs text-[#4A4640] hover:bg-[#F6F3EC] cursor-pointer">
                     <input
                       type="checkbox"
                       name="company_ids"
                       value={comp.id}
-                      className="border-gray-300 text-[#806A50] focus:ring-[#806A50]"
+                      className="accent-[#9E4300]"
                     />
                     <span className="truncate font-medium">{comp.name}</span>
                   </label>

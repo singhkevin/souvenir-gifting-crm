@@ -7,6 +7,8 @@ import { sortProductCategories } from '@/lib/products/categories'
 import { readProductCost } from '@/lib/pricing/product-costs'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 import { ProductImage } from '@/components/ui/product-image'
+import { ChannelBadges } from '@/components/products/channel-badges'
+import { channelSummary } from '@/lib/products/channel-visibility'
 
 const PAGE_SIZE = 50
 
@@ -79,7 +81,7 @@ export default async function ProductsPage({
             Product Catalogue
           </h1>
           <p className="mt-1 text-xs text-[#4A4640]">
-            Every product carries a unique SKU and its own client visibility. <span className="font-mono">{total}</span> in this view.
+            Every product carries a unique SKU and its own retail, business and corporate visibility. <span className="font-mono">{total}</span> in this view.
           </p>
         </div>
         {['admin', 'sales'].includes(profile.role) && (
@@ -151,14 +153,14 @@ export default async function ProductsPage({
             },
             {
               key: 'access',
-              label: 'Visibility',
+              label: 'Corporate visibility',
               value: accessFilter,
               emptyLabel: 'Any',
               options: [
                 { value: '', label: 'Any' },
-                { value: 'all', label: 'All Clients' },
-                { value: 'selected', label: 'Selected Clients' },
-                { value: 'none', label: 'Internal Only' },
+                { value: 'all', label: 'All companies' },
+                { value: 'selected', label: 'Selected companies' },
+                { value: 'none', label: 'None' },
               ],
             },
             {
@@ -189,7 +191,7 @@ export default async function ProductsPage({
                 <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Cost (₹)</th>
               )}
               <th className="px-3.5 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Price (₹)</th>
-              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Visibility</th>
+              <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Shows on</th>
               <th className="px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Status</th>
             </tr>
           </thead>
@@ -233,19 +235,7 @@ export default async function ProductsPage({
                       {formatCurrency(p.price)}
                     </td>
                     <td className="px-3.5 py-2.5">
-                      {p.catalogue_access === 'all' ? (
-                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#4A4640]">
-                          All Clients
-                        </span>
-                      ) : p.catalogue_access === 'selected' ? (
-                        <span className="inline-flex items-center rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 text-[10px] uppercase text-[#9E4300]">
-                          {companyCount} {companyCount === 1 ? 'Client' : 'Clients'}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#7C766F]">
-                          Internal Only
-                        </span>
-                      )}
+                      <ChannelBadges summary={channelSummary(p, companyCount)} />
                     </td>
                     <td className="px-3.5 py-2.5">
                       {p.status === 'active' ? (
@@ -337,19 +327,7 @@ export default async function ProductsPage({
                     </div>
                   )}
                   <div className="col-span-2 pt-1">
-                    {p.catalogue_access === 'all' ? (
-                      <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#4A4640]">
-                        All Clients
-                      </span>
-                    ) : p.catalogue_access === 'selected' ? (
-                      <span className="inline-flex items-center rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-2 py-0.5 text-[10px] uppercase text-[#9E4300]">
-                        {companyCount} {companyCount === 1 ? 'Client' : 'Clients'}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#7C766F]">
-                        Internal Only
-                      </span>
-                    )}
+                    <ChannelBadges summary={channelSummary(p, companyCount)} />
                   </div>
                 </div>
 
