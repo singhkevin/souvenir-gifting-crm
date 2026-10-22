@@ -239,7 +239,7 @@ create temporary table _sim on commit drop as select 'before'::text as stage, pg
 -- Phase 2 TODO: quantity tiers (offer and sell), per-portal company margins, supplier currency and FX,
 -- GST-inclusive supplier costs (phase 1 treats every cost as INR excluding GST), stale-offer expiry.
 --
--- Do not apply from the agent. Rollback: supabase/rollbacks/20261022_pricing_cost_basis_rollback.sql
+-- Applied to production 2026-10-22 (~12:48 IST, approved by Kevin). Rollback: supabase/rollbacks/20261022_pricing_cost_basis_rollback.sql
 -- Dry run: supabase/tests/pricing_cost_basis_check.sql (built by scripts/build-pricing-dry-run.mjs).
 
 -- 1. Cost basis: a default per portal, an override per product ---------------------------------
