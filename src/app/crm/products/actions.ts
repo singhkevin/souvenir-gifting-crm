@@ -167,7 +167,7 @@ async function createProductOnce(formData: FormData) {
   {
     const { error: costError } = await upsertProductCost(supabase, product.id, {
       supplier_cost,
-      ...(costSource.value !== 'manual' ? { cost_source: costSource.value } : {}),
+      ...(costSource.value !== 'portal_default' ? { cost_source: costSource.value } : {}),
     })
     if (costError) {
       await supabase.from('products').delete().eq('id', product.id)
@@ -298,7 +298,7 @@ export async function updateProduct(productId: string, formData: FormData) {
   text('supplier_id')
   text('hsn_code')
   number('moq', 'moq', 1)
-  const costPatch: { supplier_cost?: number | null; cost_source?: 'manual' | 'preferred' | 'lowest' } = {}
+  const costPatch: { supplier_cost?: number | null; cost_source?: 'portal_default' | 'manual' | 'preferred' | 'lowest' } = {}
   if (formData.has('supplier_cost')) {
     // Cost price is the one price staff enter. products.price is frozen and never written here.
     const priced = resolveCost(formData.get('supplier_cost'))
@@ -366,8 +366,8 @@ export async function updateProduct(productId: string, formData: FormData) {
 
   if (Object.keys(costPatch).length > 0) {
     let { error: costError } = await upsertProductCost(supabase, productId, costPatch)
-    // Before the cost-basis migration there is no cost_source column; manual is the only behaviour then.
-    if (costError && /cost_source/i.test(costError.message) && costPatch.cost_source === 'manual') {
+    // Before the cost-basis migration there is no cost_source column; portal default (manual) is the only behaviour then.
+    if (costError && /cost_source/i.test(costError.message) && costPatch.cost_source === 'portal_default') {
       delete costPatch.cost_source
       costError = Object.keys(costPatch).length ? (await upsertProductCost(supabase, productId, costPatch)).error : null
     }

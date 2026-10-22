@@ -126,7 +126,7 @@ export function PriceGrid({
         const product = bySku.get(sku)
         if (!product) change.note = 'Product not found'
         else if ([cost, store, business, corporate, storeMargin, businessMargin, corporateMargin].includes('bad')) change.note = 'A price or margin is not a number'
-        else if (source && !source.ok) change.note = 'Cost source must be manual, preferred or lowest'
+        else if (source && !source.ok) change.note = 'Cost source must be portal_default, manual, preferred or lowest'
         else {
           const floorCost = change.cost ?? product.cost
           for (const portal of PORTALS) {
@@ -217,9 +217,8 @@ export function PriceGrid({
                 </td>
                 {showCost ? (
                   <td className="p-3">
-                    <p className="font-medium text-gray-900">{amount(row.cost)}</p>
-                    <p className="text-[10px] uppercase tracking-wide text-gray-400">{COST_SOURCE_LABEL[row.costSource]}</p>
-                    {row.costSource !== 'manual' && row.manualCost !== row.cost ? <p className="text-[10px] text-gray-500">Manual {amount(row.manualCost)}</p> : null}
+                    <p className="font-medium text-gray-900">{amount(row.manualCost)}</p>
+                    <p className="text-[10px] uppercase tracking-wide text-gray-400">Manual cost · {COST_SOURCE_LABEL[row.costSource]}</p>
                     {canEdit ? <PriceField action={setCostPrice} productId={row.id} price={row.manualCost} allowBlank /> : null}
                     {canEdit ? (
                       <ActionForm action={setCostSource} className="mt-1 flex items-center gap-1">
@@ -253,7 +252,7 @@ export function PriceGrid({
       {canEdit ? (
         <section className="space-y-3 rounded-xl border border-gray-200 bg-white p-4">
           <h2 className="text-sm font-semibold text-gray-900">Import CSV</h2>
-          <p className="text-xs text-gray-500">Columns: sku, cost_price, cost_source (manual, preferred or lowest), store_fixed_price, business_fixed_price, corporate_fixed_price, store_margin_percent, business_margin_percent, corporate_margin_percent. A blank cell is left unchanged. Type clear to remove a fixed price or margin. The exported retail_price and effective_cost columns are for reference and are not imported.</p>
+          <p className="text-xs text-gray-500">Columns: sku, cost_price, cost_source (portal_default, manual, preferred or lowest; portal_default follows each portal rule), store_fixed_price, business_fixed_price, corporate_fixed_price, store_margin_percent, business_margin_percent, corporate_margin_percent. A blank cell is left unchanged. Type clear to remove a fixed price or margin. The exported retail_price, *_effective_cost and *_sell_price columns are for reference and are not imported.</p>
           <input type="file" accept=".csv,text/csv" onChange={(event) => onCsv(event.target.files?.[0] || null)} className="text-sm" />
           {importRows.length > 0 ? (
             <>
@@ -301,6 +300,11 @@ function PortalCell({
     <td className="p-3">
       <p className="font-medium text-gray-900">{cell.price == null ? 'Price on quote' : amount(cell.price)}</p>
       <p className="text-[10px] uppercase tracking-wide text-gray-400">{cell.source}</p>
+      <p className="text-[10px] text-gray-500" data-cost-basis={row.costs[portal].basis}>
+        {showCost ? `Cost ${amount(row.costs[portal].cost)} · ` : 'Cost: '}
+        {COST_SOURCE_LABEL[row.costs[portal].basis]}
+        {row.costs[portal].basis !== 'manual' && !row.costs[portal].fromOffer ? ' (no eligible offer, manual)' : ''}
+      </p>
       {showCost && cell.marginOverCost != null ? <p className="text-[10px] text-gray-500">{cell.marginOverCost}% over cost</p> : null}
       {showCost && cell.belowFloor ? <p className="text-[10px] text-amber-800">Below floor</p> : null}
       {canEdit ? (

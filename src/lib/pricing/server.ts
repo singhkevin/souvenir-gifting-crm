@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { resolvePortalPrice, type PricingPortal, type ResolvedPortalPrice } from '@/lib/pricing/engine'
 import type { MarginSettings } from '@/lib/pricing/resolve'
 import type { SupplierOffer } from '@/lib/pricing/offers'
-import { asCostSource, effectiveCost, type CostSource, type EffectiveCost } from '@/lib/pricing/cost-basis'
+import { asCostSource, effectiveCost, resolveCostSource, type CostSource, type EffectiveCost, type ResolvedCostSource } from '@/lib/pricing/cost-basis'
 import {
   portalForSurface,
   PORTAL_SETTING_COLUMNS,
@@ -87,6 +87,14 @@ export async function getPricingSettings(): Promise<PricingSettings> {
       .select(PRICING_SETTING_COLUMNS.join(', '))
       .limit(1)
       .maybeSingle()
+    // Before 20261022_pricing_cost_basis.sql there are no default_cost_source columns (every portal is manual).
+    if (result.error && /default_cost_source/i.test(result.error.message)) {
+      result = await client
+        .from('org_settings')
+        .select(PRICING_SETTING_COLUMNS.filter((column) => !column.endsWith('_default_cost_source')).join(', '))
+        .limit(1)
+        .maybeSingle()
+    }
     if (result.error && /store_price_base|corporate_|column/i.test(result.error.message)) {
       result = await client
         .from('org_settings')
@@ -126,13 +134,14 @@ function finiteOrNull(value: unknown): number | null {
 }
 
 /**
- * The effective cost per product, the same as public.effective_product_cost.
+ * The effective cost per product on one portal, the same as public.effective_product_cost(product, qty, portal).
+ * portalDefault is that portal rule's costSource; omit it (no portal) and portal_default products use manual.
  * Before 20261022_pricing_cost_basis.sql is applied there is no cost_source column and every product is manual.
  */
 export async function loadEffectiveCosts(
   client: SupabaseClient,
   productIds: string[],
-  options: { requireInStock: boolean; quantity?: number | null },
+  options: { requireInStock: boolean; quantity?: number | null; portalDefault?: ResolvedCostSource | null },
 ): Promise<Map<string, ProductCostBasis>> {
   const result = new Map<string, ProductCostBasis>()
   const ids = [...new Set(productIds.filter(Boolean))]
@@ -146,7 +155,9 @@ export async function loadEffectiveCosts(
     rows = (withSource.data || []) as typeof rows
   }
   const byProduct = new Map(rows.map((row) => [row.product_id, row]))
-  const needOffers = rows.filter((row) => asCostSource(row.cost_source) !== 'manual').map((row) => row.product_id)
+  const needOffers = rows
+    .filter((row) => resolveCostSource(asCostSource(row.cost_source), options.portalDefault) !== 'manual')
+    .map((row) => row.product_id)
   const [offers, moqRows] = needOffers.length
     ? await Promise.all([
       loadSupplierOffers(client, needOffers),
@@ -160,6 +171,7 @@ export async function loadEffectiveCosts(
     const manualCost = finiteOrNull(row?.supplier_cost)
     const resolved = effectiveCost({
       source,
+      portalDefault: options.portalDefault ?? null,
       manualCost,
       offers: offers.filter((offer) => offer.product_id === id),
       quantity: options.quantity ?? null,
@@ -264,7 +276,7 @@ export async function resolveListedPrices(
       .eq('portal', portal)
       .in('product_id', productIds),
     needCost
-      ? loadEffectiveCosts(admin, productIds, { requireInStock: rules.requireInStock })
+      ? loadEffectiveCosts(admin, productIds, { requireInStock: rules.requireInStock, portalDefault: rule.costSource })
       : Promise.resolve(new Map<string, ProductCostBasis>()),
     loadProductMargins(admin, productIds, portal),
   ])

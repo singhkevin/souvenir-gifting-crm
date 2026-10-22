@@ -15,7 +15,7 @@ import {
 import { pickBestOffer } from '@/lib/pricing/offers'
 import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, loadEffectiveCosts, loadProductMargins, loadSupplierOffers } from '@/lib/pricing/server'
-import { parseCostSource, type CostSource } from '@/lib/pricing/cost-basis'
+import { asResolvedCostSource, parseCostSource, parsePortalCostSource, type CostSource } from '@/lib/pricing/cost-basis'
 import { isUuid } from '@/lib/utils'
 
 const PORTALS: PricingPortal[] = ['store', 'business', 'corporate']
@@ -55,10 +55,10 @@ async function costOf(productId: string) {
 }
 
 /** The cost prices are built from (manual or the chosen supplier offer). Used for the margin floor. */
-async function effectiveCostOf(productId: string) {
+async function effectiveCostOf(productId: string, portal: PricingPortal) {
   const supabase = await createClient()
   const settings = await getPricingSettings()
-  const costs = await loadEffectiveCosts(supabase, [productId], { requireInStock: settings.requireInStock })
+  const costs = await loadEffectiveCosts(supabase, [productId], { requireInStock: settings.requireInStock, portalDefault: settings.portals[portal].costSource })
   return costs.get(productId)?.cost ?? null
 }
 
@@ -94,12 +94,15 @@ export async function savePortalRules(formData: FormData) {
     const floor = floorRaw === '' ? 0 : Number(floorRaw)
     if (!Number.isFinite(floor) || floor < 0) return { error: `${portal} minimum margin must be 0 or more` }
 
+    const costSource = parsePortalCostSource(formData.get(`${portal}_cost_source`))
+    if (!costSource.ok) return { error: costSource.error }
     const next = {
       margin,
       rounding,
       gst,
       floor,
       show: show(`${portal}_show`),
+      costSource: costSource.value,
     }
     const previous = {
       margin: existing[`${portal}_margin_percent`] == null ? null : Number(existing[`${portal}_margin_percent`]),
@@ -109,11 +112,14 @@ export async function savePortalRules(formData: FormData) {
       show: portal === 'corporate'
         ? existing.portal_show_sell_price !== false
         : existing[`${portal}_show_sell_price`] !== false,
+      costSource: asResolvedCostSource(existing[`${portal}_default_cost_source`]),
     }
     payload[`${portal}_margin_percent`] = next.margin
     payload[`${portal}_rounding`] = next.rounding
     payload[`${portal}_gst_mode`] = next.gst
     payload[`${portal}_min_margin_percent`] = next.floor
+    if (`${portal}_default_cost_source` in existing) payload[`${portal}_default_cost_source`] = next.costSource
+    else if (next.costSource !== 'manual') return { error: MIGRATION_HINT }
     if (portal === 'store') payload.store_show_sell_price = next.show
     if (portal === 'business') payload.business_show_sell_price = next.show
     if (portal === 'corporate') {
@@ -183,7 +189,7 @@ export async function setPortalFixedPrice(formData: FormData) {
   }
 
   const settings = await getPricingSettings()
-  const blocked = fixedPriceBlockReason(parsed as number, await effectiveCostOf(productId), settings.portals[portal].minMarginPercent)
+  const blocked = fixedPriceBlockReason(parsed as number, await effectiveCostOf(productId, portal), settings.portals[portal].minMarginPercent)
   if (blocked) return { error: blocked }
   const { error } = await supabase.from('portal_product_prices').upsert({
     product_id: productId,
@@ -300,7 +306,7 @@ export async function setCostSource(formData: FormData) {
     actorId: access.profile.id,
     productId,
     field: 'cost_source',
-    oldValue: (previous?.cost_source as string | null | undefined) || 'manual',
+    oldValue: (previous?.cost_source as string | null | undefined) || 'portal_default',
     newValue: parsed.value,
   })
   if (logError) return { error: logError }
@@ -349,7 +355,7 @@ export async function bulkAdjustPrices(formData: FormData) {
   const rule = settings.portals[portal]
   const [{ data: products }, costs, margins, { data: fixed }] = await Promise.all([
     supabase.from('products').select('id').in('id', ids),
-    loadEffectiveCosts(supabase, ids, { requireInStock: settings.requireInStock }),
+    loadEffectiveCosts(supabase, ids, { requireInStock: settings.requireInStock, portalDefault: rule.costSource }),
     loadProductMargins(supabase, ids, portal),
     supabase.from('portal_product_prices').select('product_id, price').eq('portal', portal).in('product_id', ids),
   ])
@@ -444,6 +450,10 @@ export async function applyPricingCsv(formData: FormData) {
   const bySku = new Map((products || []).map((product) => [String(product.sku).toUpperCase(), product]))
   const ids = (products || []).map((product) => product.id)
   const effective = await loadEffectiveCosts(supabase, ids, { requireInStock: settings.requireInStock })
+  const effectiveByPortal = new Map<PricingPortal, Awaited<ReturnType<typeof loadEffectiveCosts>>>()
+  for (const portal of PORTALS) {
+    effectiveByPortal.set(portal, await loadEffectiveCosts(supabase, ids, { requireInStock: settings.requireInStock, portalDefault: settings.portals[portal].costSource }))
+  }
   const costById = new Map([...effective].map(([id, basis]) => [id, basis.manualCost]))
   const problems: string[] = []
 
@@ -455,7 +465,7 @@ export async function applyPricingCsv(formData: FormData) {
       continue
     }
     // The floor uses the cost the row sets, else the product's effective cost.
-    const cost = 'cost' in change && change.cost != null ? Number(change.cost) : effective.get(product.id)?.cost ?? null
+    const rowCost = 'cost' in change && change.cost != null ? Number(change.cost) : null
     for (const portal of PORTALS) {
       if (!(portal in change) || change[portal] == null) continue
       const price = Number(change[portal])
@@ -463,6 +473,7 @@ export async function applyPricingCsv(formData: FormData) {
         problems.push(`${sku}: ${portal} price is not a number`)
         continue
       }
+      const cost = rowCost ?? effectiveByPortal.get(portal)?.get(product.id)?.cost ?? null
       const blocked = fixedPriceBlockReason(price, cost, settings.portals[portal].minMarginPercent)
       if (blocked) problems.push(`${sku}: ${blocked}`)
     }
@@ -473,7 +484,7 @@ export async function applyPricingCsv(formData: FormData) {
       }
     }
     if ('cost_source' in change && change.cost_source != null && !parseCostSource(change.cost_source).ok) {
-      problems.push(`${sku}: cost source must be manual, preferred or lowest`)
+      problems.push(`${sku}: cost source must be portal_default, manual, preferred or lowest`)
     }
     if ('cost' in change && change.cost != null && (!Number.isFinite(Number(change.cost)) || Number(change.cost) < 0)) {
       problems.push(`${sku}: cost price is not a number`)
@@ -500,7 +511,7 @@ export async function applyPricingCsv(formData: FormData) {
     if ('cost_source' in change && change.cost_source != null) {
       const parsed = parseCostSource(change.cost_source)
       if (parsed.ok) {
-        const previous = effective.get(product.id)?.source || 'manual'
+        const previous = effective.get(product.id)?.source || 'portal_default'
         if (previous !== parsed.value) {
           const { error } = await upsertProductCost(supabase, product.id, { cost_source: parsed.value })
           if (error) return { error: /cost_source/i.test(error.message) ? MIGRATION_HINT : error.message }

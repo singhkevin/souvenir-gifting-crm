@@ -422,7 +422,7 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
 
     const costPayload: { supplier_cost?: number | null; internal_notes?: string | null; cost_source?: CostSource } = {}
     if (item.supplier_cost != null) costPayload.supplier_cost = item.supplier_cost
-    if (item.cost_source && item.cost_source !== 'manual') costPayload.cost_source = item.cost_source
+    if (item.cost_source && item.cost_source !== 'portal_default') costPayload.cost_source = item.cost_source
     if (item.internal_notes) costPayload.internal_notes = item.internal_notes
     if (Object.keys(costPayload).length > 0) {
       const { error: costError } = await upsertProductCost(supabase, product.id, costPayload)

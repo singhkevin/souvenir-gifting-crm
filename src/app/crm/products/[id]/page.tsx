@@ -16,6 +16,7 @@ import { readProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, loadEffectiveCosts, loadSupplierOffers, resolveListedPrices } from '@/lib/pricing/server'
 import { pickBestOffer } from '@/lib/pricing/offers'
 import { COST_SOURCES, COST_SOURCE_LABEL } from '@/lib/pricing/cost-basis'
+import { PORTAL_LABEL } from '@/lib/pricing/engine'
 import { NameCreateField } from '@/components/products/name-create-field'
 import { createBrand, createSupplier } from '../actions'
 import { SupplierOffersEditor } from './SupplierOffersEditor'
@@ -64,8 +65,11 @@ export default async function ProductDetailPage({
   // Store (Retail) price from the shared pricer: fixed price, product margin, or cost + store margin.
   const storeResolved = await resolveListedPrices([{ id }], 'store', null, null, pricing)
   const storePrice = storeResolved?.get(id)?.price ?? null
-  const costBasis = (await loadEffectiveCosts(supabase, [id], { requireInStock: pricing.requireInStock })).get(id)
-  const costSource = costBasis?.source || 'manual'
+  const portalCosts = await Promise.all((['store', 'business', 'corporate'] as const).map(async (portal) => ({
+    portal,
+    basis: (await loadEffectiveCosts(supabase, [id], { requireInStock: pricing.requireInStock, portalDefault: pricing.portals[portal].costSource })).get(id),
+  })))
+  const costSource = portalCosts[0].basis?.source || 'portal_default'
 
   const grantedCompanyIds = accessRecords?.map(a => a.company_id) || []
   const channels = channelSummary(product, grantedCompanyIds.length)
@@ -276,7 +280,12 @@ export default async function ProductDetailPage({
                       {COST_SOURCES.map((source) => <option key={source} value={source}>{COST_SOURCE_LABEL[source]}</option>)}
                     </select>
                     <p className="mt-1 text-[11px] text-[#7C766F]">
-                      Prices are built from this cost.{costBasis && costBasis.source !== 'manual' ? <> Effective cost now: <span className="font-mono">{formatCurrency(costBasis.cost)}</span>{costBasis.from === 'offer' ? ' (supplier offer)' : ' (manual, no eligible offer)'}.</> : null}
+                      Prices are built from the effective cost on each portal:{' '}
+                      {portalCosts.map(({ portal, basis }, index) => (
+                        <span key={portal}>
+                          {index ? ' · ' : ''}{PORTAL_LABEL[portal]} <span className="font-mono">{basis?.cost == null ? 'no cost' : formatCurrency(basis.cost)}</span> ({COST_SOURCE_LABEL[basis?.basis || 'manual'].toLowerCase()}{basis?.from === 'manual' && basis.basis !== 'manual' ? ', no eligible offer' : ''})
+                        </span>
+                      ))}
                     </p>
                   </>
                 ) : (

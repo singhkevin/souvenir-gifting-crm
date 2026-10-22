@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { canSeeCosts, canViewPricing, getProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getPricingSettings, loadEffectiveCosts, resolveListedPrices } from '@/lib/pricing/server'
+import { getPricingSettings, loadEffectiveCosts, resolveListedPrices, type ProductCostBasis } from '@/lib/pricing/server'
 import type { PricingPortal } from '@/lib/pricing/engine'
 
 export const dynamic = 'force-dynamic'
@@ -20,7 +20,7 @@ function text(value: number | null | undefined) {
 
 /**
  * Pricing CSV. Import columns: sku, cost_price, cost_source, *_fixed_price, *_margin_percent.
- * Reference only (ignored on import): name, effective_cost, retail_price (frozen products.price),
+ * Reference only (ignored on import): name, *_effective_cost (cost basis per portal), retail_price (frozen products.price),
  * *_sell_price (what each portal charges with no company).
  */
 export async function GET() {
@@ -38,9 +38,13 @@ export async function GET() {
   ])
   const rows = products || []
   const ids = rows.map((product) => product.id)
-  const costs = showCost
-    ? await loadEffectiveCosts(createAdminClient() || supabase, ids, { requireInStock: settings.requireInStock })
-    : new Map()
+  const costClient = createAdminClient() || supabase
+  const costs = new Map<PricingPortal, Map<string, ProductCostBasis>>()
+  if (showCost) {
+    for (const portal of PORTALS) {
+      costs.set(portal, await loadEffectiveCosts(costClient, ids, { requireInStock: settings.requireInStock, portalDefault: settings.portals[portal].costSource }))
+    }
+  }
   const sell = new Map<PricingPortal, Map<string, { price: number | null }> | null>()
   for (const portal of PORTALS) {
     sell.set(portal, await resolveListedPrices(ids.map((id) => ({ id })), portal, null, null, settings))
@@ -54,7 +58,7 @@ export async function GET() {
   const headers = [
     'sku',
     'name',
-    ...(showCost ? ['cost_price', 'cost_source', 'effective_cost'] : []),
+    ...(showCost ? ['cost_price', 'cost_source', 'store_effective_cost', 'business_effective_cost', 'corporate_effective_cost'] : []),
     'store_fixed_price',
     'business_fixed_price',
     'corporate_fixed_price',
@@ -68,11 +72,13 @@ export async function GET() {
   ]
   const lines = [headers.join(',')]
   for (const product of rows) {
-    const basis = costs.get(product.id)
+    const basis = costs.get('store')?.get(product.id)
     const values = [
       product.sku || '',
       product.name || '',
-      ...(showCost ? [text(basis?.manualCost), basis?.source || 'manual', text(basis?.cost)] : []),
+      ...(showCost
+        ? [text(basis?.manualCost), basis?.source || 'portal_default', ...PORTALS.map((portal) => text(costs.get(portal)?.get(product.id)?.cost))]
+        : []),
       ...PORTALS.map((portal) => fixedPrice.get(`${product.id}:${portal}`) || ''),
       ...PORTALS.map((portal) => marginOf.get(`${product.id}:${portal}`) || ''),
       ...PORTALS.map((portal) => text(sell.get(portal)?.get(product.id)?.price)),

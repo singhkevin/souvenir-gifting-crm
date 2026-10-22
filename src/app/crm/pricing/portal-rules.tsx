@@ -12,6 +12,7 @@ import {
   type PricingPortal,
   type RoundingMode,
 } from '@/lib/pricing/engine'
+import { COST_SOURCE_LABEL, RESOLVED_COST_SOURCES, type ResolvedCostSource } from '@/lib/pricing/cost-basis'
 import { savePortalRules } from './actions'
 import type { RuleSample } from './load'
 
@@ -99,6 +100,19 @@ export function PortalRules({
                   <option value="end9">Ends in 9</option>
                   <option value="end99">Ends in 99</option>
                 </select>
+              </label>
+              <label className="block text-xs text-gray-500">
+                Cost source
+                <select
+                  name={`${portal}_cost_source`}
+                  value={rule.costSource}
+                  disabled={!canEdit}
+                  onChange={(event) => update(portal, { costSource: event.target.value as ResolvedCostSource })}
+                  className={field}
+                >
+                  {RESOLVED_COST_SOURCES.map((source) => <option key={source} value={source}>{COST_SOURCE_LABEL[source]}</option>)}
+                </select>
+                <span className="mt-1 block text-[11px] text-gray-400">For products set to Use portal default. A product&apos;s own choice wins.</span>
               </label>
               <label className="block text-xs text-gray-500">
                 GST mode

@@ -6,6 +6,7 @@ import {
   type RoundingMode,
 } from '@/lib/pricing/engine'
 import type { MarginSettings } from '@/lib/pricing/resolve'
+import { asResolvedCostSource } from '@/lib/pricing/cost-basis'
 
 export type PriceSurface = 'crm' | 'portal' | 'microsite' | 'store' | 'business'
 
@@ -28,6 +29,7 @@ const PORTAL_COLUMNS: Record<PricingPortal, {
   gst: string
   floor: string
   show: string
+  costSource: string
 }> = {
   store: {
     margin: 'store_margin_percent',
@@ -35,6 +37,7 @@ const PORTAL_COLUMNS: Record<PricingPortal, {
     gst: 'store_gst_mode',
     floor: 'store_min_margin_percent',
     show: 'store_show_sell_price',
+    costSource: 'store_default_cost_source',
   },
   business: {
     margin: 'business_margin_percent',
@@ -42,6 +45,7 @@ const PORTAL_COLUMNS: Record<PricingPortal, {
     gst: 'business_gst_mode',
     floor: 'business_min_margin_percent',
     show: 'business_show_sell_price',
+    costSource: 'business_default_cost_source',
   },
   corporate: {
     margin: 'corporate_margin_percent',
@@ -49,6 +53,7 @@ const PORTAL_COLUMNS: Record<PricingPortal, {
     gst: 'corporate_gst_mode',
     floor: 'corporate_min_margin_percent',
     show: 'portal_show_sell_price',
+    costSource: 'corporate_default_cost_source',
   },
 }
 
@@ -59,6 +64,7 @@ export const PORTAL_SETTING_COLUMNS = [
     column.gst,
     column.floor,
     column.show,
+    column.costSource,
   ])),
   'microsite_show_sell_price',
 ]
@@ -83,6 +89,7 @@ export function portalRuleFromRow(
     gstMode: oneOf<GstMode>(row?.[column.gst], ['inclusive', 'exclusive'], seed.gstMode),
     showPrices: flag(row?.[column.show], seed.showPrices),
     minMarginPercent: floorNumber != null && Number.isFinite(floorNumber) ? floorNumber : seed.minMarginPercent,
+    costSource: asResolvedCostSource(row?.[column.costSource] ?? seed.costSource),
   }
 }
 

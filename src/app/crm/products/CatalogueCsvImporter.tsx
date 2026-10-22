@@ -12,7 +12,7 @@ const FIELD_LABELS: { key: string; label: string; required?: boolean }[] = [
   { key: 'name', label: 'Product name', required: true },
   { key: 'sku', label: 'SKU', required: true },
   { key: 'supplier_cost', label: 'Cost price (₹, supplier price)' },
-  { key: 'cost_source', label: 'Cost source (manual / preferred / lowest)' },
+  { key: 'cost_source', label: 'Cost source (portal_default / manual / preferred / lowest)' },
   { key: 'price', label: 'Old price column (read as cost when cost is blank)' },
   { key: 'description', label: 'Description' },
   { key: 'category', label: 'Category' },
@@ -116,7 +116,7 @@ export function CatalogueCsvImporter({ defaultCreateCategories = false }: { defa
           />
           <p className="text-[11px] text-gray-500 mt-2">
             Required columns: product name, SKU, cost price. Selling prices are calculated from cost
-            and set in Pricing. Cost source is manual, preferred or lowest (blank = manual). Optional: description, category, supplier, MOQ, stock, internal notes, retail (yes / no), business (yes / no), corporate visibility, companies, image URL, image filename,
+            and set in Pricing. Cost source is portal_default, manual, preferred or lowest (blank = portal_default, which follows each portal rule). Optional: description, category, supplier, MOQ, stock, internal notes, retail (yes / no), business (yes / no), corporate visibility, companies, image URL, image filename,
             colour, size, variant SKU, extra price, status. Blank retail / business follow corporate &ldquo;all&rdquo;, as before.
           </p>
         </div>

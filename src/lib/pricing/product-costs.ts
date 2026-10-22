@@ -36,7 +36,7 @@ export function withProductCost<T extends object>(row: T): T & ProductCostFields
 export async function upsertProductCost(
   client: SupabaseClient,
   productId: string,
-  fields: Partial<ProductCostFields> & { cost_source?: 'manual' | 'preferred' | 'lowest' },
+  fields: Partial<ProductCostFields> & { cost_source?: 'portal_default' | 'manual' | 'preferred' | 'lowest' },
 ) {
   const payload: Record<string, unknown> = {
     product_id: productId,

@@ -1,4 +1,5 @@
 import { specialPriceActive } from '@/lib/pricing/listed'
+import type { ResolvedCostSource } from '@/lib/pricing/cost-basis'
 import { roundMoney } from '@/lib/pricing/resolve'
 
 /** Store, the business portal, and the corporate portal (company portal, microsite, catalogs). */
@@ -20,6 +21,8 @@ export type PortalRule = {
   showPrices: boolean
   /** Warn in admin. Block saving a fixed price below cost plus this percent. Does not rewrite a price. */
   minMarginPercent: number
+  /** Cost basis for products set to portal_default. */
+  costSource: ResolvedCostSource
 }
 
 /** Fallback rules when org_settings cannot be read: cost as-is, paise rounding, nothing hidden. */
@@ -30,6 +33,7 @@ export const SEEDED_PORTAL_RULES: Record<PricingPortal, PortalRule> = {
     gstMode: 'inclusive',
     showPrices: true,
     minMarginPercent: 0,
+    costSource: 'manual',
   },
   business: {
     marginPercent: null,
@@ -37,6 +41,7 @@ export const SEEDED_PORTAL_RULES: Record<PricingPortal, PortalRule> = {
     gstMode: 'exclusive',
     showPrices: true,
     minMarginPercent: 0,
+    costSource: 'manual',
   },
   corporate: {
     marginPercent: 0,
@@ -44,6 +49,7 @@ export const SEEDED_PORTAL_RULES: Record<PricingPortal, PortalRule> = {
     gstMode: 'exclusive',
     showPrices: true,
     minMarginPercent: 0,
+    costSource: 'manual',
   },
 }
 

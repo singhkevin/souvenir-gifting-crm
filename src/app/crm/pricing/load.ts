@@ -9,7 +9,7 @@ import {
 } from '@/lib/pricing/engine'
 import { getPricingSettings, loadEffectiveCosts, type ProductCostBasis } from '@/lib/pricing/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import type { CostSource } from '@/lib/pricing/cost-basis'
+import type { CostSource, ResolvedCostSource } from '@/lib/pricing/cost-basis'
 import type { PricingSettings } from '@/lib/pricing/surfaces'
 import { oneRelation } from '@/lib/utils'
 
@@ -31,7 +31,10 @@ export type GridRow = {
   cost: number | null
   /** The stored manual cost, shown when the source is an offer. */
   manualCost: number | null
+  /** The product's own choice (portal_default follows each portal rule). */
   costSource: CostSource
+  /** Cost basis per portal: the cost each portal's price is built from. Cost is null when hidden. */
+  costs: Record<PricingPortal, { cost: number | null; basis: ResolvedCostSource; fromOffer: boolean }>
   /** Per-product portal margin and fixed price, the editable overrides. */
   margins: Record<PricingPortal, number | null>
   fixed: Record<PricingPortal, number | null>
@@ -103,7 +106,7 @@ function num(value: unknown): number | null {
 
 function cell(
   portal: PricingPortal,
-  product: { cost: number | null; margins: Partial<Record<PricingPortal, number | null>> },
+  product: { costs: Record<PricingPortal, number | null>; margins: Partial<Record<PricingPortal, number | null>> },
   fixed: { price: number; valid_until: string | null } | undefined,
   settings: PricingSettings,
   showCost: boolean,
@@ -114,7 +117,7 @@ function cell(
   const resolved = resolvePortalPrice({
     portal,
     rule: settings.portals[portal],
-    costPrice: product.cost,
+    costPrice: product.costs[portal],
     productMarginPercent: product.margins[portal] ?? null,
     companyMarginPercent: companyMargin,
     specialPrice: special?.price,
@@ -159,7 +162,11 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
   // Costs come from the effective-cost rule. Read with the service role so a sales login still sees
   // sell prices; the cost itself is only returned when this profile may see costs.
   const costClient = createAdminClient() || supabase
-  const costBasis = await loadEffectiveCosts(costClient, products.map((row) => row.id), { requireInStock: settings.requireInStock })
+  const ids = products.map((row) => row.id)
+  const [storeCosts, businessCosts, corporateCosts] = await Promise.all((['store', 'business', 'corporate'] as const).map((portal) =>
+    loadEffectiveCosts(costClient, ids, { requireInStock: settings.requireInStock, portalDefault: settings.portals[portal].costSource })))
+  const costMaps: Record<PricingPortal, Map<string, ProductCostBasis>> = { store: storeCosts, business: businessCosts, corporate: corporateCosts }
+  const costBasis = storeCosts
   const marginQuery = await costClient.from('portal_product_margins').select('product_id, portal, margin_percent')
   const marginsByProduct = new Map<string, Partial<Record<PricingPortal, number | null>>>()
   if (!marginQuery.error) {
@@ -170,13 +177,22 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
     }
   }
   const basisFor = (id: string): ProductCostBasis | undefined => costBasis.get(id)
+  const costsFor = (id: string): Record<PricingPortal, number | null> => ({
+    store: costMaps.store.get(id)?.cost ?? null,
+    business: costMaps.business.get(id)?.cost ?? null,
+    corporate: costMaps.corporate.get(id)?.cost ?? null,
+  })
 
   const rows: GridRow[] = products.map((row) => {
     const category = oneRelation(row.category as { id?: string; name?: string | null } | { id?: string; name?: string | null }[] | null)
     const basis = basisFor(row.id)
     const cost = basis?.cost ?? null
     const margins = marginsByProduct.get(row.id) || {}
-    const product = { cost, margins }
+    const product = { costs: costsFor(row.id), margins }
+    const portalCost = (portal: PricingPortal) => {
+      const entry = costMaps[portal].get(row.id)
+      return { cost: showCost ? entry?.cost ?? null : null, basis: entry?.basis || settings.portals[portal].costSource, fromOffer: entry?.from === 'offer' }
+    }
     const fixed = fixedByProduct.get(row.id)
     return {
       id: row.id,
@@ -187,7 +203,8 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
       categoryId: row.category_id,
       cost: showCost ? cost : null,
       manualCost: showCost ? basis?.manualCost ?? null : null,
-      costSource: basis?.source || 'manual',
+      costSource: basis?.source || 'portal_default',
+      costs: { store: portalCost('store'), business: portalCost('business'), corporate: portalCost('corporate') },
       margins: { store: margins.store ?? null, business: margins.business ?? null, corporate: margins.corporate ?? null },
       fixed: { store: fixed?.store?.price ?? null, business: fixed?.business?.price ?? null, corporate: fixed?.corporate?.price ?? null },
       store: cell('store', product, fixed?.store, settings, showCost),
@@ -290,7 +307,7 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
     const companyRows = new Map<string, DrillCompany>()
     for (const company of companies) {
       if (company.margin == null) continue
-      const product = { cost: basisFor(focus.id)?.cost ?? null, margins: focus.margins }
+      const product = { costs: costsFor(focus.id), margins: focus.margins }
       const fixed = fixedByProduct.get(focus.id)
       companyRows.set(company.id, {
         id: company.id,
@@ -305,7 +322,7 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
     for (const row of specialsForProduct.data || []) {
       const company = oneRelation(row.company as { name?: string; margin_percent?: number | null } | { name?: string; margin_percent?: number | null }[] | null)
       const margin = num(company?.margin_percent)
-      const product = { cost: basisFor(focus.id)?.cost ?? null, margins: focus.margins }
+      const product = { costs: costsFor(focus.id), margins: focus.margins }
       const special = { price: Number(row.price), validUntil: row.valid_until as string | null }
       const scope = (row.portal as string | null | undefined) || null
       const fixed = fixedByProduct.get(focus.id)
