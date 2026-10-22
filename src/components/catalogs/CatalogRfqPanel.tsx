@@ -8,11 +8,13 @@ import { Spinner } from '@/components/ui/submit-button'
 import { requestCatalogQuotation } from '@/app/portal/actions'
 import { submitShareCatalogRfq } from '@/app/share/catalogs/actions'
 import { formatCurrency } from '@/lib/utils'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export type CatalogRfqOffering = {
   id: string
   name: string
   sku?: string | null
+  imageUrl?: string | null
   price?: number | null
   moq: number
 }
@@ -143,6 +145,7 @@ export function CatalogRfqPanel({
                 checked={Boolean(selected[offering.id])}
                 onChange={() => toggle(offering.id, offering.moq)}
               />
+              <ProductThumb src={offering.imageUrl} alt={offering.name} />
               <span>
                 <span className="font-medium text-[#1C1917]">{offering.name}</span>
                 {offering.sku && <span className="mt-0.5 block font-mono text-[10px] text-[#7A7267]">{offering.sku}</span>}

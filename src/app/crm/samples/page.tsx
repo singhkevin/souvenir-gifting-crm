@@ -6,6 +6,7 @@ import { requireStaff, canSeeCosts } from '@/lib/auth'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export default async function SamplesPage({
   searchParams,
@@ -21,7 +22,7 @@ export default async function SamplesPage({
   const moved = params.moved === '1'
 
   const [{ data: samples }, { data: movements }, { data: products }, { data: companies }] = await Promise.all([
-    supabase.from('sample_stock').select('*, product:products(name, sku)'),
+    supabase.from('sample_stock').select('*, product:products(name, sku, image_url)'),
     supabase.from('sample_movements').select('*, product:products(name), company:companies(name)').order('created_at', { ascending: false }).limit(25),
     supabase.from('products').select('id, name, sku').eq('status', 'active').order('name').limit(200),
     supabase.from('companies').select('id, name').order('name'),
@@ -122,8 +123,13 @@ export default async function SamplesPage({
               return (
                 <tr key={sample.id} className="border-t align-top">
                   <td className="p-3">
-                    <Link href={`/crm/products/${sample.product_id}`} className="font-medium hover:underline">{product?.name}</Link>
-                    <p className="text-[11px] text-[#7A7267]">{product?.sku}</p>
+                    <div className="flex items-start gap-3">
+                      <ProductThumb src={product?.image_url} alt={product?.name} />
+                      <div className="min-w-0">
+                        <Link href={`/crm/products/${sample.product_id}`} className="font-medium hover:underline">{product?.name}</Link>
+                        <p className="text-[11px] text-[#7A7267]">{product?.sku}</p>
+                      </div>
+                    </div>
                   </td>
                   <td className="p-3">{sample.in_office || 0}</td>
                   <td className="p-3">{sample.with_team || 0}</td>

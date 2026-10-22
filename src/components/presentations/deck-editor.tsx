@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { ProductImage } from '@/components/ui/product-image'
 import { cleanSpecs, parseMoq, parseMoney } from '@/lib/presentations/rules'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export type DeckProduct = {
   id: string
@@ -196,8 +197,11 @@ export function DeckEditor({
           {slides.length === 0 ? <p className="text-sm text-gray-500">Nothing on the deck yet.</p> : null}
           {slides.map((slide) => (
             <div key={slide.key} className="border p-3">
-              <div className="flex justify-between gap-2">
-                <p className="text-sm font-medium">{slide.title}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <ProductThumb src={slide.imageUrl} alt={slide.title} />
+                  <p className="text-sm font-medium">{slide.title}</p>
+                </div>
                 <button type="button" className="text-xs text-red-700" onClick={() => setSlides((current) => current.filter((row) => row.key !== slide.key))}>Remove</button>
               </div>
               <p className="text-[11px] uppercase tracking-wide text-gray-500">{slide.kind}</p>

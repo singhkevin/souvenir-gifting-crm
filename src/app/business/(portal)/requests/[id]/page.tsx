@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { requireBusiness } from '@/lib/business/session'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ export default async function BusinessRequestPage({ params }: { params: Promise<
 
   const { data: lines } = await supabase
     .from('requirement_products')
-    .select('id, quantity, notes, target_unit_price, alt_quantities, product:products(name, sku)')
+    .select('id, quantity, notes, target_unit_price, alt_quantities, product:products(name, sku, image_url)')
     .eq('requirement_id', id)
 
   return (
@@ -94,15 +95,20 @@ export default async function BusinessRequestPage({ params }: { params: Promise<
           </thead>
           <tbody className="divide-y divide-[#CCC5BD]">
             {(lines || []).map((line) => {
-              const product = oneRelation(line.product as { name?: string; sku?: string } | { name?: string; sku?: string }[] | null)
+              const product = oneRelation(line.product as { name?: string; sku?: string; image_url?: string | null } | { name?: string; sku?: string; image_url?: string | null }[] | null)
               const breaks = Array.isArray(line.alt_quantities) ? line.alt_quantities.join(', ') : ''
               return (
                 <tr key={line.id} className="hover:bg-[#F6F3EC] transition-colors">
                   <td className="p-3.5">
-                    <p className="font-medium text-[#1C1C18]">{product?.name || 'Item'}</p>
-                    {product?.sku ? (
-                      <p className="sv2-mono-sm text-xs text-[#7C766F]">SKU: {product.sku}</p>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                      <ProductThumb src={product?.image_url} alt={product?.name || 'Item'} />
+                      <div className="min-w-0">
+                        <p className="font-medium text-[#1C1C18]">{product?.name || 'Item'}</p>
+                        {product?.sku ? (
+                          <p className="sv2-mono-sm text-xs text-[#7C766F]">SKU: {product.sku}</p>
+                        ) : null}
+                      </div>
+                    </div>
                   </td>
                   <td className="p-3.5 sv2-mono-sm text-right text-xs text-[#1C1C18]">
                     {line.quantity}

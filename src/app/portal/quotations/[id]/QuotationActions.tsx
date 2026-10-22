@@ -7,11 +7,13 @@ import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { estimateTickedLines } from '@/lib/quotes/flow'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export type QuotationDecisionLine = {
   id: string
   name: string
   sku: string | null
+  imageUrl?: string | null
   quantity: number
   unitPrice: number
   lineTotal: number
@@ -112,6 +114,7 @@ export function QuotationActions({
               disabled={pending}
               aria-label={`Accept ${item.name}`}
             />
+            <ProductThumb src={item.imageUrl} alt={item.name} />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-[#1C1C18]">{item.name}</p>
               {item.sku && <p className="font-mono text-[10px] text-[#7C766F] mt-0.5">SKU: {item.sku}</p>}

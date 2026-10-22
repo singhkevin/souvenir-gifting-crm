@@ -4,6 +4,7 @@ import { PrintButton } from './PrintButton'
 import { requireStaff } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export default async function QuotationPreviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -18,7 +19,7 @@ export default async function QuotationPreviewPage({ params }: { params: Promise
   if (!quote) notFound()
   const { data: items } = await supabase
     .from('quotation_items')
-    .select('id, quantity, unit_price, line_total, description, product:products(name, sku)')
+    .select('id, quantity, unit_price, line_total, description, product:products(name, sku, image_url)')
     .eq('quotation_id', id)
   const company = oneRelation(quote.company)
 
@@ -50,8 +51,13 @@ export default async function QuotationPreviewPage({ params }: { params: Promise
             return (
               <tr key={item.id} className="border-b border-gray-100">
                 <td className="py-2">
-                  <div className="font-semibold text-gray-900">{product?.name || item.description || 'Item'}</div>
-                  <div className="font-mono text-[10px] text-gray-400">{product?.sku}</div>
+                  <div className="flex items-center gap-3">
+                    <ProductThumb src={product?.image_url} alt={product?.name || item.description || 'Item'} />
+                    <div className="min-w-0">
+                      <div className="font-semibold text-gray-900">{product?.name || item.description || 'Item'}</div>
+                      <div className="font-mono text-[10px] text-gray-400">{product?.sku}</div>
+                    </div>
+                  </div>
                 </td>
                 <td className="py-2 text-right">{item.quantity}</td>
                 <td className="py-2 text-right">{formatCurrency(item.unit_price)}</td>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { QuotationActions } from '@/app/portal/quotations/[id]/QuotationActions'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 function QuoteStatusChip({ status }: { status: string | null }) {
   const norm = String(status || 'sent').toLowerCase()
@@ -176,11 +177,14 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#CCC5BD]">
-                {quote.items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+                {quote.items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string; image_url?: string | null } | { name?: string; sku?: string; image_url?: string | null }[] | null }) => {
                   const product = oneRelation(item.product)
                   return (
                     <tr key={item.id} className="hover:bg-[#F6F3EC] transition-colors">
                       <td className="py-3.5 px-4">
+                        <div className="flex items-start gap-3">
+                        <ProductThumb src={product?.image_url} alt={product?.name || 'Item'} />
+                        <div className="min-w-0">
                         <div className="font-semibold text-[#1C1C18]">{product?.name || 'Item'}</div>
                         {product?.sku && (
                           <div className="font-mono text-[10px] text-[#7C766F] mt-0.5">
@@ -196,6 +200,8 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
                             {item.client_response}
                           </span>
                         )}
+                        </div>
+                        </div>
                       </td>
                       <td className="py-3.5 px-4 text-center font-mono text-[#1C1C18]">
                         {item.quantity} units
@@ -215,12 +221,13 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
 
           {/* Mobile Stacked Items */}
           <div className="md:hidden border border-[#CCC5BD] bg-white rounded-none divide-y divide-[#CCC5BD]">
-            {quote.items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+            {quote.items?.map((item: { id: string; quantity: number; unit_price: number; line_total: number; client_response?: string | null; product?: { name?: string; sku?: string; image_url?: string | null } | { name?: string; sku?: string; image_url?: string | null }[] | null }) => {
               const product = oneRelation(item.product)
               return (
                 <article key={item.id} className="p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2">
-                    <div>
+                    <ProductThumb src={product?.image_url} alt={product?.name || 'Item'} />
+                    <div className="min-w-0 flex-1">
                       <p className="font-semibold text-sm text-[#1C1C18]">{product?.name || 'Item'}</p>
                       {product?.sku && (
                         <p className="font-mono text-[10px] text-[#7C766F] mt-0.5">SKU: {product.sku}</p>
@@ -303,12 +310,13 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
               discountPercent={Number(quote.discount_percent) || 0}
               taxPercent={Number(quote.tax_percent) || 0}
               validUntil={quote.valid_until || null}
-              items={(quote.items || []).map((item: { id: string; quantity: number; unit_price: number; line_total: number; product?: { name?: string; sku?: string } | { name?: string; sku?: string }[] | null }) => {
+              items={(quote.items || []).map((item: { id: string; quantity: number; unit_price: number; line_total: number; product?: { name?: string; sku?: string; image_url?: string | null } | { name?: string; sku?: string; image_url?: string | null }[] | null }) => {
                 const product = oneRelation(item.product)
                 return {
                   id: item.id,
                   name: product?.name || 'Item',
                   sku: product?.sku || null,
+                  imageUrl: product?.image_url || null,
                   quantity: Number(item.quantity) || 0,
                   unitPrice: Number(item.unit_price) || 0,
                   lineTotal: Number(item.line_total) || 0,

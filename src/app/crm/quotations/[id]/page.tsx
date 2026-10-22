@@ -447,6 +447,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               productId: item.product_id || null,
               name: product?.name || 'Item',
               sku: product?.sku || null,
+              imageUrl: product?.image_url || null,
               quantity: Number(item.quantity) || 1,
               unitPrice: Number(item.unit_price) || 0,
               catalogCost: item.product_id ? catalogCostByProduct.get(item.product_id) ?? null : null,

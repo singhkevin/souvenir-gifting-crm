@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaff, applyOrderScope, applyOwnerScope, applyCompanyScope } from '@/lib/auth'
 import Link from 'next/link'
 import { formatCurrency, oneRelation, asRows } from '@/lib/utils'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 type SearchLead = {
   id: string
@@ -12,7 +13,7 @@ type SearchLead = {
 type SearchCompany = { id: string; name: string }
 type SearchCampaign = { id: string; name: string }
 type SearchRequirement = { id: string; name: string }
-type SearchProduct = { id: string; name: string; sku: string | null }
+type SearchProduct = { id: string; name: string; sku: string | null; image_url?: string | null }
 type SearchPerson = { id: string; full_name: string | null; role: string }
 type SearchQuote = { id: string; quotation_number: string | null; total: number | null }
 type SearchOrder = {
@@ -73,7 +74,7 @@ export default async function SearchPage({
     canSales ? supabase.from('campaigns').select('id, name').ilike('name', like).limit(8) : Promise.resolve({ data: [] as SearchCampaign[] }),
     canSales ? reqQuery : Promise.resolve({ data: [] as SearchRequirement[] }),
     (canSales || canOps)
-      ? supabase.from('products').select('id, name, sku').or(`name.ilike.${like},sku.ilike.${like}`).limit(8)
+      ? supabase.from('products').select('id, name, sku, image_url').or(`name.ilike.${like},sku.ilike.${like}`).limit(8)
       : Promise.resolve({ data: [] as SearchProduct[] }),
     canPeople
       ? supabase.from('profiles').select('id, full_name, email, role').or(`full_name.ilike.${like},email.ilike.${like}`).in('role', ['admin', 'sales', 'operations', 'accounts', 'management']).limit(8)
@@ -153,7 +154,10 @@ export default async function SearchPage({
       {(canSales || canOps) && (
         <Section title="Products">
           {(products || []).map((p: SearchProduct) => (
-            <Link key={p.id} href={`/crm/products/${p.id}`} className="block text-sm hover:underline">{p.name} · {p.sku}</Link>
+            <Link key={p.id} href={`/crm/products/${p.id}`} className="flex items-center gap-2 py-0.5 text-sm hover:underline">
+              <ProductThumb src={p.image_url} alt={p.name} />
+              <span>{p.name} · {p.sku}</span>
+            </Link>
           ))}
           {(!products || products.length === 0) && <p className="text-sm text-gray-500">No products.</p>}
         </Section>

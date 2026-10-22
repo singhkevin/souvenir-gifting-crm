@@ -7,6 +7,7 @@ import { requireBusiness } from '@/lib/business/session'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import type { CartItem } from '@/lib/catalogue/cart'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
 
@@ -103,14 +104,19 @@ export default async function BusinessQuotePage({ params }: { params: Promise<{ 
           </thead>
           <tbody className="divide-y divide-[#CCC5BD]">
             {lines.map((item) => {
-              const product = oneRelation(item.product as { name?: string; sku?: string } | null)
+              const product = oneRelation(item.product as { name?: string; sku?: string; image_url?: string | null } | null)
               return (
                 <tr key={item.id} className="hover:bg-[#F6F3EC] transition-colors">
                   <td className="p-3.5">
-                    <p className="font-medium text-[#1C1C18]">{product?.name || item.description}</p>
-                    {product?.sku ? (
-                      <p className="sv2-mono-sm text-xs text-[#7C766F]">SKU: {product.sku}</p>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                      <ProductThumb src={product?.image_url} alt={product?.name || 'Item'} />
+                      <div className="min-w-0">
+                        <p className="font-medium text-[#1C1C18]">{product?.name || item.description}</p>
+                        {product?.sku ? (
+                          <p className="sv2-mono-sm text-xs text-[#7C766F]">SKU: {product.sku}</p>
+                        ) : null}
+                      </div>
+                    </div>
                   </td>
                   <td className="p-3.5 sv2-mono-sm text-right text-xs text-[#1C1C18]">
                     {item.quantity}
@@ -165,8 +171,8 @@ export default async function BusinessQuotePage({ params }: { params: Promise<{ 
         <QuoteResponse
           quotationId={quote.id}
           items={lines.map((item) => {
-            const product = oneRelation(item.product as { name?: string } | null)
-            return { id: item.id, name: product?.name || item.description || 'Item' }
+            const product = oneRelation(item.product as { name?: string; image_url?: string | null } | null)
+            return { id: item.id, name: product?.name || item.description || 'Item', imageUrl: product?.image_url || null }
           })}
         />
       ) : null}

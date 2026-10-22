@@ -7,6 +7,7 @@ import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { readCatalogueShortlist } from '@/lib/portal/catalogue-shortlist'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 const PURPOSE_OPTIONS = [
   { value: 'festival', label: 'Festival (Diwali, Christmas, etc)' },
@@ -305,9 +306,12 @@ export function RequestQuotationForm() {
                         key={p.sku || p.id}
                         className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between hover:bg-[#F6F3EC] transition-colors"
                       >
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[#1C1C18]">{p.name}</p>
-                          <p className="font-mono text-[10px] text-[#7C766F] mt-0.5">SKU: {p.sku}</p>
+                        <div className="flex min-w-0 items-center gap-3">
+                          <ProductThumb src={p.image_url} alt={p.name} />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-[#1C1C18]">{p.name}</p>
+                            <p className="font-mono text-[10px] text-[#7C766F] mt-0.5">SKU: {p.sku}</p>
+                          </div>
                         </div>
                         <label className="flex items-center gap-2 text-xs text-[#7C766F]">
                           <span className="font-bold uppercase tracking-wider text-[10px]">Qty:</span>

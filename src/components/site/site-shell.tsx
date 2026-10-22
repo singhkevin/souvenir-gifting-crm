@@ -43,6 +43,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
     id: product.id,
     name: product.name,
     category_name: product.category_name,
+    image_url: product.image_url || null,
     href: `/catalogue/${product.id}`,
   }))
   const categoryLinks = homeCategoryTiles(categories, 6).map((category) => ({

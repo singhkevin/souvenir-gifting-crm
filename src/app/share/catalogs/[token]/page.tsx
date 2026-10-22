@@ -196,6 +196,7 @@ async function SharePurchase({
         offerings={rows.filter((row) => row.offer.buy && row.product.product_id).map((row) => ({
           productId: row.product.product_id as string,
           name: row.product.display_name || 'Gift',
+          imageUrl: row.product.client_image_url || null,
           price: row.price,
           maxBuyQty: row.offer.maxBuyQty,
         }))}
@@ -208,6 +209,7 @@ async function SharePurchase({
           id: row.product.id,
           name: row.product.display_name || 'Gift',
           sku: row.product.sku || null,
+          imageUrl: row.product.client_image_url || null,
           price: row.price,
           moq: row.product.moq && row.product.moq > 0 ? row.product.moq : 1,
         }))}

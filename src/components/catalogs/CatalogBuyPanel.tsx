@@ -6,10 +6,12 @@ import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { checkoutShareCatalog } from '@/app/share/catalogs/actions'
 import { formatCurrency } from '@/lib/utils'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export type CatalogBuyOffering = {
   productId: string
   name: string
+  imageUrl?: string | null
   price: number | null
   maxBuyQty: number | null
 }
@@ -96,7 +98,8 @@ export function CatalogBuyPanel({
       <ul className="mt-4 space-y-3">
         {offerings.map((offering) => (
           <li key={offering.productId} className="flex items-center justify-between gap-3 text-sm">
-            <div>
+            <ProductThumb src={offering.imageUrl} alt={offering.name} />
+            <div className="min-w-0 flex-1">
               <p className="font-medium">{offering.name}</p>
               <p className="text-xs text-[#7A7267]">
                 {offering.price == null ? 'Price on request' : formatCurrency(offering.price)}

@@ -12,6 +12,7 @@ import { toggleOfferingSelection } from '@/app/portal/catalogue/actions'
 import { budgetBadge, clampQuoteQty, quoteEstimate, type BudgetBadge } from '@/lib/portal/catalog-quote'
 import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { formatCurrency } from '@/lib/utils'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export type CatalogQuoteItem = {
   id: string
@@ -450,7 +451,8 @@ function QuoteBasket({
           {lines.map(({ item, quantity }) => (
             <li key={item.id} className="p-3 space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
+                <ProductThumb src={item.imageUrl} alt={item.name} />
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold text-[#1C1C18] line-clamp-2">{item.name}</p>
                   <p className="font-mono text-[10px] text-[#7C766F] mt-0.5">
                     {item.price == null ? 'Price on request' : formatCurrency(item.price)} per person

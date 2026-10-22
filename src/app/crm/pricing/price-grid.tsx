@@ -15,6 +15,7 @@ import {
   useBestOfferAsCost,
 } from './actions'
 import type { GridRow } from './load'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 const PORTALS: PricingPortal[] = ['store', 'business', 'corporate']
 
@@ -187,10 +188,15 @@ export function PriceGrid({
                   <input type="checkbox" checked={selected.includes(row.id)} onChange={() => toggle(row.id)} aria-label={`Select ${row.name}`} />
                 </td>
                 <td className="p-3">
-                  <p className="font-medium text-gray-900">{row.name}</p>
-                  <p className="font-mono text-[10px] text-gray-400">{row.sku}</p>
-                  <p className="text-[10px] text-gray-500">{row.category || 'Uncategorised'}</p>
-                  <Link href={`/crm/pricing?tab=Price%20grid&product=${row.id}`} className="text-[11px] font-medium text-[#806A50] underline">Where is this price?</Link>
+                  <div className="flex items-start gap-3">
+                    <ProductThumb src={row.imageUrl} alt={row.name} />
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900">{row.name}</p>
+                      <p className="font-mono text-[10px] text-gray-400">{row.sku}</p>
+                      <p className="text-[10px] text-gray-500">{row.category || 'Uncategorised'}</p>
+                      <Link href={`/crm/pricing?tab=Price%20grid&product=${row.id}`} className="text-[11px] font-medium text-[#806A50] underline">Where is this price?</Link>
+                    </div>
+                  </div>
                 </td>
                 {showCost ? (
                   <td className="p-3">

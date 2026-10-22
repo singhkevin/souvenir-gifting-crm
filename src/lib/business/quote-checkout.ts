@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export type QuoteCheckoutLine = {
   name: string
   sku: string
+  imageUrl: string | null
   quantity: number
   unitPrice: number
 }
@@ -40,7 +41,7 @@ export async function loadQuoteCheckout(token: string): Promise<QuoteCheckoutVie
   const [{ data: quote }, { data: company }, { data: items }] = await Promise.all([
     admin.from('quotations').select('id, quotation_number, status, company_id, contact_id, discount_percent, tax_percent').eq('id', row.quotation_id).maybeSingle(),
     admin.from('companies').select('name, account_type, business_verification').eq('id', row.company_id).maybeSingle(),
-    admin.from('quotation_items').select('description, quantity, unit_price, client_response, product:products(name, sku, status)').eq('quotation_id', row.quotation_id),
+    admin.from('quotation_items').select('description, quantity, unit_price, client_response, product:products(name, sku, status, image_url)').eq('quotation_id', row.quotation_id),
   ])
   if (!quote || quote.status !== 'accepted' || company?.account_type !== 'business' || company.business_verification !== 'verified') {
     return { ok: false, reason: 'invalid' }
@@ -54,6 +55,7 @@ export async function loadQuoteCheckout(token: string): Promise<QuoteCheckoutVie
     lines.push({
       name: product.name || item.description || 'Item',
       sku: product.sku || '',
+      imageUrl: product.image_url || null,
       quantity: Number(item.quantity) || 1,
       unitPrice: Number(item.unit_price) || 0,
     })

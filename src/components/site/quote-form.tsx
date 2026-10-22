@@ -5,8 +5,9 @@ import { submitPublicQuote } from '@/app/request-quote/actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { BrandName } from '@/components/brand/brand-name'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
-export type QuoteFormItem = { id: string; name: string; sku?: string; quantity: number }
+export type QuoteFormItem = { id: string; name: string; sku?: string; quantity: number; image_url?: string | null }
 
 export function QuoteForm({
   productId,
@@ -76,7 +77,10 @@ export function QuoteForm({
           <ul className="space-y-1 sv2-body-sm text-xs text-[#1C1C18]">
             {items.map((item) => (
               <li key={item.id} className="flex items-center justify-between gap-2 border-b border-[#CCC5BD]/40 pb-1 last:border-0 last:pb-0">
-                <span className="min-w-0 truncate">{item.name}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <ProductThumb src={item.image_url} alt={item.name} size={32} />
+                  <span className="min-w-0 truncate">{item.name}</span>
+                </span>
                 <span className="shrink-0 sv2-mono-sm font-semibold text-[#7C766F]">&times; {item.quantity}</span>
               </li>
             ))}

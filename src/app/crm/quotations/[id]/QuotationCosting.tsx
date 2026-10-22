@@ -7,11 +7,13 @@ import { useAction } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { liveMarginPercent, marginWarningText, marginWarnings, syncCostingFields } from '@/lib/quotes/flow'
 import type { SupplierOffer } from '@/lib/pricing/offers'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 type Line = {
   id: string
   name: string
   sku: string | null
+  imageUrl?: string | null
   quantity: number
   unitPrice: number
   catalogCost?: number | null
@@ -187,7 +189,8 @@ function CostLine({
   return (
     <div className={`rounded-none border p-4 text-xs space-y-3.5 ${cardBorderBg}`}>
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <ProductThumb src={line.imageUrl} alt={line.name} />
+        <div className="min-w-0 flex-1">
           <p className="font-semibold text-sm text-[#1C1C18]">{line.name}</p>
           <p className="font-mono text-xs text-[#7C766F] mt-0.5">{line.sku} · qty {line.quantity}</p>
         </div>

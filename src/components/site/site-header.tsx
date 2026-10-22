@@ -15,6 +15,7 @@ import {
   HeaderSampleCartLink,
   HeaderSearchSubmit,
 } from '@/components/sv2/header-actions'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 const PRIMARY_NAV = [
   { href: '/about', label: 'About' },
@@ -28,6 +29,7 @@ type Suggestion = {
   id: string
   name: string
   category_name: string | null
+  image_url?: string | null
   href: string
 }
 
@@ -136,15 +138,18 @@ export function SiteHeader({
                   <Link
                     key={item.id}
                     href={item.href}
-                    className="block px-4 py-2.5 text-sm text-[#1C1C18] hover:bg-[#F6F3EC] border-b border-[#CCC5BD]/40 last:border-0"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#1C1C18] hover:bg-[#F6F3EC] border-b border-[#CCC5BD]/40 last:border-0"
                     onMouseDown={(event) => event.preventDefault()}
                   >
-                    <span className="block font-medium">{item.name}</span>
-                    {item.category_name ? (
-                      <span className="mt-0.5 block sv2-label text-[10px] text-[#9E4300]">
-                        {item.category_name}
-                      </span>
-                    ) : null}
+                    <ProductThumb src={item.image_url} alt={item.name} />
+                    <span className="min-w-0">
+                      <span className="block font-medium">{item.name}</span>
+                      {item.category_name ? (
+                        <span className="mt-0.5 block sv2-label text-[10px] text-[#9E4300]">
+                          {item.category_name}
+                        </span>
+                      ) : null}
+                    </span>
                   </Link>
                 ))}
               </div>
@@ -224,14 +229,17 @@ export function SiteHeader({
                     key={item.id}
                     href={item.href}
                     onClick={() => setSearchOpen(false)}
-                    className="block py-2.5 sv2-body-sm text-[#1C1C18] border-b border-[#CCC5BD]/40 last:border-0"
+                    className="flex items-center gap-3 py-2.5 sv2-body-sm text-[#1C1C18] border-b border-[#CCC5BD]/40 last:border-0"
                   >
-                    <span className="block font-medium">{item.name}</span>
-                    {item.category_name ? (
-                      <span className="mt-0.5 block sv2-label text-[10px] text-[#9E4300]">
-                        {item.category_name}
-                      </span>
-                    ) : null}
+                    <ProductThumb src={item.image_url} alt={item.name} />
+                    <span className="min-w-0">
+                      <span className="block font-medium">{item.name}</span>
+                      {item.category_name ? (
+                        <span className="mt-0.5 block sv2-label text-[10px] text-[#9E4300]">
+                          {item.category_name}
+                        </span>
+                      ) : null}
+                    </span>
                   </Link>
                 ))}
               </div>

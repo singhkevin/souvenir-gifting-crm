@@ -5,6 +5,7 @@ import { CartCheckout } from '@/components/site/cart-checkout'
 import { loadQuoteCheckout } from '@/lib/business/quote-checkout'
 import { formatCurrency } from '@/lib/utils'
 import { siteContent } from '@/config/siteContent'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
 
@@ -123,7 +124,8 @@ export default async function QuoteCheckoutPage({
               <ul className="divide-y divide-[#CCC5BD] border-y border-[#CCC5BD] max-h-80 overflow-y-auto">
                 {view.lines.map((line) => (
                   <li key={`${line.sku}-${line.name}`} className="flex justify-between gap-3 py-3 sv2-body-sm text-sm">
-                    <div className="min-w-0">
+                    <ProductThumb src={line.imageUrl} alt={line.name} />
+                    <div className="min-w-0 flex-1">
                       <span className="block font-medium text-[#1C1C18] truncate">{line.name}</span>
                       <span className="sv2-mono-sm text-xs text-[#7C766F]">
                         {line.sku} &middot; {line.quantity} &times; {formatCurrency(line.unitPrice)}

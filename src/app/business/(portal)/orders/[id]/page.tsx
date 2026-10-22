@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
 import { paymentLabel } from '@/lib/orders/payment'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +30,7 @@ export default async function BusinessOrderPage({ params }: { params: Promise<{ 
     .maybeSingle()
   const { data: items } = await supabase
     .from('order_items')
-    .select('id, quantity, unit_price, line_total, product:products(name, sku)')
+    .select('id, quantity, unit_price, line_total, product:products(name, sku, image_url)')
     .eq('order_id', id)
 
   return (
@@ -94,14 +95,19 @@ export default async function BusinessOrderPage({ params }: { params: Promise<{ 
           </thead>
           <tbody className="divide-y divide-[#CCC5BD]">
             {(items || []).map((item) => {
-              const product = oneRelation(item.product as { name?: string; sku?: string } | null)
+              const product = oneRelation(item.product as { name?: string; sku?: string; image_url?: string | null } | null)
               return (
                 <tr key={item.id} className="hover:bg-[#F6F3EC] transition-colors">
                   <td className="p-3.5">
-                    <p className="font-medium text-[#1C1C18]">{product?.name || 'Item'}</p>
-                    {product?.sku ? (
-                      <p className="sv2-mono-sm text-xs text-[#7C766F]">SKU: {product.sku}</p>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                      <ProductThumb src={product?.image_url} alt={product?.name || 'Item'} />
+                      <div className="min-w-0">
+                        <p className="font-medium text-[#1C1C18]">{product?.name || 'Item'}</p>
+                        {product?.sku ? (
+                          <p className="sv2-mono-sm text-xs text-[#7C766F]">SKU: {product.sku}</p>
+                        ) : null}
+                      </div>
+                    </div>
                   </td>
                   <td className="p-3.5 sv2-mono-sm text-right text-xs text-[#1C1C18]">
                     {item.quantity}

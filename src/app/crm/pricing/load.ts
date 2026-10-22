@@ -22,6 +22,7 @@ export type GridRow = {
   id: string
   name: string
   sku: string
+  imageUrl: string | null
   category: string | null
   categoryId: string | null
   cost: number | null
@@ -57,6 +58,7 @@ export type SpecialRow = {
   productId: string
   name: string
   sku: string
+  imageUrl?: string | null
   price: number
   validUntil: string | null
 }
@@ -67,6 +69,7 @@ export type CatalogFixedRow = {
   campaign: string
   productId: string
   name: string
+  imageUrl?: string | null
   manualPrice: number | null
 }
 
@@ -127,7 +130,7 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
 
   const productQuery = await supabase
     .from('products')
-    .select('id, name, sku, price, category_id, category:categories(id, name), product_costs(supplier_cost)')
+    .select('id, name, sku, price, image_url, category_id, category:categories(id, name), product_costs(supplier_cost)')
     .eq('status', 'active')
     .order('name')
     .limit(1000)
@@ -154,6 +157,7 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
       id: row.id,
       name: row.name,
       sku: row.sku,
+      imageUrl: row.image_url || null,
       category: category?.name || null,
       categoryId: row.category_id,
       cost: showCost ? cost : null,
@@ -206,14 +210,15 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
   if (selected) {
     const specialQuery = await supabase
       .from('company_product_prices')
-      .select('product_id, price, valid_until, product:products(name, sku)')
+      .select('product_id, price, valid_until, product:products(name, sku, image_url)')
       .eq('company_id', selected.id)
     specials = (specialQuery.data || []).map((row) => {
-      const product = oneRelation(row.product as { name?: string; sku?: string } | { name?: string; sku?: string }[] | null)
+      const product = oneRelation(row.product as { name?: string; sku?: string; image_url?: string | null } | { name?: string; sku?: string; image_url?: string | null }[] | null)
       return {
         productId: row.product_id,
         name: product?.name || 'Product',
         sku: product?.sku || '',
+        imageUrl: product?.image_url || null,
         price: Number(row.price),
         validUntil: row.valid_until,
       }
@@ -227,7 +232,7 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
     if (campaignIds.length) {
       const lines = await supabase
         .from('campaign_products')
-        .select('id, campaign_id, product_id, manual_price, selling_price, product:products(name), campaign:campaigns(name)')
+        .select('id, campaign_id, product_id, manual_price, selling_price, product:products(name, image_url), campaign:campaigns(name)')
         .in('campaign_id', campaignIds)
         .limit(300)
       catalogFixed = (lines.data || [])
@@ -238,6 +243,7 @@ export async function loadPricingPage(profile: ProfileSession, companyId: string
           campaign: oneRelation(row.campaign as { name?: string } | { name?: string }[] | null)?.name || 'Catalog',
           productId: row.product_id as string,
           name: oneRelation(row.product as { name?: string } | { name?: string }[] | null)?.name || 'Product',
+          imageUrl: oneRelation(row.product as { image_url?: string | null } | { image_url?: string | null }[] | null)?.image_url || null,
           manualPrice: num(row.manual_price),
         }))
     }

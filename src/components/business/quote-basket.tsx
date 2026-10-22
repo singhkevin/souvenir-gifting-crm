@@ -13,6 +13,7 @@ import {
   normaliseBreaks,
 } from '@/lib/business/lines'
 import { formatCurrency } from '@/lib/utils'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 type Meta = {
   client_request_id: string
@@ -109,7 +110,8 @@ export function QuoteBasket({ pendingApproval = false, priceNote = 'excl. GST' }
           {items.map((item) => (
             <li key={item.id} className="border border-[#CCC5BD] bg-[#FCF9F2] p-4 sm:p-5 rounded-none">
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <ProductThumb src={item.image_url} alt={item.name} size={48} />
+                <div className="min-w-0 flex-1">
                   <p className="font-serif text-lg font-normal text-[#1C1C18]">{item.name}</p>
                   <p className="sv2-mono-sm text-xs text-[#7C766F] mt-0.5">SKU: {item.sku}</p>
                   <p className="mt-1 sv2-mono-sm text-sm font-semibold text-[#9E4300]">

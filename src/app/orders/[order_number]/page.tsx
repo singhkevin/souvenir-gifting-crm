@@ -7,6 +7,7 @@ import { publicOrderTokenMatches } from '@/lib/orders/public-token'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatCurrency, formatDate, oneRelation } from '@/lib/utils'
 import { SiteShell } from '@/components/site/site-shell'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,7 +56,7 @@ export default async function GuestOrderStatusPage({
     .select(`
       id, order_number, status, order_value, expected_delivery_date, dispatch_date, tracking_number, public_token_hash,
       courier_partner:courier_partners(name),
-      items:order_items(id, description, quantity, product:products(name, sku))
+      items:order_items(id, description, quantity, product:products(name, sku, image_url))
     `)
     .eq('order_number', orderNumber)
     .maybeSingle()
@@ -217,13 +218,16 @@ export default async function GuestOrderStatusPage({
                 const product = oneRelation(item.product)
                 return (
                   <li key={item.id} className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                      <h4 className="font-serif text-lg font-normal text-[#1C1C18]">
-                        {product?.name || item.description || 'Gift Item'}
-                      </h4>
-                      {product?.sku ? (
-                        <p className="sv2-mono-sm text-xs text-[#7C766F] mt-0.5">SKU: {product.sku}</p>
-                      ) : null}
+                    <div className="flex items-center gap-3">
+                      <ProductThumb src={product?.image_url} alt={product?.name || item.description || 'Gift Item'} size={48} />
+                      <div className="min-w-0">
+                        <h4 className="font-serif text-lg font-normal text-[#1C1C18]">
+                          {product?.name || item.description || 'Gift Item'}
+                        </h4>
+                        {product?.sku ? (
+                          <p className="sv2-mono-sm text-xs text-[#7C766F] mt-0.5">SKU: {product.sku}</p>
+                        ) : null}
+                      </div>
                     </div>
                     <div className="text-left sm:text-right">
                       <span className="sv2-label text-[10px] text-[#7C766F] block">Quantity</span>

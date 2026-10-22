@@ -12,6 +12,7 @@ import { countGiftChoices } from '@/lib/gifts/export'
 import { giftJoinUrl } from '@/lib/gifts/company'
 import { giftWindowOpen } from '@/lib/gifts/rules'
 import { resetGiftSubmission, updateGiftSelection } from '../actions'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +58,8 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
   const counts = countGiftChoices(
     (submissions || []).map((row) => ({ label: row.selected_label, size: row.size })),
   )
+  // Submissions store the chosen item's title; match it back to that item's picture.
+  const imageByLabel = new Map((items || []).map((item) => [item.title as string, (item.image_url as string | null) || null]))
   const open = giftWindowOpen(selection.opens_at, selection.closes_at)
   const initial = (items || []).map((item) => ({
     key: item.id,
@@ -133,8 +136,11 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
         {counts.length === 0 ? <p className="mt-2 text-sm text-gray-500">No submissions yet.</p> : (
           <ul className="mt-3 divide-y text-sm">
             {counts.map((row) => (
-              <li key={`${row.label}-${row.size}`} className="flex justify-between py-2">
-                <span>{row.label}{row.size !== '—' ? ` · ${row.size}` : ''}</span>
+              <li key={`${row.label}-${row.size}`} className="flex items-center justify-between gap-3 py-2">
+                <span className="flex items-center gap-3">
+                  <ProductThumb src={imageByLabel.get(row.label)} alt={row.label} />
+                  <span>{row.label}{row.size !== '—' ? ` · ${row.size}` : ''}</span>
+                </span>
                 <span className="font-medium">{row.count}</span>
               </li>
             ))}
@@ -156,7 +162,12 @@ export default async function GiftSelectionDetailPage({ params }: { params: Prom
               <tr key={row.id} className="border-t align-top">
                 <td className="px-3 py-3">{row.employee_name}</td>
                 <td className="px-3 py-3">{row.employee_email}</td>
-                <td className="px-3 py-3">{row.selected_label}</td>
+                <td className="px-3 py-3">
+                  <div className="flex items-center gap-2">
+                    <ProductThumb src={imageByLabel.get(row.selected_label)} alt={row.selected_label} />
+                    <span>{row.selected_label}</span>
+                  </div>
+                </td>
                 <td className="px-3 py-3">{row.size || '—'}</td>
                 <td className="px-3 py-3">{row.address}</td>
                 <td className="px-3 py-3">{row.city}</td>

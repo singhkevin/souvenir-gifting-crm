@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation'
 import { ArrowDown, ArrowUp } from 'lucide-react'
 import { ActionForm } from '@/components/ui/action-form'
 import { ConfirmAction } from '@/components/ui/confirm-action'
-import { ProductImage } from '@/components/ui/product-image'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { getPublicCatalogueProducts, type PublicProduct } from '@/lib/catalogue/products'
 import { createClient } from '@/lib/supabase/server'
@@ -14,6 +13,7 @@ import type { CollectionDef } from '@/lib/homepage/types'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { addCollectionProduct, deleteCollection, moveCollectionProduct, removeCollectionProduct, saveCollection } from '../../actions'
 import { buttonClass, Field, ghostButtonClass, inputClass, ScheduleFields, SetupNotice } from '../../ui'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 const BLANK: CollectionDef = {
   slug: '',
@@ -36,9 +36,7 @@ const BLANK: CollectionDef = {
 function ProductRow({ product, children }: { product: Pick<PublicProduct, 'id' | 'name' | 'sku' | 'image_url' | 'price'>; children?: React.ReactNode }) {
   return (
     <li className="flex items-center gap-3 p-3">
-      <div className="relative h-12 w-12 shrink-0 overflow-hidden border border-gray-200 bg-gray-50">
-        <ProductImage src={product.image_url} alt="" fit="cover" className="absolute inset-0 h-full w-full bg-transparent" />
-      </div>
+      <ProductThumb src={product.image_url} alt={product.name} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-gray-900">{product.name}</p>
         <p className="font-mono text-[11px] text-gray-500">

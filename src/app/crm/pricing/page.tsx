@@ -11,6 +11,7 @@ import { savePricingCompanyMargin, setCatalogManualPrice } from './actions'
 import { loadPricingPage } from './load'
 import { PortalRules } from './portal-rules'
 import { PriceGrid } from './price-grid'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,9 +57,12 @@ export default async function PricingPage({
       {data.drill ? (
         <section className="space-y-3 rounded-xl border border-gray-200 bg-white p-4">
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900">Where is this price? {data.drill.product.name}</h2>
-              <p className="font-mono text-[11px] text-gray-400">{data.drill.product.sku}</p>
+            <div className="flex items-start gap-3">
+              <ProductThumb src={data.drill.product.imageUrl} alt={data.drill.product.name} />
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900">Where is this price? {data.drill.product.name}</h2>
+                <p className="font-mono text-[11px] text-gray-400">{data.drill.product.sku}</p>
+              </div>
             </div>
             <Link href="/crm/pricing?tab=Price%20grid" className="text-xs text-[#806A50] underline">Close</Link>
           </div>
@@ -180,7 +184,7 @@ export default async function PricingPage({
                         {data.specials.length === 0 ? <tr><td colSpan={4} className="py-3 text-gray-500">No special prices.</td></tr> : null}
                         {data.specials.map((row) => (
                           <tr key={row.productId} className="border-t border-gray-100">
-                            <td className="py-2 pr-3">{row.name} <span className="font-mono text-[10px] text-gray-400">{row.sku}</span></td>
+                            <td className="py-2 pr-3"><div className="flex items-center gap-2"><ProductThumb src={row.imageUrl} alt={row.name} /><span>{row.name} <span className="font-mono text-[10px] text-gray-400">{row.sku}</span></span></div></td>
                             <td className="py-2 pr-3">{amount(row.price)}</td>
                             <td className="py-2 pr-3">{row.validUntil || 'No end date'}</td>
                             <td className="py-2">
@@ -227,7 +231,7 @@ export default async function PricingPage({
                         {data.catalogFixed.map((line) => (
                           <tr key={line.id} className="border-t border-gray-100">
                             <td className="py-2 pr-3">{line.campaign}</td>
-                            <td className="py-2 pr-3">{line.name}</td>
+                            <td className="py-2 pr-3"><div className="flex items-center gap-2"><ProductThumb src={line.imageUrl} alt={line.name} /><span>{line.name}</span></div></td>
                             <td className="py-2">
                               {canEdit ? (
                                 <ActionForm action={setCatalogManualPrice} className="flex items-center gap-2">

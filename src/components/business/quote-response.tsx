@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { respondBusinessQuotation } from '@/app/business/actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { ProductThumb } from '@/components/ui/product-thumb'
 
 export function QuoteResponse({
   quotationId,
   items,
 }: {
   quotationId: string
-  items: { id: string; name: string }[]
+  items: { id: string; name: string; imageUrl?: string | null }[]
 }) {
   const [action, setAction] = useState<'accept' | 'reject' | 'revise'>('accept')
   const [selected, setSelected] = useState<string[]>(items.map((item) => item.id))
@@ -67,6 +68,7 @@ export function QuoteResponse({
                 }}
                 className="h-4 w-4 rounded-none border-[#CCC5BD] text-[#9E4300] focus:ring-0"
               />
+              <ProductThumb src={item.imageUrl} alt={item.name} />
               <span>{item.name}</span>
             </label>
           ))}
