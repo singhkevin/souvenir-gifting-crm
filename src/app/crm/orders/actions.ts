@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getProfile, canChangeOrderStage, canSeeCosts, isOpsStaff } from '@/lib/auth'
 import { canAdvanceTo, nextLifecycleStatus, ORDER_STATUS_LABELS, STAGE_DEPARTMENT } from '@/lib/order-workflow'
+import { lineLifecycleEnabled } from '@/lib/orders/line-lifecycle-server'
 
 type AdvanceArgs = {
   orderId: string
@@ -32,6 +33,9 @@ function cleanError(message: string) {
  * migration has not been applied yet.
  */
 async function callAdvanceStage(supabase: SupabaseClient, args: AdvanceArgs): Promise<{ error?: string }> {
+  // Line lifecycle: the order stage follows its lines. olc_hand_off_order keeps hand-off and
+  // cancel; advance_order_stage stays the old app's function until the go-live migration.
+  const rpcName = (await lineLifecycleEnabled(supabase)) ? 'olc_hand_off_order' : 'advance_order_stage'
   const base = {
     p_order_id: args.orderId,
     p_status: args.status,
@@ -44,10 +48,10 @@ async function callAdvanceStage(supabase: SupabaseClient, args: AdvanceArgs): Pr
   // Only send p_expected_status when there is one; the 7-argument call is what a database
   // without migration 20261007 understands.
   let { error } = await supabase.rpc(
-    'advance_order_stage',
+    rpcName,
     args.expectedStatus ? { ...base, p_expected_status: args.expectedStatus } : base,
   )
-  if (error && args.expectedStatus && (error.code === 'PGRST202' || /could not find the function/i.test(error.message))) {
+  if (error && rpcName === 'advance_order_stage' && args.expectedStatus && (error.code === 'PGRST202' || /could not find the function/i.test(error.message))) {
     ;({ error } = await supabase.rpc('advance_order_stage', base))
   }
   if (!error) return {}

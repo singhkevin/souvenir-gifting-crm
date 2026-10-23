@@ -67,6 +67,13 @@ $enum$;
 -- existing screen, report and email keeps working.
 -- Rollback: supabase/rollbacks/20261023_order_line_lifecycle_rollback.sql
 -- Trial run: supabase/tests/order_line_lifecycle_check.sql (always raises, nothing kept).
+--
+-- SAFE WITH THE OLD APP: production may keep running the order-level code after this is
+-- applied. advance_order_stage and client_decide_order_approval are NOT changed here; the
+-- new app calls olc_hand_off_order and client_decide_branding_approval instead. Inserting a
+-- line only recomputes the order stage once 'lifecycle_live' is on, and while it is off an
+-- order stage changed by the old app moves its lines along (new columns only). The switch to
+-- the new rules happens later in 20261023b_order_line_lifecycle_go_live.sql.
 
 -- ---------------------------------------------------------------------------
 -- A. Settings. Every key is a default chosen while Vishal's answers are pending.
@@ -96,7 +103,9 @@ values (true, jsonb_build_object(
   -- TODO(client): which order sources ship from stock by default (skip sourcing).
   'stock_sources', jsonb_build_array('store'),
   -- TODO(client): raise the supplier payable when the PO is sent ('po_sent') or never automatically ('manual').
-  'payable_on', 'po_sent'
+  'payable_on', 'po_sent',
+  -- Off while production still runs the order-level app. Turned on by the go-live migration.
+  'lifecycle_live', false
 ))
 on conflict (id) do nothing;
 
@@ -138,7 +147,7 @@ begin
   end if;
   if not exists (select 1 from pg_constraint where conname = 'order_items_qty_delivered_check') then
     alter table public.order_items add constraint order_items_qty_delivered_check
-      check (qty_delivered >= 0 and qty_delivered <= quantity);
+      check (qty_delivered >= 0);
   end if;
 end $$;
 
@@ -548,6 +557,7 @@ begin
     if v_slug is not null then
       select id, manager_id into v_dept, v_manager from public.departments where slug = v_slug limit 1;
     end if;
+    perform set_config('olc.internal', 'on', true);
     update public.orders
     set status = v_new,
         current_department_id = coalesce(v_dept, current_department_id),
@@ -555,6 +565,7 @@ begin
         actual_delivery_date = case when v_new = 'delivered' then coalesce(actual_delivery_date, current_date) else actual_delivery_date end,
         updated_at = now()
     where id = p_order_id;
+    perform set_config('olc.internal', '', true);
     insert into public.order_status_history (order_id, from_status, to_status, changed_by, note, changed_at)
     values (p_order_id, v_old, v_new, auth.uid(), 'Updated from product line stages', now());
   end if;
@@ -1348,8 +1359,9 @@ begin
 end;
 $$;
 
--- Same signature as before; now works at any point before printing starts.
-create or replace function public.client_decide_order_approval(p_order_id uuid, p_decision text, p_note text default null)
+-- Client branding decision for the new app; works at any point before printing starts.
+-- client_decide_order_approval (old app) is left as it is until go-live.
+create or replace function public.client_decide_branding_approval(p_order_id uuid, p_decision text, p_note text default null)
 returns void
 language plpgsql
 security definer
@@ -1366,9 +1378,10 @@ begin
 end;
 $$;
 
--- Same signature as before. Hand-off (assignee, department, due date, next action, comment)
--- still works; the stage itself now follows the product lines. Cancel cascades to lines and jobs.
-create or replace function public.advance_order_stage(
+-- Hand-off for the new app (same arguments as advance_order_stage, which the old app keeps
+-- using until go-live). Assignee, department, due date, next action and comment still work;
+-- the stage itself follows the product lines. Cancel cascades to lines and jobs.
+create or replace function public.olc_hand_off_order(
   p_order_id uuid, p_status text, p_assigned_to uuid default null, p_department_id uuid default null,
   p_comment text default null, p_stage_due text default null, p_next_action text default null,
   p_expected_status text default null
@@ -1402,7 +1415,9 @@ begin
     update public.purchase_orders set status = 'cancelled', updated_at = now() where order_id = p_order_id and status in ('draft', 'sent', 'ready');
     update public.print_jobs set status = 'cancelled', updated_at = now() where order_id = p_order_id and status in ('pending', 'go_ahead', 'ready');
     update public.deliveries set status = 'cancelled', updated_at = now() where order_id = p_order_id and status = 'out';
+    perform set_config('olc.internal', 'on', true);
     update public.orders set status = 'cancelled', updated_at = now() where id = p_order_id;
+    perform set_config('olc.internal', '', true);
   end if;
 
   update public.orders
@@ -1474,7 +1489,59 @@ as $$
 begin
   insert into public.order_item_stage_history (order_item_id, order_id, from_stage, to_stage, changed_by, note)
   values (new.id, new.order_id, null, new.stage, auth.uid(), 'Line added');
-  perform public.recompute_order_status(new.order_id);
+  -- The old app sets the order stage itself; only recompute once the new rules are live.
+  if coalesce((public.olc_setting('lifecycle_live') #>> '{}')::boolean, false) then
+    perform public.recompute_order_status(new.order_id);
+  end if;
+  return null;
+end;
+$$;
+
+-- While the old app is live it moves orders.status itself. Keep the lines in step so the new
+-- screens show the right stage. Writes only new columns and the new history table, never
+-- raises (an error here must not block the old Advance button), and does nothing once
+-- 'lifecycle_live' is on or when the change came from the new functions (olc.internal).
+create or replace function public.olc_legacy_status_sync()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_stage text;
+begin
+  if coalesce(current_setting('olc.internal', true), '') = 'on' then
+    return null;
+  end if;
+  if coalesce((public.olc_setting('lifecycle_live') #>> '{}')::boolean, false) then
+    return null;
+  end if;
+  v_stage := case new.status
+    when 'created' then 'confirmed'
+    when 'procurement' then 'sourcing'
+    when 'mockup' then 'at_printer'
+    when 'client_approval' then 'at_printer'
+    when 'production' then 'printing'
+    when 'packaging_qc' then 'packing'
+    when 'dispatched' then 'out_for_delivery'
+    when 'delivered' then 'delivered'
+    when 'cancelled' then 'cancelled'
+    else null end;
+  if v_stage is null then
+    return null;
+  end if;
+  insert into public.order_item_stage_history (order_item_id, order_id, from_stage, to_stage, changed_by, note)
+  select oi.id, oi.order_id, oi.stage, v_stage, auth.uid(), 'Order stage changed to ' || new.status
+  from public.order_items oi
+  where oi.order_id = new.id and oi.stage <> 'cancelled' and oi.stage is distinct from v_stage;
+  update public.order_items oi
+  set stage = v_stage,
+      qty_delivered = case when v_stage = 'delivered' then oi.quantity else oi.qty_delivered end,
+      stage_updated_at = now()
+  where oi.order_id = new.id and oi.stage <> 'cancelled' and oi.stage is distinct from v_stage;
+  return null;
+exception when others then
+  raise warning 'olc_legacy_status_sync skipped for order %: %', new.id, sqlerrm;
   return null;
 end;
 $$;
@@ -1542,6 +1609,10 @@ create trigger order_items_lifecycle_defaults before insert on public.order_item
 drop trigger if exists order_items_lifecycle_after_insert on public.order_items;
 create trigger order_items_lifecycle_after_insert after insert on public.order_items
   for each row execute function public.order_items_lifecycle_after_insert();
+drop trigger if exists orders_olc_legacy_status_sync on public.orders;
+create trigger orders_olc_legacy_status_sync after update of status on public.orders
+  for each row when (old.status is distinct from new.status)
+  execute function public.olc_legacy_status_sync();
 
 -- ---------------------------------------------------------------------------
 -- J. Grants.
@@ -1554,6 +1625,9 @@ revoke execute on function public.recompute_order_status(uuid) from public, anon
 revoke execute on function public.olc_apply_branding_decision(uuid, text, text, boolean) from public, anon, authenticated;
 revoke execute on function public.order_items_lifecycle_defaults() from public, anon, authenticated;
 revoke execute on function public.order_items_lifecycle_after_insert() from public, anon, authenticated;
+revoke execute on function public.olc_legacy_status_sync() from public, anon, authenticated;
+revoke execute on function public.olc_hand_off_order(uuid, text, uuid, uuid, text, text, text, text) from public, anon;
+revoke execute on function public.client_decide_branding_approval(uuid, text, text) from public, anon;
 
 revoke execute on function public.plan_order_line(uuid, text, boolean, uuid, uuid, uuid, numeric) from public, anon;
 revoke execute on function public.create_purchase_order(uuid, uuid, uuid[], date, text) from public, anon;
@@ -1582,6 +1656,8 @@ grant execute on function public.plan_order_line(uuid, text, boolean, uuid, uuid
   public.complete_delivery(uuid, jsonb, text, text, text, text, text, text),
   public.cancel_order_line(uuid, text),
   public.record_branding_approval(uuid, text, text),
+  public.olc_hand_off_order(uuid, text, uuid, uuid, text, text, text, text),
+  public.client_decide_branding_approval(uuid, text, text),
   public.is_runner(), public.olc_setting(text), public.olc_actor(boolean)
 to authenticated, service_role;
 $mig$;
@@ -1610,7 +1686,10 @@ $mig$;
     'bucket', (select count(*) from storage.buckets where id = 'order-proofs'),
     'grant_auth_plan', has_function_privilege('authenticated', 'public.plan_order_line(uuid, text, boolean, uuid, uuid, uuid, numeric)', 'execute'),
     'grant_anon_plan', has_function_privilege('anon', 'public.plan_order_line(uuid, text, boolean, uuid, uuid, uuid, numeric)', 'execute'),
-    'grant_auth_set_line', has_function_privilege('authenticated', 'public.olc_set_line_stage(uuid, text, text)', 'execute')
+    'grant_auth_set_line', has_function_privilege('authenticated', 'public.olc_set_line_stage(uuid, text, text)', 'execute'),
+    'fn_md5', (select jsonb_object_agg(p.proname, md5(pg_get_functiondef(p.oid))) from pg_proc p join pg_namespace s on s.oid = p.pronamespace
+               where s.nspname = 'public' and p.proname in ('advance_order_stage', 'client_decide_order_approval')),
+    'lifecycle_live', (select settings -> 'lifecycle_live' from public.order_lifecycle_settings)
   ) into j;
   r := r || jsonb_build_object('after', j);
 
@@ -1618,6 +1697,30 @@ $mig$;
   select id into v_admin from public.profiles where role = 'admin' and is_active order by created_at limit 1;
   perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', v_admin::text, true);
+  -- ---------- old app (main 825f428) still works ----------
+  declare
+    v_old_order uuid;
+    v_old_status text;
+  begin
+    select o.id, o.status into v_old_order, v_old_status from public.orders o
+    where o.status in ('procurement', 'created') and exists (select 1 from public.order_items where order_id = o.id)
+      and o.id not in (select o2.id from public.orders o2 where o2.status = 'created' and o2.source = 'portal'
+                       and exists (select 1 from public.order_items where order_id = o2.id) order by o2.created_at limit 1)
+    order by o.created_at desc limit 1;
+    perform public.advance_order_stage(v_old_order, case v_old_status when 'created' then 'procurement' else 'mockup' end,
+      null, null, 'trial old advance', null, null, v_old_status);
+    r := r || jsonb_build_object('old_app_advance', jsonb_build_object(
+      'order', (select order_number from public.orders where id = v_old_order), 'from', v_old_status,
+      'to', (select status from public.orders where id = v_old_order),
+      'lines_followed', (select jsonb_agg(distinct stage) from public.order_items where order_id = v_old_order)));
+    -- Old app cancel
+    perform public.advance_order_stage(v_old_order, 'cancelled', null, null, 'trial old cancel', null, null, null);
+    r := r || jsonb_build_object('old_app_cancel', (select status || ' / lines ' || (select string_agg(distinct stage, ',') from public.order_items where order_id = v_old_order)
+      from public.orders where id = v_old_order));
+  exception when others then
+    r := r || jsonb_build_object('old_app_advance', 'FAILED: ' || sqlerrm);
+  end;
+
   select o.id into v_order from public.orders o where o.status = 'created' and o.source = 'portal'
     and (select count(*) from public.order_items where order_id = o.id) >= 1 order by o.created_at limit 1;
   select id, quantity into v_item, v_item_qty from public.order_items where order_id = v_order order by quantity desc limit 1;
@@ -1671,11 +1774,13 @@ $mig$;
   v_steps := v_steps || jsonb_build_object('printer_pickup', (select stage from public.order_items where id = v_item), 'order', (select status from public.orders where id = v_order));
 
   begin
-    perform public.advance_order_stage(v_order, 'dispatched');
-    v_steps := v_steps || jsonb_build_object('old_advance', 'ALLOWED (unexpected)');
+    perform public.olc_hand_off_order(v_order, 'dispatched');
+    v_steps := v_steps || jsonb_build_object('new_handoff_stage_move', 'ALLOWED (unexpected)');
   exception when others then
-    v_steps := v_steps || jsonb_build_object('old_advance', 'blocked: ' || sqlerrm);
+    v_steps := v_steps || jsonb_build_object('new_handoff_stage_move', 'blocked: ' || sqlerrm);
   end;
+  perform public.olc_hand_off_order(v_order, (select status from public.orders where id = v_order), null, null, 'trial hand-off comment');
+  v_steps := v_steps || jsonb_build_object('new_handoff_same_stage', 'ok', 'lines_untouched', (select jsonb_agg(stage) from public.order_items where order_id = v_order));
 
   -- Partial runner delivery of the main line.
   v_del := public.create_delivery(v_order, jsonb_build_array(jsonb_build_object('order_item_id', v_item, 'qty', greatest(v_item_qty - 1, 1))),
@@ -1707,7 +1812,7 @@ $mig$;
     insert into public.order_items (order_id, product_id, description, quantity, unit_price, line_total)
     select order_id, product_id, 'trial line', 1, unit_price, unit_price from public.order_items where order_id = v_store_order limit 1
     returning stage into v_tmp;
-    v_steps := v_steps || jsonb_build_object('store_new_line', v_tmp, 'store_order', (select status from public.orders where id = v_store_order));
+    v_steps := v_steps || jsonb_build_object('store_new_line', v_tmp, 'store_order_status_unchanged_while_not_live', (select status from public.orders where id = v_store_order));
   end if;
 
   r := r || jsonb_build_object('flow', v_steps);
@@ -1719,7 +1824,9 @@ $mig$;
   execute $rb$
 -- Rollback for 20261023_order_line_lifecycle.sql.
 -- Restores the order-level stage flow exactly as it was before (advance_order_stage and
--- client_decide_order_approval are the definitions that were live on 2026-10-22).
+-- client_decide_order_approval are the definitions that were live on 2026-10-22; #58 itself
+-- leaves them alone, this re-creates them in case the go-live step replaced them).
+-- If 20261023b_order_line_lifecycle_go_live.sql was applied, run its rollback first.
 -- orders, order_items rows, their quantities and prices are kept. orders.status keeps its
 -- current value; an order in 'partly_delivered' goes back to 'dispatched' (also in its history)
 -- because the old check does not allow that value.
@@ -1729,6 +1836,7 @@ $mig$;
 
 drop trigger if exists order_items_lifecycle_defaults on public.order_items;
 drop trigger if exists order_items_lifecycle_after_insert on public.order_items;
+drop trigger if exists orders_olc_legacy_status_sync on public.orders;
 
 drop policy if exists notifications_select_runner on public.notifications;
 drop policy if exists notifications_update_runner on public.notifications;
@@ -2033,6 +2141,9 @@ drop function if exists public.olc_order_stage_for_line(text);
 drop function if exists public.olc_actor(boolean);
 drop function if exists public.order_items_lifecycle_defaults();
 drop function if exists public.order_items_lifecycle_after_insert();
+drop function if exists public.olc_legacy_status_sync();
+drop function if exists public.olc_hand_off_order(uuid, text, uuid, uuid, text, text, text, text);
+drop function if exists public.client_decide_branding_approval(uuid, text, text);
 
 -- 'partly_delivered' is not a valid old stage.
 update public.orders set status = 'dispatched' where status = 'partly_delivered';

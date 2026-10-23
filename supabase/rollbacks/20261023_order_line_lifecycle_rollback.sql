@@ -1,6 +1,8 @@
 -- Rollback for 20261023_order_line_lifecycle.sql.
 -- Restores the order-level stage flow exactly as it was before (advance_order_stage and
--- client_decide_order_approval are the definitions that were live on 2026-10-22).
+-- client_decide_order_approval are the definitions that were live on 2026-10-22; #58 itself
+-- leaves them alone, this re-creates them in case the go-live step replaced them).
+-- If 20261023b_order_line_lifecycle_go_live.sql was applied, run its rollback first.
 -- orders, order_items rows, their quantities and prices are kept. orders.status keeps its
 -- current value; an order in 'partly_delivered' goes back to 'dispatched' (also in its history)
 -- because the old check does not allow that value.
@@ -10,6 +12,7 @@
 
 drop trigger if exists order_items_lifecycle_defaults on public.order_items;
 drop trigger if exists order_items_lifecycle_after_insert on public.order_items;
+drop trigger if exists orders_olc_legacy_status_sync on public.orders;
 
 drop policy if exists notifications_select_runner on public.notifications;
 drop policy if exists notifications_update_runner on public.notifications;
@@ -314,6 +317,9 @@ drop function if exists public.olc_order_stage_for_line(text);
 drop function if exists public.olc_actor(boolean);
 drop function if exists public.order_items_lifecycle_defaults();
 drop function if exists public.order_items_lifecycle_after_insert();
+drop function if exists public.olc_legacy_status_sync();
+drop function if exists public.olc_hand_off_order(uuid, text, uuid, uuid, text, text, text, text);
+drop function if exists public.client_decide_branding_approval(uuid, text, text);
 
 -- 'partly_delivered' is not a valid old stage.
 update public.orders set status = 'dispatched' where status = 'partly_delivered';
