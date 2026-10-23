@@ -3,7 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-const STAFF_ROLES = ['admin', 'sales', 'operations', 'accounts', 'management']
+// 'runner' needs migration 20261023_runner_role_enum.sql; before it the database rejects the value.
+const STAFF_ROLES = ['admin', 'sales', 'operations', 'accounts', 'management', 'runner']
 
 export async function updateTeamMember(formData: FormData) {
   const supabase = await createClient()

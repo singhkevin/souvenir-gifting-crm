@@ -8,7 +8,7 @@ import {
   Package, Image as ImageIcon, FileText, ShoppingBag, KanbanSquare,
   Truck, Printer, Package2, Receipt, CreditCard, ArrowDownToLine,
   BarChart3, Activity, UserCog, Settings, ShieldCheck, LogOut,
-  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift, Tags, LayoutTemplate
+  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift, Tags, LayoutTemplate, Bike
 } from 'lucide-react';
 import { signOut } from '@/app/login/actions';
 import { BrandLogo } from '@/components/brand/brand-logo';
@@ -84,6 +84,7 @@ const navGroups: NavGroup[] = [
       { label: 'Order Management', href: '/crm/order-management', matchPrefix: '/crm/order-management', icon: KanbanSquare },
       { label: 'Orders', href: '/crm/orders', matchPrefix: '/crm/orders', icon: ShoppingBag },
       { label: 'Department', href: '/crm/department', matchPrefix: '/crm/department', icon: BadgeCheck },
+      { label: 'Runs', href: '/crm/runs', matchPrefix: '/crm/runs', icon: Bike },
       { label: 'Suppliers', href: '/crm/suppliers', matchPrefix: '/crm/suppliers', icon: Truck },
       { label: 'Printing', href: '/crm/printing-vendors', matchPrefix: '/crm/printing-vendors', icon: Printer },
       { label: 'Delivery', href: '/crm/courier-partners', matchPrefix: '/crm/courier-partners', icon: Package2 },
