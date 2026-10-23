@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { formatDate } from '@/lib/utils'
-import { updateTeamMember } from '@/app/crm/team/actions'
+import { toast } from 'sonner'
+import { addTeamMember, updateTeamMember } from '@/app/crm/team/actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
@@ -39,6 +40,126 @@ const roleColors: Record<string, string> = {
   sales: 'bg-green-100 text-green-800',
   operations: 'bg-amber-100 text-amber-800',
   accounts: 'bg-indigo-100 text-indigo-800',
+  runner: 'bg-teal-100 text-teal-800',
+}
+
+const STAFF_ROLE_SET = new Set(ROLE_OPTIONS.map((o) => o.value))
+
+const OTHER_ROLE_LABELS: Record<string, string> = {
+  business_user: 'Business portal',
+  gift_employee: 'Gift portal employee',
+}
+
+const inputClass =
+  'w-full border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0'
+
+function CreatedLogin({ email, password, onDone }: { email: string; password: string; onDone: () => void }) {
+  const [revealed, setRevealed] = useState(false)
+  return (
+    <div className="md:col-span-2 space-y-3 border border-[#CCC5BD] bg-[#F6F3EC] p-4">
+      <p className="text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A]">Team member added</p>
+      <p className="text-[11px] text-[#7C766F]">
+        No email was sent. Share these details yourself. The password is not stored in the CRM and cannot be shown again.
+      </p>
+      <p className="text-xs">
+        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Login email</span>
+        <span className="font-mono text-[#1C1B1A]">{email}</span>
+      </p>
+      <p className="text-xs">
+        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Temporary password · share securely</span>
+        <span className="font-mono text-[#1C1B1A]">{revealed ? password : '••••••••'}</span>
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => setRevealed((v) => !v)} className="border border-[#1C1B1A] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A] hover:bg-[#FCF9F2]">
+          {revealed ? 'Hide' : 'Reveal once'}
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
+            await navigator.clipboard.writeText(`${email}\n${password}`)
+            toast.success('Copied')
+          }}
+          className="border border-[#1C1B1A] px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#1C1B1A] hover:bg-[#FCF9F2]"
+        >
+          Copy
+        </button>
+        <button type="button" onClick={onDone} className="bg-[#1C1B1A] px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#FCF9F2] hover:bg-[#9E4300]">
+          Done
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function AddMemberForm({ departmentOptions }: { departmentOptions: DepartmentOption[] }) {
+  const [formKey, setFormKey] = useState(0)
+  const [created, setCreated] = useState<{ email: string; password: string } | null>(null)
+
+  const create = async (formData: FormData) => {
+    const result = await addTeamMember(formData)
+    if (result?.error) return { error: result.error }
+    if (result?.success && result.email && result.temporaryPassword) {
+      return { email: result.email, temporaryPassword: result.temporaryPassword }
+    }
+    return { error: 'Team member was not added.' }
+  }
+
+  return (
+    <div className="space-y-3">
+      <ActionForm
+        key={formKey}
+        action={create}
+        successMessage="Team member added"
+        onSuccess={(result) => {
+          const r = result as { email?: string; temporaryPassword?: string } | undefined
+          if (r?.email && r.temporaryPassword) setCreated({ email: r.email, password: r.temporaryPassword })
+          setFormKey((k) => k + 1)
+        }}
+        className="grid gap-3 border border-[#E8E4DE] bg-white p-4 text-xs md:grid-cols-2"
+      >
+        <label className="block space-y-1">
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Full name</span>
+          <input name="full_name" required placeholder="Full name" className={inputClass} />
+        </label>
+        <label className="block space-y-1">
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Login email</span>
+          <input name="email" type="email" required placeholder="name@company.com" className={`${inputClass} font-mono`} />
+        </label>
+        <MobileSheetSelect name="role" label="Role" showDesktopLabel options={ROLE_OPTIONS} emptyLabel="Select role" required />
+        <MobileSheetSelect
+          name="department_id"
+          label="Department"
+          showDesktopLabel
+          defaultValue=""
+          options={departmentOptions.filter((o) => o.value)}
+          emptyLabel="No department"
+        />
+        <label className="block space-y-1 md:col-span-2">
+          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Temporary password</span>
+          <input
+            name="password"
+            type="password"
+            minLength={8}
+            autoComplete="new-password"
+            placeholder="Leave empty to generate one (min 8)"
+            className={`${inputClass} font-mono`}
+          />
+        </label>
+        <p className="text-[11px] text-[#7C766F] md:col-span-2">
+          Creates the login straight away. No invite email is sent; you share the login yourself.
+        </p>
+        {created && (
+          <CreatedLogin email={created.email} password={created.password} onDone={() => setCreated(null)} />
+        )}
+        <SubmitButton
+          pendingLabel="Adding…"
+          className="bg-[#1C1B1A] px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] md:col-span-2"
+        >
+          Add team member
+        </SubmitButton>
+      </ActionForm>
+    </div>
+  )
 }
 
 const CLIENT_ROLES = new Set(['client_admin', 'client_user'])
@@ -211,11 +332,24 @@ export function TeamDirectory({
   ]
 
   const pending = profiles.filter(isPendingAccount)
-  const staff = profiles.filter((p) => !CLIENT_ROLES.has(p.role))
+  const staff = profiles.filter((p) => STAFF_ROLE_SET.has(p.role))
+  // Business-portal and gift-portal users belong to a company; they are listed here read-only.
+  const others = profiles.filter((p) => !CLIENT_ROLES.has(p.role) && !STAFF_ROLE_SET.has(p.role))
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[var(--color-primary)]">Team Directory</h1>
+
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-semibold text-[#1C1917]">Add team member</h2>
+          <p className="mt-1 max-w-3xl text-sm text-gray-500">
+            Staff roles: admin · sales · operations · accounts · management · runner (deliveries only).
+            Client logins are added from the company page.
+          </p>
+        </div>
+        <AddMemberForm departmentOptions={departmentOptions} />
+      </section>
 
       <section className="space-y-3">
         <div>
@@ -258,6 +392,39 @@ export function TeamDirectory({
         </div>
         <MemberTable profiles={staff} departmentOptions={departmentOptions} pending={false} />
       </section>
+
+      {others.length > 0 && (
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold text-[#1C1917]">Portal accounts (not staff)</h2>
+            <p className="mt-1 max-w-3xl text-sm text-gray-500">
+              Business and gift portal users belong to a company and are managed there. Shown here for reference.
+            </p>
+          </div>
+          <div className="overflow-x-auto border bg-white">
+            <table className="w-full min-w-[560px] text-left text-sm">
+              <thead>
+                <tr className="border-b bg-gray-50 text-xs text-gray-500">
+                  <th className="p-3">Name</th>
+                  <th className="p-3">Email</th>
+                  <th className="p-3">Type</th>
+                  <th className="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {others.map((p) => (
+                  <tr key={p.id} className="border-b">
+                    <td className="p-3 font-medium">{p.full_name}</td>
+                    <td className="p-3">{p.email}</td>
+                    <td className="p-3">{OTHER_ROLE_LABELS[p.role] || p.role}</td>
+                    <td className="p-3">{p.is_active === false ? 'Inactive' : 'Active'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

@@ -99,3 +99,15 @@ left join lateral aclexplode(p.proacl) a on true
 left join pg_roles r on r.oid = a.grantee
 where n.nspname = 'public' and p.proname = 'claim_portal_host_jobs';
 ```
+
+
+## 60 · 20261023c_role_active_checks.sql · NOT APPLIED (needs Kevin's approval)
+
+Deactivated users (profiles.is_active = false) still had database access because has_any_role, is_admin,
+current_role and the inline sales/operations checks in orders_select, companies_select, contacts_select,
+slug_history_select and portal_hosts_select ignore is_active. Adds the check. Active users are unaffected.
+Rollback: supabase/rollbacks/20261023c_role_active_checks_rollback.sql (restores the 23 Oct 2026 definitions).
+Trial (live, forced rollback, 23 Oct 2026): supabase/tests/role_active_checks_trial.sql. 17 accounts probed
+(every staff, client_admin, business and inactive account); 15 active accounts: identical access before and after.
+Inactive admin: 31 orders · 26 companies · 22 leads · 26 quotations · 29 profiles visible before, 0 after
+(own 13 tasks stay via tasks_write). Rollback restored function and policy md5s and the exact access.
