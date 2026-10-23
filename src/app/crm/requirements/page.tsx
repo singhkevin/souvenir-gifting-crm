@@ -31,7 +31,7 @@ type RequirementRow = {
 }
 
 export default async function RequirementsPage(props: { searchParams: Promise<{ status?: string; source?: string }> }) {
-  const profile = await requireStaff()
+  const profile = await requireStaff(['admin', 'sales', 'management']) // same as requirements/[id] and the RLS
   const searchParams = await props.searchParams
   const statusFilter = searchParams.status || 'all'
   const sourceFilter = searchParams.source || 'all'

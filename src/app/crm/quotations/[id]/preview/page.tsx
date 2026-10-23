@@ -9,7 +9,7 @@ import { ProductThumb } from '@/components/ui/product-thumb'
 export default async function QuotationPreviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  await requireStaff()
+  await requireStaff(['admin', 'sales', 'management']) // quotations RLS: admin, sales, management only
   const supabase = await createClient()
   const { data: quote } = await supabase
     .from('quotations')

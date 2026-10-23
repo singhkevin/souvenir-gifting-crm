@@ -22,7 +22,7 @@ import { ProductImage } from '@/components/ui/product-image'
 export default async function QuotationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const profile = await requireStaff()
+  const profile = await requireStaff(['admin', 'sales', 'management']) // quotations RLS: admin, sales, management only
   const canPrice = ['admin', 'sales', 'management', 'accounts'].includes(profile.role)
   const supabase = await createClient()
 

@@ -24,7 +24,8 @@ interface SidebarProps {
   mobileOpen?: boolean;
 }
 
-type NavItem = { label: string; href: string; matchPrefix: string; icon: typeof LayoutDashboard };
+// `roles` on an item narrows its group's roles; keep both in step with the page guards (requireStaff).
+type NavItem = { label: string; href: string; matchPrefix: string; icon: typeof LayoutDashboard; roles?: Role[] };
 type NavGroup = { label: string; roles: Role[]; items: NavItem[] };
 
 const navGroups: NavGroup[] = [
@@ -39,10 +40,10 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'CUSTOMERS',
-    roles: ['admin', 'sales', 'management'],
+    roles: ['admin', 'sales', 'management', 'operations', 'accounts'],
     items: [
       { label: 'Companies', href: '/crm/companies', matchPrefix: '/crm/companies', icon: Building2 },
-      { label: 'Contacts', href: '/crm/contacts', matchPrefix: '/crm/contacts', icon: Users },
+      { label: 'Contacts', href: '/crm/contacts', matchPrefix: '/crm/contacts', icon: Users, roles: ['admin', 'sales', 'management'] },
     ]
   },
   {
@@ -79,16 +80,18 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'OPERATIONS',
-    roles: ['admin', 'operations', 'management'],
+    roles: ['admin', 'operations', 'management', 'sales', 'accounts'],
     items: [
       { label: 'Order Management', href: '/crm/order-management', matchPrefix: '/crm/order-management', icon: KanbanSquare },
       { label: 'Orders', href: '/crm/orders', matchPrefix: '/crm/orders', icon: ShoppingBag },
       { label: 'Department', href: '/crm/department', matchPrefix: '/crm/department', icon: BadgeCheck },
-      { label: 'Runs', href: '/crm/runs', matchPrefix: '/crm/runs', icon: Bike },
-      { label: 'Suppliers', href: '/crm/suppliers', matchPrefix: '/crm/suppliers', icon: Truck },
-      { label: 'Printing', href: '/crm/printing-vendors', matchPrefix: '/crm/printing-vendors', icon: Printer },
-      { label: 'Delivery', href: '/crm/courier-partners', matchPrefix: '/crm/courier-partners', icon: Package2 },
-      { label: 'Samples', href: '/crm/samples', matchPrefix: '/crm/samples', icon: Package },
+      { label: 'Runs', href: '/crm/runs', matchPrefix: '/crm/runs', icon: Bike, roles: ['admin', 'operations', 'management'] },
+      { label: 'Suppliers', href: '/crm/suppliers', matchPrefix: '/crm/suppliers', icon: Truck, roles: ['admin', 'operations', 'management'] },
+      { label: 'Printing', href: '/crm/printing-vendors', matchPrefix: '/crm/printing-vendors', icon: Printer, roles: ['admin', 'operations', 'management'] },
+      { label: 'Delivery', href: '/crm/courier-partners', matchPrefix: '/crm/courier-partners', icon: Package2, roles: ['admin', 'operations', 'management'] },
+      { label: 'Samples', href: '/crm/samples', matchPrefix: '/crm/samples', icon: Package, roles: ['admin', 'operations', 'management'] },
+      { label: 'Products', href: '/crm/products', matchPrefix: '/crm/products', icon: Package, roles: ['admin', 'operations', 'management'] },
+      { label: 'Mockup Storage', href: '/crm/mockups', matchPrefix: '/crm/mockups', icon: ImageIcon, roles: ['admin', 'operations', 'management'] },
     ]
   },
   {
@@ -105,13 +108,13 @@ const navGroups: NavGroup[] = [
   },
   {
     label: 'MANAGEMENT',
-    roles: ['admin', 'management'],
+    roles: ['admin', 'management', 'accounts'],
     items: [
       { label: 'Reports', href: '/crm/reports', matchPrefix: '/crm/reports', icon: BarChart3 },
-      { label: 'Tracking', href: '/crm/tracking', matchPrefix: '/crm/tracking', icon: Activity },
-      { label: 'Reviews', href: '/crm/reviews', matchPrefix: '/crm/reviews', icon: BadgeCheck },
-      { label: 'Activities', href: '/crm/activities', matchPrefix: '/crm/activities', icon: Activity },
-      { label: 'Audit Log', href: '/crm/audit-log', matchPrefix: '/crm/audit-log', icon: ShieldCheck },
+      { label: 'Tracking', href: '/crm/tracking', matchPrefix: '/crm/tracking', icon: Activity, roles: ['admin', 'management'] },
+      { label: 'Reviews', href: '/crm/reviews', matchPrefix: '/crm/reviews', icon: BadgeCheck, roles: ['admin', 'management'] },
+      { label: 'Activities', href: '/crm/activities', matchPrefix: '/crm/activities', icon: Activity, roles: ['admin', 'management'] },
+      { label: 'Audit Log', href: '/crm/audit-log', matchPrefix: '/crm/audit-log', icon: ShieldCheck, roles: ['admin', 'management'] },
     ]
   },
   {
@@ -146,6 +149,7 @@ export function Sidebar({ role, user, onNavigate, showClose, onClose, mobileOpen
   const visibleGroups = navGroups.flatMap((group) => {
     if (!group.roles.includes(role)) return []
     const items = group.items.filter((item) => {
+      if (item.roles && !item.roles.includes(role)) return false
       if (seenHrefs.has(item.href)) return false
       seenHrefs.add(item.href)
       return true
