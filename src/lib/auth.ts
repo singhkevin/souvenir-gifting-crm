@@ -42,7 +42,8 @@ export async function requireStaff(roles?: Role[]): Promise<ProfileSession> {
 export async function requireRunnerOrOps(): Promise<ProfileSession> {
   const profile = await getProfile()
   if (!profile || !profile.is_active) redirect("/login")
-  if (isRunnerRole(profile.role) || isOpsStaff(profile.role)) return profile
+  // Management may look at runner jobs (read-only); only runners and ops act on them.
+  if (isRunnerRole(profile.role) || isOpsStaff(profile.role) || profile.role === "management") return profile
   if (isStaffRole(profile.role)) redirect("/crm/access-denied")
   redirect("/login")
 }

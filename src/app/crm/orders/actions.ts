@@ -137,8 +137,11 @@ export async function handOffOrder(formData: FormData) {
     nextAction,
   })
   if (result.error) return result
-  const { orderStageChangedCustomerEmail } = await import('@/lib/email/order-emails')
-  await orderStageChangedCustomerEmail(orderId, status)
+  // A hand-off that keeps the same stage is not a stage change: do not re-send the customer email.
+  if (status !== order.status) {
+    const { orderStageChangedCustomerEmail } = await import('@/lib/email/order-emails')
+    await orderStageChangedCustomerEmail(orderId, status)
+  }
   revalidatePath(`/crm/orders/${orderId}`)
   revalidatePath('/crm/order-management')
   revalidatePath('/crm/department')

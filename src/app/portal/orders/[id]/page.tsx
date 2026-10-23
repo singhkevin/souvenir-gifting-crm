@@ -11,6 +11,7 @@ import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
 import { decideOrderApproval } from '../actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { CLIENT_LINE_STAGE_LABELS, DELIVERY_STATUS_LABELS, linesAwaitingBranding } from '@/lib/orders/line-lifecycle'
 
 function fileHref(path: string | null) {
   if (!path) return null
@@ -100,6 +101,35 @@ export default async function PortalOrderDetailPage({
       .order('invoice_date', { ascending: false }),
   ])
   const invoice = (invoices || [])[0] ?? null
+
+  // Per-line progress and deliveries (after the line-lifecycle update; ignored before it).
+  const [lineRes, deliveryRes] = await Promise.all([
+    supabase.from('order_items').select('id, stage, qty_delivered, needs_branding').eq('order_id', id),
+    supabase
+      .from('deliveries')
+      .select('id, method, status, delivered_at, created_at, lines:delivery_lines(order_item_id, qty_sent, qty_delivered)')
+      .eq('order_id', id)
+      .neq('status', 'cancelled')
+      .order('created_at', { ascending: true }),
+  ])
+  const lifecycleOn = !lineRes.error
+  const lineState = new Map(
+    ((lineRes.error ? [] : lineRes.data) || []).map((l: { id: string; stage: string | null; qty_delivered: number | null; needs_branding: boolean | null }) => [l.id, l]),
+  )
+  const deliveries = (deliveryRes.error ? [] : deliveryRes.data || []) as {
+    id: string
+    method: string
+    status: string
+    delivered_at: string | null
+    created_at: string
+    lines: { order_item_id: string; qty_sent: number; qty_delivered: number | null }[] | null
+  }[]
+  const earlyApproval =
+    lifecycleOn &&
+    order.status !== 'client_approval' &&
+    !['cancelled', 'delivered'].includes(order.status) &&
+    order.client_approval_status !== 'approved' &&
+    linesAwaitingBranding([...lineState.values()]).length > 0
   const showMockups = (mockups || []).length > 0 || order.status === 'mockup' || order.status === 'client_approval'
 
   const campaign = oneRelation(order.campaign)
@@ -238,16 +268,16 @@ export default async function PortalOrderDetailPage({
         ) : null}
 
         {/* Client approval Box (If Active) */}
-        {order.status === 'client_approval' && (
+        {(order.status === 'client_approval' || earlyApproval) && (
           <div className="p-6 space-y-4 bg-[#FFDBCB]/20 border-l-4 border-l-[#9E4300]">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9E4300]">
-                Action needed · Mockup approval
+                {earlyApproval ? 'Mockup approval · approve early to save time' : 'Action needed · Mockup approval'}
               </span>
               <h2 className="font-serif text-2xl text-[#1C1C18] mt-1">Client approval</h2>
               {order.client_approval_status === 'approved' ? (
                 <p className="text-sm text-[#3A4537] mt-1 font-medium">
-                  You approved this order{order.client_approval_note ? `: ${order.client_approval_note}` : '.'} Production can start once the team advances it.
+                  You approved this order{order.client_approval_note ? `: ${order.client_approval_note}` : '.'} {lifecycleOn ? 'Branding can go ahead.' : 'Production can start once the team advances it.'}
                 </p>
               ) : (
                 <p className="text-sm text-[#4A4640] mt-1">
@@ -393,6 +423,7 @@ export default async function PortalOrderDetailPage({
               <thead>
                 <tr className="border-b border-[#CCC5BD] bg-[#F6F3EC] text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">
                   <th className="py-3 px-4">Product</th>
+                  {lifecycleOn && <th className="py-3 px-4">Progress</th>}
                   <th className="py-3 px-4 text-right">Units</th>
                   <th className="py-3 px-4 text-right">Unit</th>
                   <th className="py-3 px-4 text-right">Amount</th>
@@ -401,7 +432,7 @@ export default async function PortalOrderDetailPage({
               <tbody className="divide-y divide-[#CCC5BD]">
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-xs text-[#7C766F] bg-[#FCF9F2]">
+                    <td colSpan={lifecycleOn ? 5 : 4} className="py-8 text-center text-xs text-[#7C766F] bg-[#FCF9F2]">
                       No products on this order yet.
                     </td>
                   </tr>
@@ -438,6 +469,19 @@ export default async function PortalOrderDetailPage({
                             </div>
                           </div>
                         </td>
+                        {lifecycleOn && (() => {
+                          const line = lineState.get(item.id)
+                          const stage = line?.stage || 'confirmed'
+                          const delivered = line?.qty_delivered ?? 0
+                          return (
+                            <td className="py-3.5 px-4 text-[#4A4640]">
+                              {CLIENT_LINE_STAGE_LABELS[stage] || 'In progress'}
+                              {delivered > 0 && stage !== 'delivered' ? (
+                                <span className="block text-[10px] text-[#7C766F]">{delivered} of {item.quantity} delivered</span>
+                              ) : null}
+                            </td>
+                          )
+                        })()}
                         <td className="py-3.5 px-4 text-right font-mono text-[#1C1C18]">
                           {item.quantity}
                         </td>
@@ -454,6 +498,29 @@ export default async function PortalOrderDetailPage({
               </tbody>
             </table>
           </div>
+
+          {deliveries.length > 0 && (
+            <div className="mt-6 space-y-2">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Deliveries</h3>
+              <ul className="divide-y divide-[#CCC5BD] border border-[#CCC5BD] bg-white text-xs">
+                {deliveries.map((d, i) => {
+                  const sent = (d.lines || []).reduce((sum, l) => sum + (l.qty_sent || 0), 0)
+                  const got = (d.lines || []).reduce((sum, l) => sum + (l.qty_delivered || 0), 0)
+                  return (
+                    <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                      <span className="text-[#1C1C18]">
+                        Delivery {i + 1} · {DELIVERY_STATUS_LABELS[d.status] || d.status}
+                      </span>
+                      <span className="text-[#4A4640]">
+                        {d.status === 'out' ? `${sent} pcs on the way` : `${got} of ${sent} pcs received`}
+                        {d.delivered_at ? ` · ${formatDate(d.delivered_at)}` : ''}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>

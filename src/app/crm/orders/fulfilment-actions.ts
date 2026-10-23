@@ -40,7 +40,10 @@ type Supa = Awaited<ReturnType<typeof createClient>>
 
 async function orderStatus(supabase: Supa, orderId: string | null) {
   if (!orderId) return null
-  const { data } = await supabase.from('orders').select('status').eq('id', orderId).maybeSingle()
+  // Runners cannot read orders under RLS; the caller has already been checked, so read the
+  // status with the service client (status only) when it is configured.
+  const reader = (createAdminClient() as Supa | null) ?? supabase
+  const { data } = await reader.from('orders').select('status').eq('id', orderId).maybeSingle()
   return data?.status ? String(data.status) : null
 }
 

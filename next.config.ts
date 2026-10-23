@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Delivery proof photos (signature, seal / challan) are compressed in the browser first;
+  // this leaves headroom for two or three photos in one submission.
+  experimental: {
+    serverActions: { bodySizeLimit: '6mb' },
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },

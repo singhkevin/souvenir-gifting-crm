@@ -25,6 +25,8 @@ import {
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
 import { ProductImage } from '@/components/ui/product-image'
 import { ClientTabs } from '@/components/ui/client-tabs'
+import { FulfilmentPanel } from '@/components/orders/fulfilment-panel'
+import { lineLifecycleEnabled } from '@/lib/orders/line-lifecycle-server'
 import { ChevronRight } from 'lucide-react'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { ActionButton } from '@/components/ui/action-button'
@@ -40,7 +42,7 @@ export default async function OrderDetailPage({
 }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const { tab = 'details', stage_error: stageError } = await searchParams
+  const { tab, stage_error: stageError } = await searchParams
   const profile = await getProfile()
   if (!profile) return redirect('/login')
   if (profile.role === 'client_admin') return redirect('/portal/gifts')
@@ -89,6 +91,10 @@ export default async function OrderDetailPage({
   const order = orderRes.data
   if (!order) notFound()
 
+  // After the line-lifecycle migration, stages move per product line on the Fulfilment tab;
+  // the order stage is derived from the lines, so Advance and stage hand-offs are retired.
+  const lifecycleOn = await lineLifecycleEnabled(supabase)
+
   const isDelivered = order.status === 'delivered' || order.status === 'cancelled'
   const approvalStatus = order.client_approval_status ?? null
   const nextStage = nextLifecycleStatus(order.status)
@@ -105,9 +111,13 @@ export default async function OrderDetailPage({
   const printingVendor = oneRelation(order.printing_vendor)
   const courierPartner = oneRelation(order.courier_partner)
   const quotation = oneRelation(order.quotation)
-  const tabs = showCosts
+  const baseTabs = showCosts
     ? ['details', 'products', 'vendors', 'financials', 'history']
     : ['details', 'products', 'vendors', 'history']
+  const tabs = lifecycleOn ? ['fulfilment', ...baseTabs] : baseTabs
+  const handoffOptions = lifecycleOn
+    ? handoffStageOptions(order.status, approvalStatus).filter((o) => o.value === order.status || o.value === 'cancelled')
+    : handoffStageOptions(order.status, approvalStatus)
 
   const healthChip = (() => {
     switch (health) {
@@ -186,7 +196,7 @@ export default async function OrderDetailPage({
             <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Order Value</span>
             <span className="font-mono text-xl font-bold text-[#1C1C18] mt-0.5 block">{formatCurrency(order.order_value)}</span>
           </div>
-          {canStage && !isDelivered && nextStage && advanceGate?.ok && (
+          {canStage && !lifecycleOn && !isDelivered && nextStage && advanceGate?.ok && (
             <ActionButton
               action={advanceOrderStatus.bind(null, id, order.status)}
               pendingLabel="Advancing…"
@@ -195,7 +205,7 @@ export default async function OrderDetailPage({
               Advance to {ORDER_STATUS_LABELS[nextStage]} <ChevronRight size={14} />
             </ActionButton>
           )}
-          {canStage && !isDelivered && nextStage === 'production' && advanceGate && !advanceGate.ok && (
+          {canStage && !lifecycleOn && !isDelivered && nextStage === 'production' && advanceGate && !advanceGate.ok && (
             <p className="max-w-xs rounded-none border border-[#9E4300]/30 bg-[#FFB690]/20 px-3 py-2 text-xs text-[#9E4300]">
               Waiting for the client to approve before Production.
             </p>
@@ -214,7 +224,7 @@ export default async function OrderDetailPage({
           </p>
         </div>
         <OrderLifecycleBar status={order.status} history={history} showActors />
-        {order.status === 'client_approval' && approvalStatus !== 'approved' && (
+        {!lifecycleOn && order.status === 'client_approval' && approvalStatus !== 'approved' && (
           <p className="text-xs text-[#9E4300] bg-[#FFB690]/20 border border-[#9E4300]/30 p-2.5 rounded-none">
             Waiting for the client to approve the mockup. Staff cannot start Production until then.
           </p>
@@ -238,13 +248,16 @@ export default async function OrderDetailPage({
           <input type="hidden" name="expected_status" value={order.status} />
           <div className="md:col-span-2 border-b border-[#CCC5BD] pb-2">
             <h2 className="font-[family-name:var(--font-newsreader)] text-lg md:text-xl font-normal text-[#1C1C18]">Stage Hand-off</h2>
+            {lifecycleOn ? (
+              <p className="mt-1 text-xs text-[#4A4640]">Hand the order to another person or department. Stages now move per product line on the Fulfilment tab.</p>
+            ) : null}
           </div>
           <MobileSheetSelect
             name="status"
             label="New stage"
             showDesktopLabel
             defaultValue={order.status}
-            options={handoffStageOptions(order.status, approvalStatus)}
+            options={handoffOptions}
           />
           <MobileSheetSelect
             name="department_id"
@@ -291,10 +304,23 @@ export default async function OrderDetailPage({
       {/* Tabs */}
       <ClientTabs
         tabs={tabs}
-        initialTab={tabs.includes(tab) ? tab : 'details'}
+        initialTab={tab && tabs.includes(tab) ? tab : tabs[0]}
         activeClassName="border-[#9E4300] text-[#9E4300] font-bold tracking-[0.12em] uppercase"
         idleClassName="border-transparent text-[#7C766F] hover:text-[#1C1C18] font-bold tracking-[0.12em] uppercase"
         panels={{
+          ...(lifecycleOn
+            ? {
+                fulfilment: (
+                  <FulfilmentPanel
+                    orderId={order.id}
+                    role={profile.role}
+                    showCosts={showCosts}
+                    approvalStatus={approvalStatus}
+                    approvalNote={order.client_approval_note ?? null}
+                  />
+                ),
+              }
+            : {}),
           details: (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none shadow-none overflow-hidden">
