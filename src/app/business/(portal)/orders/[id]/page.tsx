@@ -7,6 +7,7 @@ import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
 import { paymentLabel } from '@/lib/orders/payment'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
 import { ProductThumb } from '@/components/ui/product-thumb'
+import { CLIENT_LINE_STAGE_LABELS } from '@/lib/orders/line-lifecycle'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +33,14 @@ export default async function BusinessOrderPage({ params }: { params: Promise<{ 
     .from('order_items')
     .select('id, quantity, unit_price, line_total, product:products(name, sku, image_url)')
     .eq('order_id', id)
+  // Per-line progress after the line-lifecycle update; the query fails harmlessly before it.
+  const { data: lineStages, error: lineStageError } = await supabase
+    .from('order_items')
+    .select('id, stage, qty_delivered')
+    .eq('order_id', id)
+  const stageById = new Map(
+    (lineStageError ? [] : lineStages || []).map((l: { id: string; stage: string | null; qty_delivered: number | null }) => [l.id, l]),
+  )
 
   return (
     <div className="space-y-6">
@@ -105,6 +114,14 @@ export default async function BusinessOrderPage({ params }: { params: Promise<{ 
                         <p className="font-medium text-[#1C1C18]">{product?.name || 'Item'}</p>
                         {product?.sku ? (
                           <p className="sv2-mono-sm text-xs text-[#7C766F]">SKU: {product.sku}</p>
+                        ) : null}
+                        {stageById.get(item.id)?.stage ? (
+                          <p className="text-[11px] text-[#4A4640]">
+                            {CLIENT_LINE_STAGE_LABELS[String(stageById.get(item.id)?.stage)] || 'In progress'}
+                            {(stageById.get(item.id)?.qty_delivered ?? 0) > 0 && stageById.get(item.id)?.stage !== 'delivered'
+                              ? ` · ${stageById.get(item.id)?.qty_delivered} of ${item.quantity} delivered`
+                              : ''}
+                          </p>
                         ) : null}
                       </div>
                     </div>

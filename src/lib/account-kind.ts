@@ -1,4 +1,4 @@
-import { isClientRole, isGiftEmployeeRole, isStaffRole } from '@/lib/roles'
+import { isClientRole, isGiftEmployeeRole, isRunnerRole, isStaffRole } from '@/lib/roles'
 
 export type AccountKind = 'staff' | 'client' | 'retail'
 
@@ -6,6 +6,6 @@ export type AccountKind = 'staff' | 'client' | 'retail'
 export function accountKindForRole(role: string | null | undefined): AccountKind {
   if (!role) return 'retail'
   if (isClientRole(role) || isGiftEmployeeRole(role)) return 'client'
-  if (isStaffRole(role)) return 'staff'
+  if (isStaffRole(role) || isRunnerRole(role)) return 'staff'
   return 'retail'
 }

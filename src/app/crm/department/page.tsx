@@ -3,11 +3,14 @@ import { requireStaff } from '@/lib/auth'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { ORDER_STATUS_LABELS, orderHealth, HEALTH_LABELS, HEALTH_STYLES } from '@/lib/order-workflow'
 import Link from 'next/link'
+import { LifecycleSummary } from '@/components/orders/lifecycle-summary'
+import { lineLifecycleEnabled } from '@/lib/orders/line-lifecycle-server'
 
 export default async function DepartmentPage() {
   const profile = await requireStaff(['admin', 'operations', 'management', 'accounts', 'sales'])
   const supabase = await createClient()
   const today = new Date().toISOString().slice(0, 10)
+  const lifecycleOn = await lineLifecycleEnabled(supabase)
 
   const { data: department } = profile.department_id
     ? await supabase.from('departments').select('id, name, slug, manager_id, manager:manager_id(full_name)').eq('id', profile.department_id).maybeSingle()
@@ -62,6 +65,8 @@ export default async function DepartmentPage() {
         <div className="bg-white p-4 border"><p className="text-xs text-[#7A7267]">Overdue</p><p className="text-2xl font-semibold mt-1 text-red-700">{overdue.length}</p></div>
         <div className="bg-white p-4 border"><p className="text-xs text-[#7A7267]">Completed</p><p className="text-2xl font-semibold mt-1">{completed.length}</p></div>
       </div>
+
+      {lifecycleOn && ['admin', 'operations', 'management'].includes(profile.role) ? <LifecycleSummary supabase={supabase} /> : null}
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white border p-5">

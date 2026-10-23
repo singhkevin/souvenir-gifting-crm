@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { isBusinessRole, isClientRole, isStaffRole } from "@/lib/roles"
+import { isBusinessRole, isClientRole, isRunnerRole, isStaffRole } from "@/lib/roles"
 import type { Role } from "@/lib/types"
 
 export type ProfileSession = {
@@ -30,11 +30,22 @@ export async function requireStaff(roles?: Role[]): Promise<ProfileSession> {
   if (!profile || !profile.is_active) redirect("/login")
   if (isBusinessRole(profile.role)) redirect("/business/dashboard")
   if (isClientRole(profile.role)) redirect("/portal/gifts")
+  if (isRunnerRole(profile.role)) redirect("/crm/runs")
   if (!isStaffRole(profile.role)) redirect("/login")
   if (roles && !roles.includes(profile.role)) {
     redirect("/crm/access-denied")
   }
   return profile
+}
+
+/** Staff who run lifecycle actions, or a runner (for /crm/runs only). */
+export async function requireRunnerOrOps(): Promise<ProfileSession> {
+  const profile = await getProfile()
+  if (!profile || !profile.is_active) redirect("/login")
+  // Management may look at runner jobs (read-only); only runners and ops act on them.
+  if (isRunnerRole(profile.role) || isOpsStaff(profile.role) || profile.role === "management") return profile
+  if (isStaffRole(profile.role)) redirect("/crm/access-denied")
+  redirect("/login")
 }
 
 export function canSeeFinance(role: Role) {

@@ -2,7 +2,8 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CrmFrame } from '@/components/layout/crm-frame';
-import { isBusinessRole, isClientRole, isGiftEmployeeRole, isStaffRole } from '@/lib/roles'
+import { isBusinessRole, isClientRole, isGiftEmployeeRole, isRunnerRole, isStaffRole } from '@/lib/roles'
+import { RunnerFrame } from '@/components/runs/runner-frame'
 import type { Role } from '@/lib/types';
 import { getRequestTabId } from '@/lib/auth/tab-server';
 import { TabSessionRevive } from '@/components/auth/tab-session-revive';
@@ -44,6 +45,13 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
 
   if (isClientRole(profile.role)) {
     redirect('/portal/gifts');
+  }
+
+  // Delivery runners get a phone-sized frame with no CRM navigation. Every other CRM page
+  // calls requireStaff, which sends a runner back to /crm/runs.
+  if (isRunnerRole(profile.role)) {
+    const runnerName = profile.full_name || user.email?.split('@')[0] || 'Runner';
+    return <RunnerFrame name={runnerName}>{children}</RunnerFrame>;
   }
 
   if (!isStaffRole(profile.role)) {

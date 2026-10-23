@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CLIENT_STATUS_LABELS } from '@/lib/order-workflow'
+import { CLIENT_LINE_STAGE_LABELS, CLIENT_ORDER_STEPS, clientOrderStepIndex } from '@/lib/orders/line-lifecycle'
 import { paymentLabel } from '@/lib/orders/payment'
 import { publicOrderTokenMatches } from '@/lib/orders/public-token'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -16,26 +17,21 @@ export const metadata: Metadata = {
   title: 'Order status',
 }
 
-const ORDER_STAGES = [
-  { id: 'placed', label: 'Order Placed', desc: 'Order received & confirmed' },
-  { id: 'packed', label: 'Packed & Sealed', desc: 'Packed and checked' },
-  { id: 'dispatched', label: 'In Transit', desc: 'Handed to courier partner' },
-  { id: 'out_for_delivery', label: 'Out for Delivery', desc: 'With local courier delivery team' },
-  { id: 'delivered', label: 'Delivered', desc: 'Safely delivered to recipient' },
-]
-
-function getStageIndex(status: string): number {
-  switch (status) {
-    case 'delivered':
-      return 4
-    case 'dispatched':
-      return 2
-    case 'in_production':
-    case 'procurement':
-    case 'confirmed':
-      return 1
+/** Hero line for each step, so the page never says "being prepared" after delivery. */
+function heroText(status: string, stepIndex: number) {
+  if (status === 'cancelled') return 'This order has been cancelled. Contact us if this is unexpected.'
+  if (status === 'partly_delivered') return 'Part of your order has been delivered. The rest is on its way.'
+  switch (stepIndex) {
+    case 0:
+      return 'Your order has been received and confirmed.'
+    case 1:
+      return 'Your order is being prepared.'
+    case 2:
+      return 'Your order is packed and ready to leave.'
+    case 3:
+      return 'Your order is on its way.'
     default:
-      return 0
+      return 'Your order has been delivered.'
   }
 }
 
@@ -73,7 +69,25 @@ export default async function GuestOrderStatusPage({
 
   const courier = oneRelation(order.courier_partner)
   const items = order.items || []
-  const currentStageIndex = getStageIndex(order.status)
+  const cancelled = order.status === 'cancelled'
+  const currentStageIndex = clientOrderStepIndex(order.status)
+
+  // Per-line progress exists only after the line-lifecycle migration; before it this query
+  // fails and the page shows the order-level steps alone.
+  const lineProgress = new Map<string, { stage: string | null; delivered: number }>()
+  {
+    const { data: lines, error: linesError } = await admin
+      .from('order_items')
+      .select('id, stage, qty_delivered')
+      .eq('order_id', order.id)
+    if (!linesError) {
+      for (const line of (lines || []) as { id: string; stage: string | null; qty_delivered: number | null }[]) {
+        lineProgress.set(line.id, { stage: line.stage, delivered: Number(line.qty_delivered || 0) })
+      }
+    }
+  }
+  const showLineStages =
+    lineProgress.size > 0 && new Set(Array.from(lineProgress.values()).map((l) => l.stage)).size > 1
 
   return (
     <SiteShell>
@@ -88,7 +102,7 @@ export default async function GuestOrderStatusPage({
               Order {order.order_number}
             </h1>
             <p className="mt-2 sv2-body-lg text-[#4A4640] max-w-2xl">
-              Your order has been received and is being prepared for dispatch.
+              {heroText(order.status, currentStageIndex)}
             </p>
           </div>
 
@@ -138,9 +152,9 @@ export default async function GuestOrderStatusPage({
 
           <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-6 sm:p-8">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6 relative">
-              {ORDER_STAGES.map((stage, idx) => {
-                const isPassed = idx <= currentStageIndex
-                const isCurrent = idx === currentStageIndex
+              {CLIENT_ORDER_STEPS.map((stage, idx) => {
+                const isPassed = !cancelled && idx <= currentStageIndex
+                const isCurrent = !cancelled && idx === currentStageIndex
                 return (
                   <div key={stage.id} className="flex md:flex-col items-start gap-3">
                     <div
@@ -172,6 +186,9 @@ export default async function GuestOrderStatusPage({
                 )
               })}
             </div>
+            {cancelled ? (
+              <p className="mt-6 border-t border-[#CCC5BD] pt-4 sv2-body-sm text-[#9E4300]">This order was cancelled.</p>
+            ) : null}
           </div>
 
           {/* Courier Card */}
@@ -197,7 +214,11 @@ export default async function GuestOrderStatusPage({
             </div>
             <div className="sv2-mono-sm text-[11px] text-[#4A4640] flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#9E4300]" />
-              <span>Tracking details will update once dispatched.</span>
+              <span>
+                {currentStageIndex >= 3
+                  ? 'Dispatched. Use the tracking number above with the courier.'
+                  : 'Tracking details will update once dispatched.'}
+              </span>
             </div>
           </div>
         </section>
@@ -232,6 +253,14 @@ export default async function GuestOrderStatusPage({
                     <div className="text-left sm:text-right">
                       <span className="sv2-label text-[10px] text-[#7C766F] block">Quantity</span>
                       <span className="sv2-mono-md font-bold text-[#1C1C18]">&times; {item.quantity}</span>
+                      {showLineStages && lineProgress.get(item.id)?.stage ? (
+                        <span className="sv2-mono-sm block text-[11px] text-[#9E4300] mt-1">
+                          {CLIENT_LINE_STAGE_LABELS[lineProgress.get(item.id)!.stage!] || lineProgress.get(item.id)!.stage}
+                          {lineProgress.get(item.id)!.delivered > 0 && lineProgress.get(item.id)!.delivered < Number(item.quantity || 0)
+                            ? ` · ${lineProgress.get(item.id)!.delivered} of ${item.quantity} delivered`
+                            : ''}
+                        </span>
+                      ) : null}
                     </div>
                   </li>
                 )

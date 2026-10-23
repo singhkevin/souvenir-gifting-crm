@@ -69,6 +69,14 @@ export default async function SettingsPage() {
         </div>
 
         <div className="border-t pt-4 space-y-3">
+          <h2 className="text-sm font-semibold text-gray-900">Order lifecycle</h2>
+          <p className="text-xs text-gray-500">
+            Early mockup approval, short counts, delivery proof and partial deliveries.
+          </p>
+          <a href="/crm/settings/order-lifecycle" className="inline-flex text-sm font-medium text-[#806A50] underline">Open order lifecycle settings</a>
+        </div>
+
+        <div className="border-t pt-4 space-y-3">
           <h2 className="text-sm font-semibold text-gray-900">Business quotes</h2>
           <label className="block">
             <span className="text-gray-500 text-xs">Quote validity (days)</span>

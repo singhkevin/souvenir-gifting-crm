@@ -1,4 +1,4 @@
-export type Role = "admin" | "sales" | "operations" | "accounts" | "management" | "client_admin" | "client_user" | "business_user" | "gift_employee"
+export type Role = "admin" | "sales" | "operations" | "accounts" | "management" | "client_admin" | "client_user" | "business_user" | "gift_employee" | "runner"
 export type LeadStage = "cold" | "warm" | "hot" | "client" | "regular_client"
 export type LeadSource = "referral" | "website" | "direct" | "social_media" | "event" | "other"
 export type QuotationStatus = "draft" | "sent" | "viewed" | "accepted" | "rejected" | "expired"

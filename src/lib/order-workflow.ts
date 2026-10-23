@@ -32,7 +32,7 @@ export const LEGACY_ORDER_STATUS_MAP: Record<string, string> = {
   cancelled: "cancelled",
 }
 
-const KNOWN_STATUSES = new Set<string>([...ORDER_LIFECYCLE, "cancelled"])
+const KNOWN_STATUSES = new Set<string>([...ORDER_LIFECYCLE, "cancelled", "partly_delivered"])
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   created: "Order received",
@@ -43,6 +43,7 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   packaging_qc: "Packaging / QC",
   dispatched: "Dispatch",
   delivered: "Delivered",
+  partly_delivered: "Part delivered",
   cancelled: "Cancelled",
   confirmed: "Planning",
   in_progress: "In Progress",
@@ -60,6 +61,7 @@ export const CLIENT_STATUS_LABELS: Record<string, string> = {
   packaging_qc: "Packaging / QC",
   dispatched: "Dispatch",
   delivered: "Delivered",
+  partly_delivered: "Part delivered",
   cancelled: "Cancelled",
   confirmed: "Order Confirmed",
   in_progress: "In Production",
@@ -76,6 +78,7 @@ export const STAGE_DEPARTMENT: Record<string, string> = {
   production: "printing",
   packaging_qc: "quality",
   dispatched: "logistics",
+  partly_delivered: "logistics",
   delivered: "accounts",
 }
 
@@ -117,6 +120,8 @@ export function nextLifecycleStatus(current: string): string | null {
 }
 
 export function lifecycleIndex(status: string): number {
+  // Line-level lifecycle: some lines delivered, the rest still on the way.
+  if (status === "partly_delivered") return ORDER_LIFECYCLE.indexOf("dispatched")
   const i = ORDER_LIFECYCLE.indexOf(status as (typeof ORDER_LIFECYCLE)[number])
   return i < 0 ? 0 : i
 }

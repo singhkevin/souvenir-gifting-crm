@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { isUuid } from '@/lib/utils'
+import { isMissingSchemaError } from '@/lib/orders/line-lifecycle-server'
 
 function cleanError(message: string) {
   return message.replace(/\s+/g, ' ').slice(0, 300)
@@ -26,11 +27,15 @@ export async function decideOrderApproval(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Please sign in again to continue' }
 
-  const { error } = await supabase.rpc('client_decide_order_approval', {
-    p_order_id: orderId,
-    p_decision: decision,
-    p_note: note || null,
-  })
+  const params = { p_order_id: orderId, p_decision: decision, p_note: note || null }
+  // Line lifecycle: branding approval is a gate that can be given early. Falls back to the
+  // order-level function when the lifecycle migration is not applied or is switched off.
+  let { error } = process.env.ORDER_LINE_LIFECYCLE === 'off'
+    ? await supabase.rpc('client_decide_order_approval', params)
+    : await supabase.rpc('client_decide_branding_approval', params)
+  if (error && process.env.ORDER_LINE_LIFECYCLE !== 'off' && isMissingSchemaError(error)) {
+    ;({ error } = await supabase.rpc('client_decide_order_approval', params))
+  }
   if (error) return { error: cleanError(error.message) }
 
   revalidatePath(`/portal/orders/${orderId}`)

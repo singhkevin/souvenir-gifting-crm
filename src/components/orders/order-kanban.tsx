@@ -22,11 +22,15 @@ export type KanbanCard = {
 
 export function OrderKanban({
   orders,
-  canDrag,
+  canDrag: canDragProp,
+  lineLifecycle = false,
 }: {
   orders: KanbanCard[]
   canDrag: boolean
+  /** After the line-lifecycle migration the order stage follows its lines, so cards are read-only. */
+  lineLifecycle?: boolean
 }) {
+  const canDrag = canDragProp && !lineLifecycle
   const { pending, error, run } = useAction()
   const [movingId, setMovingId] = useState<string | null>(null)
 
@@ -47,10 +51,13 @@ export function OrderKanban({
     <div className="space-y-3">
       {error && <p role="alert" className="text-xs text-red-700 bg-red-50 border border-red-100 px-3 py-2">{error}</p>}
       {pending && <p role="status" className="text-[11px] text-[#7A7267]">Updating stage…</p>}
+      {lineLifecycle && (
+        <p className="text-[11px] text-[#7A7267]">Stages follow the product lines. Open an order and use its Fulfilment tab to move lines.</p>
+      )}
       <div className="overflow-x-auto pb-2">
         <div className="flex gap-3 min-w-max">
           {ORDER_LIFECYCLE.map((column) => {
-            const cards = orders.filter((o) => o.status === column)
+            const cards = orders.filter((o) => (o.status === 'partly_delivered' ? 'dispatched' : o.status) === column)
             return (
               <div
                 key={column}

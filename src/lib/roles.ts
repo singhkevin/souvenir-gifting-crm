@@ -27,6 +27,11 @@ export function isGiftStaffRole(role: string | null | undefined): boolean {
   return includes(GIFT_STAFF_ROLES, role)
 }
 
+/** Delivery runner: signs in on the admin site but only sees /crm/runs. Not a STAFF_ROLE. */
+export function isRunnerRole(role: string | null | undefined): boolean {
+  return role === 'runner'
+}
+
 export function isGiftEmployeeRole(role: string | null | undefined): boolean {
   return role === 'gift_employee'
 }
