@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { invalidatePublicCatalogue } from '@/lib/catalogue/public-read'
 import { normalizeEmailDomain } from '@/lib/pricing/domains'
 
 export async function updateOrgSettings(formData: FormData) {
@@ -42,6 +43,7 @@ export async function updateOrgSettings(formData: FormData) {
     error = (await save(rest)).error
   }
   if (error) return { error: error.message }
+  invalidatePublicCatalogue()
   revalidatePath('/crm/settings')
   return { success: true }
 }

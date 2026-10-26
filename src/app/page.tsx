@@ -14,6 +14,7 @@ import { appName } from "@/lib/brand"
 import { isGiftEmployeeRole } from "@/lib/roles"
 import { domainSplitEnabled } from "@/lib/domain-flag"
 import { resolveHost } from "@/lib/portal-host"
+import { sessionHintFromHeaders } from "@/lib/auth/session-cookie"
 import type { Metadata } from "next"
 
 function firstParam(value: string | string[] | undefined) {
@@ -67,26 +68,29 @@ export default async function RootPage({
 
   if (!(await getRequestTabId())) return <TabSessionRevive />
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const sessionHeaders = await headers()
+  if (sessionHintFromHeaders((name) => sessionHeaders.get(name))) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle()
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle()
 
-    if (isGiftEmployeeRole(profile?.role)) {
-      redirect("/gift")
+      if (isGiftEmployeeRole(profile?.role)) {
+        redirect("/gift")
+      }
+
+      if (profile?.role === "client_admin" || profile?.role === "client_user") {
+        redirect("/portal/gifts")
+      }
+
+      // Admins previewing the draft homepage (?preview=1) stay on the store page.
+      if (!(profile?.role === "admin" && wantsPreview(params))) redirect("/crm/dashboard")
     }
-
-    if (profile?.role === "client_admin" || profile?.role === "client_user") {
-      redirect("/portal/gifts")
-    }
-
-    // Admins previewing the draft homepage (?preview=1) stay on the store page.
-    if (!(profile?.role === "admin" && wantsPreview(params))) redirect("/crm/dashboard")
   }
 
   return (
