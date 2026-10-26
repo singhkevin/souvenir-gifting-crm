@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { BackButton } from '@/components/ui/back-button'
 import { formatCurrency, formatDate, formatDateTime, isUuid, oneRelation } from '@/lib/utils'
@@ -12,7 +12,7 @@ import {
   saveOrderCosting,
   handOffOrder,
 } from '../actions'
-import { getProfile, canSeeCosts, canChangeOrderStage, applyOrderScope } from '@/lib/auth'
+import { requireStaff, canSeeCosts, canChangeOrderStage, applyOrderScope } from '@/lib/auth'
 import { isOrderSource, ORDER_SOURCE_LABELS } from '@/lib/orders/source'
 import {
   ORDER_STATUS_LABELS,
@@ -43,9 +43,7 @@ export default async function OrderDetailPage({
   const { id } = await params
   if (!isUuid(id)) notFound()
   const { tab, stage_error: stageError } = await searchParams
-  const profile = await getProfile()
-  if (!profile) return redirect('/login')
-  if (profile.role === 'client_admin') return redirect('/portal/gifts')
+  const profile = await requireStaff() // staff only; runners use /crm/runs
 
   const supabase = await createClient()
 

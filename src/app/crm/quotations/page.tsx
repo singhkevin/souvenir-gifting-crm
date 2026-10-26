@@ -58,7 +58,7 @@ export default async function QuotationsPage(props: {
   searchParams: Promise<{ status?: string; q?: string; owner?: string }>
 }) {
   const { status = 'all', q = '', owner = 'all' } = await props.searchParams
-  const profile = await requireStaff()
+  const profile = await requireStaff(['admin', 'sales', 'management']) // quotations RLS: admin, sales, management only
   const supabase = await createClient()
 
   let query = supabase
@@ -75,8 +75,8 @@ export default async function QuotationsPage(props: {
   else if (owner !== 'all') query = query.eq('owner_id', owner)
   if (q.trim()) query = query.ilike('quotation_number', `%${q.trim()}%`)
 
-  let acceptedQuery = applyOwnerScope(supabase.from('quotations').select('id', { count: 'exact', head: true }).eq('status', 'accepted'), profile)
-  let totalQuery = applyOwnerScope(supabase.from('quotations').select('id', { count: 'exact', head: true }), profile)
+  const acceptedQuery = applyOwnerScope(supabase.from('quotations').select('id', { count: 'exact', head: true }).eq('status', 'accepted'), profile)
+  const totalQuery = applyOwnerScope(supabase.from('quotations').select('id', { count: 'exact', head: true }), profile)
 
   const [{ data: quotations, error }, { count: acceptedCount }, { count: totalCount }] = await Promise.all([
     query,

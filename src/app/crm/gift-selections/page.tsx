@@ -1,3 +1,4 @@
+import { GIFT_STAFF_ROLES } from '@/lib/roles'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
@@ -16,7 +17,7 @@ type Row = {
 }
 
 export default async function GiftSelectionsPage() {
-  const profile = await requireStaff()
+  const profile = await requireStaff([...GIFT_STAFF_ROLES]) // is_gift_staff in the RLS
   if (!isGiftStaffRole(profile.role)) {
     return <p className="text-sm text-red-700">You do not have access to gift selection.</p>
   }

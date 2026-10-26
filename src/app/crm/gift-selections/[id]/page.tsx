@@ -1,3 +1,4 @@
+import { GIFT_STAFF_ROLES } from '@/lib/roles'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -26,7 +27,7 @@ function toLocalInput(iso: string) {
 export default async function GiftSelectionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const profile = await requireStaff()
+  const profile = await requireStaff([...GIFT_STAFF_ROLES]) // is_gift_staff in the RLS
   if (!isGiftStaffRole(profile.role)) {
     return <p className="text-sm text-red-700">You do not have access to gift selection.</p>
   }
