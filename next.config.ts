@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Delivery proof photos (signature, seal / challan) are compressed in the browser first;
+  // this leaves headroom for two or three photos in one submission.
+  experimental: {
+    serverActions: { bodySizeLimit: '6mb' },
+  },
   images: {
     minimumCacheTTL: 60 * 60 * 24 * 30,
     qualities: [75, 90],

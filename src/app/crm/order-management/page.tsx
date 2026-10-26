@@ -11,6 +11,8 @@ import {
 import { isOrderSource, ORDER_SOURCE_LABELS, ORDER_SOURCES } from '@/lib/orders/source'
 import Link from 'next/link'
 import { OrderKanban } from '@/components/orders/order-kanban'
+import { LifecycleSummary } from '@/components/orders/lifecycle-summary'
+import { lineLifecycleEnabled } from '@/lib/orders/line-lifecycle-server'
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
 import { MobileDateRangeFilter, MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
 
@@ -54,6 +56,7 @@ export default async function OrderControlCenterPage({
   const params = await searchParams
   const supabase = await createClient()
   const view = params.view === 'kanban' ? 'kanban' : 'table'
+  const lifecycleOn = await lineLifecycleEnabled(supabase)
   const sourceFilter = isOrderSource(params.source) ? params.source : 'all'
 
   const [{ data: companies }, { data: departments }, { data: staff }] = await Promise.all([
@@ -112,9 +115,12 @@ export default async function OrderControlCenterPage({
           <p className="mt-1 text-xs text-[#7A7267]">Who owns each order right now, and whether it is healthy.</p>
           <p className="mt-2 text-[10px] leading-relaxed text-[#7A7267]">
             Lifecycle: {ORDER_LIFECYCLE.map((s) => ORDER_STATUS_LABELS[s]).join(' → ')}
+            {lifecycleOn ? ' · Part delivered shows under Dispatch' : ''}
           </p>
           <p className="mt-1 text-[10px] leading-relaxed text-[#7A7267]">
-            Production stays locked until the client approves. Requesting changes returns the order to Mockup.
+            {lifecycleOn
+              ? 'Each product line moves on its own; the order stage shows the line furthest behind. Printing waits for client approval.'
+              : 'Production stays locked until the client approves. Requesting changes returns the order to Mockup.'}
           </p>
         </div>
         <div className="flex gap-2 text-xs">
@@ -122,6 +128,8 @@ export default async function OrderControlCenterPage({
           <Link href={kanbanHref} className={`min-h-10 flex-1 border px-3 py-2 text-center sm:flex-none ${view === 'kanban' ? 'border-[#806A50] bg-[#806A50] text-[#FFFFFF]' : 'bg-white'}`}>Kanban</Link>
         </div>
       </div>
+
+      {lifecycleOn ? <LifecycleSummary supabase={supabase} /> : null}
 
       <div className="space-y-3 lg:hidden">
         <MobileFilterBar
@@ -299,6 +307,7 @@ export default async function OrderControlCenterPage({
       {view === 'kanban' ? (
         <OrderKanban
           canDrag={canChangeOrderStage(profile.role)}
+          lineLifecycle={lifecycleOn}
           orders={rows.map((o) => {
             const company = oneRelation(o.company)
             const assignee = oneRelation(o.assignee)

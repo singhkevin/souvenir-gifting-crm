@@ -22,9 +22,10 @@ type Department = { id: string; name: string }
 
 type DepartmentOption = { value: string; label: string }
 
-const ROLE_OPTIONS = ['admin', 'sales', 'operations', 'accounts', 'management'].map((r) => ({
+// 'runner' (delivery runner, sees only /crm/runs) needs migration 20261023_runner_role_enum.sql.
+const ROLE_OPTIONS = ['admin', 'sales', 'operations', 'accounts', 'management', 'runner'].map((r) => ({
   value: r,
-  label: r,
+  label: r === 'runner' ? 'runner · deliveries only' : r,
 }))
 
 const STATUS_OPTIONS = [
