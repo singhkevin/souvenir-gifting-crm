@@ -1,7 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import { optimisedImageSrc } from '@/components/ui/optimised-src'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { DEFAULT_SECTIONS } from '@/lib/homepage/defaults'
 import { headingParts } from '@/lib/homepage/heading'
@@ -22,7 +24,18 @@ function HeroImage({ src, alt }: { src: string | null; alt: string }) {
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden bg-[#31312C]">
       {!ready ? <div className="absolute inset-0 animate-pulse bg-[#31312C]" aria-hidden="true" /> : null}
-      {src ? (
+      {src && optimisedImageSrc(src) ? (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="(max-width: 1024px) 50vw, 25vw"
+          quality={90}
+          className={`scale-[1.08] object-cover transition-[opacity,transform] duration-500 group-hover:scale-[1.14] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.08] ${ready ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setReady(true)}
+          onError={() => setReady(true)}
+        />
+      ) : src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}

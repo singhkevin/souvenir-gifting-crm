@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { getProfile } from '@/lib/auth'
+import { sessionHintFromHeaders } from '@/lib/auth/session-cookie'
 import { isBusinessRole, isClientRole } from '@/lib/roles'
 import { landingPathForRole } from '@/lib/safe-next'
 import { getBusinessCatalogue, type BusinessProduct } from '@/lib/business/catalogue'
@@ -8,8 +10,7 @@ import { getPublicBrands, getPublicCategories, type PublicProduct } from '@/lib/
 import { curateTrendingProducts } from '@/lib/catalogue/curate'
 import { STORE_NAV_CATEGORIES, storeNavCategoryHref } from '@/lib/catalogue/store-nav'
 import { readCatalogueFilters } from '@/lib/catalogue/catalogue-query'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { resolvePublicContactPhone } from '@/lib/contact/public-phone'
+import { getPublicContactPhone } from '@/lib/contact/public-phone-server'
 import { siteContent } from '@/config/siteContent'
 
 import { StorefrontCatalog } from '@/components/site/storefront-catalog'
@@ -36,30 +37,14 @@ function withImage<T extends { image_url: string | null }>(items: T[]): T[] {
   return pictured.length ? pictured : items
 }
 
-async function getContactPhone(): Promise<string | null> {
-  const fromEnv = process.env.PUBLIC_CONTACT_PHONE
-  const admin = createAdminClient()
-  if (!admin) return resolvePublicContactPhone(fromEnv, null)
-  try {
-    const { data, error } = await admin
-      .from('org_settings')
-      .select('public_contact_phone')
-      .limit(1)
-      .maybeSingle()
-    if (error || !data) return resolvePublicContactPhone(fromEnv, null)
-    return resolvePublicContactPhone(fromEnv, data.public_contact_phone as string | null)
-  } catch {
-    return resolvePublicContactPhone(fromEnv, null)
-  }
-}
-
 export async function BusinessHome({
   searchParams,
 }: {
   searchParams?: Record<string, string | string[] | undefined>
 }) {
   const filters = readCatalogueFilters(searchParams)
-  const profile = await getProfile()
+  const headerStore = await headers()
+  const profile = sessionHintFromHeaders((name) => headerStore.get(name)) ? await getProfile() : null
   const companyId = profile && isBusinessRole(profile.role) ? profile.company_id : null
   const accountHref = profile
     ? isClientRole(profile.role)
@@ -78,7 +63,7 @@ export async function BusinessHome({
     getBusinessCatalogue(companyId).catch(() => [] as BusinessProduct[]),
     getPublicCategories().catch(() => []),
     getPublicBrands().catch(() => []),
-    getContactPhone(),
+    getPublicContactPhone(),
   ])
 
   // Featured kits for hero slider come ONLY from live products

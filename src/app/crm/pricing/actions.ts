@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { invalidatePublicCatalogue } from '@/lib/catalogue/public-read'
 import { canEditPricing, getProfile } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { recordPriceChange } from '@/lib/pricing/audit'
@@ -21,6 +22,7 @@ import { isUuid } from '@/lib/utils'
 const PORTALS: PricingPortal[] = ['store', 'business', 'corporate']
 
 function reprice() {
+  invalidatePublicCatalogue()
   revalidatePath('/crm/pricing')
   revalidatePath('/crm/products')
   revalidatePath('/portal/gifts')
