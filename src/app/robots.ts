@@ -16,7 +16,11 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const resolved = resolveHost(host)
   if (resolved.kind === 'store') {
     return {
-      rules: { userAgent: '*', allow: '/', disallow: ['/login', '/signup', '/api/'] },
+      rules: {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/login', '/signup', '/api/', '/*?*'],
+      },
       sitemap: `${storePublicOrigin(host)}/sitemap.xml`,
     }
   }

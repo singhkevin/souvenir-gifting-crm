@@ -5,6 +5,8 @@ import { canSeeCosts, getProfile } from '@/lib/auth'
 import { parseCsv, splitCompanyNames } from '@/lib/csv'
 import { ignoredCostWarning, parseOptionalNumber, parseProductStatus, sideEffectWarning, type ImportNotice } from '@/lib/products/csv-import'
 import { revalidatePath } from 'next/cache'
+import { invalidatePublicCatalogue } from '@/lib/catalogue/public-read'
+import { PUBLIC_STORAGE_CACHE_CONTROL } from '@/lib/storage/cache-control'
 import { PRODUCT_CATEGORY_ALIASES } from '@/lib/products/categories'
 import { assignCategoryId, planMissingCategories, previewImportCategories, type CategoryRef } from '@/lib/products/category-plan'
 import { directOrderSchemaHint } from '@/lib/catalogue/purchase-path'
@@ -457,7 +459,7 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
       const objectPath = `${product.id}/${Date.now()}.${extension}`
       const { error: uploadError } = await supabase.storage
         .from(IMAGE_BUCKET)
-        .upload(objectPath, item.imageFile, { contentType: item.imageFile.type, upsert: false })
+        .upload(objectPath, item.imageFile, { contentType: item.imageFile.type, upsert: false, cacheControl: PUBLIC_STORAGE_CACHE_CONTROL })
       if (uploadError) {
         const warning = sideEffectWarning(item.rowNumber, item.sku, 'image', uploadError.message)
         if (warning) warnings.push(warning)
@@ -489,6 +491,7 @@ async function importCatalogueCsvOnce(formData: FormData): Promise<ImportSummary
     existingSkus.add(item.sku)
   }
 
+  invalidatePublicCatalogue()
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
 

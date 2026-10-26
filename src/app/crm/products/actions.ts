@@ -1,7 +1,14 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath as revalidateNextPath } from 'next/cache'
+import { invalidatePublicCatalogue } from '@/lib/catalogue/public-read'
+import { PUBLIC_STORAGE_CACHE_CONTROL } from '@/lib/storage/cache-control'
+
+function revalidatePath(path: string, type?: 'layout' | 'page') {
+  invalidatePublicCatalogue()
+  revalidateNextPath(path, type)
+}
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
@@ -215,7 +222,7 @@ async function createProductOnce(formData: FormData) {
       const objectPath = `${product.id}/${Date.now()}.${extension}`
       const { error: uploadError } = await supabase.storage
         .from(IMAGE_BUCKET)
-        .upload(objectPath, imageFile, { contentType: imageFile.type, upsert: false })
+        .upload(objectPath, imageFile, { contentType: imageFile.type, upsert: false, cacheControl: PUBLIC_STORAGE_CACHE_CONTROL })
       if (uploadError) {
         imageHint = 'upload-failed'
       } else {
@@ -443,7 +450,7 @@ export async function uploadProductImage(formData: FormData) {
   const objectPath = `${productId}/${Date.now()}.${extension}`
   const { error: uploadError } = await supabase.storage
     .from(IMAGE_BUCKET)
-    .upload(objectPath, file, { contentType: file.type, upsert: false })
+    .upload(objectPath, file, { contentType: file.type, upsert: false, cacheControl: PUBLIC_STORAGE_CACHE_CONTROL })
   if (uploadError) return { error: 'Unable to upload product image. Please check the file and try again.' }
 
   const nextUrl = publicImageUrl(objectPath)

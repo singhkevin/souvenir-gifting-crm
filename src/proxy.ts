@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { isSafeNext, landingPathForRole } from '@/lib/safe-next'
 import { authCookieOptions, localCookieWriteOptions } from '@/lib/auth/cookie-options'
 import { TAB_HEADER, TAB_QUERY, TAB_URL_HEADER, authCookieName, isPublicAuthPath, isPublicSitePath, isTabId } from '@/lib/auth/tab'
+import { SESSION_HEADER, hasAuthSessionCookie, publicReadSkipsSession } from '@/lib/auth/session-cookie'
 import { domainSplitEnabled } from '@/lib/domain-flag'
 import { businessPortalRedirect, decideHostRoute, pendingPortalRedirect, robotsHeaderFor, staffAreaRedirect } from '@/lib/domain-routing'
 import {
@@ -30,6 +31,8 @@ function withRequestHeaders(request: NextRequest, mutate: (headers: Headers) => 
   mutate(requestHeaders)
   requestHeaders.set(TAB_URL_HEADER, requestUrlHint(request))
   if (isTabId(tabId)) requestHeaders.set(TAB_HEADER, tabId)
+  requestHeaders.delete(SESSION_HEADER)
+  if (hasAuthSessionCookie(request.cookies.getAll())) requestHeaders.set(SESSION_HEADER, '1')
   return NextResponse.next({ request: { headers: requestHeaders } })
 }
 
@@ -78,6 +81,8 @@ function rewriteToTenantPage(
         applyTenantHeaders(headers, tenant)
         headers.set(TAB_URL_HEADER, requestUrlHint(request))
         if (isTabId(tabId)) headers.set(TAB_HEADER, tabId)
+        headers.delete(SESSION_HEADER)
+        if (hasAuthSessionCookie(request.cookies.getAll())) headers.set(SESSION_HEADER, '1')
         return headers
       })(),
     },
@@ -188,6 +193,10 @@ export async function proxy(request: NextRequest) {
       return respond(NextResponse.redirect(new URL('/login', request.url)))
     }
     return respond(withTabRequest(request, null, tenant))
+  }
+
+  if (publicReadSkipsSession(resolved.kind, pathname)) {
+    return respond(withTabRequest(request, tabId, tenant))
   }
 
   let supabaseResponse = withTabRequest(request, tabId, tenant)

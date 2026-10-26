@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { invalidatePublicCatalogue } from '@/lib/catalogue/public-read'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
 import { isStaffRole } from '@/lib/roles'
@@ -44,6 +45,7 @@ export async function saveBrandLogo(formData: FormData) {
     }
     return { error: error.message }
   }
+  invalidatePublicCatalogue()
   revalidatePath('/crm/storefront')
   revalidatePath('/home')
   return { ok: true }
@@ -63,6 +65,7 @@ export async function saveProductOccasions(formData: FormData) {
     }
     return { error: error.message }
   }
+  invalidatePublicCatalogue()
   revalidatePath('/crm/storefront')
   revalidatePath('/catalogue')
   return { ok: true }

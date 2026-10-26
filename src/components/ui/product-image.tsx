@@ -1,7 +1,9 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import { Package } from 'lucide-react'
+import { optimisedImageSrc } from '@/components/ui/optimised-src'
 import { cn } from '@/lib/utils'
 
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'hero'
@@ -16,6 +18,14 @@ const sizeWrap: Record<Size, string> = {
   md: 'aspect-square w-full h-auto min-h-0',
   lg: 'w-32 h-32',
   hero: 'w-full aspect-square min-h-0',
+}
+
+const sizeHint: Record<Size, string> = {
+  xs: '32px',
+  sm: '56px',
+  md: '(max-width: 768px) 50vw, 320px',
+  lg: '128px',
+  hero: '(max-width: 1024px) 100vw, 50vw',
 }
 
 function usableSrc(src?: string | null): string | null {
@@ -63,7 +73,8 @@ export function ProductImage({
   fadeEdges?: boolean
 }) {
   const resolved = usableSrc(src)
-  const [failed, setFailed] = React.useState(false)
+  const [failedSrc, setFailedSrc] = React.useState<string | null>(null)
+  const failed = Boolean(resolved) && failedSrc === resolved
   const showImage = Boolean(resolved) && !failed
   const compact = size === 'xs' || size === 'sm'
   const fillParent =
@@ -71,10 +82,6 @@ export function ProductImage({
     className.includes('h-full') ||
     className.includes('absolute') ||
     className.includes('inset-0')
-
-  React.useEffect(() => {
-    setFailed(false)
-  }, [resolved])
 
   const wantsFade =
     fadeEdges ||
@@ -89,21 +96,38 @@ export function ProductImage({
       )}
     >
       {showImage ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={resolved as string}
-          alt={alt || 'Product'}
-          loading="lazy"
-          decoding="async"
-          className={cn(
-            'h-full w-full',
-            fit === 'cover' ? 'object-cover' : 'object-contain',
-            fit === 'contain' && compact ? 'p-0.5' : fit === 'contain' ? 'p-0' : '',
-            wantsFade && !imgClassName.includes('catalogue-product-img') ? 'catalogue-product-img' : '',
-            imgClassName,
-          )}
-          onError={() => setFailed(true)}
-        />
+        optimisedImageSrc(resolved as string) ? (
+          <Image
+            src={resolved as string}
+            alt={alt || 'Product'}
+            fill
+            sizes={sizeHint[size]}
+            quality={90}
+            className={cn(
+              fit === 'cover' ? 'object-cover' : 'object-contain',
+              fit === 'contain' && compact ? 'p-0.5' : '',
+              wantsFade && !imgClassName.includes('catalogue-product-img') ? 'catalogue-product-img' : '',
+              imgClassName,
+            )}
+            onError={() => setFailedSrc(resolved)}
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={resolved as string}
+            alt={alt || 'Product'}
+            loading="lazy"
+            decoding="async"
+            className={cn(
+              'h-full w-full',
+              fit === 'cover' ? 'object-cover' : 'object-contain',
+              fit === 'contain' && compact ? 'p-0.5' : fit === 'contain' ? 'p-0' : '',
+              wantsFade && !imgClassName.includes('catalogue-product-img') ? 'catalogue-product-img' : '',
+              imgClassName,
+            )}
+            onError={() => setFailedSrc(resolved)}
+          />
+        )
       ) : (
         <Fallback alt={alt} compact={compact} />
       )}

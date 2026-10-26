@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { invalidatePublicCatalogue } from '@/lib/catalogue/public-read'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isUuid } from '@/lib/utils'
@@ -28,6 +29,7 @@ function failure(error: { code?: string; message?: string } | null, fallback = '
 }
 
 function refreshStore() {
+  invalidatePublicCatalogue()
   revalidatePath('/crm/catalogue-setup', 'layout')
   revalidatePath('/')
   revalidatePath('/home')

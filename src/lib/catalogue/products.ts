@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { oneRelation } from '@/lib/utils'
@@ -7,14 +8,19 @@ import { readProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, resolveListedPrices } from '@/lib/pricing/server'
 import { type PurchaseOffer } from '@/lib/catalogue/purchase-path'
 import { occasionTagList, storefrontSampleOffer } from '@/lib/catalogue/storefront'
+import { cachedPublicRead } from '@/lib/catalogue/public-read'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { CHANNEL_COLUMN, channelColumnsMissing, type Channel } from '@/lib/products/channel-visibility'
 
-const PUBLIC_PRODUCT_SELECT =
-  'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, category:categories(id, name), brand:brands(id, name)' as const
-const PUBLIC_PRODUCT_SELECT_WITH_PURCHASE =
-  'id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, sample_only, category:categories(id, name), brand:brands(id, name)' as const
+const CATEGORY_EMBED = 'category:categories(id, name)'
+const BRAND_EMBED = 'brand:brands(id, name)'
+const BRAND_LOGO_EMBED = 'brand:brands(id, name, logo_url)'
 const PUBLIC_COST_EMBED = 'product_costs(supplier_cost)'
+const FULL_CATALOGUE_SELECT =
+  `id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, sample_only, occasion_tags, ${CATEGORY_EMBED}, ${BRAND_LOGO_EMBED}, ${PUBLIC_COST_EMBED}`
+const SUGGESTION_SELECT = `id, name, image_url, ${CATEGORY_EMBED}`
+const NAV_CATEGORY_SELECT = `category_id, ${CATEGORY_EMBED}`
+const SUGGESTION_LIMIT = 40
 
 export type PublicProduct = {
   id: string
@@ -36,30 +42,47 @@ export type PublicProduct = {
   priceNote?: string | null
 }
 
-type Named = { id: string; name: string }
+export type StoreSearchSuggestion = {
+  id: string
+  name: string
+  category_name: string | null
+  image_url: string | null
+  href: string
+}
 
-function toPublicProduct(
-  row: {
-    id: string
-    name: string
-    sku: string
-    description: string | null
-    image_url: string | null
-    price: number | null
-    moq: number | null
-    category_id: string | null
-    brand_id?: string | null
-    status: string
-    created_at?: string | null
-    stock_qty?: number | null
-    fulfillment_mode?: string | null
-    sample_only?: boolean | null
-    category?: Named | Named[] | null
-    brand?: Named | Named[] | null
-  },
-  sellPrice: number | null,
-  priceNote?: string | null,
-): PublicProduct {
+type Named = { id: string; name: string; logo_url?: string | null }
+type QueryError = { message: string }
+
+type PublicRow = {
+  id: string
+  name: string
+  sku: string
+  description: string | null
+  image_url: string | null
+  price: number | null
+  moq: number | null
+  category_id: string | null
+  brand_id?: string | null
+  status: string
+  created_at?: string | null
+  stock_qty?: number | null
+  fulfillment_mode?: string | null
+  sample_only?: boolean | null
+  occasion_tags?: unknown
+  supplier_cost?: number | null
+  category?: Named | Named[] | null
+  brand?: Named | Named[] | null
+  product_costs?: unknown
+}
+
+function logoOf(brand: Named | Named[] | null | undefined) {
+  const logo = oneRelation(brand)?.logo_url
+  if (typeof logo !== 'string') return null
+  const trimmed = logo.trim()
+  return trimmed || null
+}
+
+function toPublicProduct(row: PublicRow, sellPrice: number | null, priceNote?: string | null): PublicProduct {
   return {
     id: row.id,
     name: row.name,
@@ -72,8 +95,8 @@ function toPublicProduct(
     category_name: oneRelation(row.category)?.name || null,
     brand_id: row.brand_id || null,
     brand_name: oneRelation(row.brand)?.name || null,
-    brand_logo_url: null,
-    occasion_tags: [],
+    brand_logo_url: logoOf(row.brand),
+    occasion_tags: occasionTagList(row.occasion_tags),
     status: row.status,
     created_at: row.created_at || null,
     purchase: storefrontSampleOffer({
@@ -86,135 +109,129 @@ function toPublicProduct(
   }
 }
 
-function missingPurchaseColumn(message: string | undefined) {
-  return Boolean(message && /stock_qty|fulfillment_mode/i.test(message))
-}
-
-type PublicRow = Parameters<typeof toPublicProduct>[0] & {
-  supplier_cost?: number | null
-}
-
 function attachCosts(rows: unknown[]): PublicRow[] {
   return rows.map((row) => {
-    const record = row as PublicRow & { product_costs?: unknown }
+    const record = row as PublicRow
     return { ...record, ...readProductCost(record as Parameters<typeof readProductCost>[0]) }
   })
 }
 
-/**
- * Store and business portal read their own channel switch. Until
- * 20261022_channel_visibility.sql is applied the columns do not exist and both
- * channels keep the legacy rule (catalogue_access = 'all').
- */
-async function channelFilter(client: SupabaseClient, channel: Channel): Promise<[string, string | boolean]> {
-  const probe = await client.from('products').select('show_in_store, show_in_business').limit(1)
-  if (probe.error && channelColumnsMissing(probe.error.message)) return ['catalogue_access', 'all']
-  return [CHANNEL_COLUMN[channel], true]
+function asRows(data: unknown): unknown[] {
+  if (!data) return []
+  return Array.isArray(data) ? data : [data]
 }
 
-async function loadPublicRows(client: SupabaseClient, id?: string, channel: Channel = 'store'): Promise<PublicRow[]> {
-  const [channelColumn, channelValue] = await channelFilter(client, channel)
-  const probe = await client.from('products').select('sample_only').limit(1)
-  const purchaseColumns = probe.error && /sample_only/i.test(probe.error.message)
-    ? PUBLIC_PRODUCT_SELECT_WITH_PURCHASE.replace(', sample_only', '')
-    : PUBLIC_PRODUCT_SELECT_WITH_PURCHASE
-  const purchaseSelect = `${purchaseColumns}, ${PUBLIC_COST_EMBED}`
-  const plainSelect = `${PUBLIC_PRODUCT_SELECT}, ${PUBLIC_COST_EMBED}`
-  if (id) {
-    const single = await client
-      .from('products')
-      .select(purchaseSelect)
-      .eq('status', 'active')
-      .eq(channelColumn, channelValue)
-      .eq('id', id)
-      .maybeSingle()
-    if (single.error && /product_costs/i.test(single.error.message)) {
-      const withoutCost = await client
-        .from('products')
-        .select(purchaseColumns)
-        .eq('status', 'active')
-        .eq(channelColumn, channelValue)
-        .eq('id', id)
-        .maybeSingle()
-      if (withoutCost.error && missingPurchaseColumn(withoutCost.error.message)) {
-        const fallback = await client
-          .from('products')
-          .select(PUBLIC_PRODUCT_SELECT)
-          .eq('status', 'active')
-          .eq(channelColumn, channelValue)
-          .eq('id', id)
-          .maybeSingle()
-        return fallback.data ? attachCosts([fallback.data]) : []
-      }
-      return withoutCost.data ? attachCosts([withoutCost.data]) : []
-    }
-    if (single.error && missingPurchaseColumn(single.error.message)) {
-      const fallback = await client
-        .from('products')
-        .select(plainSelect)
-        .eq('status', 'active')
-        .eq(channelColumn, channelValue)
-        .eq('id', id)
-        .maybeSingle()
-      if (fallback.error && /product_costs/i.test(fallback.error.message)) {
-        const plain = await client
-          .from('products')
-          .select(PUBLIC_PRODUCT_SELECT)
-          .eq('status', 'active')
-          .eq(channelColumn, channelValue)
-          .eq('id', id)
-          .maybeSingle()
-        return plain.data ? attachCosts([plain.data]) : []
-      }
-      return fallback.data ? attachCosts([fallback.data]) : []
-    }
-    return single.data ? attachCosts([single.data]) : []
+function narrowSelect(select: string, message: string) {
+  if (/logo_url/i.test(message) && select.includes(BRAND_LOGO_EMBED)) {
+    return select.replace(BRAND_LOGO_EMBED, BRAND_EMBED)
   }
+  if (/occasion_tags/i.test(message) && select.includes('occasion_tags')) {
+    return select.replace(', occasion_tags', '')
+  }
+  if (/sample_only/i.test(message) && select.includes('sample_only')) {
+    return select.replace(', sample_only', '')
+  }
+  if (/stock_qty|fulfillment_mode/i.test(message) && /stock_qty|fulfillment_mode/.test(select)) {
+    return select
+      .replace(', stock_qty, fulfillment_mode, sample_only', '')
+      .replace(', stock_qty, fulfillment_mode', '')
+      .replace(', sample_only', '')
+  }
+  if (/product_costs/i.test(message) && select.includes(PUBLIC_COST_EMBED)) {
+    return select.replace(`, ${PUBLIC_COST_EMBED}`, '')
+  }
+  return null
+}
 
-  const first = await client
-    .from('products')
-    .select(purchaseSelect)
-    .eq('status', 'active')
-    .eq(channelColumn, channelValue)
-    .order('name')
-  if (first.error && /product_costs/i.test(first.error.message)) {
-    const withoutCost = await client
-      .from('products')
-      .select(purchaseColumns)
-      .eq('status', 'active')
-      .eq(channelColumn, channelValue)
-      .order('name')
-    if (withoutCost.error && missingPurchaseColumn(withoutCost.error.message)) {
-      const fallback = await client
-        .from('products')
-        .select(PUBLIC_PRODUCT_SELECT)
-        .eq('status', 'active')
-        .eq(channelColumn, channelValue)
-        .order('name')
-      return attachCosts(fallback.data || [])
-    }
-    return attachCosts(withoutCost.data || [])
+async function selectActive(
+  client: SupabaseClient,
+  select: string,
+  column: string,
+  value: string | boolean,
+  options?: { id?: string; limit?: number },
+): Promise<{ data: unknown; error: QueryError | null }> {
+  let query = client.from('products').select(select).eq('status', 'active').eq(column, value)
+  if (options?.id) {
+    const single = await query.eq('id', options.id).maybeSingle()
+    return { data: single.data, error: single.error ? { message: single.error.message } : null }
   }
-  if (first.error && missingPurchaseColumn(first.error.message)) {
-    const fallback = await client
-      .from('products')
-      .select(plainSelect)
-      .eq('status', 'active')
-      .eq(channelColumn, channelValue)
-      .order('name')
-    if (fallback.error && /product_costs/i.test(fallback.error.message)) {
-      const plain = await client
-        .from('products')
-        .select(PUBLIC_PRODUCT_SELECT)
-        .eq('status', 'active')
-        .eq(channelColumn, channelValue)
-        .order('name')
-      return attachCosts(plain.data || [])
-    }
-    return attachCosts(fallback.data || [])
+  query = query.order('name')
+  if (options?.limit) query = query.limit(options.limit)
+  const list = await query
+  return { data: list.data, error: list.error ? { message: list.error.message } : null }
+}
+
+async function selectOnChannel(
+  client: SupabaseClient,
+  select: string,
+  channel: Channel,
+  options?: { limit?: number },
+) {
+  let column: string = CHANNEL_COLUMN[channel]
+  let value: string | boolean = true
+  let result = await selectActive(client, select, column, value, options)
+  if (result.error && channelColumnsMissing(result.error.message)) {
+    column = 'catalogue_access'
+    value = 'all'
+    result = await selectActive(client, select, column, value, options)
   }
-  if (first.error || !first.data) return []
-  return attachCosts(first.data)
+  return result
+}
+
+/**
+ * Active products for one channel. One query when the live columns exist.
+ * Older databases retry without the column the error names, instead of probing first.
+ */
+export async function loadPublicRows(client: SupabaseClient, channel: Channel = 'store'): Promise<PublicRow[]> {
+  let select = FULL_CATALOGUE_SELECT
+  let column: string = CHANNEL_COLUMN[channel]
+  let value: string | boolean = true
+  let switchedChannel = false
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const result = await selectActive(client, select, column, value)
+    if (!result.error) return attachCosts(asRows(result.data))
+    if (!switchedChannel && channelColumnsMissing(result.error.message)) {
+      column = 'catalogue_access'
+      value = 'all'
+      switchedChannel = true
+      continue
+    }
+    const next = narrowSelect(select, result.error.message)
+    if (!next || next === select) throw new Error(result.error.message)
+    select = next
+  }
+  throw new Error('Could not read the public catalogue')
+}
+
+/** First 40 store products by name: the header search only shows these. */
+export async function readSearchSuggestions(client: SupabaseClient, limit = SUGGESTION_LIMIT): Promise<StoreSearchSuggestion[]> {
+  const result = await selectOnChannel(client, SUGGESTION_SELECT, 'store', { limit })
+  if (result.error) throw new Error(result.error.message)
+  return asRows(result.data).map((row) => {
+    const product = row as PublicRow
+    return {
+      id: product.id,
+      name: product.name,
+      category_name: oneRelation(product.category)?.name || null,
+      image_url: product.image_url || null,
+      href: `/catalogue/${product.id}`,
+    }
+  })
+}
+
+/** Categories that have an active store product, without loading prices or descriptions. */
+export async function readNavCategories(client: SupabaseClient) {
+  const result = await selectOnChannel(client, NAV_CATEGORY_SELECT, 'store')
+  if (result.error) throw new Error(result.error.message)
+  const unique = new Map<string, { id: string; name: string }>()
+  for (const row of asRows(result.data) as PublicRow[]) {
+    const category = oneRelation(row.category)
+    const id = row.category_id || category?.id || null
+    const name = category?.name || null
+    if (!id || !name) continue
+    unique.set(id, { id, name })
+  }
+  return sortProductCategories([...unique.values()])
 }
 
 async function publicDbClient(): Promise<SupabaseClient | null> {
@@ -227,47 +244,70 @@ async function publicDbClient(): Promise<SupabaseClient | null> {
   }
 }
 
-async function decorateStorefront(client: SupabaseClient, products: PublicProduct[]) {
-  if (!products.length) return products
-  const tagged = await client.from('products').select('id, occasion_tags').in('id', products.map((product) => product.id))
-  const tags = new Map<string, string[]>()
-  if (!tagged.error) {
-    for (const row of tagged.data || []) tags.set(row.id as string, occasionTagList(row.occasion_tags))
-  }
-  const logos = await client.from('brands').select('id, logo_url')
-  const logo = new Map<string, string | null>()
-  if (!logos.error) {
-    for (const row of logos.data || []) logo.set(row.id as string, (row.logo_url as string | null) || null)
-  }
-  return products.map((product) => ({
-    ...product,
-    occasion_tags: tags.get(product.id) || [],
-    brand_logo_url: product.brand_id ? logo.get(product.brand_id) || null : null,
-  }))
+async function assembleCatalogue(client: SupabaseClient, channel: Channel): Promise<PublicProduct[]> {
+  const data = await loadPublicRows(client, channel)
+  if (!data.length) return []
+  const settings = await getPricingSettings()
+  const rule = settings.portals.store
+  const note = settings.surfaces.store.showSellPrice ? gstPriceNote(rule.gstMode) : null
+  const resolved = settings.surfaces.store.showSellPrice
+    ? await resolveListedPrices(data.map((row) => ({ id: row.id })), 'store', null, null, settings, client)
+    : null
+  if (!settings.surfaces.store.showSellPrice) return data.map((row) => toPublicProduct(row, null))
+  return data.map((row) => toPublicProduct(row, resolved?.get(row.id)?.price ?? null, note))
 }
 
+const readCachedCatalogue = cachedPublicRead('priced-catalogue', async (channel: Channel) => {
+  const client = createAdminClient()
+  if (!client) throw new Error('missing service role')
+  return assembleCatalogue(client, channel)
+})
+
+const readCachedSuggestions = cachedPublicRead('search-suggestions', async () => {
+  const client = createAdminClient()
+  if (!client) throw new Error('missing service role')
+  return readSearchSuggestions(client)
+})
+
+const readCachedNavCategories = cachedPublicRead('nav-categories', async () => {
+  const client = createAdminClient()
+  if (!client) throw new Error('missing service role')
+  return readNavCategories(client)
+})
+
 /** Active products switched on for the retail store (default) or the business portal. */
-export async function getPublicCatalogueProducts(channel: Channel = 'store'): Promise<PublicProduct[]> {
+export const getPublicCatalogueProducts = cache(async (channel: Channel = 'store'): Promise<PublicProduct[]> => {
   try {
+    if (createAdminClient()) return await readCachedCatalogue(channel)
     const client = await publicDbClient()
     if (!client) return []
-    const data = await loadPublicRows(client, undefined, channel)
-    if (!data.length) return []
-    const settings = await getPricingSettings()
-    const rule = settings.portals.store
-    const note = settings.surfaces.store.showSellPrice ? gstPriceNote(rule.gstMode) : null
-    // Store (Retail) price: fixed price, else effective cost + product margin or store margin.
-    const resolved = settings.surfaces.store.showSellPrice
-      ? await resolveListedPrices(data.map((row) => ({ id: row.id })), 'store', null, null, settings, client)
-      : null
-    const priced = !settings.surfaces.store.showSellPrice
-      ? data.map((row) => toPublicProduct(row, null))
-      : data.map((row) => toPublicProduct(row, resolved?.get(row.id)?.price ?? null, note))
-    return decorateStorefront(client, priced)
+    return await assembleCatalogue(client, channel)
   } catch {
     return []
   }
-}
+})
+
+export const getPublicSearchSuggestions = cache(async (): Promise<StoreSearchSuggestion[]> => {
+  try {
+    if (createAdminClient()) return await readCachedSuggestions()
+    const client = await publicDbClient()
+    if (!client) return []
+    return await readSearchSuggestions(client)
+  } catch {
+    return []
+  }
+})
+
+export const getPublicNavCategories = cache(async () => {
+  try {
+    if (createAdminClient()) return await readCachedNavCategories()
+    const client = await publicDbClient()
+    if (!client) return []
+    return await readNavCategories(client)
+  } catch {
+    return []
+  }
+})
 
 function previewPublicProduct(id: string): PublicProduct | null {
   if (process.env.STOREFRONT_UI_PREVIEW !== '1') return null
@@ -297,25 +337,12 @@ function previewPublicProduct(id: string): PublicProduct | null {
   }
 }
 
-export async function getPublicProduct(id: string): Promise<PublicProduct | null> {
+export const getPublicProduct = cache(async (id: string): Promise<PublicProduct | null> => {
   const preview = previewPublicProduct(id)
   if (preview) return preview
-  try {
-    const client = await publicDbClient()
-    if (!client) return null
-    const data = (await loadPublicRows(client, id))[0]
-    if (!data) return null
-    const settings = await getPricingSettings()
-    if (!settings.surfaces.store.showSellPrice) {
-      return (await decorateStorefront(client, [toPublicProduct(data, null)]))[0] || null
-    }
-    const resolved = await resolveListedPrices([{ id: data.id }], 'store', null, null, settings, client)
-    const price = resolved?.get(data.id)?.price ?? null
-    return (await decorateStorefront(client, [toPublicProduct(data, price, gstPriceNote(settings.portals.store.gstMode))]))[0] || null
-  } catch {
-    return null
-  }
-}
+  const products = await getPublicCatalogueProducts()
+  return products.find((product) => product.id === id) || null
+})
 
 export async function getPublicCategories() {
   const products = await getPublicCatalogueProducts()

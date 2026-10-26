@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
+import { optimisedImageSrc } from '@/components/ui/optimised-src'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
 import { StorefrontCatalog } from '@/components/site/storefront-catalog'
@@ -55,9 +57,21 @@ export default async function BrandPage({ params, searchParams }: Props) {
           <div className="mt-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
               {brand.logo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <div className="flex h-16 w-16 items-center justify-center border border-[#3A3835] bg-[#FCF9F2] p-2">
-                  <img src={brand.logo_url} alt={brand.name} className="max-h-full max-w-full object-contain" />
+                  {optimisedImageSrc(brand.logo_url) ? (
+                    <Image
+                      src={brand.logo_url}
+                      alt={brand.name}
+                      width={48}
+                      height={48}
+                      quality={90}
+                      className="max-h-full max-w-full object-contain"
+                      style={{ width: 'auto', height: 'auto' }}
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={brand.logo_url} alt={brand.name} className="max-h-full max-w-full object-contain" />
+                  )}
                 </div>
               ) : null}
               <div>

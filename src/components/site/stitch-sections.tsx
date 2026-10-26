@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { ProductImage } from '@/components/ui/product-image'
+import { optimisedImageSrc } from '@/components/ui/optimised-src'
 import { StitchProductCard } from '@/components/site/stitch-product-card'
 import { siteContent } from '@/config/siteContent'
 import { brandPath } from '@/lib/catalogue/store-nav'
@@ -415,7 +417,17 @@ export function BrandLogoRow({
               href={brandPath(brand, brands)}
               className="group flex w-1/2 items-center justify-center border-b border-[#CCC5BD] px-5 py-8 text-center transition-colors hover:bg-[#FCF9F2] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#9E4300] sm:w-1/3 lg:w-1/4"
             >
-              {brand.logo_url ? (
+              {brand.logo_url && optimisedImageSrc(brand.logo_url) ? (
+                <Image
+                  src={brand.logo_url}
+                  alt={brand.name}
+                  width={160}
+                  height={40}
+                  quality={90}
+                  className="h-10 w-auto max-w-full object-contain grayscale transition-[filter] duration-300 group-hover:grayscale-0 motion-reduce:transition-none"
+                  style={{ width: 'auto', height: '2.5rem' }}
+                />
+              ) : brand.logo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={brand.logo_url}

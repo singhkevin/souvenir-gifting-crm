@@ -13,8 +13,6 @@ export const metadata: Metadata = {
   description: `Editorial ${appName()} collections and corporate occasions, grouped from the existing catalogue.`,
 }
 
-export const dynamic = 'force-dynamic'
-
 export default async function CollectionsPage() {
   const collections = await listedStoreCollections()
   return (

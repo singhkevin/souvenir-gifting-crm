@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     serverActions: { bodySizeLimit: '6mb' },
   },
   images: {
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    qualities: [75, 90],
     remotePatterns: [
       { protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/**' },
     ],
