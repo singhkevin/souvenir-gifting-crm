@@ -10,6 +10,7 @@ import { originForHostname } from '@/lib/local-origin'
  * Company portal routing still uses server-only ROOT_DOMAIN in portal-host.ts.
  * Unset ROOT_DOMAIN keeps every host on the main site.
  * With DOMAIN_SPLIT on, store and admin helpers point at STORE_DOMAIN and ADMIN_HOST.
+ * Unset hosts stay on the current public site. They do not fall back to a legacy domain.
  */
 
 export const DEFAULT_APP_NAME = 'Souvenir - Gifting Solutions'
@@ -86,18 +87,22 @@ function hostFromEnv(value: string | undefined, fallback: string) {
   return raw.replace(/:\d+$/, '').replace(/\.$/, '') || fallback
 }
 
-/** Store origin. With the split off this stays the current public site URL. */
+/** Store origin. With the split off, or with STORE_DOMAIN unset, this stays the current public site URL. */
 export function storeSiteUrl() {
   if (!domainSplitEnabled()) return publicSiteUrl()
-  return originForHostname(hostFromEnv(process.env.STORE_DOMAIN, 'souvenirgifting.com'))
+  const store = hostFromEnv(process.env.STORE_DOMAIN, '')
+  if (!store) return publicSiteUrl()
+  return originForHostname(store)
 }
 
-/** Staff CRM origin. With the split off this stays the current public site URL. */
+/** Staff CRM origin. With the split off, or with both hosts unset, this stays the current public site URL. */
 export function adminSiteUrl() {
   if (!domainSplitEnabled()) return publicSiteUrl()
-  const explicit = trimmed(process.env.ADMIN_HOST)
-  if (explicit) return originForHostname(hostFromEnv(explicit, 'admin.souvenirgifting.com'))
-  return originForHostname(`admin.${hostFromEnv(process.env.STORE_DOMAIN, 'souvenirgifting.com')}`)
+  const admin = hostFromEnv(process.env.ADMIN_HOST, '')
+  if (admin) return originForHostname(admin)
+  const store = hostFromEnv(process.env.STORE_DOMAIN, '')
+  if (store) return originForHostname(`admin.${store}`)
+  return publicSiteUrl()
 }
 
 /** Finder apex. With the split off this stays the current public site URL. */

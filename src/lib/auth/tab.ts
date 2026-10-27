@@ -52,7 +52,9 @@ export function isPublicAuthPath(pathname: string) {
     pathname === '/auth/callback' ||
     pathname.startsWith('/auth/callback/') ||
     pathname === '/auth/confirm' ||
-    pathname.startsWith('/auth/confirm/')
+    pathname.startsWith('/auth/confirm/') ||
+    pathname === '/auth/establish' ||
+    pathname.startsWith('/auth/establish/')
   )
 }
 

@@ -169,8 +169,6 @@ export function rootDomain(): string {
   return normalizeDomain(process.env.ROOT_DOMAIN)
 }
 
-const DEFAULT_STORE_DOMAIN = 'souvenirgifting.com'
-
 function normalizeDomain(value: string | undefined) {
   let raw = (value || '').trim().toLowerCase()
   if (!raw) return ''
@@ -189,9 +187,8 @@ export function effectivePortalRoot(): string {
 }
 
 export function storeDomain(): string {
-  const explicit = normalizeDomain(process.env.STORE_DOMAIN)
-  if (explicit) return explicit
-  return domainSplitEnabled() ? DEFAULT_STORE_DOMAIN : ''
+  if (!domainSplitEnabled()) return ''
+  return normalizeDomain(process.env.STORE_DOMAIN)
 }
 
 export function adminHost(): string {
@@ -384,7 +381,9 @@ export function isTenantAuthPath(pathname: string) {
     pathname === '/reset-password' ||
     pathname.startsWith('/reset-password/') ||
     pathname === '/auth/confirm' ||
-    pathname.startsWith('/auth/confirm/')
+    pathname.startsWith('/auth/confirm/') ||
+    pathname === '/auth/establish' ||
+    pathname.startsWith('/auth/establish/')
   )
 }
 

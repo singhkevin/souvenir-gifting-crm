@@ -95,7 +95,7 @@ export async function updateQuotationStatus(quotationId: string, newStatus: stri
 export async function convertToOrder(quotationId: string) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
-  if (!['admin', 'sales'].includes(profile.role)) {
+  if (!['admin', 'sales', 'management'].includes(profile.role)) {
     return { error: 'Not permitted to convert quotations' }
   }
   const supabase = await createClient()

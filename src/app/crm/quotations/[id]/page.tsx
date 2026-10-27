@@ -24,6 +24,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
   if (!isUuid(id)) notFound()
   const profile = await requireStaff(['admin', 'sales', 'management']) // quotations RLS: admin, sales, management only
   const canPrice = ['admin', 'sales', 'management', 'accounts'].includes(profile.role)
+  const canConvertOrder = ['admin', 'sales', 'management'].includes(profile.role)
   const supabase = await createClient()
 
   const { data: quote } = await supabase
@@ -259,7 +260,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               </ActionButton>
             </>
           )}
-          {quote.status === 'accepted' && !linkedOrder && (
+          {canConvertOrder && quote.status === 'accepted' && !linkedOrder && (
             <ActionButton
               action={convertToOrder.bind(null, quote.id)}
               pendingLabel="Converting…"

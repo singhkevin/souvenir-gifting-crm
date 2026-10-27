@@ -141,8 +141,12 @@ test('resolveHost matrix when the split is on', () => {
     ADMIN_HOST: undefined,
   }, () => {
     assert.deepEqual(resolveHost('tcs.giftingstore.online'), { kind: 'tenant', slug: 'tcs' })
-    assert.deepEqual(resolveHost('souvenirgifting.com'), { kind: 'store' })
-    assert.deepEqual(resolveHost('admin.souvenirgifting.com'), { kind: 'admin' })
+    assert.deepEqual(resolveHost('giftingstore.online'), { kind: 'portal-root' })
+    assert.deepEqual(resolveHost('www.giftingstore.online'), { kind: 'portal-root' })
+    assert.deepEqual(resolveHost('souvenirgifting.com'), { kind: 'dev' })
+    assert.deepEqual(resolveHost('admin.souvenirgifting.com'), { kind: 'dev' })
+    assert.equal(storeSiteUrl(), publicSiteUrl())
+    assert.equal(adminSiteUrl(), publicSiteUrl())
   })
 })
 
