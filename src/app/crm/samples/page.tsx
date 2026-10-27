@@ -1,249 +1,188 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, formatDateTime } from '@/lib/utils'
-import Link from 'next/link'
-import { receiveSample, moveSample } from './actions'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
-import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
-import { ActionForm } from '@/components/ui/action-form'
-import { SubmitButton } from '@/components/ui/submit-button'
-import { ProductThumb } from '@/components/ui/product-thumb'
+import { oneRelation } from '@/lib/utils'
+import { SamplesBoard, type NamedOption, type SampleCard, type SampleMovement } from './samples-board'
+
+const TEAM_ROLES = ['admin', 'sales', 'operations', 'accounts', 'management', 'runner']
+const MANAGE_ROLES = ['admin', 'sales', 'operations', 'management']
+
+type ProductRel = { name?: string | null; sku?: string | null; image_url?: string | null }
+type NameRel = { name?: string | null; full_name?: string | null }
 
 export default async function SamplesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; received?: string; moved?: string }>
+  searchParams: Promise<{ error?: string; received?: string; returned?: string; sent?: string }>
 }) {
   const profile = await requireStaff()
   const supabase = await createClient()
-  const showCost = canSeeCosts(profile.role)
   const params = await searchParams
-  const error = params.error || ''
-  const received = params.received === '1'
-  const moved = params.moved === '1'
+  const showCost = canSeeCosts(profile.role)
+  const canManage = MANAGE_ROLES.includes(profile.role)
 
-  const [{ data: samples }, { data: movements }, { data: products }, { data: companies }] = await Promise.all([
-    supabase.from('sample_stock').select('*, product:products(name, sku, image_url)'),
-    supabase.from('sample_movements').select('*, product:products(name), company:companies(name)').order('created_at', { ascending: false }).limit(25),
-    supabase.from('products').select('id, name, sku').eq('status', 'active').order('name').limit(200),
+  const movementSelect =
+    'id, product_id, quantity, from_holder, to_holder, company_id, holder_profile_id, note, created_at, created_by, product:products(name), company:companies(name)'
+  const [stockResult, movementResult, companyResult, teamResult, productResult] = await Promise.all([
+    supabase.from('sample_stock').select('id, product_id, in_office, with_team, with_client, pending_supplier, unit_cost, product:products(name, sku, image_url)'),
+    supabase.from('sample_movements').select(movementSelect).order('created_at', { ascending: false }).limit(40),
     supabase.from('companies').select('id, name').order('name'),
+    supabase.from('profiles').select('id, full_name').eq('is_active', true).in('role', TEAM_ROLES).order('full_name'),
+    supabase.from('products').select('id, name, sku').eq('status', 'active').order('name').limit(1000),
   ])
 
-  const totalInOffice = samples?.reduce((acc, curr) => acc + (curr.in_office || 0), 0) || 0
-  const totalWithTeam = samples?.reduce((acc, curr) => acc + (curr.with_team || 0), 0) || 0
-  const totalWithClient = samples?.reduce((acc, curr) => acc + (curr.with_client || 0), 0) || 0
-  const totalPending = samples?.reduce((acc, curr) => acc + (curr.pending_supplier || 0), 0) || 0
+  let movementsRaw: unknown[] = movementResult.data || []
+  let movementError = movementResult.error?.message || ''
+  if (movementResult.error && /holder_profile_id/i.test(movementResult.error.message)) {
+    const retry = await supabase
+      .from('sample_movements')
+      .select('id, product_id, quantity, from_holder, to_holder, company_id, note, created_at, created_by, product:products(name), company:companies(name)')
+      .order('created_at', { ascending: false })
+      .limit(40)
+    movementsRaw = retry.data || []
+    movementError = retry.error?.message || ''
+  }
+
+  const balances = await supabase
+    .from('sample_balances')
+    .select('product_id, company_id, profile_id, quantity, company:companies(name), profile:profiles(full_name)')
+    .gt('quantity', 0)
+  const balanceHint = balances.error
+    ? /sample_balances/i.test(balances.error.message)
+      ? 'Per-client balances need supabase/migrations/20261027_samples_internal.sql before Receive into Office can square a client off.'
+      : balances.error.message
+    : ''
+
+  const actorIds = new Set<string>()
+  for (const row of movementsRaw) {
+    const record = row as { created_by?: string | null; holder_profile_id?: string | null }
+    if (record.created_by) actorIds.add(record.created_by)
+    if (record.holder_profile_id) actorIds.add(record.holder_profile_id)
+  }
+  const names = new Map<string, string>()
+  if (actorIds.size) {
+    const { data: actors } = await supabase.from('profiles').select('id, full_name').in('id', [...actorIds])
+    for (const actor of actors || []) names.set(actor.id, actor.full_name || 'Team member')
+  }
+
+  const companiesByProduct = new Map<string, SampleCard['companies']>()
+  const teamByProduct = new Map<string, SampleCard['team']>()
+  for (const row of balances.data || []) {
+    const record = row as {
+      product_id: string
+      company_id: string | null
+      profile_id: string | null
+      quantity: number
+      company?: NameRel | NameRel[] | null
+      profile?: NameRel | NameRel[] | null
+    }
+    if (record.company_id) {
+      const list = companiesByProduct.get(record.product_id) || []
+      list.push({
+        id: record.company_id,
+        name: oneRelation(record.company)?.name || 'Client',
+        quantity: Number(record.quantity || 0),
+      })
+      companiesByProduct.set(record.product_id, list)
+    }
+    if (record.profile_id) {
+      const list = teamByProduct.get(record.product_id) || []
+      list.push({
+        id: record.profile_id,
+        name: oneRelation(record.profile)?.full_name || names.get(record.profile_id) || 'Team member',
+        quantity: Number(record.quantity || 0),
+      })
+      teamByProduct.set(record.product_id, list)
+    }
+  }
+
+  const samples: SampleCard[] = (stockResult.data || []).map((row) => {
+    const record = row as {
+      id: string
+      product_id: string
+      in_office: number | null
+      with_team: number | null
+      with_client: number | null
+      pending_supplier: number | null
+      unit_cost: number | null
+      product?: ProductRel | ProductRel[] | null
+    }
+    const product = oneRelation(record.product)
+    return {
+      id: record.id,
+      productId: record.product_id,
+      name: product?.name || 'Product',
+      sku: product?.sku || '',
+      imageUrl: product?.image_url || null,
+      inOffice: Number(record.in_office || 0),
+      withTeam: Number(record.with_team || 0),
+      withClient: Number(record.with_client || 0),
+      pendingSupplier: Number(record.pending_supplier || 0),
+      unitCost: record.unit_cost,
+      companies: (companiesByProduct.get(record.product_id) || []).sort((a, b) => a.name.localeCompare(b.name)),
+      team: (teamByProduct.get(record.product_id) || []).sort((a, b) => a.name.localeCompare(b.name)),
+    }
+  }).sort((a, b) => a.name.localeCompare(b.name))
+
+  const movements: SampleMovement[] = movementsRaw.map((row) => {
+    const record = row as {
+      id: string
+      product_id: string
+      quantity: number
+      from_holder: string
+      to_holder: string
+      note: string | null
+      created_at: string
+      created_by?: string | null
+      holder_profile_id?: string | null
+      product?: ProductRel | ProductRel[] | null
+      company?: NameRel | NameRel[] | null
+    }
+    return {
+      id: record.id,
+      at: record.created_at,
+      productId: record.product_id,
+      productName: oneRelation(record.product)?.name || 'Product',
+      quantity: Number(record.quantity || 0),
+      from: record.from_holder,
+      to: record.to_holder,
+      companyName: oneRelation(record.company)?.name || null,
+      holderName: record.holder_profile_id ? names.get(record.holder_profile_id) || null : null,
+      actorName: record.created_by ? names.get(record.created_by) || null : null,
+      note: record.note,
+    }
+  })
+
+  const companies: NamedOption[] = (companyResult.data || []).map((company) => ({ id: company.id, name: company.name }))
+  const team: NamedOption[] = (teamResult.data || []).map((member) => ({ id: member.id, name: member.full_name || 'Team member' }))
+  const products: NamedOption[] = (productResult.data || []).map((product) => ({ id: product.id, name: product.name, sku: product.sku }))
+
+  const notice =
+    params.returned === 'client'
+      ? 'Sample received into the office. That client balance is squared off.'
+      : params.returned === 'team'
+        ? 'Sample returned from the team into the office.'
+        : params.sent === '1'
+          ? 'Sample sent. The movement is recorded.'
+          : params.received === '1'
+            ? 'Sample received from the supplier into office stock.'
+            : ''
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--color-primary)]">Sample Management</h1>
-        <p className="text-xs text-[#7A7267] mt-1">
-          Track physical samples in office, with the team, with a client, or pending from a supplier. Use{' '}
-          <span className="font-semibold text-[#806A50]">Send to client</span> on any product below to dispatch samples
-          directly to a company.
-        </p>
-      </div>
-
-      {error ? (
-        <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{error}</div>
-      ) : null}
-      {received ? (
-        <div className="border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          Sample received into office stock.
-        </div>
-      ) : null}
-      {moved ? (
-        <div className="border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          Sample movement recorded.
-        </div>
-      ) : null}
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          ['In Office', totalInOffice],
-          ['With Team', totalWithTeam],
-          ['With Client', totalWithClient],
-          ['Pending Supplier', totalPending],
-        ].map(([label, value]) => (
-          <div key={String(label)} className="p-4 bg-white border">
-            <p className="text-xs text-[#7A7267]">{label}</p>
-            <p className="text-xl font-semibold">{value}</p>
-          </div>
-        ))}
-      </div>
-
-      <ActionForm action={receiveSample} className="grid items-end gap-3 border bg-white p-4 text-xs md:grid-cols-4" resetOnSuccess>
-        <MobileSheetSelect
-          name="product_id"
-          label="Product"
-          required
-          showDesktopLabel
-          emptyLabel="Select product to receive"
-          className="md:col-span-2"
-          options={[
-            { value: '', label: 'Select product to receive' },
-            ...(products || []).map((p) => ({ value: p.id, label: `${p.name} · ${p.sku}` })),
-          ]}
-        />
-        <label className="block space-y-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Quantity</span>
-          <input name="quantity" type="number" min="1" defaultValue={1} required className="min-h-11 w-full border px-2 py-2" />
-        </label>
-        {showCost ? (
-          <label className="block space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Unit cost</span>
-            <input name="unit_cost" type="number" step="0.01" min="0" placeholder="0.00" className="min-h-11 w-full border px-2 py-2" />
-          </label>
-        ) : (
-          <input type="hidden" name="unit_cost" value="0" />
-        )}
-        <SubmitButton
-          className="inline-flex min-h-11 items-center justify-center bg-[#806A50] px-4 py-2.5 font-semibold text-white md:col-span-4"
-         pendingLabel="Receiving…">
-          Receive into office
-        </SubmitButton>
-      </ActionForm>
-
-      <div className="bg-white border overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-[#FAF7F2] text-xs text-[#7A7267]">
-            <tr>
-              <th className="p-3">Product</th>
-              <th className="p-3">Office</th>
-              <th className="p-3">Team</th>
-              <th className="p-3">Client</th>
-              <th className="p-3">Supplier</th>
-              {showCost && <th className="p-3">Unit cost</th>}
-              <th className="p-3">Move</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(samples || []).map((sample) => {
-              const product = Array.isArray(sample.product) ? sample.product[0] : sample.product
-              return (
-                <tr key={sample.id} className="border-t align-top">
-                  <td className="p-3">
-                    <div className="flex items-start gap-3">
-                      <ProductThumb src={product?.image_url} alt={product?.name} />
-                      <div className="min-w-0">
-                        <Link href={`/crm/products/${sample.product_id}`} className="font-medium hover:underline">{product?.name}</Link>
-                        <p className="text-[11px] text-[#7A7267]">{product?.sku}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3">{sample.in_office || 0}</td>
-                  <td className="p-3">{sample.with_team || 0}</td>
-                  <td className="p-3">{sample.with_client || 0}</td>
-                  <td className="p-3">{sample.pending_supplier || 0}</td>
-                  {showCost && <td className="p-3">{formatCurrency(sample.unit_cost)}</td>}
-                  <td className="p-3">
-                    <div className="min-w-[220px] space-y-2">
-                      <ActionForm action={moveSample}
-                        className="space-y-1.5 border border-[#806A50]/25 bg-[#F4EFE6] p-2 text-[11px]"
-                      >
-                        <input type="hidden" name="stock_id" value={sample.id} />
-                        <input type="hidden" name="to_holder" value="client" />
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#806A50]">
-                          Send to client
-                        </p>
-                        <MobileSheetSelect
-                          name="from_holder"
-                          label="From"
-                          defaultValue="office"
-                          options={[
-                            { value: 'office', label: 'From office' },
-                            { value: 'team', label: 'From team' },
-                          ]}
-                        />
-                        <MobileSheetSelect
-                          name="company_id"
-                          label="Client"
-                          required
-                          emptyLabel="Select client"
-                          options={[
-                            { value: '', label: 'Select client' },
-                            ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
-                          ]}
-                        />
-                        <div className="grid grid-cols-2 gap-1">
-                          <input
-                            name="quantity"
-                            type="number"
-                            min="1"
-                            defaultValue={1}
-                            required
-                            className="border px-1 py-1"
-                          />
-                          <SubmitButton className="bg-[#806A50] py-1 font-semibold text-white" pendingLabel="Sending…">Send</SubmitButton>
-                        </div>
-                        <input name="note" placeholder="Note (optional)" className="w-full border px-1 py-1" />
-                      </ActionForm>
-
-                      <details className="text-[11px]">
-                        <summary className="cursor-pointer text-[#7A7267]">Other movement</summary>
-                        <ActionForm action={moveSample} className="mt-1.5 grid grid-cols-2 gap-1">
-                          <input type="hidden" name="stock_id" value={sample.id} />
-                          <MobileSheetSelect
-                            name="from_holder"
-                            label="From"
-                            defaultValue="office"
-                            options={[
-                              { value: 'office', label: 'From office' },
-                              { value: 'team', label: 'From team' },
-                              { value: 'client', label: 'From client' },
-                              { value: 'supplier', label: 'From supplier' },
-                            ]}
-                          />
-                          <MobileSheetSelect
-                            name="to_holder"
-                            label="To"
-                            defaultValue="team"
-                            options={[
-                              { value: 'team', label: 'To team' },
-                              { value: 'office', label: 'To office' },
-                              { value: 'supplier', label: 'To supplier' },
-                            ]}
-                          />
-                          <input name="quantity" type="number" min="1" defaultValue={1} className="border px-1 py-1" />
-                          <MobileSheetSelect
-                            name="company_id"
-                            label="Client"
-                            emptyLabel="Client (if needed)"
-                            options={[
-                              { value: '', label: 'Client (if needed)' },
-                              ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
-                            ]}
-                          />
-                          <input name="note" placeholder="Note / holder name" className="col-span-2 border px-1 py-1" />
-                          <SubmitButton className="col-span-2 border py-1 font-semibold" pendingLabel="Recording…">Record movement</SubmitButton>
-                        </ActionForm>
-                      </details>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-            {(!samples || samples.length === 0) && (
-              <tr><td colSpan={7} className="p-6 text-center text-gray-500">No sample stock yet.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="bg-white border p-5">
-        <h2 className="font-serif text-lg mb-3">Movement history</h2>
-        {(movements || []).map((m) => {
-          const product = Array.isArray(m.product) ? m.product[0] : m.product
-          const company = Array.isArray(m.company) ? m.company[0] : m.company
-          return (
-            <p key={m.id} className="text-xs py-1 border-t">
-              {formatDateTime(m.created_at)} · {product?.name} · {m.quantity} · {m.from_holder} → {m.to_holder}
-              {company?.name ? ` · ${company.name}` : ''} {m.note ? ` · ${m.note}` : ''}
-            </p>
-          )
-        })}
-        {(!movements || movements.length === 0) && <p className="text-sm text-gray-500">No movements recorded.</p>}
-      </div>
+    <div className="space-y-4">
+      {params.error ? <div className="border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{params.error}</div> : null}
+      {movementError ? <div className="border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{movementError}</div> : null}
+      {stockResult.error ? <div className="border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{stockResult.error.message}</div> : null}
+      {notice ? <div className="border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">{notice}</div> : null}
+      <SamplesBoard
+        samples={samples}
+        movements={movements}
+        companies={companies}
+        team={team}
+        products={products}
+        canManage={canManage}
+        showCost={showCost}
+        balanceHint={balanceHint}
+      />
     </div>
   )
 }

@@ -17,6 +17,8 @@ import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 import { withIdempotency } from '@/lib/idempotency'
+import { initialOfficeQuantity, parseSampleQty } from '@/lib/samples/ledger'
+import { seedSampleStock } from '@/lib/samples/seed'
 import { canonicalCategoryLabel, findCategory } from '@/lib/products/category-plan'
 import { legacyPriceForInsert, resolveCost } from '@/lib/products/cost-price'
 import { parseCostSource } from '@/lib/pricing/cost-basis'
@@ -78,7 +80,7 @@ async function createProductOnce(formData: FormData) {
   const image_url = ((formData.get('image_url') as string) || '').trim() || null
   const hsn_code = ((formData.get('hsn_code') as string) || '').trim() || null
   const status = (formData.get('status') as string) || 'active'
-  const catalogue_access =
+  let catalogue_access =
     profile.role === 'admin' ? ((formData.get('catalogue_access') as string) || 'all') : 'all'
   const selectedCompanies = [
     ...new Set(
@@ -88,8 +90,17 @@ async function createProductOnce(formData: FormData) {
   // Retail and Business are independent of corporate visibility. Only admin sees the
   // switches; everyone else creates a product on every channel, as before.
   const channelForm = profile.role === 'admin' && formData.has('channel_present')
-  const show_in_store = channelForm ? formData.get('show_in_store') === 'on' : true
-  const show_in_business = channelForm ? formData.get('show_in_business') === 'on' : true
+  let show_in_store = channelForm ? formData.get('show_in_store') === 'on' : true
+  let show_in_business = channelForm ? formData.get('show_in_business') === 'on' : true
+  const sampleOnly = formData.get('sample_only') === 'on'
+  const sampleQty = parseSampleQty(formData.get('sample_qty'))
+  if (!sampleQty.ok) return { error: sampleQty.error }
+  // Samples are staff-only. A sample-only product is not listed on any public channel.
+  if (sampleOnly) {
+    show_in_store = false
+    show_in_business = false
+    catalogue_access = 'none'
+  }
 
   if (!name) {
     return { error: 'Product name is required' }
@@ -159,8 +170,10 @@ async function createProductOnce(formData: FormData) {
     delete insertRow.show_in_business
     inserted = await supabase.from('products').insert(insertRow).select('id').single()
   }
+  let sampleOnlySaved = insertRow.sample_only === true
   if (inserted.error && /sample_only/i.test(inserted.error.message)) {
     delete insertRow.sample_only
+    sampleOnlySaved = false
     inserted = await supabase.from('products').insert(insertRow).select('id').single()
   }
   const product = inserted.data
@@ -253,7 +266,26 @@ async function createProductOnce(formData: FormData) {
     })
   }
 
+  const officeQty = initialOfficeQuantity({
+    sampleOnly: sampleOnlySaved,
+    sampleQty: sampleQty.value,
+    stockQty: stock_qty,
+  })
+  if (officeQty != null) {
+    const seeded = await seedSampleStock(supabase, {
+      productId: product.id,
+      quantity: officeQty,
+      unitCost: supplier_cost,
+      userId: profile.id,
+    })
+    if (seeded.error) {
+      await supabase.from('products').delete().eq('id', product.id)
+      return { error: seeded.error }
+    }
+  }
+
   revalidatePath('/crm/products')
+  revalidatePath('/crm/samples')
   revalidatePath('/portal/catalogue')
   selectedCompanies.forEach((companyId) => revalidatePath('/crm/companies/' + companyId))
   redirect('/crm/products/' + product.id + (imageHint ? `?image=${imageHint}` : ''))
@@ -328,6 +360,10 @@ export async function updateProduct(productId: string, formData: FormData) {
   if (formData.has('fulfillment_mode')) {
     update.fulfillment_mode = parseFulfillmentMode(formData.get('fulfillment_mode'))
   }
+  const sampleQty = formData.has('sample_qty')
+    ? parseSampleQty(formData.get('sample_qty'))
+    : { ok: true as const, value: null }
+  if (!sampleQty.ok) return { error: sampleQty.error }
   if (formData.has('sample_only_present')) {
     update.sample_only = formData.get('sample_only') === 'on'
   }
@@ -344,6 +380,13 @@ export async function updateProduct(productId: string, formData: FormData) {
     update.catalogue_access = catalogue_access
     update.visibility =
       catalogue_access === 'all' ? 'catalogue' : catalogue_access === 'selected' ? 'selected_companies' : 'internal_only'
+  }
+
+  if (update.sample_only === true && profile.role === 'admin') {
+    update.show_in_store = false
+    update.show_in_business = false
+    update.catalogue_access = 'none'
+    update.visibility = 'internal_only'
   }
 
   // SKU is the stable product identifier. It is never changed implicitly, and only
@@ -387,8 +430,25 @@ export async function updateProduct(productId: string, formData: FormData) {
     await hideDiscontinuedProductFromClients(supabase, productId)
   }
 
+  const officeQty = initialOfficeQuantity({
+    sampleOnly: update.sample_only === true,
+    sampleQty: sampleQty.value,
+    stockQty: typeof update.stock_qty === 'number' ? update.stock_qty : 0,
+  })
+  if (officeQty != null) {
+    const unitCost = typeof costPatch.supplier_cost === 'number' ? costPatch.supplier_cost : 0
+    const seeded = await seedSampleStock(supabase, {
+      productId,
+      quantity: officeQty,
+      unitCost,
+      userId: profile.id,
+    })
+    if (seeded.error) return { error: seeded.error }
+  }
+
   revalidatePath('/crm/products/' + productId)
   revalidatePath('/crm/products')
+  revalidatePath('/crm/samples')
   revalidatePath('/portal/catalogue')
   return { success: true }
 }

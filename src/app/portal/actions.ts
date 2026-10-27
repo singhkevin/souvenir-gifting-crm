@@ -19,6 +19,7 @@ import { HIDDEN_CATALOG_LINE_ERROR, selectionIncludesHiddenLine } from '@/lib/ca
 import { displayableLineIds } from '@/lib/catalogs/visibility-data'
 import { emailQuotationOwner } from '@/lib/quotes/notify-owner'
 import { requestOrigin } from '@/lib/auth/request-origin'
+import { sampleOnlyProductIds } from '@/lib/samples/public'
 
 async function createPortalRequirementOnce(formData: {
   name: string
@@ -95,12 +96,14 @@ async function createPortalRequirementOnce(formData: {
     }
 
     const skus = [...new Set(requested.map((line) => line.sku))]
-    const { data: products } = await supabase
+    const { data: catalogueProducts } = await supabase
       .from('client_products')
       .select('id, sku')
       .in('sku', skus)
+    const hiddenSamples = await sampleOnlyProductIds(supabase, (catalogueProducts || []).map((product) => product.id))
+    const products = (catalogueProducts || []).filter((product) => !hiddenSamples.has(product.id))
 
-    if (!products?.length) {
+    if (!products.length) {
       if (formData.lines?.length) {
         await admin.from('requirements').delete().eq('id', requirement.id)
         return { error: 'None of the selected products are available on your catalogue' }

@@ -13,6 +13,7 @@ import { getCompanyMarginPercent, getPricingSettings, sellPricesForSurface } fro
 import { gstPriceNote } from '@/lib/pricing/engine'
 import { listCompanyCatalogs } from '@/lib/catalogs/company-catalogs'
 import { catalogStatusLabel } from '@/lib/catalogs/status'
+import { sampleOnlyProductIds } from '@/lib/samples/public'
 
 const PAGE_SIZE = 24
 
@@ -174,7 +175,8 @@ async function AllGifts({
     ).map(([id, name]) => ({ id, name })),
   )
 
-  let products = productRows || []
+  const hiddenSamples = await sampleOnlyProductIds(supabase, (productRows || []).map((product) => product.id))
+  let products = (productRows || []).filter((product) => !hiddenSamples.has(product.id))
   let gstNote = 'excl. GST'
   const tenant = readTenantFromHeaders(await headers())
   if (products.length) {

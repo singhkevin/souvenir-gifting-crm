@@ -5,6 +5,7 @@ import { PACK_OPTION_LABELS } from '@/lib/catalogs/pack-labels'
 import { withCompanyPrices } from '@/lib/catalogs/pricing'
 import { withVisibleKitTotals } from '@/lib/catalogs/visibility'
 import { displayableLineIds } from '@/lib/catalogs/visibility-data'
+import { sampleOnlyProductIds } from '@/lib/samples/public'
 import { formatCurrency } from '@/lib/utils'
 import { CatalogQuoteBoard, type CatalogQuoteItem } from '@/components/portal/catalog-quote-board'
 import { Package } from 'lucide-react'
@@ -30,9 +31,14 @@ export default async function CollectionPage({ params }: { params: Promise<{ id:
   const storedOfferings = offeringsResult.data || []
   const pricedOfferings = await withCompanyPrices(storedOfferings, companyId)
   const visibleIds = companyId ? await displayableLineIds(id, { kind: 'company', companyId }) : null
-  const offerings = withVisibleKitTotals(
+  const listed = withVisibleKitTotals(
     visibleIds ? pricedOfferings.filter((offering) => visibleIds.has(offering.id)) : pricedOfferings,
   )
+  const hiddenSamples = await sampleOnlyProductIds(
+    supabase,
+    listed.map((offering) => offering.product_id).filter((id): id is string => Boolean(id)),
+  )
+  const offerings = listed.filter((offering) => !offering.product_id || !hiddenSamples.has(offering.product_id))
 
   const [{ data: selections }, { data: campaignMeta }] = await Promise.all([
     supabase.from('client_product_selections').select('campaign_product_id, kind').eq('company_id', companyId),

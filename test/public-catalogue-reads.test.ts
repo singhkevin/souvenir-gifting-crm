@@ -138,6 +138,34 @@ test('nav categories are distinct and do not load product prices', async () => {
   assert.deepEqual(categories.map((category) => category.name), ['Drinkware', 'Wellness'])
 })
 
+test('sample-only products are left out of the public catalogue, search, and nav', async () => {
+  const sample = {
+    ...product,
+    id: 'sample-1',
+    name: 'Showroom sample',
+    sample_only: true,
+    category_id: 'c9',
+    category: { id: 'c9', name: 'Samples' },
+  }
+  const catalogue = fakeClient(() => ({ data: [product, sample], error: null }))
+  const rows = await loadPublicRows(catalogue as never, 'store')
+  assert.deepEqual(rows.map((row) => row.id), ['p1'])
+
+  const suggestions = fakeClient(() => ({ data: [product, sample], error: null }))
+  const found = await readSearchSuggestions(suggestions as never)
+  assert.deepEqual(found.map((row) => row.id), ['p1'])
+
+  const nav = fakeClient(() => ({
+    data: [
+      { category_id: 'c1', sample_only: false, category: { id: 'c1', name: 'Drinkware' } },
+      { category_id: 'c9', sample_only: true, category: { id: 'c9', name: 'Samples' } },
+    ],
+    error: null,
+  }))
+  const categories = await readNavCategories(nav as never)
+  assert.deepEqual(categories.map((category) => category.name), ['Drinkware'])
+})
+
 test('anonymous public pages skip the proxy session lookup', () => {
   assert.equal(publicReadSkipsSession('store', '/catalogue'), true)
   assert.equal(publicReadSkipsSession('store', '/'), true)

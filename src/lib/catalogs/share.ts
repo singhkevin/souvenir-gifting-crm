@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { isShareToken, shareLinkGrantsAccess, sharePath } from '@/lib/catalogs/share-link'
+import { sampleOnlyProductIds } from '@/lib/samples/public'
 
 export { isShareToken, sharePath }
 
@@ -49,11 +50,15 @@ export async function loadSharedCatalog(token: string): Promise<SharedCatalog | 
   const row = payload as Partial<SharedCatalog>
   if (typeof row.name !== 'string' || !Array.isArray(row.products)) return null
   if (!shareLinkGrantsAccess({ expires_at: row.expires_at ?? null })) return null
+  const hiddenSamples = await sampleOnlyProductIds(
+    supabase,
+    row.products.map((product) => product.product_id || '').filter(Boolean),
+  )
   return {
     name: row.name,
     occasion: row.occasion ?? null,
     budget_per_employee: row.budget_per_employee == null ? null : Number(row.budget_per_employee),
     expires_at: row.expires_at ?? null,
-    products: row.products,
+    products: row.products.filter((product) => !product.product_id || !hiddenSamples.has(product.product_id)),
   }
 }
