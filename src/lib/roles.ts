@@ -41,3 +41,17 @@ const PRESENTATION_STAFF_ROLES = ['admin', 'sales', 'operations', 'management'] 
 export function isPresentationStaffRole(role: string | null | undefined): boolean {
   return includes(PRESENTATION_STAFF_ROLES, role)
 }
+
+/** Same roles as company create / update. Management can read companies but not create them. */
+export const COMPANY_EDITOR_ROLES = ['admin', 'sales'] as const
+
+/** Same roles as the contacts page. */
+export const CONTACT_EDITOR_ROLES = ['admin', 'sales', 'management'] as const
+
+export function canEditCompanies(role: string | null | undefined) {
+  return includes(COMPANY_EDITOR_ROLES, role)
+}
+
+export function canEditContacts(role: string | null | undefined) {
+  return includes(CONTACT_EDITOR_ROLES, role)
+}

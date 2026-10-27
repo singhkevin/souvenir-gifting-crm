@@ -4,9 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { writeAudit } from '@/lib/audit'
+import { getProfile } from '@/lib/auth'
+import { isUuid } from '@/lib/utils'
 import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 import { withIdempotency } from '@/lib/idempotency'
 import { catalogProductPricesForCompany } from '@/lib/catalogs/pricing'
+import { capPickerRows, requirementProductQueryPlan } from '@/lib/requirements/product-search'
 
 export async function createRequirement(formData: FormData) {
   return withIdempotency('crm.createRequirement', formData, () => createRequirementOnce(formData))
@@ -236,6 +239,34 @@ export async function addProductToRequirement(formData: FormData) {
 
   revalidatePath(`/crm/requirements/${requirementId}`)
   redirect(`/crm/requirements/${requirementId}?tab=products`)
+}
+
+const REQUIREMENT_ROLES = new Set(['admin', 'sales', 'management'])
+
+/** Active products for the requirement picker. Bounded search, not the first PostgREST page. */
+export async function searchRequirementProducts(query: string, excludeIds: string[] = []) {
+  const profile = await getProfile()
+  if (!profile?.is_active || !REQUIREMENT_ROLES.has(profile.role)) {
+    return { error: 'Not permitted' }
+  }
+
+  const plan = requirementProductQueryPlan(query)
+  const ids = [...new Set(excludeIds.filter((id) => isUuid(id)))]
+  const supabase = await createClient()
+  let request = supabase
+    .from('products')
+    .select('id, name, sku')
+    .eq('status', 'active')
+    .order('name')
+  if (plan.clauses) {
+    for (const clause of plan.clauses) request = request.or(clause)
+  }
+  if (ids.length > 0) request = request.not('id', 'in', `(${ids.join(',')})`)
+
+  const { data, error } = await request.limit(plan.fetch)
+  if (error) return { error: error.message }
+  const capped = capPickerRows(data || [], plan.limit)
+  return { products: capped.rows, truncated: capped.truncated }
 }
 
 export async function removeProductFromRequirement(formData: FormData) {
