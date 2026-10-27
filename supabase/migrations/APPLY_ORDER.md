@@ -111,3 +111,8 @@ Trial (live, forced rollback, 23 Oct 2026): supabase/tests/role_active_checks_tr
 (every staff, client_admin, business and inactive account); 15 active accounts: identical access before and after.
 Inactive admin: 31 orders · 26 companies · 22 leads · 26 quotations · 29 profiles visible before, 0 after
 (own 13 tasks stay via tasks_write). Rollback restored function and policy md5s and the exact access.
+
+## 61 · 20261027_sample_internal_ledger.sql · NOT APPLIED
+
+Staff-only sample ledger. Drops existing policies on `sample_stock` and `sample_movements` (a permissive policy would stay open because policies are OR'd), enables RLS, and allows active staff to read. Admin, sales, and operations may write. Adds `sample_holdings` (per client company or team member), `sample_movements.holder_profile_id`, and `sample_movements.condition`. Backfills client balances from movement history without overwriting later edits. Does not change orders.
+Rollback: `supabase/rollbacks/20261027_sample_internal_ledger_rollback.sql` (drops the holdings table and the new columns; staff-only policies stay so sample stock is not published to the store, business portal, or company portals).

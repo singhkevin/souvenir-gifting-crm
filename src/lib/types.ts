@@ -430,6 +430,7 @@ export interface SampleStock {
   product_id: string
   in_office: number
   with_client: number
+  with_team: number
   pending_supplier: number
   unit_cost: number | null
   product?: Pick<Product, "id" | "name" | "sku" | "image_url"> | null
@@ -442,11 +443,21 @@ export interface SampleMovement {
   from_holder: string
   to_holder: string
   company_id: string | null
+  holder_profile_id?: string | null
   requirement_id: string | null
   cost: number | null
+  condition?: string | null
   note: string | null
   created_by: string
   created_at: string
+}
+
+export interface SampleHolding {
+  id: string
+  product_id: string
+  company_id: string | null
+  profile_id: string | null
+  quantity: number
 }
 
 export interface Goal {

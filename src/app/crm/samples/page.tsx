@@ -1,249 +1,171 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency, formatDateTime } from '@/lib/utils'
-import Link from 'next/link'
-import { receiveSample, moveSample } from './actions'
+import { formatCurrency, formatDateTime, oneRelation } from '@/lib/utils'
 import { requireStaff, canSeeCosts } from '@/lib/auth'
-import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
-import { ActionForm } from '@/components/ui/action-form'
-import { SubmitButton } from '@/components/ui/submit-button'
-import { ProductThumb } from '@/components/ui/product-thumb'
+import { canManageSamples, deriveClientHoldings, HOLDER_LABEL, SAMPLE_VIEW_ROLES } from '@/lib/samples/ledger'
+import { sampleSchemaMissing } from '@/lib/samples/opening-stock'
+import { SamplesBoard, type MovementModel, type SampleCardModel } from './samples-board'
+
+const MOVEMENT_BASE =
+  'id, product_id, quantity, from_holder, to_holder, company_id, note, created_by, created_at, product:products(name), company:companies(name)'
 
 export default async function SamplesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; received?: string; moved?: string }>
+  searchParams: Promise<{ error?: string; received?: string; moved?: string; returned?: string; sent?: string }>
 }) {
   const profile = await requireStaff()
   const supabase = await createClient()
   const showCost = canSeeCosts(profile.role)
   const params = await searchParams
-  const error = params.error || ''
-  const received = params.received === '1'
-  const moved = params.moved === '1'
 
-  const [{ data: samples }, { data: movements }, { data: products }, { data: companies }] = await Promise.all([
-    supabase.from('sample_stock').select('*, product:products(name, sku, image_url)'),
-    supabase.from('sample_movements').select('*, product:products(name), company:companies(name)').order('created_at', { ascending: false }).limit(25),
+  const [stockResult, movementExtended, productsResult, companiesResult, peopleResult] = await Promise.all([
+    supabase.from('sample_stock').select('id, product_id, in_office, with_team, with_client, pending_supplier, unit_cost, product:products(name, sku, image_url)'),
+    supabase
+      .from('sample_movements')
+      .select(`${MOVEMENT_BASE}, holder_profile_id, condition`)
+      .order('created_at', { ascending: false })
+      .limit(80),
     supabase.from('products').select('id, name, sku').eq('status', 'active').order('name').limit(200),
     supabase.from('companies').select('id, name').order('name'),
+    supabase
+      .from('profiles')
+      .select('id, full_name, email, role, is_active')
+      .in('role', [...SAMPLE_VIEW_ROLES])
+      .order('full_name'),
   ])
 
-  const totalInOffice = samples?.reduce((acc, curr) => acc + (curr.in_office || 0), 0) || 0
-  const totalWithTeam = samples?.reduce((acc, curr) => acc + (curr.with_team || 0), 0) || 0
-  const totalWithClient = samples?.reduce((acc, curr) => acc + (curr.with_client || 0), 0) || 0
-  const totalPending = samples?.reduce((acc, curr) => acc + (curr.pending_supplier || 0), 0) || 0
+  const movementResult =
+    movementExtended.error && /holder_profile_id|condition/i.test(movementExtended.error.message)
+      ? await supabase.from('sample_movements').select(MOVEMENT_BASE).order('created_at', { ascending: false }).limit(80)
+      : movementExtended
+
+  const holdingResult = await supabase.from('sample_holdings').select('product_id, company_id, profile_id, quantity')
+  const holdingsReady = !holdingResult.error
+  const holdingRows = holdingsReady ? holdingResult.data || [] : []
+
+  const people = peopleResult.data || []
+  const personName = new Map(people.map((person) => [person.id, person.full_name || person.email || 'Team member']))
+  const companies = companiesResult.data || []
+  const companyName = new Map(companies.map((company) => [company.id, company.name]))
+
+  const movementRows = (movementResult.data || []).map((row) => {
+    const record = row as Record<string, unknown>
+    const product = oneRelation(record.product as { name?: string } | { name?: string }[] | null)
+    const company = oneRelation(record.company as { name?: string } | { name?: string }[] | null)
+    const holderProfileId = typeof record.holder_profile_id === 'string' ? record.holder_profile_id : null
+    const companyId = typeof record.company_id === 'string' ? record.company_id : null
+    return {
+      id: String(record.id),
+      productId: String(record.product_id),
+      productName: product?.name || 'Product',
+      companyId,
+      companyName: company?.name || (companyId ? companyName.get(companyId) || null : null),
+      quantity: Number(record.quantity) || 0,
+      from: String(record.from_holder || ''),
+      to: String(record.to_holder || ''),
+      holderProfileId,
+      actorId: typeof record.created_by === 'string' ? record.created_by : null,
+      condition: typeof record.condition === 'string' ? record.condition : null,
+      note: typeof record.note === 'string' ? record.note : null,
+      createdAt: typeof record.created_at === 'string' ? record.created_at : null,
+    }
+  })
+
+  const derivedClients = holdingsReady
+    ? []
+    : deriveClientHoldings(
+        movementRows.map((row) => ({
+          product_id: row.productId,
+          company_id: row.companyId,
+          company_name: row.companyName,
+          quantity: row.quantity,
+          from_holder: row.from,
+          to_holder: row.to,
+        })),
+      )
+
+  const cards: SampleCardModel[] = (stockResult.data || []).map((row) => {
+    const product = oneRelation(row.product as { name?: string; sku?: string; image_url?: string | null } | { name?: string; sku?: string; image_url?: string | null }[] | null)
+    const clients = holdingsReady
+      ? holdingRows
+          .filter((holding) => holding.product_id === row.product_id && holding.company_id && Number(holding.quantity) > 0)
+          .map((holding) => ({
+            id: holding.company_id as string,
+            name: companyName.get(holding.company_id as string) || 'Client',
+            quantity: Number(holding.quantity) || 0,
+          }))
+      : derivedClients
+          .filter((holding) => holding.productId === row.product_id)
+          .map((holding) => ({ id: holding.companyId, name: holding.name, quantity: holding.quantity }))
+    const team = holdingsReady
+      ? holdingRows
+          .filter((holding) => holding.product_id === row.product_id && holding.profile_id && Number(holding.quantity) > 0)
+          .map((holding) => ({
+            id: holding.profile_id as string,
+            name: personName.get(holding.profile_id as string) || 'Team member',
+            quantity: Number(holding.quantity) || 0,
+          }))
+      : []
+    const name = product?.name || 'Product'
+    const sku = product?.sku || ''
+    return {
+      id: row.id,
+      productId: row.product_id,
+      name,
+      sku,
+      imageUrl: product?.image_url || null,
+      inOffice: Number(row.in_office) || 0,
+      withTeam: Number(row.with_team) || 0,
+      withClient: Number(row.with_client) || 0,
+      pendingSupplier: Number(row.pending_supplier) || 0,
+      unitCostLabel: showCost ? formatCurrency(row.unit_cost) : null,
+      holders: [...clients.map((client) => client.name), ...team.map((member) => member.name)],
+      clients,
+      team,
+    }
+  })
+
+  cards.sort((a, b) => a.name.localeCompare(b.name))
+
+  const movements: MovementModel[] = movementRows.map((row) => {
+    const who = [row.companyName, row.holderProfileId ? personName.get(row.holderProfileId) || 'Team member' : null]
+      .filter(Boolean)
+      .join(' · ') || null
+    return {
+      id: row.id,
+      productId: row.productId,
+      productName: row.productName,
+      quantity: row.quantity,
+      fromLabel: HOLDER_LABEL[row.from] || row.from,
+      toLabel: HOLDER_LABEL[row.to] || row.to,
+      who,
+      actor: row.actorId ? personName.get(row.actorId) || 'Staff' : null,
+      condition: row.condition,
+      note: row.note,
+      when: formatDateTime(row.createdAt),
+    }
+  })
+
+  const loadError = [stockResult.error, movementResult.error, holdingResult.error]
+    .map((error) => error?.message || '')
+    .find((message) => message && !sampleSchemaMissing(message))
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--color-primary)]">Sample Management</h1>
-        <p className="text-xs text-[#7A7267] mt-1">
-          Track physical samples in office, with the team, with a client, or pending from a supplier. Use{' '}
-          <span className="font-semibold text-[#806A50]">Send to client</span> on any product below to dispatch samples
-          directly to a company.
-        </p>
-      </div>
-
-      {error ? (
-        <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{error}</div>
-      ) : null}
-      {received ? (
-        <div className="border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          Sample received into office stock.
-        </div>
-      ) : null}
-      {moved ? (
-        <div className="border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          Sample movement recorded.
-        </div>
-      ) : null}
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          ['In Office', totalInOffice],
-          ['With Team', totalWithTeam],
-          ['With Client', totalWithClient],
-          ['Pending Supplier', totalPending],
-        ].map(([label, value]) => (
-          <div key={String(label)} className="p-4 bg-white border">
-            <p className="text-xs text-[#7A7267]">{label}</p>
-            <p className="text-xl font-semibold">{value}</p>
-          </div>
-        ))}
-      </div>
-
-      <ActionForm action={receiveSample} className="grid items-end gap-3 border bg-white p-4 text-xs md:grid-cols-4" resetOnSuccess>
-        <MobileSheetSelect
-          name="product_id"
-          label="Product"
-          required
-          showDesktopLabel
-          emptyLabel="Select product to receive"
-          className="md:col-span-2"
-          options={[
-            { value: '', label: 'Select product to receive' },
-            ...(products || []).map((p) => ({ value: p.id, label: `${p.name} · ${p.sku}` })),
-          ]}
-        />
-        <label className="block space-y-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Quantity</span>
-          <input name="quantity" type="number" min="1" defaultValue={1} required className="min-h-11 w-full border px-2 py-2" />
-        </label>
-        {showCost ? (
-          <label className="block space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#7A7267]">Unit cost</span>
-            <input name="unit_cost" type="number" step="0.01" min="0" placeholder="0.00" className="min-h-11 w-full border px-2 py-2" />
-          </label>
-        ) : (
-          <input type="hidden" name="unit_cost" value="0" />
-        )}
-        <SubmitButton
-          className="inline-flex min-h-11 items-center justify-center bg-[#806A50] px-4 py-2.5 font-semibold text-white md:col-span-4"
-         pendingLabel="Receiving…">
-          Receive into office
-        </SubmitButton>
-      </ActionForm>
-
-      <div className="bg-white border overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-[#FAF7F2] text-xs text-[#7A7267]">
-            <tr>
-              <th className="p-3">Product</th>
-              <th className="p-3">Office</th>
-              <th className="p-3">Team</th>
-              <th className="p-3">Client</th>
-              <th className="p-3">Supplier</th>
-              {showCost && <th className="p-3">Unit cost</th>}
-              <th className="p-3">Move</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(samples || []).map((sample) => {
-              const product = Array.isArray(sample.product) ? sample.product[0] : sample.product
-              return (
-                <tr key={sample.id} className="border-t align-top">
-                  <td className="p-3">
-                    <div className="flex items-start gap-3">
-                      <ProductThumb src={product?.image_url} alt={product?.name} />
-                      <div className="min-w-0">
-                        <Link href={`/crm/products/${sample.product_id}`} className="font-medium hover:underline">{product?.name}</Link>
-                        <p className="text-[11px] text-[#7A7267]">{product?.sku}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3">{sample.in_office || 0}</td>
-                  <td className="p-3">{sample.with_team || 0}</td>
-                  <td className="p-3">{sample.with_client || 0}</td>
-                  <td className="p-3">{sample.pending_supplier || 0}</td>
-                  {showCost && <td className="p-3">{formatCurrency(sample.unit_cost)}</td>}
-                  <td className="p-3">
-                    <div className="min-w-[220px] space-y-2">
-                      <ActionForm action={moveSample}
-                        className="space-y-1.5 border border-[#806A50]/25 bg-[#F4EFE6] p-2 text-[11px]"
-                      >
-                        <input type="hidden" name="stock_id" value={sample.id} />
-                        <input type="hidden" name="to_holder" value="client" />
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#806A50]">
-                          Send to client
-                        </p>
-                        <MobileSheetSelect
-                          name="from_holder"
-                          label="From"
-                          defaultValue="office"
-                          options={[
-                            { value: 'office', label: 'From office' },
-                            { value: 'team', label: 'From team' },
-                          ]}
-                        />
-                        <MobileSheetSelect
-                          name="company_id"
-                          label="Client"
-                          required
-                          emptyLabel="Select client"
-                          options={[
-                            { value: '', label: 'Select client' },
-                            ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
-                          ]}
-                        />
-                        <div className="grid grid-cols-2 gap-1">
-                          <input
-                            name="quantity"
-                            type="number"
-                            min="1"
-                            defaultValue={1}
-                            required
-                            className="border px-1 py-1"
-                          />
-                          <SubmitButton className="bg-[#806A50] py-1 font-semibold text-white" pendingLabel="Sending…">Send</SubmitButton>
-                        </div>
-                        <input name="note" placeholder="Note (optional)" className="w-full border px-1 py-1" />
-                      </ActionForm>
-
-                      <details className="text-[11px]">
-                        <summary className="cursor-pointer text-[#7A7267]">Other movement</summary>
-                        <ActionForm action={moveSample} className="mt-1.5 grid grid-cols-2 gap-1">
-                          <input type="hidden" name="stock_id" value={sample.id} />
-                          <MobileSheetSelect
-                            name="from_holder"
-                            label="From"
-                            defaultValue="office"
-                            options={[
-                              { value: 'office', label: 'From office' },
-                              { value: 'team', label: 'From team' },
-                              { value: 'client', label: 'From client' },
-                              { value: 'supplier', label: 'From supplier' },
-                            ]}
-                          />
-                          <MobileSheetSelect
-                            name="to_holder"
-                            label="To"
-                            defaultValue="team"
-                            options={[
-                              { value: 'team', label: 'To team' },
-                              { value: 'office', label: 'To office' },
-                              { value: 'supplier', label: 'To supplier' },
-                            ]}
-                          />
-                          <input name="quantity" type="number" min="1" defaultValue={1} className="border px-1 py-1" />
-                          <MobileSheetSelect
-                            name="company_id"
-                            label="Client"
-                            emptyLabel="Client (if needed)"
-                            options={[
-                              { value: '', label: 'Client (if needed)' },
-                              ...(companies || []).map((c) => ({ value: c.id, label: c.name })),
-                            ]}
-                          />
-                          <input name="note" placeholder="Note / holder name" className="col-span-2 border px-1 py-1" />
-                          <SubmitButton className="col-span-2 border py-1 font-semibold" pendingLabel="Recording…">Record movement</SubmitButton>
-                        </ActionForm>
-                      </details>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-            {(!samples || samples.length === 0) && (
-              <tr><td colSpan={7} className="p-6 text-center text-gray-500">No sample stock yet.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="bg-white border p-5">
-        <h2 className="font-serif text-lg mb-3">Movement history</h2>
-        {(movements || []).map((m) => {
-          const product = Array.isArray(m.product) ? m.product[0] : m.product
-          const company = Array.isArray(m.company) ? m.company[0] : m.company
-          return (
-            <p key={m.id} className="text-xs py-1 border-t">
-              {formatDateTime(m.created_at)} · {product?.name} · {m.quantity} · {m.from_holder} → {m.to_holder}
-              {company?.name ? ` · ${company.name}` : ''} {m.note ? ` · ${m.note}` : ''}
-            </p>
-          )
-        })}
-        {(!movements || movements.length === 0) && <p className="text-sm text-gray-500">No movements recorded.</p>}
-      </div>
-    </div>
+    <SamplesBoard
+      cards={cards}
+      movements={movements}
+      products={(productsResult.data || []).map((product) => ({ id: product.id, name: product.name, sku: product.sku }))}
+      companies={companies.map((company) => ({ id: company.id, name: company.name }))}
+      team={people
+        .filter((person) => person.is_active)
+        .map((person) => ({ id: person.id, name: person.full_name || person.email || 'Team member' }))}
+      canManage={canManageSamples(profile.role)}
+      showCost={showCost}
+      notice={params.error || loadError || ''}
+      received={params.received === '1'}
+      moved={params.moved === '1'}
+      returned={params.returned === '1'}
+      sent={params.sent === '1'}
+    />
   )
 }
