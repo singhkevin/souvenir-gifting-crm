@@ -18,10 +18,15 @@ async function visibleProductIds(
 ): Promise<Set<string> | null> {
   const ids = [...new Set(productIds.filter(Boolean))]
   if (!ids.length) return new Set()
-  const { data: products, error } = await admin
-    .from('products')
-    .select('id, status, catalogue_access')
-    .in('id', ids)
+  const productQuery = await admin.from('products').select('id, status, catalogue_access, sample_only').in('id', ids)
+  const missingSampleColumn = Boolean(productQuery.error && /sample_only/i.test(productQuery.error.message))
+  const retry = missingSampleColumn
+    ? await admin.from('products').select('id, status, catalogue_access').in('id', ids)
+    : null
+  const products = retry
+    ? retry.data?.map((row) => ({ ...row, sample_only: false as boolean | null })) ?? null
+    : productQuery.data
+  const error = retry ? retry.error : productQuery.error
   if (error || !products) return null
 
   const granted = new Set<string>()
@@ -145,11 +150,19 @@ export async function hiddenCatalogItemsByCompany(
   const admin = createAdminClient()
   if (!admin) return []
   const productIds = [...unique.keys()]
-  const [{ data: products, error: productError }, { data: grantRows, error: grantError }, { data: exclusionRows, error: exclusionError }] = await Promise.all([
-    admin.from('products').select('id, status, catalogue_access').in('id', productIds),
+  const [productQuery, { data: grantRows, error: grantError }, { data: exclusionRows, error: exclusionError }] = await Promise.all([
+    admin.from('products').select('id, status, catalogue_access, sample_only').in('id', productIds),
     admin.from('company_product_access').select('company_id, product_id').in('product_id', productIds).in('company_id', companies),
     admin.from('company_product_exclusions').select('company_id, product_id').in('product_id', productIds).in('company_id', companies),
   ])
+  const missingSampleColumn = Boolean(productQuery.error && /sample_only/i.test(productQuery.error.message))
+  const retry = missingSampleColumn
+    ? await admin.from('products').select('id, status, catalogue_access').in('id', productIds)
+    : null
+  const products = retry
+    ? retry.data?.map((row) => ({ ...row, sample_only: false as boolean | null })) ?? null
+    : productQuery.data
+  const productError = retry ? retry.error : productQuery.error
   if (productError || grantError || exclusionError || !products) return []
 
   const byId = new Map(products.map((product) => [product.id as string, product]))
@@ -175,6 +188,7 @@ export async function hiddenCatalogItemsByCompany(
       name,
       status: (product?.status as string | null) ?? null,
       catalogueAccess: (product?.catalogue_access as string | null) ?? null,
+      sampleOnly: (product as { sample_only?: boolean | null } | undefined)?.sample_only ?? false,
     }
   })
 

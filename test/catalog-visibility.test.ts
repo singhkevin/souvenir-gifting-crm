@@ -21,11 +21,13 @@ test('guest visibility is active public catalogue products only', () => {
   assert.equal(productVisibleInScope({ status: 'active', catalogue_access: 'all' }, guest), true)
   assert.equal(productVisibleInScope({ status: 'active', catalogue_access: 'selected' }, guest, { granted: true, excluded: false }), false)
   assert.equal(productVisibleInScope({ status: 'active', catalogue_access: 'none' }, guest), false)
+  assert.equal(productVisibleInScope({ status: 'active', catalogue_access: 'all', sample_only: true }, guest), false)
   assert.equal(productVisibleInScope({ status: 'draft', catalogue_access: 'all' }, guest), false)
 })
 
 test('company visibility matches public catalogue, grants, and exclusions', () => {
   assert.equal(productVisibleInScope({ status: 'active', catalogue_access: 'all' }, company, noAccess), true)
+  assert.equal(productVisibleInScope({ status: 'active', catalogue_access: 'all', sample_only: true }, company, noAccess), false)
   assert.equal(productVisibleInScope({ status: 'active', catalogue_access: 'all' }, company, { granted: false, excluded: true }), false)
   assert.equal(productVisibleInScope({ status: 'active', catalogue_access: 'selected' }, company, { granted: true, excluded: false }), true)
   assert.equal(productVisibleInScope({ status: 'active', catalogue_access: 'selected' }, company, noAccess), false)

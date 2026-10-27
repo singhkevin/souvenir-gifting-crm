@@ -16,10 +16,12 @@ import { toggleOfferingSelectionForm } from '@/app/portal/catalogue/actions'
 import { budgetBadge } from '@/lib/portal/catalog-quote'
 import { kitDisplayTotal } from '@/lib/catalogs/visibility'
 import { displayableLineIds } from '@/lib/catalogs/visibility-data'
+import { internalSampleProductIds } from '@/lib/samples/hide-samples'
 
 export default async function GiftDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
+  if ((await internalSampleProductIds()).includes(id)) notFound()
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

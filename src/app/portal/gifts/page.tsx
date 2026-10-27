@@ -13,6 +13,7 @@ import { getCompanyMarginPercent, getPricingSettings, sellPricesForSurface } fro
 import { gstPriceNote } from '@/lib/pricing/engine'
 import { listCompanyCatalogs } from '@/lib/catalogs/company-catalogs'
 import { catalogStatusLabel } from '@/lib/catalogs/status'
+import { internalSampleNotIn, internalSampleProductIds } from '@/lib/samples/hide-samples'
 
 const PAGE_SIZE = 24
 
@@ -152,17 +153,23 @@ async function AllGifts({
   const search = sanitiseSearch(q)
   const categoryFilter = isUuid(category) ? category : ''
 
+  const hiddenSamples = internalSampleNotIn(await internalSampleProductIds())
   let query = supabase.from('client_products').select('*', { count: 'exact' })
+  if (hiddenSamples) query = query.not('id', 'in', hiddenSamples)
   if (search) query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,sku.ilike.%${search}%`)
   if (categoryFilter) query = query.eq('category_id', categoryFilter)
   if (sort === 'price_low') query = query.order('price', { ascending: true })
   else if (sort === 'price_high') query = query.order('price', { ascending: false })
   else query = query.order('name', { ascending: true })
 
-  const [{ data: productRows, count }, { data: categoryRows }] = await Promise.all([
-    query.range(from, from + PAGE_SIZE - 1),
-    supabase.from('client_products').select('category_id, category_name').not('category_id', 'is', null),
-  ])
+  const productResult = await query.range(from, from + PAGE_SIZE - 1)
+  const categoryBase = supabase.from('client_products').select('category_id, category_name').not('category_id', 'is', null)
+  const categoryResult = hiddenSamples
+    ? await categoryBase.not('id', 'in', hiddenSamples)
+    : await categoryBase
+  const productRows = productResult.data
+  const count = productResult.count
+  const categoryRows = categoryResult.data
 
   const categories = sortProductCategories(
     Array.from(

@@ -392,8 +392,22 @@ export default async function ProductDetailPage({
             <input type="hidden" name="sample_only_present" value="1" />
             <label className="flex items-center gap-2 text-xs text-[#4A4640] cursor-pointer">
               <input type="checkbox" name="sample_only" value="on" defaultChecked={Boolean(product.sample_only)} className="rounded-none border-[#CCC5BD] text-[#1C1B1A] focus:ring-0" />
-              Sample only. This stock is not sellable and the product is not buyable. Request one sample instead.
+              Sample only. Kept in the staff sample register, off the retail store, business portal, and client catalogues.
             </label>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Add to office samples</label>
+              <input
+                type="number"
+                name="initial_sample_qty"
+                min="0"
+                step="1"
+                placeholder="Blank leaves the current count"
+                className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+              />
+              <p className="mt-1 text-[11px] text-[#7C766F]">
+                Ticking Sample only lists the product under Samples. Enter a quantity only when pieces are being received into the office.
+              </p>
+            </div>
 
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Description</label>

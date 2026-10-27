@@ -17,6 +17,8 @@ import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 import { withIdempotency } from '@/lib/idempotency'
+import { parseOptionalSampleQty } from '@/lib/samples/ledger'
+import { syncSampleStock } from '@/lib/samples/sync-stock'
 import { canonicalCategoryLabel, findCategory } from '@/lib/products/category-plan'
 import { legacyPriceForInsert, resolveCost } from '@/lib/products/cost-price'
 import { parseCostSource } from '@/lib/pricing/cost-basis'
@@ -88,8 +90,11 @@ async function createProductOnce(formData: FormData) {
   // Retail and Business are independent of corporate visibility. Only admin sees the
   // switches; everyone else creates a product on every channel, as before.
   const channelForm = profile.role === 'admin' && formData.has('channel_present')
-  const show_in_store = channelForm ? formData.get('show_in_store') === 'on' : true
-  const show_in_business = channelForm ? formData.get('show_in_business') === 'on' : true
+  let show_in_store = channelForm ? formData.get('show_in_store') === 'on' : true
+  let show_in_business = channelForm ? formData.get('show_in_business') === 'on' : true
+  const sampleOnly = formData.get('sample_only') === 'on'
+  const initialSample = parseOptionalSampleQty(formData.get('initial_sample_qty'))
+  if (!initialSample.ok) return { error: initialSample.error }
 
   if (!name) {
     return { error: 'Product name is required' }
@@ -123,8 +128,12 @@ async function createProductOnce(formData: FormData) {
   if (!['all', 'selected', 'none'].includes(catalogue_access)) {
     return { error: 'Invalid catalogue visibility' }
   }
-  if (catalogue_access === 'selected' && selectedCompanies.length === 0) {
+  if (catalogue_access === 'selected' && selectedCompanies.length === 0 && !sampleOnly) {
     return { error: 'Select at least one company for personalized catalogue access.' }
+  }
+  if (sampleOnly) {
+    show_in_store = false
+    show_in_business = false
   }
 
   const insertRow: Record<string, unknown> = {
@@ -138,18 +147,24 @@ async function createProductOnce(formData: FormData) {
     moq,
     stock_qty,
     fulfillment_mode,
-    sample_only: formData.get('sample_only') === 'on',
+    sample_only: sampleOnly,
     image_url,
     hsn_code,
     status,
-    catalogue_access,
-    visibility: catalogue_access === 'all' ? 'catalogue' : (catalogue_access === 'selected' ? 'selected_companies' : 'internal_only'),
+    catalogue_access: sampleOnly ? 'none' : catalogue_access,
+    visibility: sampleOnly
+      ? 'internal_only'
+      : catalogue_access === 'all'
+        ? 'catalogue'
+        : catalogue_access === 'selected'
+          ? 'selected_companies'
+          : 'internal_only',
     show_in_store,
     show_in_business,
   }
   let inserted = await supabase.from('products').insert(insertRow).select('id').single()
   if (inserted.error && channelColumnsMissing(inserted.error.message)) {
-    const legacy = legacyChannelDefault(catalogue_access)
+    const legacy = legacyChannelDefault(sampleOnly ? 'none' : catalogue_access)
     if (show_in_store !== legacy || show_in_business !== legacy) {
       return {
         error: `Separate Retail and Business switches need ${CHANNEL_MIGRATION}. Until it is applied, Retail and Business follow "All companies".`,
@@ -165,6 +180,13 @@ async function createProductOnce(formData: FormData) {
   }
   const product = inserted.data
   const error = inserted.error
+
+  const discardProduct = async (productId: string) => {
+    await supabase.from('sample_movements').delete().eq('product_id', productId)
+    await supabase.from('sample_holder_balances').delete().eq('product_id', productId)
+    await supabase.from('sample_stock').delete().eq('product_id', productId)
+    await supabase.from('products').delete().eq('id', productId)
+  }
 
   if (error || !product) {
     if (error?.code === '23505') return { error: 'SKU already exists.' }
@@ -182,6 +204,21 @@ async function createProductOnce(formData: FormData) {
     }
   }
 
+  if (insertRow.sample_only !== false || initialSample.qty) {
+    const sampleError = await syncSampleStock(supabase, {
+      productId: product.id,
+      sampleOnly: insertRow.sample_only === true,
+      initialQty: initialSample.qty,
+      stockQty: stock_qty,
+      unitCost: supplier_cost,
+      userId: profile.id,
+    })
+    if (sampleError) {
+      await discardProduct(product.id)
+      return { error: sampleError }
+    }
+  }
+
   if (supplier_id) {
     const leadRaw = String(formData.get('lead_time_days') || '').trim()
     const lead = leadRaw ? Number(leadRaw) : null
@@ -196,19 +233,19 @@ async function createProductOnce(formData: FormData) {
       is_preferred: formData.get('is_preferred') === 'on',
     })
     if (offerError && !/product_supplier_offers/i.test(offerError.message)) {
-      await supabase.from('products').delete().eq('id', product.id)
+      await discardProduct(product.id)
       return { error: supplierSchemaHint(offerError.message) }
     }
   }
 
-  if (catalogue_access === 'selected') {
+  if (!sampleOnly && catalogue_access === 'selected') {
     const accessRows = selectedCompanies.map((cId) => ({
       product_id: product.id,
       company_id: cId,
     }))
     const { error: accessError } = await supabase.from('company_product_access').insert(accessRows)
     if (accessError) {
-      await supabase.from('products').delete().eq('id', product.id)
+      await discardProduct(product.id)
       return { error: `Product was not saved because company visibility could not be stored: ${accessError.message}` }
     }
   }
@@ -254,6 +291,7 @@ async function createProductOnce(formData: FormData) {
   }
 
   revalidatePath('/crm/products')
+  revalidatePath('/crm/samples')
   revalidatePath('/portal/catalogue')
   selectedCompanies.forEach((companyId) => revalidatePath('/crm/companies/' + companyId))
   redirect('/crm/products/' + product.id + (imageHint ? `?image=${imageHint}` : ''))
@@ -328,8 +366,14 @@ export async function updateProduct(productId: string, formData: FormData) {
   if (formData.has('fulfillment_mode')) {
     update.fulfillment_mode = parseFulfillmentMode(formData.get('fulfillment_mode'))
   }
+  const initialSample = formData.has('initial_sample_qty')
+    ? parseOptionalSampleQty(formData.get('initial_sample_qty'))
+    : { ok: true as const, qty: null }
+  if (!initialSample.ok) return { error: initialSample.error }
+  let sampleOnly: boolean | null = null
   if (formData.has('sample_only_present')) {
-    update.sample_only = formData.get('sample_only') === 'on'
+    sampleOnly = formData.get('sample_only') === 'on'
+    update.sample_only = sampleOnly
   }
 
   if (formData.has('status')) {
@@ -344,6 +388,12 @@ export async function updateProduct(productId: string, formData: FormData) {
     update.catalogue_access = catalogue_access
     update.visibility =
       catalogue_access === 'all' ? 'catalogue' : catalogue_access === 'selected' ? 'selected_companies' : 'internal_only'
+  }
+  if (sampleOnly && profile.role === 'admin') {
+    update.show_in_store = false
+    update.show_in_business = false
+    update.catalogue_access = 'none'
+    update.visibility = 'internal_only'
   }
 
   // SKU is the stable product identifier. It is never changed implicitly, and only
@@ -365,7 +415,12 @@ export async function updateProduct(productId: string, formData: FormData) {
     return { error: 'Image URLs cannot point to localhost. Upload a product photo instead.' }
   }
 
-  const { error } = await supabase.from('products').update(update).eq('id', productId)
+  let { error } = await supabase.from('products').update(update).eq('id', productId)
+  if (error && channelColumnsMissing(error.message)) {
+    delete update.show_in_store
+    delete update.show_in_business
+    ;({ error } = await supabase.from('products').update(update).eq('id', productId))
+  }
   if (error) {
     if (error.code === '23505') return { error: 'SKU already exists.' }
     return { error: directOrderSchemaHint(error.message) }
@@ -387,6 +442,24 @@ export async function updateProduct(productId: string, formData: FormData) {
     await hideDiscontinuedProductFromClients(supabase, productId)
   }
 
+  if (sampleOnly != null || initialSample.qty) {
+    let unitCost: number | null = null
+    if (formData.has('supplier_cost')) {
+      const priced = resolveCost(formData.get('supplier_cost'))
+      unitCost = priced.ok ? priced.cost : null
+    }
+    const sampleError = await syncSampleStock(supabase, {
+      productId,
+      sampleOnly: sampleOnly === true,
+      initialQty: initialSample.qty,
+      stockQty: 0,
+      unitCost,
+      userId: profile.id,
+    })
+    if (sampleError) return { error: sampleError }
+  }
+
+  revalidatePath('/crm/samples')
   revalidatePath('/crm/products/' + productId)
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
@@ -577,6 +650,10 @@ export async function saveChannelVisibility(productId: string, input: ChannelVis
   const business = Boolean(input.business)
 
   const supabase = await createClient()
+  const sampleRow = await supabase.from('products').select('sample_only').eq('id', productId).maybeSingle()
+  if (!sampleRow.error && sampleRow.data?.sample_only) {
+    return { error: 'Sample only products stay in the staff register. Untick Sample only on the product before changing where it shows.' }
+  }
   const base = { catalogue_access: mode, visibility: legacyVisibilityLabel(mode) }
   let { error: updateError } = await supabase
     .from('products')

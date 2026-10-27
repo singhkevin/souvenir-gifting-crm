@@ -18,6 +18,7 @@ export type VisibilityScope =
 export type ProductVisibility = {
   status?: string | null
   catalogue_access?: string | null
+  sample_only?: boolean | null
 }
 
 export const HIDDEN_CATALOG_LINE_ERROR = 'One of the selected products is not available on this catalog'
@@ -28,6 +29,7 @@ export function productVisibleInScope(
   access: { granted: boolean; excluded: boolean } = { granted: false, excluded: false },
 ): boolean {
   if (product.status !== 'active') return false
+  if (product.sample_only) return false
   if (scope.kind === 'public') return product.catalogue_access === 'all'
   if (access.excluded) return false
   if (product.catalogue_access === 'all') return true
@@ -130,7 +132,7 @@ export function withVisibleKitTotals<T extends PricedCatalogLine>(lines: T[]): T
 }
 
 export function hiddenCatalogItemNames(
-  items: { productId: string; name: string; status: string | null; catalogueAccess: string | null }[],
+  items: { productId: string; name: string; status: string | null; catalogueAccess: string | null; sampleOnly?: boolean | null }[],
   access: { grantedIds: ReadonlySet<string>; excludedIds: ReadonlySet<string> },
 ): string[] {
   const seen = new Set<string>()
@@ -139,7 +141,7 @@ export function hiddenCatalogItemNames(
     if (seen.has(item.productId)) continue
     seen.add(item.productId)
     const visible = productVisibleInScope(
-      { status: item.status, catalogue_access: item.catalogueAccess },
+      { status: item.status, catalogue_access: item.catalogueAccess, sample_only: item.sampleOnly },
       { kind: 'company', companyId: '' },
       { granted: access.grantedIds.has(item.productId), excluded: access.excludedIds.has(item.productId) },
     )
