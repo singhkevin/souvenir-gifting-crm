@@ -394,6 +394,20 @@ export default async function ProductDetailPage({
               <input type="checkbox" name="sample_only" value="on" defaultChecked={Boolean(product.sample_only)} className="rounded-none border-[#CCC5BD] text-[#1C1B1A] focus:ring-0" />
               Sample only. This stock is not sellable and the product is not buyable. Request one sample instead.
             </label>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Add sample quantity</label>
+              <input
+                type="number"
+                name="sample_qty"
+                min="0"
+                step="1"
+                placeholder="Pieces to add to office stock"
+                className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
+              />
+              <p className="mt-1 text-[11px] text-[#7C766F]">
+                Leave blank to keep the current sample stock. A sample-only product with no sample row records 1 in the office.
+              </p>
+            </div>
 
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">Description</label>

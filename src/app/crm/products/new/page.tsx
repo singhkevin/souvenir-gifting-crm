@@ -182,6 +182,20 @@ export default async function NewProductPage({
               <input type="checkbox" name="sample_only" value="on" />
               Sample only — not sellable stock
             </label>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Initial sample quantity</label>
+              <input
+                type="number"
+                name="sample_qty"
+                min="0"
+                step="1"
+                placeholder="Pieces to put in the office"
+                className="w-full px-3 py-2 text-xs border border-gray-200 focus:ring-1 focus:ring-[#806A50] focus:outline-none"
+              />
+              <p className="text-[11px] text-gray-500 mt-1">
+                Saved on Samples. Leave this blank on a sample-only product to record 1 in the office.
+              </p>
+            </div>
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">HSN code</label>

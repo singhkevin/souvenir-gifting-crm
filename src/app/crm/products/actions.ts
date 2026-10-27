@@ -17,6 +17,7 @@ import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 import { withIdempotency } from '@/lib/idempotency'
+import { syncOpeningSampleStock } from '@/lib/samples/opening-stock'
 import { canonicalCategoryLabel, findCategory } from '@/lib/products/category-plan'
 import { legacyPriceForInsert, resolveCost } from '@/lib/products/cost-price'
 import { parseCostSource } from '@/lib/pricing/cost-basis'
@@ -253,7 +254,24 @@ async function createProductOnce(formData: FormData) {
     })
   }
 
+  const sampleOnly = formData.get('sample_only') === 'on'
+  const sampleQtyRaw = formData.get('sample_qty')
+  if (sampleOnly || String(sampleQtyRaw || '').trim()) {
+    const synced = await syncOpeningSampleStock(supabase, {
+      productId: product.id,
+      sampleOnly,
+      sampleQtyRaw,
+      unitCost: supplier_cost,
+      actorId: profile.id,
+    })
+    if (synced.error) {
+      await supabase.from('products').delete().eq('id', product.id)
+      return { error: synced.error }
+    }
+  }
+
   revalidatePath('/crm/products')
+  revalidatePath('/crm/samples')
   revalidatePath('/portal/catalogue')
   selectedCompanies.forEach((companyId) => revalidatePath('/crm/companies/' + companyId))
   redirect('/crm/products/' + product.id + (imageHint ? `?image=${imageHint}` : ''))
@@ -387,7 +405,19 @@ export async function updateProduct(productId: string, formData: FormData) {
     await hideDiscontinuedProductFromClients(supabase, productId)
   }
 
+  if (formData.has('sample_only_present') || formData.has('sample_qty')) {
+    const synced = await syncOpeningSampleStock(supabase, {
+      productId,
+      sampleOnly: formData.get('sample_only') === 'on',
+      sampleQtyRaw: formData.get('sample_qty'),
+      unitCost: typeof costPatch.supplier_cost === 'number' ? costPatch.supplier_cost : null,
+      actorId: profile.id,
+    })
+    if (synced.error) return { error: synced.error }
+  }
+
   revalidatePath('/crm/products/' + productId)
+  revalidatePath('/crm/samples')
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
   return { success: true }
