@@ -5,6 +5,7 @@ import { BackButton } from '@/components/ui/back-button'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { RequirementPartyFields } from '@/components/requirements/requirement-party-fields'
 
 export default async function NewRequirementPage({
   searchParams,
@@ -50,29 +51,16 @@ export default async function NewRequirementPage({
           />
         </label>
 
-        <MobileSheetSelect
-          name="company_id"
-          label="Company"
-          required
-          defaultValue={preselectedCompanyId || ''}
-          emptyLabel="Select company"
-          options={[
-            { value: '', label: 'Select company' },
-            ...(companies || []).map((company) => ({ value: company.id, label: company.name })),
-          ]}
-        />
-
-        <MobileSheetSelect
-          name="contact_id"
-          label="Contact"
-          emptyLabel="Optional contact"
-          options={[
-            { value: '', label: 'Optional contact' },
-            ...(contacts || []).map((contact) => ({
-              value: contact.id,
-              label: contact.full_name || 'Contact',
-            })),
-          ]}
+        <RequirementPartyFields
+          companies={(companies || []).map((company) => ({ id: company.id, name: company.name }))}
+          contacts={(contacts || []).map((contact) => ({
+            id: contact.id,
+            full_name: contact.full_name,
+            company_id: contact.company_id,
+          }))}
+          defaultCompanyId={preselectedCompanyId || ''}
+          canAddCompany={profile.role === 'admin' || profile.role === 'sales'}
+          canAddContact={profile.role === 'admin' || profile.role === 'sales' || profile.role === 'management'}
         />
 
         {profile.role === 'admin' && (

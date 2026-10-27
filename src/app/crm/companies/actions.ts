@@ -15,6 +15,7 @@ import { domainSplitEnabled } from '@/lib/domain-flag'
 import { parsePortalSlug, isSlugReservedInHistory, clearTenantCache, portalLoginUrl } from '@/lib/portal-host'
 import { schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
 import { withIdempotency } from '@/lib/idempotency'
+import { applyQuickCompanyFields } from '@/lib/companies/quick-create'
 
 const LOGO_BUCKET = 'company-logos'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
@@ -153,7 +154,17 @@ export async function createCompany(formData: FormData) {
   return withIdempotency('crm.createCompany', formData, () => createCompanyOnce(formData))
 }
 
-async function createCompanyOnce(formData: FormData) {
+export async function quickCreateCompany(formData: FormData) {
+  return withIdempotency('crm.quickCreateCompany', formData, () => quickCreateCompanyOnce(formData))
+}
+
+async function quickCreateCompanyOnce(formData: FormData) {
+  const prepared = applyQuickCompanyFields(formData)
+  if (prepared.error) return prepared
+  return createCompanyOnce(formData, { stay: true })
+}
+
+async function createCompanyOnce(formData: FormData, options?: { stay?: boolean }) {
   const access = await requireCompanyEditor()
   if ('error' in access) return { error: access.error }
 
@@ -237,6 +248,12 @@ async function createCompanyOnce(formData: FormData) {
     const notifyClients = String(formData.get('notify_client_admins_on_live') || '') === '1'
     await stampPortalHostMeta(data.id, user.id, notifyClients)
     kickPortalWorker(data.id, portalSlug.slug)
+  }
+
+  if (options?.stay) {
+    revalidatePath('/crm/companies')
+    revalidatePath('/crm/requirements/new')
+    return { success: true as const, id: data.id, name: String(formData.get('name') || '').trim() }
   }
 
   redirect(`/crm/companies/${data.id}`)
