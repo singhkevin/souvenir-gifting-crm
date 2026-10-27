@@ -12,6 +12,12 @@ import { findReusableLogo } from '@/lib/companies/identity'
 import { parseAllowedEmailDomains, isEmailAllowedForDomains } from '@/lib/pricing/domains'
 import { recordPriceChange } from '@/lib/pricing/audit'
 import { domainSplitEnabled } from '@/lib/domain-flag'
+import { confirmOriginForAccount } from '@/lib/domain-routing'
+import { portalSetPasswordUrl } from '@/lib/auth/confirm-landing'
+import { requestOrigin } from '@/lib/auth/request-origin'
+import { sendEmail } from '@/lib/email/resend'
+import { portalInviteEmailHtml } from '@/lib/email/business'
+import { canSendPortalInvite } from '@/lib/portal/separation'
 import { parsePortalSlug, isSlugReservedInHistory, clearTenantCache, portalLoginUrl } from '@/lib/portal-host'
 import { schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
 import { withIdempotency } from '@/lib/idempotency'
@@ -443,6 +449,139 @@ export async function backfillMissingCompanyLogos() {
   }
   revalidatePath('/crm/companies')
   return { success: true, scanned: missing.length, inherited }
+}
+
+export async function sendPortalInvitation(formData: FormData) {
+  return withIdempotency('crm.sendPortalInvitation', formData, () => sendPortalInvitationOnce(formData))
+}
+
+async function sendPortalInvitationOnce(formData: FormData) {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!canSendPortalInvite(profile.role)) {
+    return { error: 'Only sales or an admin can send a portal invitation' }
+  }
+
+  const companyId = String(formData.get('company_id') || '')
+  const email = String(formData.get('email') || '').trim().toLowerCase()
+  const fullName = String(formData.get('full_name') || '').trim()
+  const role = String(formData.get('role') || 'client_user')
+  if (!companyId || !email || !email.includes('@')) return { error: 'A company and email are required' }
+  if (role !== 'client_admin' && role !== 'client_user') return { error: 'Invalid portal role' }
+
+  const supabase = await createClient()
+  const { data: company } = await supabase
+    .from('companies')
+    .select('id, name, account_type, allowed_email_domains, portal_slug')
+    .eq('id', companyId)
+    .maybeSingle()
+  if (!company) return { error: 'Company not found' }
+  if ((company.account_type || 'corporate') === 'business') {
+    return { error: 'Business accounts sign in on the business portal. This invitation is for a company microsite.' }
+  }
+  if (!isEmailAllowedForDomains(email, company.allowed_email_domains)) {
+    const domains = (company.allowed_email_domains || []).join(', ')
+    return {
+      error: domains
+        ? `Portal invitations must use an allowed domain (${domains}).`
+        : 'Portal invitation email is not allowed for this company.',
+    }
+  }
+  if (domainSplitEnabled() && !company.portal_slug) {
+    return { error: 'Add a portal address for this company before sending an invitation.' }
+  }
+
+  const admin = createAdminClient()
+  if (!admin) return { error: SERVICE_ROLE_MISSING }
+
+  const { data: existing } = await admin
+    .from('profiles')
+    .select('id, email, role, company_id, is_active')
+    .ilike('email', email)
+    .maybeSingle()
+
+  let userId = existing?.id || null
+  if (existing) {
+    if (existing.role !== 'client_admin' && existing.role !== 'client_user') {
+      return { error: 'This email already belongs to another account.' }
+    }
+    if (existing.company_id !== companyId) {
+      return { error: 'This email already belongs to another company portal.' }
+    }
+    if (existing.is_active === false) return { error: 'This portal login is inactive.' }
+  } else {
+    if (!fullName) return { error: 'Name is required' }
+    const created = await admin.auth.admin.createUser({
+      email,
+      password: generateTemporaryPassword(),
+      email_confirm: true,
+      app_metadata: { role, company_id: companyId },
+      user_metadata: { full_name: fullName },
+    })
+    if (created.error || !created.data.user) {
+      const message = created.error?.message || 'Could not create the portal login'
+      if (/portal email domain/i.test(message)) {
+        return { error: 'Portal invitations must use an allowed email domain for this company.' }
+      }
+      if (message.toLowerCase().includes('already') || message.toLowerCase().includes('registered')) {
+        return { error: 'A user with this email already exists.' }
+      }
+      return { error: message }
+    }
+    userId = created.data.user.id
+    const { error: profileError } = await admin.from('profiles').upsert({
+      id: userId,
+      full_name: fullName,
+      email,
+      role,
+      company_id: companyId,
+      is_active: true,
+    })
+    if (profileError) {
+      await admin.auth.admin.deleteUser(userId)
+      if (/portal email domain/i.test(profileError.message)) {
+        return { error: 'Portal invitations must use an allowed email domain for this company.' }
+      }
+      return { error: profileError.message }
+    }
+  }
+
+  const origin = confirmOriginForAccount({
+    role: 'client_user',
+    portalSlug: company.portal_slug,
+    fallbackOrigin: await requestOrigin(),
+  })
+  const link = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email,
+    options: { redirectTo: `${origin}/auth/confirm` },
+  })
+  const properties = link.data?.properties
+  const actionLink = portalSetPasswordUrl(origin, {
+    hashedToken: properties?.hashed_token,
+    verificationType: properties?.verification_type,
+    actionLink: properties?.action_link,
+  })
+  if (link.error || !actionLink) {
+    return { error: 'The portal login was saved, but the invitation email could not be prepared. Send it again.' }
+  }
+
+  const sent = await sendEmail({
+    to: email,
+    subject: `Your ${company.name} portal invitation`,
+    html: portalInviteEmailHtml({ companyName: company.name, actionLink }),
+  })
+  if (sent.error) return { error: `${sent.error} The login exists. Send the invitation again.` }
+
+  await writeAudit(supabase, {
+    action: 'invite',
+    entity: 'profiles',
+    entityId: userId,
+    next: { email, company_id: companyId },
+    userId: profile.id,
+  })
+  revalidatePath(`/crm/companies/${companyId}`)
+  return { success: true, message: `Invitation sent to ${email}` }
 }
 
 export async function createPortalClient(formData: FormData) {

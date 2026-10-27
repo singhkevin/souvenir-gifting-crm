@@ -3,7 +3,12 @@ import { type EmailOtpType } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { authCookieOptions, localCookieWriteOptions } from '@/lib/auth/cookie-options'
 import { RECOVERY_COOKIE_NAME } from '@/lib/auth/tab'
-import { confirmLandingPath, isAccountConfirmType } from '@/lib/auth/confirm-landing'
+import { confirmLandingForRole, isAccountConfirmType } from '@/lib/auth/confirm-landing'
+import { domainSplitEnabled } from '@/lib/domain-flag'
+import { hostLoginDecision } from '@/lib/domain-routing'
+import { isClientRole, isGiftEmployeeRole } from '@/lib/roles'
+import { resolveHost, resolveTenantBySlug } from '@/lib/portal-host'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 type PendingCookie = {
   name: string
@@ -17,6 +22,48 @@ type PendingCookie = {
     domain?: string
     expires?: Date
   }
+}
+
+async function rejectForeignSession(
+  request: NextRequest,
+  supabase: SupabaseClient,
+  pendingCookies: PendingCookie[],
+) {
+  if (!domainSplitEnabled()) return null
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, company_id, is_active')
+    .eq('id', user.id)
+    .maybeSingle()
+  if (profile?.is_active === false) {
+    await supabase.auth.signOut()
+    return redirectWithCookies(request, '/login?error=inactive', pendingCookies)
+  }
+  let portalSlug: string | null = null
+  const microsite = isClientRole(profile?.role) || isGiftEmployeeRole(profile?.role)
+  if (profile && microsite && profile.company_id) {
+    const { data: company } = await supabase
+      .from('companies')
+      .select('portal_slug')
+      .eq('id', profile.company_id)
+      .maybeSingle()
+    portalSlug = company?.portal_slug ?? null
+  }
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
+  const resolved = resolveHost(host)
+  const tenant = resolved.kind === 'tenant' ? await resolveTenantBySlug(resolved.slug) : null
+  const decision = hostLoginDecision({
+    host: resolved,
+    role: profile?.role,
+    companyId: profile?.company_id ?? null,
+    tenantCompanyId: tenant?.id ?? null,
+    portalSlug,
+  })
+  if (decision.allow) return null
+  await supabase.auth.signOut()
+  return redirectWithCookies(request, decision.href, pendingCookies)
 }
 
 function otpType(value: string | null): EmailOtpType {
@@ -79,7 +126,13 @@ export async function GET(request: NextRequest) {
     if (error) {
       return NextResponse.redirect(new URL(isAccountConfirmType(rawType) ? '/login?error=confirm' : '/reset-password?error=invalid', incoming.origin))
     }
-    const landing = confirmLandingPath(rawType, incoming.searchParams.get('next'))
+    const rejected = await rejectForeignSession(request, supabase, pendingCookies)
+    if (rejected) return rejected
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: profile } = user
+      ? await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      : { data: null }
+    const landing = confirmLandingForRole(profile?.role, rawType, incoming.searchParams.get('next'))
     if (landing) return redirectWithCookies(request, landing, pendingCookies)
     return redirectWithCookies(request, '/reset-password', cookiesForRedirect(request, pendingCookies))
   }
@@ -88,7 +141,13 @@ export async function GET(request: NextRequest) {
   if (error) {
     return NextResponse.redirect(new URL(isAccountConfirmType(rawType) ? '/login?error=confirm' : '/reset-password?error=invalid', incoming.origin))
   }
-  const landing = confirmLandingPath(rawType, incoming.searchParams.get('next'))
+  const rejected = await rejectForeignSession(request, supabase, pendingCookies)
+  if (rejected) return rejected
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+    : { data: null }
+  const landing = confirmLandingForRole(profile?.role, rawType, incoming.searchParams.get('next'))
   if (landing) return redirectWithCookies(request, landing, pendingCookies)
   return redirectWithCookies(request, '/reset-password', cookiesForRedirect(request, pendingCookies))
 }

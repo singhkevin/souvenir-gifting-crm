@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 const title = `${appName()} — Corporate gifts for teams and clients`
 const description =
-  'Browse corporate gifts with indicative prices, filter by occasion, category and budget, then request a quotation.'
+  'Corporate gifts for teams and clients. Sign in with your work email to see business pricing.'
 
 export const metadata: Metadata = {
   title: { absolute: title },

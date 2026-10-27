@@ -16,6 +16,7 @@ export function SV2ProductCard({
   price,
   moq,
   inStock = false,
+  priceText,
 }: {
   id: string
   name: string
@@ -25,6 +26,7 @@ export function SV2ProductCard({
   price: number | null
   moq: number
   inStock?: boolean
+  priceText?: string | null
 }) {
   const displayPrice = price != null && price > 0
 
@@ -71,8 +73,8 @@ export function SV2ProductCard({
       {/* Price + CTA */}
       <div className="border-t border-[#CCC5BD] p-2 sm:p-3 bg-[#F6F3EC]">
         <div className="flex flex-wrap items-baseline justify-between gap-1 mb-2">
-          <span className="sv2-mono-sm sm:sv2-mono-md font-bold text-[#1C1B1A]">
-            {displayPrice ? formatCurrency(price) : 'Price on quote'}
+          <span className={priceText ? 'text-xs font-medium leading-snug text-[#4A4640]' : 'sv2-mono-sm sm:sv2-mono-md font-bold text-[#1C1B1A]'}>
+            {priceText || (displayPrice ? formatCurrency(price) : 'Price on quote')}
           </span>
           <Chip>MOQ: {moq}</Chip>
         </div>

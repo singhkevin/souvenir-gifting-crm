@@ -1,8 +1,9 @@
 import 'server-only'
 
 import { redirect } from 'next/navigation'
+import { redirectToMicrosite } from '@/lib/account-home'
 import { getProfile, type ProfileSession } from '@/lib/auth'
-import { isBusinessRole, isClientRole, isStaffRole } from '@/lib/roles'
+import { isBusinessRole, isClientRole, isGiftEmployeeRole, isStaffRole } from '@/lib/roles'
 import { createClient } from '@/lib/supabase/server'
 
 export type BusinessCompany = {
@@ -27,7 +28,9 @@ export async function requireBusiness(): Promise<{ profile: ProfileSession; comp
     redirect('/login')
   }
   if (!isBusinessRole(profile.role)) {
-    if (isClientRole(profile.role)) redirect('/portal/gifts')
+    if (isClientRole(profile.role) || isGiftEmployeeRole(profile.role)) {
+      await redirectToMicrosite(profile.company_id, profile.role)
+    }
     if (isStaffRole(profile.role)) redirect('/crm/dashboard')
     if (profile.role === 'runner') redirect('/crm/runs')
     redirect('/login')

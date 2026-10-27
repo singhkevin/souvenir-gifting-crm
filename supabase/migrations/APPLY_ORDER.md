@@ -111,3 +111,10 @@ Trial (live, forced rollback, 23 Oct 2026): supabase/tests/role_active_checks_tr
 (every staff, client_admin, business and inactive account); 15 active accounts: identical access before and after.
 Inactive admin: 31 orders · 26 companies · 22 leads · 26 quotations · 29 profiles visible before, 0 after
 (own 13 tasks stay via tasks_write). Rollback restored function and policy md5s and the exact access.
+
+## 61 · 20261027_portal_business_separation.sql · NOT APPLIED
+
+Portal logins must use the company's allowed email domains when that list is set (empty list stays open).
+`portal_unit_price` no longer returns business tier prices to a microsite account, or corporate prices to a business account.
+Store prices, the service role, and pricing staff are unchanged. Not applied to the live database.
+Rollback: supabase/rollbacks/20261027_portal_business_separation_rollback.sql.

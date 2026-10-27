@@ -1,4 +1,5 @@
-import { isSafeNext } from '@/lib/safe-next'
+import { landingPathForRole, isSafeNext } from '@/lib/safe-next'
+import { confirmNextAllowed } from '@/lib/portal/separation'
 
 const CONFIRM_TYPES = new Set(['email', 'magiclink', 'signup', 'invite'])
 
@@ -13,10 +14,30 @@ export function confirmLandingPath(type: string | null | undefined, next: string
   return isSafeNext(next) ? next : '/business/dashboard'
 }
 
-/**
- * Confirmation link on the account's own host.
- * Supabase action_link follows the project Site URL, which is the wrong host for a store account.
- */
+/** Same as confirmLandingPath, but the destination has to belong to this account's product. */
+export function confirmLandingForRole(
+  role: string | null | undefined,
+  type: string | null | undefined,
+  next: string | null | undefined,
+) {
+  if (!isAccountConfirmType(type)) return null
+  if (confirmNextAllowed(role, next)) return next
+  return landingPathForRole(role)
+}
+
+/** Set-password link on the company portal host. Recovery lands on /reset-password. */
+export function portalSetPasswordUrl(
+  origin: string,
+  link: { hashedToken?: string | null; verificationType?: string | null; actionLink?: string | null },
+) {
+  const token = String(link.hashedToken || '').trim()
+  if (!token) return String(link.actionLink || '')
+  const url = new URL('/auth/confirm', origin)
+  url.searchParams.set('token_hash', token)
+  url.searchParams.set('type', link.verificationType || 'recovery')
+  return url.toString()
+}
+
 export function businessConfirmUrl(
   origin: string,
   link: { hashedToken?: string | null; verificationType?: string | null; actionLink?: string | null },

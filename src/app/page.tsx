@@ -11,7 +11,8 @@ import { RetailHomeSkeleton } from "@/components/site/retail-hero"
 import { PortalFinder } from "@/components/site/portal-finder"
 import { wantsPreview } from "@/lib/homepage/view"
 import { appName } from "@/lib/brand"
-import { isGiftEmployeeRole } from "@/lib/roles"
+import { redirectToMicrosite } from "@/lib/account-home"
+import { isBusinessRole, isClientRole, isGiftEmployeeRole } from "@/lib/roles"
 import { domainSplitEnabled } from "@/lib/domain-flag"
 import { resolveHost } from "@/lib/portal-host"
 import { sessionHintFromHeaders } from "@/lib/auth/session-cookie"
@@ -76,16 +77,16 @@ export default async function RootPage({
     if (user) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, company_id")
         .eq("id", user.id)
         .maybeSingle()
 
-      if (isGiftEmployeeRole(profile?.role)) {
-        redirect("/gift")
+      if (profile && (isGiftEmployeeRole(profile.role) || isClientRole(profile.role))) {
+        await redirectToMicrosite(profile.company_id, profile.role)
       }
 
-      if (profile?.role === "client_admin" || profile?.role === "client_user") {
-        redirect("/portal/gifts")
+      if (isBusinessRole(profile?.role)) {
+        redirect("/business/dashboard")
       }
 
       // Admins previewing the draft homepage (?preview=1) stay on the store page.

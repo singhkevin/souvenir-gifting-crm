@@ -10,6 +10,7 @@ export interface BestsellerProduct {
   imageUrl: string | null
   description: string | null
   price: number | null
+  priceText?: string | null
   moq: number
   categoryName?: string | null
   occasionTags?: string[]
@@ -82,6 +83,7 @@ export function BestsellerRail({ products }: { products: BestsellerProduct[] }) 
             imageUrl={product.imageUrl}
             description={product.description}
             price={product.price}
+            priceText={product.priceText}
             moq={product.moq}
           />
         ))}

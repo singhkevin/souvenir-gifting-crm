@@ -1,10 +1,16 @@
 import { emailDomain, normalizeEmailDomain } from '@/lib/pricing/domains'
 
-const FREE_MAIL = new Set([
-  'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.co.in', 'hotmail.com',
-  'outlook.com', 'live.com', 'aol.com', 'icloud.com', 'me.com', 'proton.me',
-  'protonmail.com', 'zoho.com', 'yandex.com', 'gmx.com', 'mail.com', 'rediffmail.com',
-])
+/**
+ * Free inboxes blocked from business self-registration.
+ * Add a provider here when a new public host shows up. The app checks this list before registration.
+ */
+export const FREE_EMAIL_DOMAINS = [
+  'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.co.in', 'yahoo.in', 'hotmail.com', 'hotmail.co.uk',
+  'outlook.com', 'outlook.co.in', 'live.com', 'live.in', 'msn.com', 'aol.com', 'icloud.com', 'me.com',
+  'proton.me', 'protonmail.com', 'zoho.com', 'yandex.com', 'gmx.com', 'mail.com', 'rediffmail.com',
+] as const
+
+const FREE_MAIL = new Set<string>(FREE_EMAIL_DOMAINS)
 
 const DISPOSABLE = new Set([
   'mailinator.com', 'guerrillamail.com', 'tempmail.com', '10minutemail.com',
