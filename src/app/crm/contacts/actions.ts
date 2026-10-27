@@ -30,7 +30,7 @@ async function createContactOnce(formData: FormData) {
   const companyId = String(formData.get('company_id') || '')
   if (!fullName || !companyId) return { error: 'Name and company are required' }
 
-  const { error } = await supabase.from('contacts').insert({
+  const { data, error } = await supabase.from('contacts').insert({
     full_name: fullName,
     company_id: companyId,
     designation: String(formData.get('designation') || '') || null,
@@ -39,11 +39,12 @@ async function createContactOnce(formData: FormData) {
     contact_type: String(formData.get('contact_type') || 'primary'),
     kind: 'corporate',
     notes: String(formData.get('notes') || '') || null,
-  })
-  if (error) return { error: error.message }
+  }).select('id, full_name').single()
+  if (error || !data) return { error: error?.message || 'Could not add the contact' }
   revalidatePath('/crm/contacts')
   revalidatePath(`/crm/companies/${companyId}`)
-  return { success: true }
+  revalidatePath('/crm/requirements/new')
+  return { success: true, id: data.id, full_name: data.full_name }
 }
 
 export async function updateContact(formData: FormData) {

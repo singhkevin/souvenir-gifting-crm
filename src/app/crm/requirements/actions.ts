@@ -4,9 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { writeAudit } from '@/lib/audit'
+import { getProfile } from '@/lib/auth'
+import { isUuid } from '@/lib/utils'
 import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 import { withIdempotency } from '@/lib/idempotency'
 import { catalogProductPricesForCompany } from '@/lib/catalogs/pricing'
+import { PICKER_RESULT_LIMIT, productSearchOrFilter } from '@/lib/requirements/product-search'
 
 export async function createRequirement(formData: FormData) {
   return withIdempotency('crm.createRequirement', formData, () => createRequirementOnce(formData))
@@ -199,6 +202,52 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
   revalidatePath('/crm/quotations')
   revalidatePath(`/crm/requirements/${req.id}`)
   redirect(`/crm/quotations/${quote.id}`)
+}
+
+const REQUIREMENT_STAFF = new Set(['admin', 'sales', 'management'])
+
+export async function searchRequirementProducts(requirementId: string, query: string) {
+  const profile = await getProfile()
+  if (!profile?.is_active || !REQUIREMENT_STAFF.has(profile.role)) return { error: 'Not permitted' }
+  if (!isUuid(requirementId)) return { error: 'Requirement is required' }
+
+  const supabase = await createClient()
+  const { data: requirement, error: requirementError } = await supabase
+    .from('requirements')
+    .select('id')
+    .eq('id', requirementId)
+    .maybeSingle()
+  if (requirementError) return { error: requirementError.message }
+  if (!requirement) return { error: 'Requirement not found' }
+
+  const { data: attached, error: attachedError } = await supabase
+    .from('requirement_products')
+    .select('product_id')
+    .eq('requirement_id', requirementId)
+  if (attachedError) return { error: attachedError.message }
+  const exclude = (attached || []).map((row) => row.product_id).filter((id): id is string => isUuid(id))
+
+  let request = supabase
+    .from('products')
+    .select('id, name, sku')
+    .eq('status', 'active')
+    .order('name')
+    .limit(PICKER_RESULT_LIMIT + 1)
+  const orFilter = productSearchOrFilter(query)
+  if (orFilter) request = request.or(orFilter)
+  if (exclude.length > 0) request = request.notIn('id', exclude)
+
+  const { data, error } = await request
+  if (error) return { error: error.message }
+  const rows = data || []
+  return {
+    products: rows.slice(0, PICKER_RESULT_LIMIT).map((row) => ({
+      id: row.id,
+      name: row.name,
+      sku: row.sku,
+    })),
+    truncated: rows.length > PICKER_RESULT_LIMIT,
+  }
 }
 
 export async function addProductToRequirement(formData: FormData) {
