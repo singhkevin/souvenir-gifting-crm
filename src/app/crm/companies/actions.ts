@@ -5,6 +5,12 @@ import { after } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { PUBLIC_STORAGE_CACHE_CONTROL } from '@/lib/storage/cache-control'
 import { getProfile } from '@/lib/auth'
+import { canEditCompanies } from '@/lib/roles'
+import {
+  normalizeQuickCompanyCity,
+  normalizeQuickCompanyDomains,
+  normalizeQuickCompanyName,
+} from '@/lib/companies/quick-fields'
 import { writeAudit } from '@/lib/audit'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateTemporaryPassword, SERVICE_ROLE_MISSING, validateNewPassword } from '@/lib/auth/password'
@@ -144,12 +150,20 @@ async function inheritLogoIfMissing(
 async function requireCompanyEditor() {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' as const }
-  if (!['admin', 'sales'].includes(profile.role)) {
+  if (!canEditCompanies(profile.role)) {
     return { error: 'Not permitted to manage companies' as const }
   }
   return { profile }
 }
+
+/** Inline create from the requirement form. Same insert as createCompany, without leaving the page. */
+export async function quickCreateCompany(formData: FormData) {
+  formData.set('intent', 'quick')
+  return withIdempotency('crm.quickCreateCompany', formData, () => createCompanyOnce(formData))
+}
+
 export async function createCompany(formData: FormData) {
+  formData.delete('intent')
   return withIdempotency('crm.createCompany', formData, () => createCompanyOnce(formData))
 }
 
@@ -171,7 +185,13 @@ async function createCompanyOnce(formData: FormData) {
   if (marginRaw !== '' && (!Number.isFinite(marginPercent) || (marginPercent as number) < 0)) {
     return { error: 'Margin % must be a number ≥ 0' }
   }
-  const allowedEmailDomains = parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
+  const quick = String(formData.get('intent') || '') === 'quick'
+  const nameCheck = quick ? normalizeQuickCompanyName(String(formData.get('name') || '')) : null
+  if (nameCheck && typeof nameCheck !== 'string') return nameCheck
+  const domainCheck = quick ? normalizeQuickCompanyDomains(String(formData.get('allowed_email_domains') || '')) : null
+  if (domainCheck && !Array.isArray(domainCheck)) return domainCheck
+  const companyName = typeof nameCheck === 'string' ? nameCheck : (formData.get('name') as string)
+  const allowedEmailDomains = domainCheck ?? parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
   const portalSlug = parsePortalSlug(String(formData.get('portal_slug') || ''))
   if (portalSlug.error) return { error: portalSlug.error }
   const reserved = await assertPortalSlugAvailable(portalSlug.slug)
@@ -184,10 +204,10 @@ async function createCompanyOnce(formData: FormData) {
   if (trialEndsAt !== null && typeof trialEndsAt === 'object') return trialEndsAt
 
   const { data, error } = await supabase.from('companies').insert({
-    name: formData.get('name') as string,
+    name: companyName,
     industry: formData.get('industry') as string || null,
     website: formData.get('website') as string || null,
-    city: formData.get('city') as string || null,
+    city: quick ? normalizeQuickCompanyCity(String(formData.get('city') || '')) : ((formData.get('city') as string) || null),
     state: formData.get('state') as string || null,
     country: (formData.get('country') as string) || 'India',
     address: formData.get('address') as string || null,
@@ -220,7 +240,7 @@ async function createCompanyOnce(formData: FormData) {
   } else {
     await inheritLogoIfMissing(supabase, {
       id: data.id,
-      name: String(formData.get('name') || ''),
+      name: companyName,
       website: (formData.get('website') as string) || null,
     })
   }
@@ -229,7 +249,7 @@ async function createCompanyOnce(formData: FormData) {
     action: 'create',
     entity: 'companies',
     entityId: data.id,
-    next: { name: formData.get('name'), owner_id: ownerId, portal_slug: portalSlug.slug },
+    next: { name: companyName, owner_id: ownerId, portal_slug: portalSlug.slug },
     userId: user.id,
   })
 
@@ -237,6 +257,12 @@ async function createCompanyOnce(formData: FormData) {
     const notifyClients = String(formData.get('notify_client_admins_on_live') || '') === '1'
     await stampPortalHostMeta(data.id, user.id, notifyClients)
     kickPortalWorker(data.id, portalSlug.slug)
+  }
+
+  if (quick) {
+    revalidatePath('/crm/companies')
+    revalidatePath('/crm/requirements/new')
+    return { success: true, company: { id: data.id, name: companyName } }
   }
 
   redirect(`/crm/companies/${data.id}`)

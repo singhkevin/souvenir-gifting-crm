@@ -4,14 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { getProfile } from '@/lib/auth'
+import { canEditContacts } from '@/lib/roles'
 import { withIdempotency } from '@/lib/idempotency'
-
-const CONTACT_ROLES = ['admin', 'sales', 'management'] as const
 
 async function requireContactEditor() {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' as const }
-  if (!CONTACT_ROLES.includes(profile.role as (typeof CONTACT_ROLES)[number])) {
+  if (!canEditContacts(profile.role)) {
     return { error: 'Not permitted to manage contacts' as const }
   }
   return { profile }
@@ -30,7 +29,7 @@ async function createContactOnce(formData: FormData) {
   const companyId = String(formData.get('company_id') || '')
   if (!fullName || !companyId) return { error: 'Name and company are required' }
 
-  const { error } = await supabase.from('contacts').insert({
+  const { data, error } = await supabase.from('contacts').insert({
     full_name: fullName,
     company_id: companyId,
     designation: String(formData.get('designation') || '') || null,
@@ -39,11 +38,16 @@ async function createContactOnce(formData: FormData) {
     contact_type: String(formData.get('contact_type') || 'primary'),
     kind: 'corporate',
     notes: String(formData.get('notes') || '') || null,
-  })
+  }).select('id, full_name, company_id').single()
   if (error) return { error: error.message }
+  if (!data) return { error: 'Contact was not created' }
   revalidatePath('/crm/contacts')
   revalidatePath(`/crm/companies/${companyId}`)
-  return { success: true }
+  revalidatePath('/crm/requirements/new')
+  return {
+    success: true,
+    contact: { id: data.id, full_name: data.full_name, company_id: data.company_id },
+  }
 }
 
 export async function updateContact(formData: FormData) {
