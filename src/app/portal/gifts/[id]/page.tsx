@@ -16,6 +16,7 @@ import { toggleOfferingSelectionForm } from '@/app/portal/catalogue/actions'
 import { budgetBadge } from '@/lib/portal/catalog-quote'
 import { kitDisplayTotal } from '@/lib/catalogs/visibility'
 import { displayableLineIds } from '@/lib/catalogs/visibility-data'
+import { sampleOnlyProductIds } from '@/lib/samples/public'
 
 export default async function GiftDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -33,6 +34,7 @@ export default async function GiftDetailPage({ params }: { params: Promise<{ id:
     productResult = await supabase.from('client_products').select(withoutPurchase).eq('id', id).maybeSingle()
   }
   const product = productResult.data
+  if (product && (await sampleOnlyProductIds(supabase, [product.id])).has(product.id)) notFound()
 
   if (product) {
     const tenant = readTenantFromHeaders(await headers())

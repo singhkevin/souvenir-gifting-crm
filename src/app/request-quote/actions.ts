@@ -57,15 +57,20 @@ async function submitPublicQuoteOnce(formData: FormData): Promise<{ error?: stri
   const items = parseQuoteItems(itemsRaw)
   const lookupIds = quoteProductIds({ items, productId })
   // Retail quote: products switched on for the retail store (legacy: catalogue_access = 'all').
-  const storeProducts = (column: string, value: string | boolean) => admin
-    .from('products')
-    .select('id, name, sku')
-    .in('id', lookupIds)
-    .eq('status', 'active')
-    .eq(column, value)
-  let lookup = lookupIds.length ? await storeProducts('show_in_store', true) : null
+  const storeProducts = (column: string, value: string | boolean, hideSamples: boolean) => {
+    let query = admin.from('products').select('id, name, sku').in('id', lookupIds).eq('status', 'active').eq(column, value)
+    if (hideSamples) query = query.eq('sample_only', false)
+    return query
+  }
+  let lookup = lookupIds.length ? await storeProducts('show_in_store', true, true) : null
+  if (lookup?.error && /sample_only/i.test(lookup.error.message)) {
+    lookup = await storeProducts('show_in_store', true, false)
+  }
   if (lookup?.error && channelColumnsMissing(lookup.error.message)) {
-    lookup = await storeProducts('catalogue_access', 'all')
+    lookup = await storeProducts('catalogue_access', 'all', true)
+    if (lookup.error && /sample_only/i.test(lookup.error.message)) {
+      lookup = await storeProducts('catalogue_access', 'all', false)
+    }
   }
   const products = lookup?.data || null
   const lines = resolvePublicQuoteLines({

@@ -18,8 +18,8 @@ const BRAND_LOGO_EMBED = 'brand:brands(id, name, logo_url)'
 const PUBLIC_COST_EMBED = 'product_costs(supplier_cost)'
 const FULL_CATALOGUE_SELECT =
   `id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, sample_only, occasion_tags, ${CATEGORY_EMBED}, ${BRAND_LOGO_EMBED}, ${PUBLIC_COST_EMBED}`
-const SUGGESTION_SELECT = `id, name, image_url, ${CATEGORY_EMBED}`
-const NAV_CATEGORY_SELECT = `category_id, ${CATEGORY_EMBED}`
+const SUGGESTION_SELECT = `id, name, image_url, sample_only, ${CATEGORY_EMBED}`
+const NAV_CATEGORY_SELECT = `category_id, sample_only, ${CATEGORY_EMBED}`
 const SUGGESTION_LIMIT = 40
 
 export type PublicProduct = {
@@ -121,6 +121,28 @@ function asRows(data: unknown): unknown[] {
   return Array.isArray(data) ? data : [data]
 }
 
+function isSampleOnly(row: { sample_only?: boolean | null }) {
+  return row.sample_only === true
+}
+
+/** Store, business, search, and nav reads. Sample-only products stay in the staff CRM. */
+async function selectChannelRows(
+  client: SupabaseClient,
+  select: string,
+  channel: Channel,
+  options?: { limit?: number },
+) {
+  let current = select
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const result = await selectOnChannel(client, current, channel, options)
+    if (!result.error) return asRows(result.data)
+    const next = narrowSelect(current, result.error.message)
+    if (!next || next === current) throw new Error(result.error.message)
+    current = next
+  }
+  throw new Error('Could not read the public catalogue')
+}
+
 function narrowSelect(select: string, message: string) {
   if (/logo_url/i.test(message) && select.includes(BRAND_LOGO_EMBED)) {
     return select.replace(BRAND_LOGO_EMBED, BRAND_EMBED)
@@ -189,7 +211,7 @@ export async function loadPublicRows(client: SupabaseClient, channel: Channel = 
   let switchedChannel = false
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const result = await selectActive(client, select, column, value)
-    if (!result.error) return attachCosts(asRows(result.data))
+    if (!result.error) return attachCosts(asRows(result.data)).filter((row) => !isSampleOnly(row))
     if (!switchedChannel && channelColumnsMissing(result.error.message)) {
       column = 'catalogue_access'
       value = 'all'
@@ -205,26 +227,26 @@ export async function loadPublicRows(client: SupabaseClient, channel: Channel = 
 
 /** First 40 store products by name: the header search only shows these. */
 export async function readSearchSuggestions(client: SupabaseClient, limit = SUGGESTION_LIMIT): Promise<StoreSearchSuggestion[]> {
-  const result = await selectOnChannel(client, SUGGESTION_SELECT, 'store', { limit })
-  if (result.error) throw new Error(result.error.message)
-  return asRows(result.data).map((row) => {
+  const rows = await selectChannelRows(client, SUGGESTION_SELECT, 'store', { limit })
+  return rows.flatMap((row) => {
     const product = row as PublicRow
-    return {
+    if (isSampleOnly(product)) return []
+    return [{
       id: product.id,
       name: product.name,
       category_name: oneRelation(product.category)?.name || null,
       image_url: product.image_url || null,
       href: `/catalogue/${product.id}`,
-    }
+    }]
   })
 }
 
 /** Categories that have an active store product, without loading prices or descriptions. */
 export async function readNavCategories(client: SupabaseClient) {
-  const result = await selectOnChannel(client, NAV_CATEGORY_SELECT, 'store')
-  if (result.error) throw new Error(result.error.message)
+  const rows = await selectChannelRows(client, NAV_CATEGORY_SELECT, 'store')
   const unique = new Map<string, { id: string; name: string }>()
-  for (const row of asRows(result.data) as PublicRow[]) {
+  for (const row of rows as PublicRow[]) {
+    if (isSampleOnly(row)) continue
     const category = oneRelation(row.category)
     const id = row.category_id || category?.id || null
     const name = category?.name || null
