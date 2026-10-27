@@ -1,10 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireStaff } from '@/lib/auth'
-import { createRequirement } from '../actions'
 import { BackButton } from '@/components/ui/back-button'
-import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
-import { ActionForm } from '@/components/ui/action-form'
-import { SubmitButton } from '@/components/ui/submit-button'
+import { RequirementForm } from './requirement-form'
 
 export default async function NewRequirementPage({
   searchParams,
@@ -37,117 +34,23 @@ export default async function NewRequirementPage({
         </div>
       )}
 
-      <ActionForm action={createRequirement}
-        className="grid gap-4 border border-[var(--color-border)] bg-white p-5 text-sm sm:p-6"
-      >
-        <label className="block">
-          <span className="text-xs font-semibold text-gray-700">Requirement name</span>
-          <input
-            name="name"
-            required
-            placeholder="e.g. Diwali client kits"
-            className="mt-1 min-h-11 w-full border px-3 py-2"
-          />
-        </label>
-
-        <MobileSheetSelect
-          name="company_id"
-          label="Company"
-          required
-          defaultValue={preselectedCompanyId || ''}
-          emptyLabel="Select company"
-          options={[
-            { value: '', label: 'Select company' },
-            ...(companies || []).map((company) => ({ value: company.id, label: company.name })),
-          ]}
-        />
-
-        <MobileSheetSelect
-          name="contact_id"
-          label="Contact"
-          emptyLabel="Optional contact"
-          options={[
-            { value: '', label: 'Optional contact' },
-            ...(contacts || []).map((contact) => ({
-              value: contact.id,
-              label: contact.full_name || 'Contact',
-            })),
-          ]}
-        />
-
-        {profile.role === 'admin' && (
-          <MobileSheetSelect
-            name="owner_id"
-            label="Owner"
-            defaultValue={profile.id}
-            options={(owners || []).map((owner) => ({
-              value: owner.id,
-              label: owner.full_name || owner.id,
-            }))}
-          />
-        )}
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="text-xs font-semibold text-gray-700">Quantity</span>
-            <input
-              name="quantity"
-              type="number"
-              min="1"
-              defaultValue={1}
-              className="mt-1 min-h-11 w-full border px-3 py-2"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-semibold text-gray-700">Budget</span>
-            <input
-              name="budget"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Optional"
-              className="mt-1 min-h-11 w-full border px-3 py-2"
-            />
-          </label>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <SheetDateField name="deadline" label="Deadline" />
-          <label className="block">
-            <span className="text-xs font-semibold text-gray-700">Delivery city</span>
-            <input
-              name="delivery_city"
-              placeholder="Optional"
-              className="mt-1 min-h-11 w-full border px-3 py-2"
-            />
-          </label>
-        </div>
-
-        <label className="block">
-          <span className="text-xs font-semibold text-gray-700">Purpose</span>
-          <input
-            name="purpose"
-            placeholder="e.g. Onboarding kits, festival gifts"
-            className="mt-1 min-h-11 w-full border px-3 py-2"
-          />
-        </label>
-
-        <label className="block">
-          <span className="text-xs font-semibold text-gray-700">Description</span>
-          <textarea
-            name="description"
-            rows={3}
-            placeholder="Brief notes for the sales team"
-            className="mt-1 w-full border px-3 py-2"
-          />
-        </label>
-
-        <SubmitButton
-          className="inline-flex min-h-11 items-center justify-center bg-[#806A50] px-4 text-sm font-semibold text-[#FFFFFF] hover:bg-[#9C8567]"
-         pendingLabel="Creating…">
-          Create Requirement
-        </SubmitButton>
-      </ActionForm>
+      <RequirementForm
+        companies={(companies || []).map((company) => ({ id: company.id, name: company.name }))}
+        contacts={(contacts || []).map((contact) => ({
+          id: contact.id,
+          full_name: contact.full_name,
+          company_id: contact.company_id,
+        }))}
+        owners={
+          profile.role === 'admin'
+            ? (owners || []).map((owner) => ({ id: owner.id, full_name: owner.full_name }))
+            : null
+        }
+        defaultOwnerId={profile.id}
+        preselectedCompanyId={preselectedCompanyId || ''}
+        canAddCompany={profile.role === 'admin' || profile.role === 'sales'}
+        canAddContact
+      />
     </div>
   )
 }
