@@ -7,6 +7,14 @@ import { writeAudit } from '@/lib/audit'
 import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 import { withIdempotency } from '@/lib/idempotency'
 import { catalogProductPricesForCompany } from '@/lib/catalogs/pricing'
+import { getProfile } from '@/lib/auth'
+import { isUuid } from '@/lib/utils'
+import {
+  ilikeContainsPattern,
+  mergeProductHits,
+  PRODUCT_SEARCH_LIMIT,
+  type SearchableProduct,
+} from '@/lib/requirements/product-search'
 
 export async function createRequirement(formData: FormData) {
   return withIdempotency('crm.createRequirement', formData, () => createRequirementOnce(formData))
@@ -201,6 +209,57 @@ async function createQuotationFromRequirementOnce(formData: FormData) {
   redirect(`/crm/quotations/${quote.id}`)
 }
 
+/**
+ * Active products matching a name or SKU. Queried in the database so a product
+ * past PostgREST's 1000-row cap is still findable, and only a short list is drawn.
+ */
+export async function searchRequirementProducts(requirementId: string, query: string) {
+  const empty = { products: [] as SearchableProduct[], truncated: false }
+  const profile = await getProfile()
+  if (!profile?.is_active) return { ...empty, error: 'Not authenticated' }
+  if (profile.role !== 'admin' && profile.role !== 'sales' && profile.role !== 'management') {
+    return { ...empty, error: 'Not permitted' }
+  }
+  if (!isUuid(requirementId)) return { ...empty, error: 'Requirement not found' }
+  const pattern = ilikeContainsPattern(query)
+  if (!pattern) return empty
+
+  const supabase = await createClient()
+  const { data: attached, error: attachedError } = await supabase
+    .from('requirement_products')
+    .select('product_id')
+    .eq('requirement_id', requirementId)
+  if (attachedError) return { ...empty, error: attachedError.message }
+  const attachedIds = (attached || [])
+    .map((row) => row.product_id)
+    .filter((id): id is string => isUuid(id))
+
+  const limit = PRODUCT_SEARCH_LIMIT
+  const run = (column: 'name' | 'sku') => {
+    let request = supabase
+      .from('products')
+      .select('id, name, sku')
+      .eq('status', 'active')
+      .ilike(column, pattern)
+      .order('name')
+      .limit(limit + 1)
+    if (attachedIds.length) request = request.not('id', 'in', `(${attachedIds.join(',')})`)
+    return request
+  }
+
+  const [byName, bySku] = await Promise.all([run('name'), run('sku')])
+  if (byName.error) return { ...empty, error: byName.error.message }
+  if (bySku.error) return { ...empty, error: bySku.error.message }
+
+  const toHit = (row: { id: string; name: string | null; sku: string | null }): SearchableProduct => ({
+    id: row.id,
+    name: row.name?.trim() || 'Product',
+    sku: row.sku ?? null,
+  })
+  const merged = mergeProductHits((byName.data || []).map(toHit), (bySku.data || []).map(toHit), limit)
+  return { products: merged.products, truncated: merged.truncated }
+}
+
 export async function addProductToRequirement(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -235,7 +294,8 @@ export async function addProductToRequirement(formData: FormData) {
   }
 
   revalidatePath(`/crm/requirements/${requirementId}`)
-  redirect(`/crm/requirements/${requirementId}?tab=products`)
+  // Stay on this tab. Redirecting from the form transition rejects the action and leaves the picker disabled.
+  return { success: true }
 }
 
 export async function removeProductFromRequirement(formData: FormData) {
@@ -255,7 +315,7 @@ export async function removeProductFromRequirement(formData: FormData) {
   if (error) return { error: error.message }
 
   revalidatePath(`/crm/requirements/${requirementId}`)
-  redirect(`/crm/requirements/${requirementId}?tab=products`)
+  return { success: true }
 }
 
 export async function updateRequirementProductQty(formData: FormData) {
@@ -277,7 +337,7 @@ export async function updateRequirementProductQty(formData: FormData) {
   if (error) return { error: error.message }
 
   revalidatePath(`/crm/requirements/${requirementId}`)
-  redirect(`/crm/requirements/${requirementId}?tab=products`)
+  return { success: true }
 }
 
 export async function updateRequirement(id: string, data: Record<string, unknown>) {

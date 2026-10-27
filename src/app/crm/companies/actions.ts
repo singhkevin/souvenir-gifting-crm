@@ -15,6 +15,7 @@ import { domainSplitEnabled } from '@/lib/domain-flag'
 import { parsePortalSlug, isSlugReservedInHistory, clearTenantCache, portalLoginUrl } from '@/lib/portal-host'
 import { schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
 import { withIdempotency } from '@/lib/idempotency'
+import { applyCompanyDomainField } from '@/lib/companies/quick-fields'
 
 const LOGO_BUCKET = 'company-logos'
 const MAX_LOGO_BYTES = 2 * 1024 * 1024
@@ -166,6 +167,12 @@ async function createCompanyOnce(formData: FormData) {
       ? ((formData.get('owner_id') as string) || user.id)
       : user.id
 
+  const name = String(formData.get('name') || '').trim()
+  if (!name) return { error: 'Company name is required' }
+  formData.set('name', name)
+  const domainError = applyCompanyDomainField(formData)
+  if (domainError) return domainError
+
   const marginRaw = String(formData.get('margin_percent') || '').trim()
   const marginPercent = marginRaw === '' ? null : Number(marginRaw)
   if (marginRaw !== '' && (!Number.isFinite(marginPercent) || (marginPercent as number) < 0)) {
@@ -237,6 +244,12 @@ async function createCompanyOnce(formData: FormData) {
     const notifyClients = String(formData.get('notify_client_admins_on_live') || '') === '1'
     await stampPortalHostMeta(data.id, user.id, notifyClients)
     kickPortalWorker(data.id, portalSlug.slug)
+  }
+
+  if (String(formData.get('inline') || '') === '1') {
+    revalidatePath('/crm/companies')
+    revalidatePath('/crm/requirements/new')
+    return { success: true, company: { id: data.id, name } }
   }
 
   redirect(`/crm/companies/${data.id}`)
