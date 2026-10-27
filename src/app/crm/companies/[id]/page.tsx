@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { BackButton } from '@/components/ui/back-button'
+import { ArrowLeft } from 'lucide-react'
 import { CompanyAvatar } from '@/components/ui/avatar'
 import { uploadCompanyLogo, removeCompanyLogo, updateCompany, removeCompany } from '../actions'
 import { ConfirmAction } from '@/components/ui/confirm-action'
@@ -14,7 +14,9 @@ import { resolveListedPrices } from '@/lib/pricing/server'
 import { createContact } from '@/app/crm/contacts/actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { PortalClientForm } from '../portal-client-form'
+import { PortalInviteButton, PortalInviteForm } from '../portal-invite-button'
 import { ManageClientLogin } from '../manage-client-login'
+import { canSendPortalInvite } from '@/lib/portal/separation'
 import { PortalHostCard } from '../portal-host-card'
 import { CLIENT_STATUS_LABELS, ORDER_LIFECYCLE, lifecycleIndex } from '@/lib/order-workflow'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
@@ -42,6 +44,7 @@ export default async function CompanyDetailPage({
   const { tab = 'overview', removed } = await searchParams
   const canManageVisibility = profile.role === 'admin'
   const canEdit = profile.role === 'admin' || profile.role === 'sales'
+  const canInvite = canSendPortalInvite(profile.role)
   const canSetPrices = ['admin', 'sales', 'management', 'accounts'].includes(profile.role)
 
   const supabase = await createClient()
@@ -206,7 +209,7 @@ export default async function CompanyDetailPage({
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
-    { id: 'clients', label: `Clients (${clients?.length || 0})` },
+    { id: 'clients', label: `Portal logins (${clients?.length || 0})` },
     { id: 'catalogue', label: `Catalogue (${visibleCatalogueCount})` },
     ...(canSetPrices ? [{ id: 'prices', label: `Special prices (${specialRows.length})` }] : []),
     { id: 'contacts', label: `Contacts (${contacts?.length || 0})` },
@@ -220,16 +223,21 @@ export default async function CompanyDetailPage({
 
   return (
     <div className="space-y-6">
-      <BackButton href="/crm/companies" label="Back to Companies" />
+      <div className="sticky top-0 z-30 -mx-3 border-b border-[#CCC5BD] bg-[#F6F3EC]/95 px-3 py-2 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <Link href="/crm/companies" className="inline-flex items-center text-sm font-medium text-[#4A4640] hover:text-[#9E4300]">
+          <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+          Companies
+        </Link>
+      </div>
 
       {/* Header Panel */}
       <div className="bg-[#FCF9F2] p-6 border border-[#CCC5BD] rounded-none shadow-none flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-[#7C766F] mb-1.5">
             <Link href="/crm/dashboard" className="hover:text-[#9E4300] transition-colors">CRM</Link>
-            <span>/</span>
+            <span aria-hidden="true">·</span>
             <Link href="/crm/companies" className="hover:text-[#9E4300] transition-colors">COMPANIES</Link>
-            <span>/</span>
+            <span aria-hidden="true">·</span>
             <span className="text-[#9E4300] font-semibold">{company.name}</span>
           </div>
 
@@ -630,14 +638,23 @@ export default async function CompanyDetailPage({
           <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none shadow-none overflow-hidden">
             <div className="bg-[#F6F3EC] px-4 py-3 border-b border-[#CCC5BD]">
               <h2 className="font-[family-name:var(--font-newsreader)] text-lg md:text-xl font-normal text-[#1C1B1A]">
-                Portal clients
+                Portal logins
               </h2>
               <p className="text-xs text-[#4A4640] mt-0.5">
-                Each login is a Supabase Auth user assigned to this company. Passwords are never stored in CRM tables.
+                Accounts that can sign in to this company microsite. Separate from the contact directory.
+                {formatAllowedEmailDomains(company.allowed_email_domains)
+                  ? ` Allowed email domains: ${formatAllowedEmailDomains(company.allowed_email_domains)}.`
+                  : ' No email domain is set, so any address can be invited. Add domains on Overview to restrict logins.'}
               </p>
             </div>
+            {canInvite && (company.account_type || 'corporate') !== 'business' && (
+              <div className="border-b border-[#CCC5BD] p-6">
+                <PortalInviteForm companyId={company.id} />
+              </div>
+            )}
             {profile.role === 'admin' && (
               <div className="p-6">
+                <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Create a login with a temporary password</p>
                 <PortalClientForm companyId={company.id} />
               </div>
             )}
@@ -646,7 +663,7 @@ export default async function CompanyDetailPage({
           <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none shadow-none overflow-hidden">
             <div className="bg-[#F6F3EC] px-4 py-2.5 border-b border-[#CCC5BD] flex items-center justify-between">
               <h3 className="font-[family-name:var(--font-newsreader)] text-lg font-normal text-[#1C1B1A]">
-                Client Logins
+                Portal logins
               </h3>
               <span className="font-mono text-xs text-[#7C766F]">[ {clients?.length || 0} ]</span>
             </div>
@@ -658,7 +675,7 @@ export default async function CompanyDetailPage({
                     <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Client ID / Login email</th>
                     <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Role</th>
                     <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Status</th>
-                    {profile.role === 'admin' && (
+                    {(profile.role === 'admin' || canInvite) && (
                       <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Login</th>
                     )}
                   </tr>
@@ -682,26 +699,38 @@ export default async function CompanyDetailPage({
                           </span>
                         )}
                       </td>
-                      {profile.role === 'admin' && (
+                      {(profile.role === 'admin' || canInvite) && (
                         <td className="px-4 py-2.5 text-right">
-                          <ManageClientLogin
-                            companyId={company.id}
-                            client={{
-                              id: client.id,
-                              full_name: client.full_name,
-                              email: client.email || '',
-                              role: String(client.role),
-                              is_active: Boolean(client.is_active),
-                            }}
-                          />
+                          <div className="flex flex-wrap items-center justify-end gap-3">
+                            {canInvite && client.email && (company.account_type || 'corporate') !== 'business' ? (
+                              <PortalInviteButton
+                                companyId={company.id}
+                                email={client.email}
+                                fullName={client.full_name}
+                                role={String(client.role)}
+                              />
+                            ) : null}
+                            {profile.role === 'admin' ? (
+                              <ManageClientLogin
+                                companyId={company.id}
+                                client={{
+                                  id: client.id,
+                                  full_name: client.full_name,
+                                  email: client.email || '',
+                                  role: String(client.role),
+                                  is_active: Boolean(client.is_active),
+                                }}
+                              />
+                            ) : null}
+                          </div>
                         </td>
                       )}
                     </tr>
                   ))}
                   {(!clients || clients.length === 0) && (
                     <tr>
-                      <td colSpan={profile.role === 'admin' ? 5 : 4} className="p-6 text-center text-[#7C766F]">
-                        No portal clients for this company yet.
+                      <td colSpan={profile.role === 'admin' || canInvite ? 5 : 4} className="p-6 text-center text-[#7C766F]">
+                        No portal logins for this company yet.
                       </td>
                     </tr>
                   )}
@@ -717,8 +746,11 @@ export default async function CompanyDetailPage({
           <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none shadow-none overflow-hidden">
             <div className="bg-[#F6F3EC] px-4 py-3 border-b border-[#CCC5BD]">
               <h2 className="font-[family-name:var(--font-newsreader)] text-lg md:text-xl font-normal text-[#1C1B1A]">
-                Add Contact
+                Add contact
               </h2>
+              <p className="mt-0.5 text-xs text-[#4A4640]">
+                Directory only. A contact cannot sign in until you send a portal invitation.
+              </p>
             </div>
             <ActionForm action={createContact} className="p-4 grid md:grid-cols-3 gap-3 text-xs" resetOnSuccess>
               <input type="hidden" name="company_id" value={company.id} />
@@ -776,6 +808,7 @@ export default async function CompanyDetailPage({
                     <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Designation</th>
                     <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Email</th>
                     <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Phone</th>
+                    {canInvite && <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Portal</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#CCC5BD]">
@@ -785,10 +818,19 @@ export default async function CompanyDetailPage({
                       <td className="px-4 py-2.5 text-[#4A4640]">{c.designation || '—'}</td>
                       <td className="px-4 py-2.5 text-[#4A4640]">{c.email || '—'}</td>
                       <td className="px-4 py-2.5 text-[#4A4640]">{c.phone || '—'}</td>
+                      {canInvite && (
+                        <td className="px-4 py-2.5 text-right">
+                          {c.email && (company.account_type || 'corporate') !== 'business' ? (
+                            <PortalInviteButton companyId={company.id} email={c.email} fullName={c.full_name} />
+                          ) : (
+                            <span className="text-[#7C766F]">—</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                   {(!contacts || contacts.length === 0) && (
-                    <tr><td colSpan={4} className="p-6 text-center text-[#7C766F]">No contacts added yet.</td></tr>
+                    <tr><td colSpan={canInvite ? 5 : 4} className="p-6 text-center text-[#7C766F]">No contacts added yet.</td></tr>
                   )}
                 </tbody>
               </table>

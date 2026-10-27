@@ -12,6 +12,7 @@ export function StitchProductCard({
   caption,
   tone = 'default',
   channel = 'retail',
+  hiddenPriceLabel,
 }: {
   product: PublicProduct
   href?: string
@@ -20,6 +21,8 @@ export function StitchProductCard({
   caption?: string
   tone?: 'default' | 'retail'
   channel?: 'retail' | 'business'
+  /** Shown instead of a number when this surface must not reveal a price. */
+  hiddenPriceLabel?: string | null
 }) {
   const destination = href || `/catalogue/${product.id}`
   const amount = price === undefined ? product.price : price
@@ -64,8 +67,8 @@ export function StitchProductCard({
           <h3 className="line-clamp-2 font-serif text-[15px] sm:text-[17px] leading-snug text-[#1C1C18] font-normal">
             {product.name}
           </h3>
-          <span className="sv2-mono-md font-bold text-[#1C1C18]">
-            {amount == null ? 'Price on quote' : formatCurrency(amount)}
+          <span className={amount == null && hiddenPriceLabel ? 'text-xs font-medium leading-snug text-[#4A4640]' : 'sv2-mono-md font-bold text-[#1C1C18]'}>
+            {amount == null ? (hiddenPriceLabel || 'Price on quote') : formatCurrency(amount)}
           </span>
           {moqLine ? <span className="truncate sv2-mono-sm text-[11px] text-[#7C766F]">{moqLine}</span> : null}
         </div>

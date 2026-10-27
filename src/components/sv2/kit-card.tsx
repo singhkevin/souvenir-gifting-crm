@@ -17,6 +17,7 @@ export function SV2KitCard({
   href,
   customisation,
   leadTime,
+  priceText,
 }: {
   title: string
   tag: string
@@ -28,6 +29,7 @@ export function SV2KitCard({
   href: string
   customisation?: string
   leadTime?: string
+  priceText?: string | null
 }) {
   const displayPrice = price != null && price > 0
 
@@ -87,8 +89,10 @@ export function SV2KitCard({
       <div className="border-t border-[#CCC5BD] p-2.5 sm:p-4 bg-[#FCF9F2] flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
         <div>
           <span className="block sv2-body-sm text-[10px] sm:text-xs text-[#7C766F]">Starting from</span>
-          <span className="sv2-mono-md sm:sv2-mono-lg font-bold text-[#1C1B1A]">
-            {displayPrice ? (
+          <span className={priceText ? 'block text-xs font-medium leading-snug text-[#4A4640]' : 'sv2-mono-md sm:sv2-mono-lg font-bold text-[#1C1B1A]'}>
+            {priceText ? (
+              priceText
+            ) : displayPrice ? (
               <>
                 {formatCurrency(price)}{' '}
                 <span className="sv2-body-sm text-[10px] sm:text-xs font-normal text-[#7C766F]">/ kit</span>

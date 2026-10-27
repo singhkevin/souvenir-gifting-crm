@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { redirectToMicrosite } from "@/lib/account-home"
 import { createClient } from "@/lib/supabase/server"
 import { isBusinessRole, isClientRole, isRunnerRole, isStaffRole } from "@/lib/roles"
 import type { Role } from "@/lib/types"
@@ -29,7 +30,7 @@ export async function requireStaff(roles?: Role[]): Promise<ProfileSession> {
   const profile = await getProfile()
   if (!profile || !profile.is_active) redirect("/login")
   if (isBusinessRole(profile.role)) redirect("/business/dashboard")
-  if (isClientRole(profile.role)) redirect("/portal/gifts")
+  if (isClientRole(profile.role)) await redirectToMicrosite(profile.company_id, profile.role)
   if (isRunnerRole(profile.role)) redirect("/crm/runs")
   if (!isStaffRole(profile.role)) redirect("/login")
   if (roles && !roles.includes(profile.role)) {

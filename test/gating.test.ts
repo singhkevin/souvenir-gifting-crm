@@ -9,7 +9,10 @@ import { companyHint, companyListLabel, dedupeById } from '../src/lib/catalogs/c
 test('business sign-up blocks free email unless the domain is allowlisted', () => {
   assert.match(workEmailBlock('buyer@gmail.com', []) || '', /work email/i)
   assert.match(workEmailBlock('buyer@yahoo.com', []) || '', /work email/i)
+  assert.match(workEmailBlock('buyer@hotmail.com', []) || '', /work email/i)
   assert.match(workEmailBlock('buyer@outlook.com', []) || '', /work email/i)
+  assert.match(workEmailBlock('buyer@live.com', []) || '', /work email/i)
+  assert.match(workEmailBlock('buyer@icloud.com', []) || '', /work email/i)
   assert.equal(workEmailBlock('buyer@gmail.com', ['gmail.com']), null)
   assert.equal(workEmailBlock('buyer@acme.com', []), null)
   assert.match(workEmailBlock('buyer@mailinator.com', []) || '', /work email/i)

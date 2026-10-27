@@ -34,6 +34,7 @@ export function StorefrontCatalog({
   tone = 'default',
   channel = 'retail',
   embedded = false,
+  hiddenPriceLabel,
 }: {
   products: PublicProduct[]
   categories: Category[]
@@ -51,6 +52,7 @@ export function StorefrontCatalog({
   channel?: 'retail' | 'business'
   /** Rendered inside a page section that already supplies the band and padding. */
   embedded?: boolean
+  hiddenPriceLabel?: string | null
 }) {
   const priced = products.map((product) => ({ ...product, price: priceOf(product) }))
   const bounds = priceBoundsOf(priced)
@@ -246,6 +248,7 @@ export function StorefrontCatalog({
                     caption={captionFor?.(product)}
                     tone={tone}
                     channel={channel}
+                    hiddenPriceLabel={hiddenPriceLabel}
                   />
                 ))}
               </div>
