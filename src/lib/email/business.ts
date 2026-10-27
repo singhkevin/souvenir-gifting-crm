@@ -47,6 +47,11 @@ export function businessRfqOwnerEmailHtml(input: { company: string; requirementU
   return shell('New business quote request', `${paragraph(`${input.company} submitted a quote request.`)}${button(input.requirementUrl, 'Open requirement')}`)
 }
 
+export function catalogShareRfqOwnerEmailHtml(input: { company: string; catalog: string; requirementUrl: string; detail?: string | null }) {
+  const text = input.detail || `${input.company} requested a quote from catalog ${input.catalog}.`
+  return shell('New catalog share request', `${paragraph(text)}${button(input.requirementUrl, 'Open requirement')}`)
+}
+
 export function publicQuoteOwnerEmailHtml(input: {
   company: string
   leadUrl: string

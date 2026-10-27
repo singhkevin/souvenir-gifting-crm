@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL(isAccountConfirmType(rawType) ? '/login?error=confirm' : '/reset-password?error=invalid', incoming.origin))
     }
     const landing = confirmLandingPath(rawType, incoming.searchParams.get('next'))
-    if (landing) return redirectWithCookies(request, landing, pendingCookies)
+    if (landing) return redirectWithCookies(request, establishPath(landing), pendingCookies)
     return redirectWithCookies(request, '/reset-password', cookiesForRedirect(request, pendingCookies))
   }
 
@@ -89,8 +89,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(isAccountConfirmType(rawType) ? '/login?error=confirm' : '/reset-password?error=invalid', incoming.origin))
   }
   const landing = confirmLandingPath(rawType, incoming.searchParams.get('next'))
-  if (landing) return redirectWithCookies(request, landing, pendingCookies)
+  if (landing) return redirectWithCookies(request, establishPath(landing), pendingCookies)
   return redirectWithCookies(request, '/reset-password', cookiesForRedirect(request, pendingCookies))
+}
+
+function establishPath(landing: string) {
+  const params = new URLSearchParams()
+  params.set('next', landing)
+  return `/auth/establish?${params.toString()}`
 }
 
 function cookiesForRedirect(

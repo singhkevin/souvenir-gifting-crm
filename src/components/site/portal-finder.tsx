@@ -3,8 +3,6 @@ import { BrandLogo } from '@/components/brand/brand-logo'
 import { PortalFinderForm } from '@/components/site/portal-finder-form'
 import { finderDestinations } from '@/lib/domain-routing'
 
-const ENQUIRY_URL = 'https://www.souvenirgifting.com/business'
-
 export function PortalFinder({ notice = '' }: { notice?: string }) {
   const links = finderDestinations()
   const storeHost = links.store.replace(/^https?:\/\//, '')
@@ -57,7 +55,7 @@ export function PortalFinder({ notice = '' }: { notice?: string }) {
             <PortalFinderForm />
           </div>
           <a
-            href={ENQUIRY_URL}
+            href={links.business}
             className="mt-4 inline-flex min-h-11 items-center justify-center bg-[#806A50] px-5 text-xs font-semibold uppercase tracking-[0.14em] text-white"
           >
             Corporate gifting enquiry

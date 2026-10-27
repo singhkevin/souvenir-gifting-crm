@@ -4,6 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
+import { requestOrigin } from '@/lib/auth/request-origin'
+import { resolveAlertOwnerId } from '@/lib/alerts/owner'
+import { catalogShareRfqOwnerEmailHtml } from '@/lib/email/business'
+import { sendEmail } from '@/lib/email/resend'
 import { withIdempotency } from '@/lib/idempotency'
 import { placeShareDirectOrder } from '@/lib/catalogue/direct-order'
 import type { CheckoutLineInput } from '@/lib/catalogue/purchase-path'
@@ -223,7 +227,74 @@ async function createGuestCatalogRequirement(
     ].filter(Boolean).join('\n'),
   })
 
+  await notifyStaffOfGuestCatalogRfq(admin, {
+    ownerId,
+    requirementId: requirement.id,
+    companyName: input.companyName,
+    catalogName: input.catalogName,
+    detail: [
+      `${input.companyName} requested a quote from catalog ${input.catalogName}.`,
+      input.fullName,
+      productLine,
+    ].filter(Boolean).join('\n'),
+  })
+
   return { id: requirement.id }
+}
+
+async function notifyStaffOfGuestCatalogRfq(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>,
+  input: {
+    ownerId: string | null
+    requirementId: string
+    companyName: string
+    catalogName: string
+    detail: string
+  },
+) {
+  try {
+    const alertOwnerId = await resolveAlertOwnerId(admin, input.ownerId)
+    if (!alertOwnerId) return
+    const link = `/crm/requirements/${input.requirementId}`
+    const title = 'New catalog share request'
+    const body = input.detail.slice(0, 500)
+    const note = {
+      user_id: alertOwnerId,
+      audience: 'internal',
+      title,
+      body,
+      link,
+    }
+    const inserted = await admin.from('notifications').insert(note)
+    if (inserted.error) {
+      await admin.from('notifications').insert({
+        user_id: note.user_id,
+        title: note.title,
+        body: note.body,
+        link: note.link,
+      })
+    }
+    const { data: alertOwner } = await admin
+      .from('profiles')
+      .select('email')
+      .eq('id', alertOwnerId)
+      .eq('is_active', true)
+      .maybeSingle()
+    if (!alertOwner?.email) return
+    const origin = await requestOrigin()
+    await sendEmail({
+      to: alertOwner.email,
+      subject: `New catalog share request: ${input.catalogName}`,
+      html: catalogShareRfqOwnerEmailHtml({
+        company: input.companyName,
+        catalog: input.catalogName,
+        requirementUrl: `${origin}${link}`,
+        detail: body,
+      }),
+    })
+  } catch (error) {
+    console.error('[share-rfq] staff alert', error instanceof Error ? error.message : error)
+  }
 }
 
 export async function checkoutShareCatalog(input: { token: string; lines: CheckoutLineInput[]; idempotencyKey?: string }) {

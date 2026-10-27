@@ -52,6 +52,7 @@ export async function createCatalog(formData: FormData) {
 }
 
 async function createCatalogOnce(formData: FormData) {
+  await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -90,6 +91,7 @@ async function createCatalogOnce(formData: FormData) {
 }
 
 export async function updateCatalog(formData: FormData) {
+  await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -268,6 +270,7 @@ export async function unassignCatalogCompany(formData: FormData) {
 }
 
 export async function addCatalogProducts(formData: FormData) {
+  await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -349,6 +352,7 @@ export async function addCatalogProducts(formData: FormData) {
 }
 
 export async function setCatalogProductVisibility(formData: FormData) {
+  await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const campaignId = String(formData.get('campaign_id') || '')
   const id = String(formData.get('id') || '')
@@ -436,6 +440,7 @@ export async function publishCatalog(formData: FormData) {
 }
 
 export async function removeCatalogProduct(formData: FormData) {
+  await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const campaignId = String(formData.get('campaign_id') || '')
   const id = String(formData.get('id') || '')
@@ -662,6 +667,7 @@ async function emailCatalogLinkOnce(formData: FormData) {
 }
 
 export async function removeCatalog(formData: FormData) {
+  await requireStaff(['admin', 'sales', 'management'])
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }

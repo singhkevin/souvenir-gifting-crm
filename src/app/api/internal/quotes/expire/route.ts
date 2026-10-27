@@ -7,6 +7,7 @@ import { businessQuoteExpiredEmailHtml, businessQuoteExpiringEmailHtml } from '@
 import { sendEmail } from '@/lib/email/resend'
 import { requestOrigin } from '@/lib/auth/request-origin'
 import { absoluteClientQuoteUrl } from '@/lib/quotes/client-link'
+import { quoteExpiryRecipientEmails } from '@/lib/quotes/expiry-recipients'
 import { oneRelation } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -45,7 +46,7 @@ async function run() {
   let reminders = 0
   let expiredMails = 0
   const origin = await requestOrigin()
-  const quoteSelect = 'id, quotation_number, contact_id, valid_until, company:companies(account_type, portal_slug)'
+  const quoteSelect = 'id, quotation_number, contact_id, company_id, valid_until, company:companies(account_type, portal_slug)'
   const soon = await admin
     .from('quotations')
     .select(quoteSelect)
@@ -89,14 +90,30 @@ async function mailQuote(
     id: string
     quotation_number: string | null
     contact_id: string | null
+    company_id: string | null
     company: { account_type: string | null; portal_slug: string | null } | { account_type: string | null; portal_slug: string | null }[] | null
   },
   origin: string,
   kind: 'expiring' | 'expired',
 ) {
-  if (!quote.contact_id) return false
-  const { data: contact } = await admin.from('contacts').select('email').eq('id', quote.contact_id).maybeSingle()
-  if (!contact?.email) return false
+  let contactEmail: string | null = null
+  if (quote.contact_id) {
+    const { data: contact } = await admin.from('contacts').select('email').eq('id', quote.contact_id).maybeSingle()
+    contactEmail = contact?.email ?? null
+  }
+  let recipients = quoteExpiryRecipientEmails({ contactEmail })
+  if (!recipients.length && quote.company_id) {
+    const { data: users } = await admin
+      .from('profiles')
+      .select('email')
+      .eq('company_id', quote.company_id)
+      .eq('is_active', true)
+      .in('role', ['client_admin', 'client_user', 'business_user'])
+    recipients = quoteExpiryRecipientEmails({
+      accountEmails: (users || []).map((user) => user.email),
+    })
+  }
+  if (!recipients.length) return false
   const company = oneRelation(quote.company)
   const quoteUrl = absoluteClientQuoteUrl({
     accountType: company?.account_type,
@@ -105,14 +122,19 @@ async function mailQuote(
     origin,
   })
   const number = quote.quotation_number || 'Quotation'
-  const sent = await sendEmail({
-    to: contact.email,
-    subject: kind === 'expiring' ? `${number} expires soon` : `${number} has expired`,
-    html: kind === 'expiring'
-      ? businessQuoteExpiringEmailHtml({ number, quoteUrl })
-      : businessQuoteExpiredEmailHtml({ number, quoteUrl }),
-  })
-  return !sent.error
+  let sentAny = false
+  for (const to of recipients) {
+    const sent = await sendEmail({
+      to,
+      subject: kind === 'expiring' ? `${number} expires soon` : `${number} has expired`,
+      html: kind === 'expiring'
+        ? businessQuoteExpiringEmailHtml({ number, quoteUrl })
+        : businessQuoteExpiredEmailHtml({ number, quoteUrl }),
+    })
+    if (sent.error) console.error('[quote-expiry]', quote.id, sent.error)
+    else sentAny = true
+  }
+  return sentAny
 }
 
 async function handle(request: NextRequest) {

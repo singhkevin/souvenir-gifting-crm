@@ -30,7 +30,7 @@ function isNextRedirect(err: unknown) {
   return digest.startsWith('NEXT_REDIRECT')
 }
 
-export function LoginForm({ next = '', resetSuccess = false, portalError = false, confirmed = false, branded = false }: { next?: string; resetSuccess?: boolean; portalError?: boolean; confirmed?: boolean; branded?: boolean }) {
+export function LoginForm({ next = '', resetSuccess = false, portalError = false, confirmed = false, branded = false, enquiryHref = '' }: { next?: string; resetSuccess?: boolean; portalError?: boolean; confirmed?: boolean; branded?: boolean; enquiryHref?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [help, setHelp] = useState<{ href: string; label: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -179,9 +179,9 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
               Register
             </Link>
           </p>
-          {branded ? (
+          {branded && enquiryHref ? (
             <p className="mt-4 text-center text-xs leading-relaxed text-[#7A7267]">
-              <a href="https://www.souvenirgifting.com/business" className="font-semibold text-[#624B32] hover:underline">
+              <a href={enquiryHref} className="font-semibold text-[#624B32] hover:underline">
                 Corporate gifting enquiry
               </a>
             </p>
