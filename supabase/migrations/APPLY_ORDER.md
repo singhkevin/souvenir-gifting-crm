@@ -111,3 +111,7 @@ Trial (live, forced rollback, 23 Oct 2026): supabase/tests/role_active_checks_tr
 (every staff, client_admin, business and inactive account); 15 active accounts: identical access before and after.
 Inactive admin: 31 orders · 26 companies · 22 leads · 26 quotations · 29 profiles visible before, 0 after
 (own 13 tasks stay via tasks_write). Rollback restored function and policy md5s and the exact access.
+
+## 61 · 20261027_samples_internal.sql · NOT APPLIED
+
+Sample stock, movements, and per-holder balances are staff-only (admin, sales, operations write; accounts and management read). Sample-only products are forced off the retail store, business portal, and corporate catalogues. Adds `sample_movements.holder_profile_id` and `sample_holder_balances`. Backfills a zero office row for sample-only products that have no sample stock, and client balances from movements that named a company. Rollback: `supabase/rollbacks/20261027_samples_internal_rollback.sql` (keeps the staff-only sample policies). Apply after 54 and 50. Do not apply from the agent.

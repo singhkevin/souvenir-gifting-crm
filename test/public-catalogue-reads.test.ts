@@ -81,6 +81,7 @@ test('priced catalogue is one query and includes tags, logo and cost', async () 
   assert.deepEqual(client.calls[0].filters, [
     ['status', 'active'],
     ['show_in_store', true],
+    ['sample_only', false],
   ])
   assert.equal(rows[0].occasion_tags && (rows[0].occasion_tags as string[])[0], 'welcome')
   assert.equal(rows[0].supplier_cost, 40)
@@ -99,7 +100,17 @@ test('missing channel column falls back once, without a limit-1 probe', async ()
   assert.deepEqual(client.calls[1].filters, [
     ['status', 'active'],
     ['catalogue_access', 'all'],
+    ['sample_only', false],
   ])
+})
+
+test('sample only products stay out of the public catalogue', async () => {
+  const client = fakeClient(() => ({
+    data: [product, { ...product, id: 'sample', name: 'Showroom bottle', sample_only: true }],
+    error: null,
+  }))
+  const rows = await loadPublicRows(client as never, 'store')
+  assert.deepEqual(rows.map((row) => row.id), ['p1'])
 })
 
 test('header suggestions are 40 name-sorted rows and skip the priced catalogue', async () => {

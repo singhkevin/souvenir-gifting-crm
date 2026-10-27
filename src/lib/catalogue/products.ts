@@ -18,8 +18,8 @@ const BRAND_LOGO_EMBED = 'brand:brands(id, name, logo_url)'
 const PUBLIC_COST_EMBED = 'product_costs(supplier_cost)'
 const FULL_CATALOGUE_SELECT =
   `id, name, sku, description, image_url, price, moq, category_id, brand_id, status, created_at, stock_qty, fulfillment_mode, sample_only, occasion_tags, ${CATEGORY_EMBED}, ${BRAND_LOGO_EMBED}, ${PUBLIC_COST_EMBED}`
-const SUGGESTION_SELECT = `id, name, image_url, ${CATEGORY_EMBED}`
-const NAV_CATEGORY_SELECT = `category_id, ${CATEGORY_EMBED}`
+const SUGGESTION_SELECT = `id, name, image_url, sample_only, ${CATEGORY_EMBED}`
+const NAV_CATEGORY_SELECT = `category_id, sample_only, ${CATEGORY_EMBED}`
 const SUGGESTION_LIMIT = 40
 
 export type PublicProduct = {
@@ -143,14 +143,19 @@ function narrowSelect(select: string, message: string) {
   return null
 }
 
+function withoutInternalSamples<T extends { sample_only?: boolean | null }>(rows: T[]): T[] {
+  return rows.filter((row) => row.sample_only !== true)
+}
+
 async function selectActive(
   client: SupabaseClient,
   select: string,
   column: string,
   value: string | boolean,
-  options?: { id?: string; limit?: number },
+  options?: { id?: string; limit?: number; hideSamples?: boolean },
 ): Promise<{ data: unknown; error: QueryError | null }> {
   let query = client.from('products').select(select).eq('status', 'active').eq(column, value)
+  if (options?.hideSamples) query = query.eq('sample_only', false)
   if (options?.id) {
     const single = await query.eq('id', options.id).maybeSingle()
     return { data: single.data, error: single.error ? { message: single.error.message } : null }
@@ -167,13 +172,21 @@ async function selectOnChannel(
   channel: Channel,
   options?: { limit?: number },
 ) {
+  let currentSelect = select
+  let hideSamples = true
   let column: string = CHANNEL_COLUMN[channel]
   let value: string | boolean = true
-  let result = await selectActive(client, select, column, value, options)
+  const run = () => selectActive(client, currentSelect, column, value, { ...options, hideSamples })
+  let result = await run()
+  if (result.error && hideSamples && /sample_only/i.test(result.error.message)) {
+    hideSamples = false
+    currentSelect = currentSelect.replace(', sample_only', '')
+    result = await run()
+  }
   if (result.error && channelColumnsMissing(result.error.message)) {
     column = 'catalogue_access'
     value = 'all'
-    result = await selectActive(client, select, column, value, options)
+    result = await run()
   }
   return result
 }
@@ -187,13 +200,19 @@ export async function loadPublicRows(client: SupabaseClient, channel: Channel = 
   let column: string = CHANNEL_COLUMN[channel]
   let value: string | boolean = true
   let switchedChannel = false
+  let hideSamples = true
   for (let attempt = 0; attempt < 8; attempt += 1) {
-    const result = await selectActive(client, select, column, value)
-    if (!result.error) return attachCosts(asRows(result.data))
+    const result = await selectActive(client, select, column, value, { hideSamples })
+    if (!result.error) return withoutInternalSamples(attachCosts(asRows(result.data)))
     if (!switchedChannel && channelColumnsMissing(result.error.message)) {
       column = 'catalogue_access'
       value = 'all'
       switchedChannel = true
+      continue
+    }
+    if (hideSamples && /sample_only/i.test(result.error.message)) {
+      hideSamples = false
+      select = select.replace(', sample_only', '')
       continue
     }
     const next = narrowSelect(select, result.error.message)
@@ -207,7 +226,7 @@ export async function loadPublicRows(client: SupabaseClient, channel: Channel = 
 export async function readSearchSuggestions(client: SupabaseClient, limit = SUGGESTION_LIMIT): Promise<StoreSearchSuggestion[]> {
   const result = await selectOnChannel(client, SUGGESTION_SELECT, 'store', { limit })
   if (result.error) throw new Error(result.error.message)
-  return asRows(result.data).map((row) => {
+  return withoutInternalSamples(asRows(result.data) as PublicRow[]).map((row) => {
     const product = row as PublicRow
     return {
       id: product.id,
@@ -224,7 +243,7 @@ export async function readNavCategories(client: SupabaseClient) {
   const result = await selectOnChannel(client, NAV_CATEGORY_SELECT, 'store')
   if (result.error) throw new Error(result.error.message)
   const unique = new Map<string, { id: string; name: string }>()
-  for (const row of asRows(result.data) as PublicRow[]) {
+  for (const row of withoutInternalSamples(asRows(result.data) as PublicRow[])) {
     const category = oneRelation(row.category)
     const id = row.category_id || category?.id || null
     const name = category?.name || null
