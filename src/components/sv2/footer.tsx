@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { siteContent } from '@/config/siteContent'
 import { appName, appShortName } from '@/lib/brand'
+import { BUSINESS_CATALOGUE_PATH, BUSINESS_QUOTE_PATH, BUSINESS_REGISTER_PATH } from '@/lib/business/portal-paths'
 
 /**
  * SV2 Footer — 4-column layout with hairline borders,
@@ -31,7 +32,7 @@ export function SV2Footer({ phone }: { phone?: string | null }) {
         {/* Col 2: Locations & Contact */}
         <div>
           <h4 className="sv2-label text-[#1C1C18] mb-3">
-            // ADDRESS &amp; CONTACT
+            Address · contact
           </h4>
           <div className="space-y-3 sv2-body-sm text-[#4A4640]">
             <div>
@@ -53,15 +54,15 @@ export function SV2Footer({ phone }: { phone?: string | null }) {
         {/* Col 3: Direct Procurement Links */}
         <div>
           <h4 className="sv2-label text-[#1C1C18] mb-3">
-            // PROCUREMENT
+            Procurement
           </h4>
           <ul className="space-y-2 sv2-body-sm text-[#4A4640]">
             <li>
               <Link
-                href="/catalogue"
+                href={BUSINESS_CATALOGUE_PATH}
                 className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors"
               >
-                Corporate Catalogue
+                Corporate catalogue
               </Link>
             </li>
             <li>
@@ -69,23 +70,15 @@ export function SV2Footer({ phone }: { phone?: string | null }) {
                 href="#catalog"
                 className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors"
               >
-                Occasion Kits &amp; Hampers
+                Occasion kits · hampers
               </Link>
             </li>
             <li>
               <Link
-                href="/business/quote"
+                href={BUSINESS_QUOTE_PATH}
                 className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors"
               >
-                Sample Cart &amp; Shortlist
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/request-quote"
-                className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors"
-              >
-                Request a Quotation
+                Quote basket
               </Link>
             </li>
           </ul>
@@ -94,7 +87,7 @@ export function SV2Footer({ phone }: { phone?: string | null }) {
         {/* Col 4: Legal & Direct Access */}
         <div>
           <h4 className="sv2-label text-[#1C1C18] mb-3">
-            // COMPLIANCE &amp; LEGAL
+            Compliance · legal
           </h4>
           <ul className="space-y-2 sv2-body-sm text-[#4A4640]">
             <li>
@@ -107,18 +100,18 @@ export function SV2Footer({ phone }: { phone?: string | null }) {
             </li>
             <li>
               <Link
-                href="/request-quote"
+                href={BUSINESS_QUOTE_PATH}
                 className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors"
               >
-                Request a quotation
+                Quote basket
               </Link>
             </li>
             <li>
               <Link
-                href="/business/register"
+                href={BUSINESS_REGISTER_PATH}
                 className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors"
               >
-                Register Business Account
+                Register business account
               </Link>
             </li>
             <li>

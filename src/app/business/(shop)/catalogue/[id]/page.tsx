@@ -4,7 +4,7 @@ import { AddToQuote } from '@/components/business/add-to-quote'
 import { ProductImage } from '@/components/ui/product-image'
 import { getBusinessProduct, readBusinessPriceAccess } from '@/lib/business/catalogue'
 import { businessPriceNotice } from '@/lib/business/price-access'
-import { requireBusiness } from '@/lib/business/session'
+import { readBusinessSession } from '@/lib/business/session'
 import { formatCurrency, isUuid } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -12,10 +12,12 @@ export const dynamic = 'force-dynamic'
 export default async function BusinessProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const { company, profile } = await requireBusiness()
-  const product = await getBusinessProduct(company?.id || profile.company_id, id)
-  const priceNotice = businessPriceNotice(await readBusinessPriceAccess(profile))
+  const session = await readBusinessSession()
+  const companyId = session?.company?.id || session?.profile.company_id || null
+  const product = await getBusinessProduct(companyId, id)
+  const priceNotice = businessPriceNotice(await readBusinessPriceAccess(session?.profile ?? null))
   if (!product) notFound()
+  const showPrice = product.indicativePrice != null
 
   return (
     <div className="grid gap-8 lg:grid-cols-2 items-start">
@@ -34,9 +36,9 @@ export default async function BusinessProductPage({ params }: { params: Promise<
         <div className="border-y border-[#CCC5BD] py-3.5 space-y-1.5">
           <div className="flex items-baseline gap-3">
             <span className="sv2-mono-lg text-2xl font-bold text-[#1C1C18]">
-              {product.indicativePrice == null
-                ? (priceNotice || 'Price on quote')
-                : `${formatCurrency(product.indicativePrice)}${product.priceNote ? ` ${product.priceNote}` : ''}`}
+              {showPrice
+                ? `${formatCurrency(product.indicativePrice)}${product.priceNote ? ` ${product.priceNote}` : ''}`
+                : (priceNotice || 'Price on quote')}
             </span>
             <span className="sv2-label text-[10px] text-[#7C766F]">Indicative unit price</span>
           </div>
@@ -55,7 +57,7 @@ export default async function BusinessProductPage({ params }: { params: Promise<
             sku: product.sku,
             name: product.name,
             image_url: product.image_url,
-            indicativePrice: product.indicativePrice,
+            indicativePrice: showPrice ? product.indicativePrice : null,
             moqUnits: product.moqUnits,
             buyOnStore: product.purchase.buy,
           }}

@@ -69,6 +69,7 @@ export default async function RequirementDetailPage({
   ])
 
   if (!req) notFound()
+  const fromBasket = req.source === 'business_portal'
 
   const companyId = (req.company as { id?: string } | null)?.id
   const businessMetaQuery = companyId
@@ -164,7 +165,7 @@ export default async function RequirementDetailPage({
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-4 bg-[#F6F3EC] p-3.5 rounded-none border border-[#CCC5BD]">
               <div>
-                <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Total Budget</span>
+                <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">{fromBasket ? 'Budget per kit' : 'Total Budget'}</span>
                 <span className="font-mono text-xl font-bold text-[#1C1B1A] mt-0.5 block">{formatCurrency(req.budget)}</span>
               </div>
               <div className="border-l border-[#CCC5BD] pl-4">
@@ -291,7 +292,7 @@ export default async function RequirementDetailPage({
             <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-6 text-xs space-y-4">
               <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-6 py-3.5 -mx-6 -mt-6 mb-4">
                 <h3 className="font-[family-name:var(--font-newsreader)] text-xl font-normal text-[#1C1B1A]">
-                  Brief Description & Objectives
+                  {fromBasket ? 'Overall note' : 'Brief Description & Objectives'}
                 </h3>
               </div>
               <p className="text-[#4A4640] whitespace-pre-wrap leading-relaxed text-xs">
@@ -321,7 +322,7 @@ export default async function RequirementDetailPage({
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Budget</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">{fromBasket ? 'Budget per kit' : 'Budget'}</label>
                   <input
                     name="budget"
                     type="number"
@@ -332,7 +333,7 @@ export default async function RequirementDetailPage({
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Purpose</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">{fromBasket ? 'Branding' : 'Purpose'}</label>
                   <input
                     name="purpose"
                     defaultValue={req.purpose || ''}
@@ -341,7 +342,7 @@ export default async function RequirementDetailPage({
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Delivery City</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">{fromBasket ? 'Delivery locations' : 'Delivery City'}</label>
                   <input
                     name="delivery_city"
                     defaultValue={req.delivery_city || ''}
@@ -358,7 +359,7 @@ export default async function RequirementDetailPage({
                     className="min-h-10 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
                   />
                 </div>
-                <SheetDateField name="deadline" label="Deadline" defaultValue={req.deadline || ''} />
+                <SheetDateField name="deadline" label={fromBasket ? 'Required by' : 'Deadline'} defaultValue={req.deadline || ''} />
                 <div className="md:col-span-2">
                   <MobileSheetSelect
                     name="status"
@@ -397,11 +398,11 @@ export default async function RequirementDetailPage({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Purpose / Occasion</span>
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">{fromBasket ? 'Branding' : 'Purpose / Occasion'}</span>
                   <span className="font-semibold text-[#1C1B1A]">{req.purpose || '—'}</span>
                 </div>
                 <div>
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Delivery City</span>
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">{fromBasket ? 'Delivery locations' : 'Delivery City'}</span>
                   <span className="font-semibold text-[#1C1B1A]">{req.delivery_city || '—'}</span>
                 </div>
                 <div>
@@ -411,7 +412,7 @@ export default async function RequirementDetailPage({
                   </span>
                 </div>
                 <div>
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Target Deadline</span>
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">{fromBasket ? 'Required by' : 'Target Deadline'}</span>
                   <span className="font-mono font-semibold text-[#BA1A1A]">{formatDate(req.deadline)}</span>
                 </div>
               </div>
@@ -539,7 +540,12 @@ export default async function RequirementDetailPage({
                             <div className="font-mono text-[11px] text-[#7C766F]">
                               {item.product?.sku}
                             </div>
-                            {item.notes ? <p className="mt-0.5 text-[11px] text-[#4A4640]">{item.notes}</p> : null}
+                            {item.notes ? (
+                              <p className="mt-0.5 text-[11px] text-[#4A4640]">
+                                {fromBasket ? 'Branding or variant note · ' : ''}
+                                {item.notes}
+                              </p>
+                            ) : null}
                             {item.target_unit_price != null ? (
                               <p className="text-[11px] text-[#7C766F]">Target <span className="font-mono">{formatCurrency(item.target_unit_price)}</span></p>
                             ) : null}

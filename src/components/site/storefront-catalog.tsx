@@ -10,6 +10,7 @@ import {
   type CatalogueFilters,
 } from '@/lib/catalogue/catalogue-query'
 import { brandPath } from '@/lib/catalogue/store-nav'
+import { channelCataloguePath } from '@/lib/business/portal-paths'
 import { STORE_OCCASIONS } from '@/lib/catalogue/storefront'
 import type { PublicProduct } from '@/lib/catalogue/products'
 
@@ -256,7 +257,7 @@ export function StorefrontCatalog({
             {!active && limit && filtered.length > visible.length ? (
               <div className="mt-8 text-center">
                 <Link
-                  href="/catalogue"
+                  href={channelCataloguePath(channel)}
                   className="sv2-label text-[12px] text-[#9E4300] hover:underline"
                 >
                   View all {filtered.length} products &rarr;

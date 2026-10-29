@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { readCart, writeCart, type CartItem } from '@/lib/catalogue/cart'
+import { readCart, writeCart } from '@/lib/catalogue/cart'
 import { BUSINESS_QUOTE_KEY, businessQuantityError, normaliseBreaks, targetPriceError } from '@/lib/business/lines'
+import { businessQuoteLine, upsertBusinessQuoteLine } from '@/lib/business/quote-cart'
 
 export function AddToQuote({
   product,
@@ -42,23 +43,19 @@ export function AddToQuote({
       quantity,
       breaks.map((value) => Number(value)).filter((value) => Number.isFinite(value)),
     )
-    const line: CartItem = {
+    const line = businessQuoteLine({
       id: product.id,
       sku: product.sku,
       name: product.name,
       price: product.indicativePrice,
       image_url: product.image_url,
       quantity,
-      maxQuantity: null,
-      surface: 'business',
-      catalogId: null,
       moq: product.moqUnits,
       altQuantities,
       targetUnitPrice: targetValue,
       note,
-    }
-    const current = readCart(BUSINESS_QUOTE_KEY).filter((item) => item.id !== product.id)
-    writeCart([...current, line], BUSINESS_QUOTE_KEY)
+    })
+    writeCart(upsertBusinessQuoteLine(readCart(BUSINESS_QUOTE_KEY), line), BUSINESS_QUOTE_KEY)
     setError(null)
     toast.success('Added to your quote basket')
   }
@@ -107,7 +104,7 @@ export function AddToQuote({
         />
       </label>
       <label className="block">
-        <span className="sv2-label text-[10px] text-[#4A4640]">Note</span>
+        <span className="sv2-label text-[10px] text-[#4A4640]">Branding or variant note</span>
         <textarea
           value={note}
           maxLength={500}

@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import { ProductImage } from '@/components/ui/product-image'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
+import { AddToQuoteButton } from '@/components/business/add-to-quote-button'
 import { formatCurrency } from '@/lib/utils'
 import type { PublicProduct } from '@/lib/catalogue/products'
+import { channelProductPath, channelQuoteNavigation, storefrontMoqLine } from '@/lib/business/portal-paths'
 
 export function StitchProductCard({
   product,
@@ -24,13 +26,13 @@ export function StitchProductCard({
   /** Shown instead of a number when this surface must not reveal a price. */
   hiddenPriceLabel?: string | null
 }) {
-  const destination = href || `/catalogue/${product.id}`
+  const destination = href || channelProductPath(channel, product.id)
   const amount = price === undefined ? product.price : price
-  const quoteHref = `/request-quote?product=${product.id}`
+  const quoteHref = channelQuoteNavigation(channel, product.id)
   const category = product.category_name && !/^other$/i.test(product.category_name) ? product.category_name : null
   const meta = [category, product.brand_name].filter(Boolean).join(' · ')
-  const canBuy = Boolean(showSample && product.purchase.buy)
-  const moqLine = channel === 'business' ? caption || (product.moq ? `MOQ ${product.moq}` : null) : null
+  const canBuy = channel !== 'business' && Boolean(showSample && product.purchase.buy)
+  const moqLine = storefrontMoqLine(channel, product.moq, caption)
 
   return (
     <article className="group flex h-full flex-col border border-[#CCC5BD] bg-[#FCF9F2] transition-colors hover:border-[#9E4300] focus-within:border-[#9E4300]">
@@ -94,9 +96,20 @@ export function StitchProductCard({
             className="border border-[#000000] bg-[#000000] hover:bg-[#9E4300] hover:border-[#9E4300] px-2 py-2 text-center sv2-label text-[10px] text-white tracking-wider transition-colors"
           />
         ) : null}
-        {!canBuy || product.purchase.rfq ? (
+        {channel === 'business' ? (
+          <AddToQuoteButton
+            product={{
+              id: product.id,
+              sku: product.sku,
+              name: product.name,
+              image_url: product.image_url,
+              price: amount,
+              moq: product.moq,
+            }}
+          />
+        ) : !canBuy || product.purchase.rfq ? (
           <Link
-            href={quoteHref}
+            href={quoteHref || '/request-quote'}
             className="border border-[#CCC5BD] bg-[#FCF9F2] hover:border-[#9E4300] px-2 py-2 text-center sv2-label text-[10px] text-[#1C1C18] tracking-wider transition-colors"
           >
             Request quote

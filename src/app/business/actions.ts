@@ -288,7 +288,7 @@ async function submitBusinessRfqOnce(formData: FormData) {
 
   revalidatePath('/business/requests')
   revalidatePath('/crm/requirements')
-  redirect(`/business/requests/${data}`)
+  redirect(`/business/requests/${data}?submitted=1`)
 }
 
 export async function respondBusinessQuotation(formData: FormData) {

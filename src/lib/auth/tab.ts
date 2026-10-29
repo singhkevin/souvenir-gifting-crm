@@ -60,6 +60,10 @@ export function isPublicAuthPath(pathname: string) {
 export function isPublicSitePath(pathname: string) {
   if (pathname === '/') return true
   if (pathname === '/business' || pathname === '/business/register') return true
+  // Signed-out visitors can browse the business catalogue and build a quote basket.
+  // Account pages under /business stay signed-in.
+  if (pathname === '/business/catalogue' || pathname.startsWith('/business/catalogue/')) return true
+  if (pathname === '/business/quote') return true
   const guestOrder = pathname.match(/^\/orders\/([^/]+)$/)
   if (guestOrder && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(guestOrder[1])) {
     return true

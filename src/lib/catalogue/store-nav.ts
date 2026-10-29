@@ -29,6 +29,14 @@ export function storeNavCategoryHref(categories: { name: string }[], name: strin
   return `/catalogue?q=${encodeURIComponent(query)}`
 }
 
+/** Business portal category link. Stays on /business/catalogue. */
+export function businessNavCategoryHref(categories: { id: string; name: string }[], name: string) {
+  const match = categories.find((category) => category.name === name)
+  if (match) return `/business/catalogue?category=${encodeURIComponent(match.id)}`
+  const query = SEARCH_FALLBACK[name] || name
+  return `/business/catalogue?q=${encodeURIComponent(query)}`
+}
+
 export function brandSlugBase(name: string) {
   return slugify(name) || 'brand'
 }
