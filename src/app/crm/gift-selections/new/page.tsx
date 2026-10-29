@@ -19,7 +19,7 @@ export default async function NewGiftSelectionPage() {
   }
   const supabase = await createClient()
   const [{ data: companies }, { data: products }] = await Promise.all([
-    supabase.from('companies').select('id, name').order('name'),
+    supabase.from('companies').select('id, name').neq('account_type', 'direct').order('name'),
     supabase.from('products').select('id, name, sku, image_url').eq('status', 'active').order('name').limit(400),
   ])
   const pickerProducts = (products || []) as GiftPickerProduct[]

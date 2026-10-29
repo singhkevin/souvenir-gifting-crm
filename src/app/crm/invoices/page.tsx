@@ -3,6 +3,9 @@ import { formatCurrency, formatDate, oneRelation } from '@/lib/utils'
 import Link from 'next/link'
 import { requireStaff } from '@/lib/auth'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
+import { CustomerKindBadge } from '@/components/crm/customer-kind-badge'
+import { CustomerKindFilter } from '@/components/crm/customer-kind-filter'
+import { isCustomerKind } from '@/lib/companies/customer-kind'
 
 function InvoiceStatusChip({ status }: { status: string }) {
   if (status === 'paid') {
@@ -36,14 +39,17 @@ function InvoiceStatusChip({ status }: { status: string }) {
 export default async function InvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ status?: string; customer?: string }>
 }) {
   const params = await searchParams
   await requireStaff(['admin', 'accounts', 'management'])
   const supabase = await createClient()
   const statusFilter = params.status || ''
+  const customerFilter = isCustomerKind(params.customer) ? params.customer : ''
 
-  let query = supabase.from('invoices').select('*, companies(name), orders(order_number)').order('created_at', { ascending: false })
+  const companyEmbed = customerFilter ? 'companies!inner(name, account_type)' : 'companies(name, account_type)'
+  let query = supabase.from('invoices').select(`*, ${companyEmbed}, orders(order_number)`).order('created_at', { ascending: false })
+  if (customerFilter) query = query.eq('companies.account_type', customerFilter)
   
   if (statusFilter) {
     query = query.eq('status', statusFilter)
@@ -83,8 +89,15 @@ export default async function InvoicesPage({
         </div>
       </div>
 
+      <CustomerKindFilter
+        pathname="/crm/invoices"
+        current={customerFilter}
+        preserve={statusFilter ? { status: statusFilter } : {}}
+      />
+
       <MobileFilterBar
         pathname="/crm/invoices"
+        preserveParams={customerFilter ? { customer: customerFilter } : {}}
         fields={[
           {
             key: 'status',
@@ -132,7 +145,12 @@ export default async function InvoicesPage({
                       {invoice.invoice_number}
                     </Link>
                   </td>
-                  <td className="px-3.5 py-2.5 text-[#1C1B1A]">{company?.name || '—'}</td>
+                  <td className="px-3.5 py-2.5 text-[#1C1B1A]">
+                    <span className="inline-flex flex-wrap items-center gap-1.5">
+                      {company?.name || '—'}
+                      {company ? <CustomerKindBadge accountType={(company as { account_type?: string | null }).account_type} /> : null}
+                    </span>
+                  </td>
                   <td className="px-3.5 py-2.5 font-mono text-[#4A4640]">{order?.order_number || '—'}</td>
                   <td className="px-3.5 py-2.5 text-right font-mono font-medium text-[#1C1B1A]">{formatCurrency(invoice.amount)}</td>
                   <td className="px-3.5 py-2.5">
@@ -185,6 +203,11 @@ export default async function InvoicesPage({
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Company: </span>
                     {company?.name || '—'}
+                    {company ? (
+                      <span className="ml-1.5">
+                        <CustomerKindBadge accountType={(company as { account_type?: string | null }).account_type} />
+                      </span>
+                    ) : null}
                   </div>
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Order: </span>

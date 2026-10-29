@@ -14,8 +14,11 @@ const STATUS_COLORS: Record<string, string> = {
 
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
+import { CustomerKindBadge } from '@/components/crm/customer-kind-badge'
+import { CustomerKindFilter } from '@/components/crm/customer-kind-filter'
+import { isCustomerKind } from '@/lib/companies/customer-kind'
 
-type ReqCompany = { id: string; name: string; account_type?: string | null; business_verification?: string | null; gst_number?: string | null }
+type ReqCompany = { id: string; name: string; account_type?: string | null; is_individual?: boolean | null; business_verification?: string | null; gst_number?: string | null }
 type ReqOwner = { id: string; full_name: string | null }
 type RequirementRow = {
   id: string
@@ -30,19 +33,25 @@ type RequirementRow = {
   owner?: ReqOwner | ReqOwner[] | null
 }
 
-export default async function RequirementsPage(props: { searchParams: Promise<{ status?: string; source?: string }> }) {
+export default async function RequirementsPage(props: { searchParams: Promise<{ status?: string; source?: string; customer?: string }> }) {
   const profile = await requireStaff(['admin', 'sales', 'management']) // same as requirements/[id] and the RLS
   const searchParams = await props.searchParams
   const statusFilter = searchParams.status || 'all'
   const sourceFilter = searchParams.source || 'all'
+  const customerFilter = isCustomerKind(searchParams.customer) ? searchParams.customer : ''
   
   const supabase = await createClient()
 
+  const companyFields = 'id, name, account_type, business_verification, gst_number'
+  const companySelect = customerFilter
+    ? `company:companies!inner(${companyFields})`
+    : `company:companies(${companyFields})`
   let query = supabase
     .from('requirements')
-    .select('*, company:companies(id, name, account_type, business_verification, gst_number), owner:profiles(id, full_name)')
+    .select(`*, ${companySelect}, owner:profiles(id, full_name)`)
     .order('created_at', { ascending: false })
   query = applyOwnerScope(query, profile)
+  if (customerFilter) query = query.eq('company.account_type', customerFilter)
 
   if (statusFilter !== 'all') {
     query = query.eq('status', statusFilter)
@@ -116,6 +125,10 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
       <div className="mb-6 md:hidden">
         <MobileFilterBar
           pathname="/crm/requirements"
+          preserveParams={{
+            ...(sourceFilter !== 'all' ? { source: sourceFilter } : {}),
+            ...(customerFilter ? { customer: customerFilter } : {}),
+          }}
           fields={[
             {
               key: 'status',
@@ -136,7 +149,7 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
         {statuses.map((status) => (
           <Link 
             key={status}
-            href={`/crm/requirements?status=${status}${sourceFilter !== 'all' ? `&source=${sourceFilter}` : ''}`}
+            href={`/crm/requirements?status=${status}${sourceFilter !== 'all' ? `&source=${sourceFilter}` : ''}${customerFilter ? `&customer=${customerFilter}` : ''}`}
             className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] transition-colors rounded-none ${
               statusFilter === status
                 ? 'bg-[#1C1B1A] text-[#FCF9F2]'
@@ -148,12 +161,23 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
         ))}
       </div>
 
+      <div className="mb-4">
+        <CustomerKindFilter
+          pathname="/crm/requirements"
+          current={customerFilter}
+          preserve={{
+            ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+            ...(sourceFilter !== 'all' ? { source: sourceFilter } : {}),
+          }}
+        />
+      </div>
+
       {/* Source Filters */}
       <div className="mb-6 flex flex-wrap gap-2 text-xs">
         {['all', 'business_portal', 'corporate_portal', 'website', 'staff'].map((source) => (
           <Link
             key={source}
-            href={`/crm/requirements?status=${statusFilter}${source === 'all' ? '' : `&source=${source}`}`}
+            href={`/crm/requirements?status=${statusFilter}${source === 'all' ? '' : `&source=${source}`}${customerFilter ? `&customer=${customerFilter}` : ''}`}
             className={`rounded-none px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em] transition-colors ${
               sourceFilter === source
                 ? 'bg-[#1C1B1A] text-[#FCF9F2]'
@@ -207,7 +231,10 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
               <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#CCC5BD] text-[#4A4640]">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F] block">Company</span>
-                  <span>{company?.name || '—'}</span>
+                  <span className="inline-flex flex-wrap items-center gap-1.5">
+                    {company?.name || '—'}
+                    {company ? <CustomerKindBadge accountType={company.account_type} isIndividual={company.is_individual} /> : null}
+                  </span>
                   {company?.account_type === 'business' ? (
                     <span className="mt-0.5 block text-[10px] uppercase text-[#9E4300]">
                       {company.business_verification || 'unverified'}
@@ -290,7 +317,10 @@ export default async function RequirementsPage(props: { searchParams: Promise<{ 
                     )}
                   </td>
                   <td className="py-2.5 px-4 text-sm text-[#4A4640]">
-                    {company?.name || '—'}
+                    <span className="inline-flex flex-wrap items-center gap-1.5">
+                      {company?.name || '—'}
+                      {company ? <CustomerKindBadge accountType={company.account_type} isIndividual={company.is_individual} /> : null}
+                    </span>
                     {company?.account_type === 'business' ? (
                       <span className="mt-0.5 block text-[10px] uppercase text-[#9E4300]">
                         {company.business_verification || 'unverified'}

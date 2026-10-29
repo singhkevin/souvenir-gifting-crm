@@ -7,6 +7,8 @@ import { Search } from 'lucide-react';
 import { requireStaff, applyCompanyScope } from '@/lib/auth'
 import { portalDnsMode } from '@/lib/portal-hosts/mode'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
+import { CustomerKindBadge } from '@/components/crm/customer-kind-badge'
+import { isCustomerKind } from '@/lib/companies/customer-kind'
 
 type CompanyOwner = { full_name: string | null }
 type CompanyRow = {
@@ -18,6 +20,7 @@ type CompanyRow = {
   status: string | null
   portal_slug?: string | null
   account_type?: string | null
+  is_individual?: boolean | null
   business_verification?: string | null
   created_at: string
   owner?: CompanyOwner | CompanyOwner[] | null
@@ -54,7 +57,7 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
   
   if (q) query = query.ilike('name', `%${q}%`);
   if (status) query = query.eq('status', status);
-  if (accountType === 'business' || accountType === 'corporate') query = query.eq('account_type', accountType);
+  if (isCustomerKind(accountType)) query = query.eq('account_type', accountType);
 
   const wildcardDns = portalDnsMode() === 'vercel'
   const listed = await query;
@@ -96,14 +99,14 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
             <span className="font-mono text-xs text-[#7C766F]">[ {companyRows.length} ]</span>
           </div>
           <p className="mt-1 text-xs text-[#4A4640]">
-            Manage your corporate clients, contacts and account information.
+            Microsite clients, business accounts, and direct customers.
           </p>
         </div>
         <Link
           href="/crm/companies/new"
           className="inline-flex min-h-10 items-center justify-center rounded-none bg-[#1C1B1A] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] transition-colors hover:bg-[#9E4300]"
         >
-          + Add Company
+          + Add customer
         </Link>
       </div>
 
@@ -156,8 +159,9 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
               emptyLabel: 'All types',
               options: [
                 { value: '', label: 'All types' },
-                { value: 'corporate', label: 'Corporate' },
+                { value: 'corporate', label: 'Microsite client' },
                 { value: 'business', label: 'Business' },
+                { value: 'direct', label: 'Direct' },
               ],
             },
           ]}
@@ -187,13 +191,12 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
                             />
                           ) : null}
                         </div>
-                        {c.account_type === 'business' ? (
-                          <div className="mt-1">
-                            <span className="inline-block rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9E4300]">
-                              Business{c.business_verification ? ` · ${c.business_verification}` : ''}
-                            </span>
-                          </div>
-                        ) : null}
+                        <div className="mt-1 flex flex-wrap items-center gap-1">
+                          <CustomerKindBadge accountType={c.account_type} isIndividual={c.is_individual} />
+                          {c.account_type === 'business' && c.business_verification ? (
+                            <span className="text-[10px] uppercase text-[#9E4300]">{c.business_verification}</span>
+                          ) : null}
+                        </div>
                       </div>
                     </Link>
                     <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.06em] rounded-none ${
@@ -266,10 +269,9 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
                           <CompanyAvatar name={c.name} logoPath={c.logo_path} size="md" />
                           <span className="font-semibold text-sm inline-flex items-center gap-2">
                             {c.name}
-                            {c.account_type === 'business' ? (
-                              <span className="rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#9E4300]">
-                                Business{c.business_verification ? ` · ${c.business_verification}` : ''}
-                              </span>
+                            <CustomerKindBadge accountType={c.account_type} isIndividual={c.is_individual} />
+                            {c.account_type === 'business' && c.business_verification ? (
+                              <span className="text-[10px] uppercase text-[#9E4300]">{c.business_verification}</span>
                             ) : null}
                             {c.portal_slug ? (
                               <span

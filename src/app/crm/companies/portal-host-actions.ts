@@ -10,6 +10,13 @@ import { clearTenantCache, parsePortalSlug } from '@/lib/portal-host'
 import { portalDnsMode } from '@/lib/portal-hosts/mode'
 import { deleteConflictingSubdomain, schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
 
+async function rejectDirectCustomer(companyId: string) {
+  const supabase = await createClient()
+  const { data } = await supabase.from('companies').select('account_type').eq('id', companyId).maybeSingle()
+  if (data?.account_type === 'direct') return { error: 'Direct customers do not have a microsite.' as const }
+  return null
+}
+
 async function requirePortalEditor(adminOnly = false) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' as const }
@@ -25,6 +32,8 @@ async function requirePortalEditor(adminOnly = false) {
 export async function resyncPortalHost(companyId: string) {
   const access = await requirePortalEditor(true)
   if ('error' in access) return { error: access.error }
+  const blocked = await rejectDirectCustomer(companyId)
+  if (blocked) return blocked
 
   const admin = createAdminClient()
   if (!admin) return { error: 'Server admin client is not configured.' }
@@ -72,6 +81,8 @@ export async function resyncPortalHost(companyId: string) {
 export async function removePortalAddress(companyId: string) {
   const access = await requirePortalEditor(true)
   if ('error' in access) return { error: access.error }
+  const blocked = await rejectDirectCustomer(companyId)
+  if (blocked) return blocked
 
   const supabase = await createClient()
   const { data: existing } = await supabase
@@ -104,6 +115,8 @@ export async function removePortalAddress(companyId: string) {
 export async function stopPortalRedirect(hostId: string, companyId: string) {
   const access = await requirePortalEditor(true)
   if ('error' in access) return { error: access.error }
+  const blocked = await rejectDirectCustomer(companyId)
+  if (blocked) return blocked
 
   const admin = createAdminClient()
   if (!admin) return { error: 'Server admin client is not configured.' }
@@ -150,6 +163,8 @@ export async function stopPortalRedirect(hostId: string, companyId: string) {
 export async function deleteBlockedSubdomain(companyId: string, clientSlug: string) {
   const access = await requirePortalEditor(true)
   if ('error' in access) return { error: access.error }
+  const blocked = await rejectDirectCustomer(companyId)
+  if (blocked) return blocked
 
   const admin = createAdminClient()
   if (!admin) return { error: 'Server admin client is not configured.' }

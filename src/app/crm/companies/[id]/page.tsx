@@ -28,6 +28,8 @@ import {
 } from '@/components/companies/company-catalogue-browser'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { BusinessAccountPanel } from '../business-account-panel'
+import { CustomerKindBadge } from '@/components/crm/customer-kind-badge'
+import { allowsPortalLogin, isDirectAccount, staffPricingPortal } from '@/lib/companies/customer-kind'
 import { CompanySpecialPrices, type SpecialPriceRow } from '../special-prices'
 import type { PickerProduct } from '@/components/products/product-picker-drawer'
 
@@ -86,6 +88,8 @@ export default async function CompanyDetailPage({
   ])
 
   if (!company) notFound()
+  const directCustomer = isDirectAccount(company.account_type)
+  const portalLogin = allowsPortalLogin(company.account_type)
 
   const wildcardDns = portalDnsMode() === 'vercel'
   const hostRows = (portalHosts || []) as PortalHost[]
@@ -103,7 +107,7 @@ export default async function CompanyDetailPage({
     specialPricesResult.error && /company_product_prices|schema cache|does not exist/i.test(specialPricesResult.error.message),
   )
   // Picker price = this company's calculated price (products.price is frozen legacy data).
-  const companyPortal = company.account_type === 'business' ? 'business' : 'corporate'
+  const companyPortal = staffPricingPortal(company.account_type)
   const companyPrices = await resolveListedPrices(
     productRows.map((row) => ({ id: row.id })),
     companyPortal,
@@ -209,7 +213,7 @@ export default async function CompanyDetailPage({
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
-    { id: 'clients', label: `Portal logins (${clients?.length || 0})` },
+    ...(directCustomer ? [] : [{ id: 'clients', label: `Portal logins (${clients?.length || 0})` }]),
     { id: 'catalogue', label: `Catalogue (${visibleCatalogueCount})` },
     ...(canSetPrices ? [{ id: 'prices', label: `Special prices (${specialRows.length})` }] : []),
     { id: 'contacts', label: `Contacts (${contacts?.length || 0})` },
@@ -247,10 +251,11 @@ export default async function CompanyDetailPage({
               {company.name}
             </h1>
             {statusChip}
+            <CustomerKindBadge accountType={company.account_type} isIndividual={company.is_individual} />
           </div>
 
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#4A4640] mt-1.5">
-            <span>{company.industry || 'Corporate Client'}</span>
+            <span>{directCustomer ? (company.is_individual ? 'Individual' : 'Direct customer') : (company.industry || 'Corporate Client')}</span>
             <span aria-hidden="true" className="text-[#CCC5BD]">·</span>
             <span>{company.city || 'India'}</span>
             {company.website && (
@@ -408,6 +413,12 @@ export default async function CompanyDetailPage({
                     className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 font-mono"
                   />
                 </label>
+                {directCustomer ? (
+                  <p className="text-xs text-[#4A4640] md:col-span-2">
+                    Direct customer · no microsite, portal login, or allowed email domains. Contacts are below.
+                  </p>
+                ) : (
+                  <>
                 <label className="block space-y-1 md:col-span-2">
                   <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Allowed portal email domains</span>
                   <input
@@ -442,6 +453,8 @@ export default async function CompanyDetailPage({
                   />
                   <span>Email client admins when the portal goes live (staff who set the address are always notified).</span>
                 </label>
+                  </>
+                )}
                 <label className="block space-y-1">
                   <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">City</span>
                   <input
@@ -477,18 +490,21 @@ export default async function CompanyDetailPage({
                     { value: 'inactive', label: 'Inactive' },
                   ]}
                 />
-                <MobileSheetSelect
-                  name="portal_status"
-                  label="Portal status"
-                  showDesktopLabel
-                  defaultValue={company.portal_status || 'active'}
-                  options={[
-                    { value: 'trial', label: 'Trial' },
-                    { value: 'active', label: 'Active' },
-                    { value: 'suspended', label: 'Suspended' },
-                    { value: 'cancelled', label: 'Cancelled' },
-                  ]}
-                />
+                {directCustomer ? null : (
+                  <MobileSheetSelect
+                    name="portal_status"
+                    label="Portal status"
+                    showDesktopLabel
+                    defaultValue={company.portal_status || 'active'}
+                    options={[
+                      { value: 'trial', label: 'Trial' },
+                      { value: 'active', label: 'Active' },
+                      { value: 'suspended', label: 'Suspended' },
+                      { value: 'cancelled', label: 'Cancelled' },
+                    ]}
+                  />
+                )}
+                {directCustomer ? null : (
                 <label className="block space-y-1">
                   <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Trial ends</span>
                   <input
@@ -503,6 +519,7 @@ export default async function CompanyDetailPage({
                   />
                   <span className="mt-1 block text-[11px] text-[#7C766F]">Used when portal status is Trial.</span>
                 </label>
+                )}
                 <label className="block space-y-1 md:col-span-2">
                   <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Address</span>
                   <textarea
@@ -532,6 +549,7 @@ export default async function CompanyDetailPage({
                 </button>
               </ActionForm>
             </div>
+            {directCustomer ? null : (
             <PortalHostCard
               companyId={company.id}
               primary={primaryHost}
@@ -542,6 +560,7 @@ export default async function CompanyDetailPage({
               canResync={profile.role === 'admin'}
               wildcardDns={wildcardDns}
             />
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -566,6 +585,13 @@ export default async function CompanyDetailPage({
                     {company.margin_percent != null ? `${company.margin_percent}%` : 'Org B2B default'}
                   </span>
                 </div>
+                {directCustomer ? (
+                  <div className="sm:col-span-2">
+                    <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Customer</span>
+                    <span className="mt-0.5 block text-[#1C1B1A]">Direct customer · no microsite</span>
+                  </div>
+                ) : (
+                  <>
                 <div>
                   <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Domains</span>
                   <span className="mt-0.5 block text-[#1C1B1A]">
@@ -578,6 +604,8 @@ export default async function CompanyDetailPage({
                     {portalUrlForSlug(company.portal_slug) || company.portal_slug || 'Main site'}
                   </span>
                 </div>
+                  </>
+                )}
                 <div className="sm:col-span-2">
                   <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Address</span>
                   <span className="mt-0.5 block text-[#1C1B1A]">{company.address || '—'}</span>
@@ -589,6 +617,7 @@ export default async function CompanyDetailPage({
               </div>
             </div>
 
+            {directCustomer ? null : (
             <PortalHostCard
               companyId={company.id}
               primary={primaryHost}
@@ -599,6 +628,7 @@ export default async function CompanyDetailPage({
               canResync={profile.role === 'admin'}
               wildcardDns={wildcardDns}
             />
+            )}
 
             <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none shadow-none overflow-hidden md:col-span-2">
               <div className="bg-[#F6F3EC] px-4 py-3 border-b border-[#CCC5BD]">
@@ -633,7 +663,7 @@ export default async function CompanyDetailPage({
         />
       )}
 
-      {tab === 'clients' && (
+      {tab === 'clients' && !directCustomer && (
         <div className="space-y-6">
           <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none shadow-none overflow-hidden">
             <div className="bg-[#F6F3EC] px-4 py-3 border-b border-[#CCC5BD]">
@@ -647,7 +677,7 @@ export default async function CompanyDetailPage({
                   : ' No email domain is set, so any address can be invited. Add domains on Overview to restrict logins.'}
               </p>
             </div>
-            {canInvite && (company.account_type || 'corporate') !== 'business' && (
+            {canInvite && portalLogin && (
               <div className="border-b border-[#CCC5BD] p-6">
                 <PortalInviteForm companyId={company.id} />
               </div>
@@ -702,7 +732,7 @@ export default async function CompanyDetailPage({
                       {(profile.role === 'admin' || canInvite) && (
                         <td className="px-4 py-2.5 text-right">
                           <div className="flex flex-wrap items-center justify-end gap-3">
-                            {canInvite && client.email && (company.account_type || 'corporate') !== 'business' ? (
+                            {canInvite && client.email && portalLogin ? (
                               <PortalInviteButton
                                 companyId={company.id}
                                 email={client.email}
@@ -749,7 +779,9 @@ export default async function CompanyDetailPage({
                 Add contact
               </h2>
               <p className="mt-0.5 text-xs text-[#4A4640]">
-                Directory only. A contact cannot sign in until you send a portal invitation.
+                {directCustomer
+                  ? 'Directory only. Direct customers do not get a portal login.'
+                  : 'Directory only. A contact cannot sign in until you send a portal invitation.'}
               </p>
             </div>
             <ActionForm action={createContact} className="p-4 grid md:grid-cols-3 gap-3 text-xs" resetOnSuccess>
@@ -808,7 +840,7 @@ export default async function CompanyDetailPage({
                     <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Designation</th>
                     <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Email</th>
                     <th className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Phone</th>
-                    {canInvite && <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Portal</th>}
+                    {canInvite && portalLogin && <th className="px-4 py-2.5 text-right text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Portal</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#CCC5BD]">
@@ -818,9 +850,9 @@ export default async function CompanyDetailPage({
                       <td className="px-4 py-2.5 text-[#4A4640]">{c.designation || '—'}</td>
                       <td className="px-4 py-2.5 text-[#4A4640]">{c.email || '—'}</td>
                       <td className="px-4 py-2.5 text-[#4A4640]">{c.phone || '—'}</td>
-                      {canInvite && (
+                      {canInvite && portalLogin && (
                         <td className="px-4 py-2.5 text-right">
-                          {c.email && (company.account_type || 'corporate') !== 'business' ? (
+                          {c.email ? (
                             <PortalInviteButton companyId={company.id} email={c.email} fullName={c.full_name} />
                           ) : (
                             <span className="text-[#7C766F]">—</span>
@@ -830,7 +862,7 @@ export default async function CompanyDetailPage({
                     </tr>
                   ))}
                   {(!contacts || contacts.length === 0) && (
-                    <tr><td colSpan={canInvite ? 5 : 4} className="p-6 text-center text-[#7C766F]">No contacts added yet.</td></tr>
+                    <tr><td colSpan={canInvite && portalLogin ? 5 : 4} className="p-6 text-center text-[#7C766F]">No contacts added yet.</td></tr>
                   )}
                 </tbody>
               </table>

@@ -76,6 +76,6 @@ export function shouldAttachNamedCompany(company: {
 } | null) {
   if (!company) return false
   const type = company.account_type || 'corporate'
-  if (type === 'corporate' && (company.status || '') === 'active') return false
+  if ((type === 'corporate' || type === 'direct') && (company.status || '') === 'active') return false
   return true
 }

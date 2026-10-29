@@ -35,20 +35,20 @@ export async function resolveGiftCompany(slug?: string | null): Promise<GiftComp
   if (tenant?.id) {
     const { data } = await admin
       .from('companies')
-      .select('id, name, portal_slug')
+      .select('id, name, portal_slug, account_type')
       .eq('id', tenant.id)
       .maybeSingle()
-    if (!data) return null
+    if (!data || data.account_type === 'direct') return null
     return { id: data.id, name: data.name, slug: data.portal_slug }
   }
   const clean = String(slug || '').trim().toLowerCase()
   if (!clean) return null
   const { data } = await admin
     .from('companies')
-    .select('id, name, portal_slug')
+    .select('id, name, portal_slug, account_type')
     .eq('portal_slug', clean)
     .maybeSingle()
-  if (!data) return null
+  if (!data || data.account_type === 'direct') return null
   return { id: data.id, name: data.name, slug: data.portal_slug }
 }
 

@@ -5,6 +5,7 @@ import { BackButton } from '@/components/ui/back-button'
 import { ActionForm } from '@/components/ui/action-form'
 import { MobileSheetSelect } from '@/components/ui/mobile-filter-sheet'
 import { portalAddressHelp } from '@/lib/portal-host'
+import { CustomerKindChooser } from '../customer-kind-fields'
 
 export default async function NewCompanyPage() {
   const profile = await requireStaff(['admin', 'sales'])
@@ -19,14 +20,59 @@ export default async function NewCompanyPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <BackButton href="/crm/companies" label="Back to companies" />
-      <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6 mt-4">Add New Company</h1>
+      <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-6 mt-4">Add customer</h1>
 
       <ActionForm action={createCompany} className="bg-white p-6 border border-[var(--color-border)] flex flex-col gap-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium mb-1">Company Name *</label>
-            <input type="text" name="name" required className="w-full p-2 border border-[var(--color-border)]" />
-          </div>
+          <CustomerKindChooser>
+            <div className="grid gap-6">
+              <div>
+                <label className="block text-sm font-medium mb-1">Allowed portal email domains</label>
+                <input
+                  type="text"
+                  name="allowed_email_domains"
+                  placeholder="acme.com, acme.co.in"
+                  className="w-full p-2 border border-[var(--color-border)]"
+                />
+                <p className="text-[11px] text-gray-500 mt-1">Optional. When set, portal logins must use these domains.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Portal address</label>
+                <input
+                  type="text"
+                  name="portal_slug"
+                  placeholder="acme"
+                  className="w-full p-2 border border-[var(--color-border)]"
+                />
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Optional. {portalAddressHelp('your-slug')}
+                </p>
+                <label className="mt-2 flex items-start gap-2 text-[11px] text-gray-600">
+                  <input type="checkbox" name="notify_client_admins_on_live" value="1" className="mt-0.5" />
+                  <span>Email client admins when the portal goes live</span>
+                </label>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2">
+                <MobileSheetSelect
+                  name="portal_status"
+                  label="Portal status"
+                  showDesktopLabel
+                  defaultValue="active"
+                  options={[
+                    { value: 'trial', label: 'Trial' },
+                    { value: 'active', label: 'Active' },
+                    { value: 'suspended', label: 'Suspended' },
+                    { value: 'cancelled', label: 'Cancelled' },
+                  ]}
+                />
+                <div>
+                  <label className="block text-sm font-medium mb-1">Trial ends</label>
+                  <input type="datetime-local" name="trial_ends_at" className="w-full p-2 border border-[var(--color-border)]" />
+                  <p className="text-[11px] text-gray-500 mt-1">Optional. Used when portal status is Trial.</p>
+                </div>
+              </div>
+            </div>
+          </CustomerKindChooser>
           <MobileSheetSelect
             name="industry"
             label="Industry"
@@ -60,32 +106,6 @@ export default async function NewCompanyPage() {
               placeholder="Leave empty for org B2B default"
               className="w-full p-2 border border-[var(--color-border)]"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Allowed portal email domains</label>
-            <input
-              type="text"
-              name="allowed_email_domains"
-              placeholder="acme.com, acme.co.in"
-              className="w-full p-2 border border-[var(--color-border)]"
-            />
-            <p className="text-[11px] text-gray-500 mt-1">Optional. When set, portal logins must use these domains.</p>
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-1">Portal address</label>
-            <input
-              type="text"
-              name="portal_slug"
-              placeholder="acme"
-              className="w-full p-2 border border-[var(--color-border)]"
-            />
-            <p className="text-[11px] text-gray-500 mt-1">
-              Optional. {portalAddressHelp('your-slug')}
-            </p>
-            <label className="mt-2 flex items-start gap-2 text-[11px] text-gray-600">
-              <input type="checkbox" name="notify_client_admins_on_live" value="1" className="mt-0.5" />
-              <span>Email client admins when the portal goes live</span>
-            </label>
           </div>
         </div>
 
@@ -128,24 +148,6 @@ export default async function NewCompanyPage() {
               { value: 'inactive', label: 'Inactive' },
             ]}
           />
-          <MobileSheetSelect
-            name="portal_status"
-            label="Portal status"
-            showDesktopLabel
-            defaultValue="active"
-            options={[
-              { value: 'trial', label: 'Trial' },
-              { value: 'active', label: 'Active' },
-              { value: 'suspended', label: 'Suspended' },
-              { value: 'cancelled', label: 'Cancelled' },
-            ]}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Trial ends</label>
-          <input type="datetime-local" name="trial_ends_at" className="w-full p-2 border border-[var(--color-border)]" />
-          <p className="text-[11px] text-gray-500 mt-1">Optional. Used when portal status is Trial.</p>
         </div>
 
         <div>
@@ -164,7 +166,7 @@ export default async function NewCompanyPage() {
             Cancel
           </a>
           <button type="submit" className="px-6 py-2 bg-[var(--color-primary)] text-white hover:text-white font-medium hover:opacity-90">
-            Create Company
+            Create customer
           </button>
         </div>
       </ActionForm>
