@@ -18,7 +18,7 @@ export type CategoryNavItem = { href: string; label: string; icon: StoreNavIcon 
 
 function categoryActive(pathname: string, href: string) {
   const path = href.split('?')[0]
-  if (!path || path === '/catalogue') return false
+  if (!path || path === '/catalogue' || path === '/business/catalogue') return false
   return pathname === path || pathname.startsWith(`${path}/`)
 }
 

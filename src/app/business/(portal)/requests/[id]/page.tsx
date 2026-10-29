@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { ClearSubmittedBasket } from '@/components/business/clear-submitted-basket'
 import { requireBusiness } from '@/lib/business/session'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate, isUuid, oneRelation } from '@/lib/utils'
@@ -7,8 +8,15 @@ import { ProductThumb } from '@/components/ui/product-thumb'
 
 export const dynamic = 'force-dynamic'
 
-export default async function BusinessRequestPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function BusinessRequestPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ submitted?: string }>
+}) {
   const { id } = await params
+  const { submitted } = await searchParams
   if (!isUuid(id)) notFound()
   const { company, profile } = await requireBusiness()
   const supabase = await createClient()
@@ -27,6 +35,7 @@ export default async function BusinessRequestPage({ params }: { params: Promise<
 
   return (
     <div className="space-y-6">
+      <ClearSubmittedBasket submitted={submitted === '1'} />
       <div>
         <Link
           href="/business/requests"
@@ -50,25 +59,25 @@ export default async function BusinessRequestPage({ params }: { params: Promise<
 
       <div className="grid grid-cols-2 sm:grid-cols-4 border border-[#CCC5BD] bg-[#F6F3EC] divide-x divide-y sm:divide-y-0 divide-[#CCC5BD]">
         <div className="p-3.5">
-          <p className="sv2-label text-[10px] text-[#7C766F]">Deadline</p>
+          <p className="sv2-label text-[10px] text-[#7C766F]">Required by</p>
           <p className="mt-1 sv2-mono-sm text-sm text-[#1C1C18]">
             {req.deadline ? formatDate(req.deadline) : '—'}
           </p>
         </div>
         <div className="p-3.5">
-          <p className="sv2-label text-[10px] text-[#7C766F]">Delivery City</p>
+          <p className="sv2-label text-[10px] text-[#7C766F]">Delivery locations</p>
           <p className="mt-1 text-sm text-[#1C1C18]">
             {req.delivery_city || '—'}
           </p>
         </div>
         <div className="p-3.5">
-          <p className="sv2-label text-[10px] text-[#7C766F]">Budget</p>
+          <p className="sv2-label text-[10px] text-[#7C766F]">Budget per kit</p>
           <p className="mt-1 sv2-mono-sm text-sm text-[#1C1C18]">
             {req.budget != null ? formatCurrency(req.budget) : '—'}
           </p>
         </div>
         <div className="p-3.5">
-          <p className="sv2-label text-[10px] text-[#7C766F]">Purpose</p>
+          <p className="sv2-label text-[10px] text-[#7C766F]">Branding</p>
           <p className="mt-1 text-sm text-[#1C1C18]">
             {req.purpose || '—'}
           </p>
@@ -77,7 +86,7 @@ export default async function BusinessRequestPage({ params }: { params: Promise<
 
       {req.description ? (
         <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-4 text-sm text-[#4A4640]">
-          <span className="sv2-label text-[10px] text-[#7C766F] block mb-1">Description:</span>
+          <span className="sv2-label text-[10px] text-[#7C766F] block mb-1">Overall note</span>
           {req.description}
         </div>
       ) : null}
@@ -90,7 +99,7 @@ export default async function BusinessRequestPage({ params }: { params: Promise<
               <th className="p-3.5 sv2-label text-[10px] text-[#7C766F] text-right">Quantity</th>
               <th className="p-3.5 sv2-label text-[10px] text-[#7C766F]">Quantity Breaks</th>
               <th className="p-3.5 sv2-label text-[10px] text-[#7C766F] text-right">Target Price</th>
-              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F]">Notes</th>
+              <th className="p-3.5 sv2-label text-[10px] text-[#7C766F]">Branding or variant note</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#CCC5BD]">

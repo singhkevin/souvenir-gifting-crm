@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { ProductImage } from '@/components/ui/product-image'
 import { Chip } from '@/components/sv2/chip'
+import { AddToQuoteButton } from '@/components/business/add-to-quote-button'
+import { businessProductPath } from '@/lib/business/portal-paths'
 import { formatCurrency } from '@/lib/utils'
 
 /**
@@ -29,11 +31,11 @@ export function SV2ProductCard({
   priceText?: string | null
 }) {
   const displayPrice = price != null && price > 0
+  const href = businessProductPath(id)
 
   return (
     <article className="flex flex-col justify-between border border-[#CCC5BD] bg-[#FCF9F2]">
-      {/* SKU row */}
-      <div>
+      <Link href={href} className="block text-inherit">
         <div className="flex items-center justify-between border-b border-[#CCC5BD] px-2 py-1 sm:py-1.5">
           <span className="sv2-mono-sm text-[10px] sm:text-[11px] text-[#7C766F] truncate max-w-[120px]">
             {sku ? `SKU: ${sku}` : '\u00A0'}
@@ -43,7 +45,6 @@ export function SV2ProductCard({
           )}
         </div>
 
-        {/* Image */}
         <div className="aspect-square overflow-hidden bg-[#F1EEE7]">
           {imageUrl ? (
             <ProductImage
@@ -59,7 +60,6 @@ export function SV2ProductCard({
           )}
         </div>
 
-        {/* Title + spec */}
         <div className="border-t border-[#CCC5BD] p-2 sm:p-3">
           <h4 className="sv2-headline-sm text-[15px] sm:text-[18px] leading-tight text-[#1C1C18] mb-1 line-clamp-2">
             {name}
@@ -68,7 +68,7 @@ export function SV2ProductCard({
             <p className="sv2-body-sm text-[11px] sm:text-xs text-[#7C766F] line-clamp-1">{description}</p>
           )}
         </div>
-      </div>
+      </Link>
 
       {/* Price + CTA */}
       <div className="border-t border-[#CCC5BD] p-2 sm:p-3 bg-[#F6F3EC]">
@@ -78,12 +78,16 @@ export function SV2ProductCard({
           </span>
           <Chip>MOQ: {moq}</Chip>
         </div>
-        <Link
-          href={`/request-quote?product=${encodeURIComponent(id)}`}
-          className="block w-full text-center bg-[#000000] hover:bg-[#9E4300] text-white py-1.5 sm:py-2 sv2-label text-[10px] sm:text-[11px] tracking-wider transition-colors duration-150"
-        >
-          Request Quote
-        </Link>
+        <AddToQuoteButton
+          product={{
+            id,
+            sku: sku || id,
+            name,
+            image_url: imageUrl,
+            price: displayPrice ? price : null,
+            moq,
+          }}
+        />
       </div>
     </article>
   )

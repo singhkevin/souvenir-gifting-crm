@@ -9,7 +9,8 @@ import { businessPriceNotice } from '@/lib/business/price-access'
 import { minimumOrderQty } from '@/lib/business/lines'
 import { getPublicBrands, getPublicCategories, type PublicProduct } from '@/lib/catalogue/products'
 import { curateTrendingProducts } from '@/lib/catalogue/curate'
-import { STORE_NAV_CATEGORIES, storeNavCategoryHref } from '@/lib/catalogue/store-nav'
+import { STORE_NAV_CATEGORIES, businessNavCategoryHref } from '@/lib/catalogue/store-nav'
+import { BUSINESS_CATALOGUE_PATH, BUSINESS_QUOTE_PATH } from '@/lib/business/portal-paths'
 import { readCatalogueFilters } from '@/lib/catalogue/catalogue-query'
 import { getPublicContactPhone } from '@/lib/contact/public-phone-server'
 import { siteContent } from '@/config/siteContent'
@@ -98,7 +99,7 @@ export async function BusinessHome({
       title: 'Festive & Diwali Hampers',
       tag: 'FESTIVE SEASON',
       description: 'Seasonal hampers and gift boxes for teams and clients.',
-      href: '/collections/festival-gifting',
+      href: '/business/catalogue?occasion=festive',
       imageUrl: '/site/home-festival-crate.webp',
       matchFilter: (p: BusinessProduct) =>
         p.occasion_tags?.includes('festive') ||
@@ -109,7 +110,7 @@ export async function BusinessHome({
       title: 'Day-One Welcome Kits',
       tag: 'ONBOARDING',
       description: 'Welcome sets with drinkware, notebooks, and desk essentials for new joiners.',
-      href: '/collections/welcome-kits',
+      href: '/business/catalogue?occasion=welcome',
       imageUrl: '/site/home-welcome-kit.webp',
       matchFilter: (p: BusinessProduct) =>
         p.occasion_tags?.includes('welcome') ||
@@ -120,7 +121,7 @@ export async function BusinessHome({
       title: 'Client & CXO Appreciation',
       tag: 'EXECUTIVE',
       description: 'Thoughtful executive gifts and premium pieces for key clients and partners.',
-      href: '/collections/client-appreciation',
+      href: '/business/catalogue?occasion=client',
       imageUrl: '/site/home-client-appreciation.webp',
       matchFilter: (p: BusinessProduct) =>
         p.category_name === 'Awards & Recognition' || /cxo|client|executive/i.test(p.name),
@@ -129,7 +130,7 @@ export async function BusinessHome({
       title: 'Onboarding Essentials',
       tag: 'JOINING KITS',
       description: 'Practical desk and daily essentials to equip your team from day one.',
-      href: '/collections/new-joiner-essentials',
+      href: '/business/catalogue?occasion=onboarding',
       imageUrl: '/site/home-new-joiner.webp',
       matchFilter: (p: BusinessProduct) =>
         p.occasion_tags?.includes('onboarding') || /onboard|joiner|essentials/i.test(p.name),
@@ -138,7 +139,7 @@ export async function BusinessHome({
       title: 'Conferences & Summits',
       tag: 'EVENTS',
       description: 'Curated delegate gifts including drinkware, bags, notebooks, and tech.',
-      href: '/collections/conference-and-events',
+      href: '/business/catalogue?occasion=conference',
       imageUrl: '/site/story-executive.webp',
       matchFilter: (p: BusinessProduct) =>
         ['Drinkware', 'Desk & Stationery', 'Tech & Electronics'].includes(p.category_name || '') ||
@@ -148,7 +149,7 @@ export async function BusinessHome({
       title: 'Work Anniversary & Milestones',
       tag: 'RECOGNITION',
       description: 'Recognition gifts and commemorative keepsakes for long-standing team members.',
-      href: '/collections/executive-edit',
+      href: '/business/catalogue?occasion=anniversary',
       imageUrl: '/site/banner-milestones.webp',
       matchFilter: (p: BusinessProduct) =>
         ['Apparel', 'Bags & Travel', 'Awards & Recognition', 'Watches'].includes(
@@ -203,7 +204,7 @@ export async function BusinessHome({
   const caption = (product: PublicProduct) => `MOQ ${minimumOrderQty(product.moq)} · indicative`
 
   const navCategories = STORE_NAV_CATEGORIES.map((item) => ({
-    href: storeNavCategoryHref(categories, item.name),
+    href: businessNavCategoryHref(categories, item.name),
     label: item.label,
     icon: item.icon,
   }))
@@ -275,8 +276,8 @@ export async function BusinessHome({
 
                 {/* CTAs */}
                 <div className="flex flex-wrap items-center gap-4 mb-10">
-                  <SV2Button variant="saffron" href="#quote-desk">
-                    Request a Quote
+                  <SV2Button variant="saffron" href={BUSINESS_QUOTE_PATH}>
+                    Quote basket
                   </SV2Button>
                   <SV2Button variant="outline-light" href="#catalog">
                     Explore Catalogue
@@ -332,42 +333,42 @@ export async function BusinessHome({
               </span>
               <div className="flex items-center gap-3 min-w-max">
                 <Link
-                  href="/catalogue?category=Welcome+Kits"
+                  href="/business/catalogue?q=welcome%20kit"
                   className="flex items-center gap-2 border border-[#CCC5BD] bg-[#FCF9F2] px-3.5 py-1.5 hover:border-[#000000] transition-colors shrink-0"
                 >
                   <span className="sv2-label text-[11px] text-[#1C1C18]">Welcome Kits</span>
                   <span className="sv2-body-sm text-xs text-[#7C766F]">Kits</span>
                 </Link>
                 <Link
-                  href="/categories/drinkware"
+                  href="/business/catalogue?q=drinkware"
                   className="flex items-center gap-2 border border-[#CCC5BD] bg-[#FCF9F2] px-3.5 py-1.5 hover:border-[#000000] transition-colors shrink-0"
                 >
                   <span className="sv2-label text-[11px] text-[#1C1C18]">Thermal Drinkware</span>
                   <span className="sv2-body-sm text-xs text-[#7C766F]">Insulated</span>
                 </Link>
                 <Link
-                  href="/categories/desk-stationery"
+                  href="/business/catalogue?q=notebook"
                   className="flex items-center gap-2 border border-[#CCC5BD] bg-[#FCF9F2] px-3.5 py-1.5 hover:border-[#000000] transition-colors shrink-0"
                 >
                   <span className="sv2-label text-[11px] text-[#1C1C18]">Desk &amp; Stationery</span>
                   <span className="sv2-body-sm text-xs text-[#7C766F]">Desk Sets</span>
                 </Link>
                 <Link
-                  href="/catalogue?q=copper"
+                  href="/business/catalogue?q=copper"
                   className="flex items-center gap-2 border border-[#CCC5BD] bg-[#FCF9F2] px-3.5 py-1.5 hover:border-[#000000] transition-colors shrink-0"
                 >
                   <span className="sv2-label text-[11px] text-[#1C1C18]">Copper &amp; Brass</span>
                   <span className="sv2-body-sm text-xs text-[#7C766F]">Handcrafted</span>
                 </Link>
                 <Link
-                  href="/catalogue?q=tech"
+                  href="/business/catalogue?q=tech"
                   className="flex items-center gap-2 border border-[#CCC5BD] bg-[#FCF9F2] px-3.5 py-1.5 hover:border-[#000000] transition-colors shrink-0"
                 >
                   <span className="sv2-label text-[11px] text-[#1C1C18]">Tech &amp; Electronics</span>
                   <span className="sv2-body-sm text-xs text-[#7C766F]">Accessories</span>
                 </Link>
                 <Link
-                  href="/collections/festival-gifting"
+                  href="/business/catalogue?occasion=festive"
                   className="flex items-center gap-2 border border-[#CCC5BD] bg-[#FCF9F2] px-3.5 py-1.5 hover:border-[#000000] transition-colors shrink-0"
                 >
                   <span className="sv2-label text-[11px] text-[#1C1C18]">Festive Hampers</span>
@@ -389,7 +390,7 @@ export async function BusinessHome({
                 </>
               }
               subtitle="Curated corporate gifting sets configured for rapid team and client delivery."
-              actionHref="/catalogue"
+              actionHref={BUSINESS_CATALOGUE_PATH}
               actionLabel="View full catalogue →"
             />
 
@@ -420,7 +421,7 @@ export async function BusinessHome({
               numeral="02"
               title="Corporate Bestsellers"
               subtitle="Popular corporate gifts ready for delivery across India."
-              actionHref="/catalogue"
+              actionHref={BUSINESS_CATALOGUE_PATH}
               actionLabel="Explore all items →"
             />
 
@@ -442,7 +443,7 @@ export async function BusinessHome({
             numeral="03"
             title="Comprehensive Corporate Catalogue"
             subtitle={showPrices ? 'Filter by category, brand, price and occasion. Prices shown here are indicative.' : priceNotice || undefined}
-            actionHref="/catalogue"
+            actionHref={BUSINESS_CATALOGUE_PATH}
             actionLabel="View all catalogue products →"
           />
 
@@ -568,8 +569,13 @@ export async function BusinessHome({
                 ))}
               </div>
 
-              {/* Right: Quotation Form */}
-              <div className="lg:col-span-6">
+              <div className="lg:col-span-6 space-y-4">
+                <p className="sv2-body-sm text-[#cac6c4]">
+                  <Link href={BUSINESS_QUOTE_PATH} className="text-[#FFB690] hover:underline">
+                    Add gifts to the quote basket
+                  </Link>{' '}
+                  and submit them as one request. A business account is required to send it.
+                </p>
                 <SV2RfpForm phone={phone} />
               </div>
             </div>
@@ -594,10 +600,10 @@ export async function BusinessHome({
           </span>
         </div>
         <Link
-          href="#quote-desk"
+          href={BUSINESS_QUOTE_PATH}
           className="bg-[#9E4300] hover:bg-[#FF8843] text-white px-4 py-2 sv2-label text-xs tracking-wider transition-colors uppercase font-bold"
         >
-          Request a Quote
+          Quote basket
         </Link>
       </aside>
     </div>

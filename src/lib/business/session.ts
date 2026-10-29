@@ -19,6 +19,23 @@ export type BusinessCompany = {
   notes: string | null
 }
 
+/** Signed-in business account, or null for guests, staff, and rejected accounts. */
+export async function readBusinessSession(): Promise<{ profile: ProfileSession; company: BusinessCompany | null } | null> {
+  const profile = await getProfile()
+  if (!profile?.is_active || !isBusinessRole(profile.role)) return null
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('companies')
+    .select('id, name, account_type, business_verification, gst_number, city, state, country, website, notes')
+    .eq('id', profile.company_id || '')
+    .maybeSingle()
+
+  const company = error ? null : (data as BusinessCompany | null)
+  if (company?.business_verification === 'rejected') return null
+  return { profile, company }
+}
+
 export async function requireBusiness(): Promise<{ profile: ProfileSession; company: BusinessCompany | null }> {
   const profile = await getProfile()
   if (!profile) redirect('/login?next=/business/dashboard')

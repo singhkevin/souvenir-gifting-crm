@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { AudienceSwitch } from '@/components/site/audience-switch'
 import { signOut } from '@/app/login/actions'
 import { BrandLogo } from '@/components/brand/brand-logo'
+import { HeaderSampleCartLink } from '@/components/sv2/header-actions'
 
 const LINKS = [
   { href: '/business/dashboard', label: 'Dashboard' },
@@ -49,14 +50,17 @@ export function BusinessFrame({
               <span className="text-xs text-[#4A4640]">Business account</span>
             )}
           </div>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="border border-[#CCC5BD] bg-[#FCF9F2] px-3 py-1.5 sv2-label text-[10px] text-[#4A4640] hover:border-[#1C1C18] hover:text-[#1C1C18] transition-colors"
-            >
-              Sign out
-            </button>
-          </form>
+          <div className="flex items-center gap-2">
+            <HeaderSampleCartLink />
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="border border-[#CCC5BD] bg-[#FCF9F2] px-3 py-1.5 sv2-label text-[10px] text-[#4A4640] hover:border-[#1C1C18] hover:text-[#1C1C18] transition-colors"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
         <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto no-scrollbar border-t border-[#CCC5BD] px-4 py-2 sm:px-6">
           {LINKS.map((link) => {

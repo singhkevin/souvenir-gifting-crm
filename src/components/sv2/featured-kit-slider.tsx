@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
 import { siteContent } from '@/config/siteContent'
+import { businessProductPath } from '@/lib/business/portal-paths'
 
 export interface FeaturedKitItem {
   id: string
@@ -70,7 +71,7 @@ export function FeaturedKitSlider({ items }: FeaturedKitSliderProps) {
         </div>
 
         {/* Product image preview */}
-        <div className="relative w-full aspect-[4/3] bg-[#000000] mb-4 overflow-hidden border border-[#7C766F]">
+        <Link href={businessProductPath(current.id)} className="relative block w-full aspect-[4/3] bg-[#000000] mb-4 overflow-hidden border border-[#7C766F]">
           <Image
             src={current.imageUrl}
             alt={current.name}
@@ -89,13 +90,15 @@ export function FeaturedKitSlider({ items }: FeaturedKitSliderProps) {
               Lead time: {current.leadSla}
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Spec data rail */}
         <div className="mb-4">
           <div className="flex flex-wrap justify-between items-baseline mb-1 gap-2">
             <h3 className="sv2-headline-sm text-[#FCF9F2] font-normal">
-              {current.name}
+              <Link href={businessProductPath(current.id)} className="hover:text-[#FFB690]">
+                {current.name}
+              </Link>
             </h3>
             <span className={current.priceText ? 'max-w-[14rem] text-right text-xs font-medium leading-snug text-[#FFB690]' : 'sv2-mono-lg text-[#FFB690] whitespace-nowrap'}>
               {current.priceText ? (

@@ -14,6 +14,7 @@ import {
   HeaderSampleCartLink,
   HeaderSearchSubmit,
 } from '@/components/sv2/header-actions'
+import { BUSINESS_CATALOGUE_PATH, BUSINESS_QUOTE_PATH } from '@/lib/business/portal-paths'
 
 interface SV2HeaderProps {
   categories?: CategoryNavItem[]
@@ -25,12 +26,12 @@ interface SV2HeaderProps {
 const SIGN_IN_HREF = '/login?next=/business/dashboard'
 
 const DEFAULT_CATEGORIES: CategoryNavItem[] = [
-  { label: 'Welcome Kits', href: '/catalogue?category=Welcome+Kits', icon: 'package' },
-  { label: 'Drinkware', href: '/categories/drinkware', icon: 'coffee' },
-  { label: 'Bottles', href: '/categories/bottles', icon: 'droplet' },
-  { label: 'Diaries & Desk', href: '/categories/desk-stationery', icon: 'book' },
-  { label: 'Apparel', href: '/categories/apparel', icon: 'shirt' },
-  { label: 'Watches', href: '/categories/watches', icon: 'watch' },
+  { label: 'Welcome Kits', href: '/business/catalogue?q=welcome%20kit', icon: 'package' },
+  { label: 'Drinkware', href: '/business/catalogue?q=drinkware', icon: 'coffee' },
+  { label: 'Bottles', href: '/business/catalogue?q=bottle', icon: 'droplet' },
+  { label: 'Diaries & Desk', href: '/business/catalogue?q=notebook', icon: 'book' },
+  { label: 'Apparel', href: '/business/catalogue?q=apparel', icon: 'shirt' },
+  { label: 'Watches', href: '/business/catalogue?q=watch', icon: 'watch' },
 ]
 
 export function SV2Header({ categories = DEFAULT_CATEGORIES, accountHref, accountLabel }: SV2HeaderProps) {
@@ -44,7 +45,7 @@ export function SV2Header({ categories = DEFAULT_CATEGORIES, accountHref, accoun
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.push(`/catalogue?q=${encodeURIComponent(searchQuery.trim())}`)
+      router.push(`${BUSINESS_CATALOGUE_PATH}?q=${encodeURIComponent(searchQuery.trim())}`)
     }
   }
 
@@ -85,10 +86,10 @@ export function SV2Header({ categories = DEFAULT_CATEGORIES, accountHref, accoun
 
           {/* Primary CTA: Request a Quote (desktop only; mobile has sticky bottom bar) */}
           <Link
-            href="/request-quote"
+            href={BUSINESS_QUOTE_PATH}
             className="bg-[#000000] hover:bg-[#9E4300] text-white px-3.5 py-2 sv2-label text-[10px] tracking-wider transition-colors duration-150 active:scale-[0.99] text-center"
           >
-            Request a Quote
+            Quote basket
           </Link>
         </div>
 
@@ -166,24 +167,17 @@ export function SV2Header({ categories = DEFAULT_CATEGORIES, accountHref, accoun
               </>
             )}
             <Link
-              href="/business/quote"
+              href={BUSINESS_QUOTE_PATH}
               className="sv2-body-sm text-[#1C1C18] py-1 flex items-center justify-between"
             >
-              <span>Sample Cart</span>
+              <span>Quote basket</span>
               <span className="text-[#9E4300] font-semibold">→</span>
             </Link>
             <Link
-              href="/catalogue"
+              href={BUSINESS_CATALOGUE_PATH}
               className="sv2-body-sm text-[#1C1C18] py-1 flex items-center justify-between"
             >
-              <span>Full Corporate Catalogue</span>
-              <span className="text-[#9E4300] font-semibold">→</span>
-            </Link>
-            <Link
-              href="/request-quote"
-              className="sv2-body-sm text-[#1C1C18] py-1 flex items-center justify-between"
-            >
-              <span>Request a Quotation</span>
+              <span>Full corporate catalogue</span>
               <span className="text-[#9E4300] font-semibold">→</span>
             </Link>
           </div>

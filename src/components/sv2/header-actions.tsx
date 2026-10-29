@@ -42,7 +42,7 @@ export function HeaderAccountLink({
   )
 }
 
-/** Business sample cart (quote basket) as a bag icon with a count badge. */
+/** Business quote basket as a bag icon with a count badge. */
 export function HeaderSampleCartLink({ href = '/business/quote' }: { href?: string }) {
   const [count, setCount] = useState(0)
 
@@ -57,9 +57,9 @@ export function HeaderSampleCartLink({ href = '/business/quote' }: { href?: stri
     }
   }, [])
 
-  const label = `Sample cart, ${count} item${count === 1 ? '' : 's'}`
+  const label = `Quote basket, ${count} item${count === 1 ? '' : 's'}`
   return (
-    <Link href={href} aria-label={label} title="Sample cart" className={HEADER_ICON_CLASS}>
+    <Link href={href} aria-label={label} title="Quote basket" className={HEADER_ICON_CLASS}>
       <ShoppingBag size={17} strokeWidth={1.8} aria-hidden="true" />
       <HeaderCountBadge count={count} />
     </Link>
