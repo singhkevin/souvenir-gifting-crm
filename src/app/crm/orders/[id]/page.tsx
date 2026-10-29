@@ -14,6 +14,7 @@ import {
 } from '../actions'
 import { requireStaff, canSeeCosts, canChangeOrderStage, applyOrderScope } from '@/lib/auth'
 import { isOrderSource, ORDER_SOURCE_LABELS } from '@/lib/orders/source'
+import { CustomerKindBadge } from '@/components/crm/customer-kind-badge'
 import {
   ORDER_STATUS_LABELS,
   canAdvanceTo,
@@ -63,7 +64,7 @@ export default async function OrderDetailPage({
         .from('orders')
         .select(`
           *,
-          company:companies(id, name),
+          company:companies(id, name, account_type),
           supplier:suppliers(id, name),
           printing_vendor:printing_vendors(id, name),
           courier_partner:courier_partners(id, name),
@@ -179,6 +180,11 @@ export default async function OrderDetailPage({
             {company?.name || 'Client'}
             {campaign?.name ? ` · ${campaign.name}` : ''}
           </h1>
+          {company?.account_type ? (
+            <div className="mt-2">
+              <CustomerKindBadge accountType={company.account_type} />
+            </div>
+          ) : null}
 
           <p className="text-xs text-[#4A4640] mt-1.5">
             Department: <span className="font-medium text-[#1C1C18]">{department?.name || '—'}</span>

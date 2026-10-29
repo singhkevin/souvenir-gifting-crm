@@ -416,10 +416,10 @@ async function fetchTenantBySlug(slug: string): Promise<ResolvedTenant | null> {
   if (!admin) return null
   const { data } = await admin
     .from('companies')
-    .select('id, portal_status, trial_ends_at')
+    .select('id, portal_status, trial_ends_at, account_type')
     .eq('portal_slug', slug)
     .maybeSingle()
-  if (!data?.id) return null
+  if (!data?.id || data.account_type === 'direct') return null
   const status = normalizeStatus(data.portal_status) || 'active'
   return {
     id: data.id,
@@ -570,9 +570,10 @@ export async function isPrimaryPortalLive(companyId: string): Promise<boolean> {
   if (portalDnsMode() === 'vercel') {
     const { data: company } = await admin
       .from('companies')
-      .select('portal_slug')
+      .select('portal_slug, account_type')
       .eq('id', companyId)
       .maybeSingle()
+    if (company?.account_type === 'direct') return false
     return Boolean(company?.portal_slug)
   }
 

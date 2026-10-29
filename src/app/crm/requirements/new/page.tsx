@@ -5,6 +5,8 @@ import { BackButton } from '@/components/ui/back-button'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { createCompany } from '@/app/crm/companies/actions'
+import { CustomerKindChooser } from '@/app/crm/companies/customer-kind-fields'
 
 export default async function NewRequirementPage({
   searchParams,
@@ -30,6 +32,31 @@ export default async function NewRequirementPage({
     <div className="mx-auto max-w-3xl">
       <BackButton href="/crm/requirements" label="Back to requirements" />
       <h1 className="mb-6 mt-4 text-2xl font-bold text-[var(--color-primary)]">Add Requirement</h1>
+
+      {['admin', 'sales'].includes(profile.role) ? (
+        <ActionForm
+          action={createCompany}
+          className="mb-6 grid gap-4 border border-[var(--color-border)] bg-white p-5 text-sm sm:p-6"
+        >
+          <input type="hidden" name="return_to" value="/crm/requirements/new" />
+          <input type="hidden" name="status" value="active" />
+          <h2 className="text-base font-semibold text-[var(--color-primary)]">Add a customer</h2>
+          <p className="text-xs text-gray-600">
+            Saved customers are selected on the requirement below. A direct customer has no microsite.
+          </p>
+          <CustomerKindChooser />
+          <label className="block">
+            <span className="text-xs font-semibold text-gray-700">City</span>
+            <input name="city" className="mt-1 min-h-11 w-full border px-3 py-2" />
+          </label>
+          <SubmitButton
+            className="inline-flex min-h-11 items-center justify-center border border-[#1C1B1A] px-4 text-sm font-semibold text-[#1C1B1A]"
+            pendingLabel="Saving…"
+          >
+            Save customer
+          </SubmitButton>
+        </ActionForm>
+      ) : null}
 
       {error && (
         <div className="mb-4 border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">

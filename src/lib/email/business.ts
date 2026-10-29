@@ -27,6 +27,13 @@ function paragraph(text: string) {
   return `<p style="font-size: 14px; line-height: 1.6; color: #5C6570;">${escapeHtml(text)}</p>`
 }
 
+export function portalInviteEmailHtml(input: { companyName: string; actionLink: string }) {
+  return shell(
+    `Your ${input.companyName} portal`,
+    `${paragraph(`Set a password to open the ${input.companyName} portal. This link expires in 1 hour.`)}${button(input.actionLink, 'Set password')}${paragraph('If you were not expecting this invitation, you can ignore this email.')}`,
+  )
+}
+
 export function businessConfirmEmailHtml(actionLink: string) {
   return shell('Confirm your business account', `${paragraph('Confirm your email to open your business account. You can then browse indicative prices and request a quote.')}${button(actionLink, 'Confirm email')}`)
 }

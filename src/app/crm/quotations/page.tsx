@@ -4,6 +4,9 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { requireStaff, applyOwnerScope } from '@/lib/auth'
 import { FileText } from 'lucide-react'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
+import { CustomerKindBadge } from '@/components/crm/customer-kind-badge'
+import { CustomerKindFilter } from '@/components/crm/customer-kind-filter'
+import { isCustomerKind } from '@/lib/companies/customer-kind'
 
 const STATUSES = ['all', 'draft', 'sent', 'accepted', 'rejected', 'expired']
 
@@ -14,7 +17,7 @@ type QuotationRow = {
   total: number | null
   valid_until: string | null
   created_at: string
-  company: { id: string; name: string } | { id: string; name: string }[] | null
+  company: { id: string; name: string; account_type?: string | null } | { id: string; name: string; account_type?: string | null }[] | null
   requirement: { id: string; name: string } | { id: string; name: string }[] | null
   owner: { id: string; full_name: string | null } | { id: string; full_name: string | null }[] | null
 }
@@ -55,16 +58,20 @@ function QuotationStatusChip({ status }: { status: string | null }) {
 }
 
 export default async function QuotationsPage(props: {
-  searchParams: Promise<{ status?: string; q?: string; owner?: string }>
+  searchParams: Promise<{ status?: string; q?: string; owner?: string; customer?: string }>
 }) {
-  const { status = 'all', q = '', owner = 'all' } = await props.searchParams
+  const { status = 'all', q = '', owner = 'all', customer = '' } = await props.searchParams
+  const customerFilter = isCustomerKind(customer) ? customer : ''
   const profile = await requireStaff(['admin', 'sales', 'management']) // quotations RLS: admin, sales, management only
   const supabase = await createClient()
 
+  const companyEmbed = customerFilter
+    ? 'company:companies!inner(id, name, account_type)'
+    : 'company:companies(id, name, account_type)'
   let query = supabase
     .from('quotations')
     .select(
-      'id, quotation_number, status, total, valid_until, created_at, company:companies(id, name), requirement:requirements!requirement_id(id, name), owner:profiles!owner_id(id, full_name)'
+      `id, quotation_number, status, total, valid_until, created_at, ${companyEmbed}, requirement:requirements!requirement_id(id, name), owner:profiles!owner_id(id, full_name)`
     )
     .order('created_at', { ascending: false })
     .limit(100)
@@ -74,6 +81,7 @@ export default async function QuotationsPage(props: {
   if (owner === 'mine' || profile.role === 'sales') query = query.eq('owner_id', profile.id)
   else if (owner !== 'all') query = query.eq('owner_id', owner)
   if (q.trim()) query = query.ilike('quotation_number', `%${q.trim()}%`)
+  if (customerFilter) query = query.eq('company.account_type', customerFilter)
 
   const acceptedQuery = applyOwnerScope(supabase.from('quotations').select('id', { count: 'exact', head: true }).eq('status', 'accepted'), profile)
   const totalQuery = applyOwnerScope(supabase.from('quotations').select('id', { count: 'exact', head: true }), profile)
@@ -113,10 +121,21 @@ export default async function QuotationsPage(props: {
         </div>
       )}
 
+      <CustomerKindFilter
+        pathname="/crm/quotations"
+        current={customerFilter}
+        preserve={{
+          ...(status !== 'all' ? { status } : {}),
+          ...(owner !== 'all' ? { owner } : {}),
+          ...(q.trim() ? { q: q.trim() } : {}),
+        }}
+      />
+
       <div className="space-y-3 rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-3 sm:p-4">
         <form action="/crm/quotations" className="flex gap-2">
           <input type="hidden" name="status" value={status} />
           <input type="hidden" name="owner" value={owner} />
+          {customerFilter ? <input type="hidden" name="customer" value={customerFilter} /> : null}
           <input
             name="q"
             defaultValue={q}
@@ -134,7 +153,7 @@ export default async function QuotationsPage(props: {
         <div className="md:hidden">
           <MobileFilterBar
             pathname="/crm/quotations"
-            preserveParams={q ? { q } : {}}
+            preserveParams={{ ...(q ? { q } : {}), ...(customerFilter ? { customer: customerFilter } : {}) }}
             fields={[
               {
                 key: 'status',
@@ -229,6 +248,11 @@ export default async function QuotationsPage(props: {
                     ) : (
                       <span className="text-[#7C766F]">—</span>
                     )}
+                    {company ? (
+                      <span className="ml-1.5">
+                        <CustomerKindBadge accountType={company.account_type} />
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-3.5 py-2.5">
                     {requirement ? (
@@ -304,6 +328,9 @@ export default async function QuotationsPage(props: {
                       <Link href={`/crm/companies/${company.id}`} className="hover:text-[#9E4300]">
                         {company.name}
                       </Link>
+                      <span className="ml-1.5">
+                        <CustomerKindBadge accountType={company.account_type} />
+                      </span>
                     </div>
                   )}
                   {requirement && (

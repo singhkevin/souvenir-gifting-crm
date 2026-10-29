@@ -26,6 +26,7 @@ test('business email flags and company attach rules', () => {
   assert.equal(match.possibleClientName, 'Acme')
   assert.equal(classifyBusinessEmail('a@mailinator.com', []).disposable, true)
   assert.equal(shouldAttachNamedCompany({ status: 'active', account_type: 'corporate' }), false)
+  assert.equal(shouldAttachNamedCompany({ status: 'active', account_type: 'direct' }), false)
   assert.equal(shouldAttachNamedCompany({ status: 'active' }), false)
   assert.equal(shouldAttachNamedCompany({ status: 'prospect', account_type: 'corporate' }), true)
   assert.equal(shouldAttachNamedCompany({ status: 'active', account_type: 'business' }), true)

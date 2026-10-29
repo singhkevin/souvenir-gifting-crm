@@ -111,3 +111,15 @@ Trial (live, forced rollback, 23 Oct 2026): supabase/tests/role_active_checks_tr
 (every staff, client_admin, business and inactive account); 15 active accounts: identical access before and after.
 Inactive admin: 31 orders · 26 companies · 22 leads · 26 quotations · 29 profiles visible before, 0 after
 (own 13 tasks stay via tasks_write). Rollback restored function and policy md5s and the exact access.
+
+## 61 · 20261027_portal_business_separation.sql · NOT APPLIED
+
+Portal logins must use the company's allowed email domains when that list is set (empty list stays open).
+`portal_unit_price` no longer returns business tier prices to a microsite account, or corporate prices to a business account.
+Store prices, the service role, and pricing staff are unchanged. Not applied to the live database.
+Rollback: supabase/rollbacks/20261027_portal_business_separation_rollback.sql.
+
+## 62 · 20261029_direct_customers.sql · NOT APPLIED
+
+Staff-handled customers with no microsite. Adds `companies.account_type` value `direct` and `companies.is_individual` (default false). A direct row cannot have a portal address or allowed email domains. Existing companies are not updated. `company_id` stays required. Direct customers price on the corporate surface because `company_pricing_portal` already treats every non-business company as corporate; that function is not replaced. Not applied to the live database.
+Rollback: supabase/rollbacks/20261029_direct_customers_rollback.sql (refuses while any direct row exists).

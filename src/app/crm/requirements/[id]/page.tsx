@@ -19,6 +19,7 @@ import { ConfirmAction } from '@/components/ui/confirm-action'
 import { ActionForm } from '@/components/ui/action-form'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { CustomerKindBadge } from '@/components/crm/customer-kind-badge'
 
 export default async function RequirementDetailPage({
   params,
@@ -147,6 +148,11 @@ export default async function RequirementDetailPage({
               >
                 {(req.company as { name?: string })?.name}
               </Link>
+              {businessMeta?.account_type ? (
+                <span className="ml-2">
+                  <CustomerKindBadge accountType={businessMeta.account_type} />
+                </span>
+              ) : null}
               {(businessMeta?.account_type === 'business') ? (
                 <span className="ml-2 text-[11px] uppercase text-[#9E4300]">
                   {businessMeta.business_verification || 'unverified'}

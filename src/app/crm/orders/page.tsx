@@ -7,8 +7,11 @@ import { isPaymentFilter, newestInvoiceStatus, PAYMENT_FILTER_LABELS, PAYMENT_FI
 import { requireStaff, applyOrderScope } from '@/lib/auth'
 import { OrderLifecycleBar } from '@/components/orders/order-lifecycle'
 import { MobileFilterBar } from '@/components/ui/mobile-filter-sheet'
+import { CustomerKindBadge } from '@/components/crm/customer-kind-badge'
+import { CustomerKindFilter } from '@/components/crm/customer-kind-filter'
+import { isCustomerKind } from '@/lib/companies/customer-kind'
 
-type OrderCompany = { id: string; name: string }
+type OrderCompany = { id: string; name: string; account_type?: string | null }
 type OrderOwner = { id: string; full_name: string | null }
 type OrderRow = {
   id: string
@@ -21,11 +24,12 @@ type OrderRow = {
   owner?: OrderOwner | OrderOwner[] | null
 }
 
-function ordersHref(status: string, source: string, payment: string) {
+function ordersHref(status: string, source: string, payment: string, customer = '') {
   const params = new URLSearchParams()
   if (status && status !== 'all') params.set('status', status)
   if (source && source !== 'all') params.set('source', source)
   if (payment && payment !== 'all') params.set('payment', payment)
+  if (customer) params.set('customer', customer)
   const query = params.toString()
   return query ? `/crm/orders?${query}` : '/crm/orders'
 }
@@ -59,20 +63,25 @@ function OrderStatusChip({ status }: { status: string }) {
   )
 }
 
-export default async function OrdersPage(props: { searchParams: Promise<{ status?: string; source?: string; payment?: string }> }) {
+export default async function OrdersPage(props: { searchParams: Promise<{ status?: string; source?: string; payment?: string; customer?: string }> }) {
   const profile = await requireStaff()
   const searchParams = await props.searchParams
   const statusFilter = searchParams.status || 'all'
   const sourceFilter = isOrderSource(searchParams.source) ? searchParams.source : 'all'
   const paymentFilter = isPaymentFilter(searchParams.payment) ? searchParams.payment : 'all'
+  const customerFilter = isCustomerKind(searchParams.customer) ? searchParams.customer : ''
   
   const supabase = await createClient()
 
+  const companyEmbed = customerFilter
+    ? 'company:companies!inner(id, name, account_type)'
+    : 'company:companies(id, name, account_type)'
   let query = supabase
     .from('orders')
-    .select('*, company:companies(id, name), owner:profiles!orders_owner_id_fkey(id, full_name)')
+    .select(`*, ${companyEmbed}, owner:profiles!orders_owner_id_fkey(id, full_name)`)
     .order('created_at', { ascending: false })
   query = applyOrderScope(query, profile)
+  if (customerFilter) query = query.eq('company.account_type', customerFilter)
 
   if (statusFilter !== 'all') {
     query = query.eq('status', statusFilter)
@@ -126,6 +135,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
       <div className="md:hidden">
         <MobileFilterBar
           pathname="/crm/orders"
+          preserveParams={customerFilter ? { customer: customerFilter } : {}}
           fields={[
             {
               key: 'status',
@@ -161,12 +171,22 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
         />
       </div>
 
+      <CustomerKindFilter
+        pathname="/crm/orders"
+        current={customerFilter}
+        preserve={{
+          ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+          ...(sourceFilter !== 'all' ? { source: sourceFilter } : {}),
+          ...(paymentFilter !== 'all' ? { payment: paymentFilter } : {}),
+        }}
+      />
+
       <div className="hidden space-y-3 md:block">
         <div className="flex gap-1.5 overflow-x-auto border-b border-[#CCC5BD] pb-2">
           {statuses.map((status) => (
             <Link
               key={status}
-              href={ordersHref(status, sourceFilter, paymentFilter)}
+              href={ordersHref(status, sourceFilter, paymentFilter, customerFilter)}
               className={`shrink-0 rounded-none px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${
                 statusFilter === status
                   ? 'bg-[#1C1B1A] text-[#FCF9F2]'
@@ -180,7 +200,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
 
         <div className="flex flex-wrap items-center gap-1.5">
           <Link
-            href={ordersHref(statusFilter, 'all', paymentFilter)}
+            href={ordersHref(statusFilter, 'all', paymentFilter, customerFilter)}
             className={`rounded-none px-2.5 py-0.5 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${
               sourceFilter === 'all'
                 ? 'bg-[#1C1B1A] text-[#FCF9F2]'
@@ -192,7 +212,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
           {ORDER_SOURCES.map((source) => (
             <Link
               key={source}
-              href={ordersHref(statusFilter, source, paymentFilter)}
+              href={ordersHref(statusFilter, source, paymentFilter, customerFilter)}
               className={`rounded-none px-2.5 py-0.5 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${
                 sourceFilter === source
                   ? 'bg-[#1C1B1A] text-[#FCF9F2]'
@@ -204,7 +224,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
           ))}
           <span className="mx-1 text-[#CCC5BD]">|</span>
           <Link
-            href={ordersHref(statusFilter, sourceFilter, 'all')}
+            href={ordersHref(statusFilter, sourceFilter, 'all', customerFilter)}
             className={`rounded-none px-2.5 py-0.5 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${
               paymentFilter === 'all'
                 ? 'bg-[#1C1B1A] text-[#FCF9F2]'
@@ -216,7 +236,7 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
           {PAYMENT_FILTERS.map((payment) => (
             <Link
               key={payment}
-              href={ordersHref(statusFilter, sourceFilter, payment)}
+              href={ordersHref(statusFilter, sourceFilter, payment, customerFilter)}
               className={`rounded-none px-2.5 py-0.5 text-xs font-bold uppercase tracking-[0.08em] transition-colors ${
                 paymentFilter === payment
                   ? 'bg-[#1C1B1A] text-[#FCF9F2]'
@@ -260,7 +280,12 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
                       {order.order_number || `ORD-${order.id.slice(0, 6)}`}
                     </Link>
                   </td>
-                  <td className="px-3.5 py-2.5 text-[#1C1B1A]">{company?.name || '—'}</td>
+                  <td className="px-3.5 py-2.5 text-[#1C1B1A]">
+                    <span className="inline-flex flex-wrap items-center gap-1.5">
+                      {company?.name || '—'}
+                      {company ? <CustomerKindBadge accountType={company.account_type} /> : null}
+                    </span>
+                  </td>
                   <td className="px-3.5 py-2.5">
                     <span className="inline-flex items-center rounded-none border border-[#CCC5BD] px-2 py-0.5 text-[10px] uppercase text-[#4A4640]">
                       {isOrderSource(order.source) ? ORDER_SOURCE_LABELS[order.source] : 'CRM'}
@@ -328,6 +353,11 @@ export default async function OrdersPage(props: { searchParams: Promise<{ status
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Company: </span>
                     {company?.name || '—'}
+                    {company ? (
+                      <span className="ml-1.5">
+                        <CustomerKindBadge accountType={company.account_type} />
+                      </span>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Source: </span>

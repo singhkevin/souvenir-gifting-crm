@@ -1,5 +1,8 @@
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { Gift, MapPinned, PackageSearch, PenLine, Truck } from 'lucide-react'
+import { BusinessPromptModal } from '@/components/site/business-prompt-modal'
+import { sessionHintFromHeaders } from '@/lib/auth/session-cookie'
 import { ProductImage } from '@/components/ui/product-image'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { RetailHero } from '@/components/site/retail-hero'
@@ -111,6 +114,8 @@ export async function PublicHome({
   basePath?: string
 }) {
   const filters = readCatalogueFilters(searchParams)
+  const headerStore = await headers()
+  const signedIn = sessionHintFromHeaders((name) => headerStore.get(name))
   const loaded = await getPublicCatalogueProducts()
   const preview = process.env.STOREFRONT_UI_PREVIEW === '1' && loaded.length === 0
   const products = loaded
@@ -131,6 +136,7 @@ export async function PublicHome({
 
   return (
     <div className="bg-[#FCF9F2] text-[#1C1C18]">
+      {signedIn ? null : <BusinessPromptModal />}
       {view.preview ? <HomepagePreviewBanner date={view.date} source={view.source} /> : null}
       {resolved.map((section) => {
         switch (section.type) {

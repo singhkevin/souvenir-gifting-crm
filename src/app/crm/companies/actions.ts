@@ -12,6 +12,18 @@ import { findReusableLogo } from '@/lib/companies/identity'
 import { parseAllowedEmailDomains, isEmailAllowedForDomains } from '@/lib/pricing/domains'
 import { recordPriceChange } from '@/lib/pricing/audit'
 import { domainSplitEnabled } from '@/lib/domain-flag'
+import { confirmOriginForAccount } from '@/lib/domain-routing'
+import { portalSetPasswordUrl } from '@/lib/auth/confirm-landing'
+import { requestOrigin } from '@/lib/auth/request-origin'
+import { sendEmail } from '@/lib/email/resend'
+import { portalInviteEmailHtml } from '@/lib/email/business'
+import { canSendPortalInvite } from '@/lib/portal/separation'
+import {
+  directCustomerColumns,
+  directCustomerDbError,
+  readCustomerKind,
+  requirementReturnPath,
+} from '@/lib/companies/customer-kind'
 import { parsePortalSlug, isSlugReservedInHistory, clearTenantCache, portalLoginUrl } from '@/lib/portal-host'
 import { schedulePortalHostsWorker } from '@/lib/portal-hosts/worker'
 import { withIdempotency } from '@/lib/idempotency'
@@ -166,25 +178,37 @@ async function createCompanyOnce(formData: FormData) {
       ? ((formData.get('owner_id') as string) || user.id)
       : user.id
 
+  const name = String(formData.get('name') || '').trim()
+  if (!name) return { error: 'Company name is required' }
+  formData.set('name', name)
+  const kind = readCustomerKind(formData)
+  if ('error' in kind) return kind
+
   const marginRaw = String(formData.get('margin_percent') || '').trim()
   const marginPercent = marginRaw === '' ? null : Number(marginRaw)
   if (marginRaw !== '' && (!Number.isFinite(marginPercent) || (marginPercent as number) < 0)) {
     return { error: 'Margin % must be a number ≥ 0' }
   }
-  const allowedEmailDomains = parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
-  const portalSlug = parsePortalSlug(String(formData.get('portal_slug') || ''))
+  const allowedEmailDomains = kind.accountType === 'direct'
+    ? []
+    : parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
+  const portalSlug = kind.accountType === 'direct'
+    ? { slug: null as string | null, error: null as string | null }
+    : parsePortalSlug(String(formData.get('portal_slug') || ''))
   if (portalSlug.error) return { error: portalSlug.error }
   const reserved = await assertPortalSlugAvailable(portalSlug.slug)
   if (reserved) return { error: reserved }
   const status = parseSalesStatus(formData.get('status'), 'active')
   if (typeof status === 'object') return status
-  const portalStatus = parsePortalStatus(formData.get('portal_status'), 'active')
+  const portalStatus = kind.accountType === 'direct'
+    ? 'active'
+    : parsePortalStatus(formData.get('portal_status'), 'active')
   if (typeof portalStatus === 'object') return portalStatus
-  const trialEndsAt = parseTrialEndsAt(formData.get('trial_ends_at'))
+  const trialEndsAt = kind.accountType === 'direct' ? null : parseTrialEndsAt(formData.get('trial_ends_at'))
   if (trialEndsAt !== null && typeof trialEndsAt === 'object') return trialEndsAt
 
   const { data, error } = await supabase.from('companies').insert({
-    name: formData.get('name') as string,
+    name,
     industry: formData.get('industry') as string || null,
     website: formData.get('website') as string || null,
     city: formData.get('city') as string || null,
@@ -197,12 +221,36 @@ async function createCompanyOnce(formData: FormData) {
     portal_status: portalStatus,
     trial_ends_at: trialEndsAt,
     margin_percent: marginPercent,
-    allowed_email_domains: allowedEmailDomains,
-    portal_slug: portalSlug.slug,
+    ...(kind.accountType === 'direct'
+      ? directCustomerColumns(kind.isIndividual)
+      : {
+          account_type: 'corporate' as const,
+          allowed_email_domains: allowedEmailDomains,
+          portal_slug: portalSlug.slug,
+        }),
   }).select('id').single()
   if (error) {
     console.error('[createCompany]', error.code, error.message)
+    if (kind.accountType === 'direct') {
+      const friendly = directCustomerDbError(error.message)
+      if (friendly) return { error: friendly }
+    }
     return { error: portalSlugError(error.message) }
+  }
+
+  if (kind.accountType === 'direct') {
+    const contactError = await insertDirectPrimaryContact(supabase, {
+      companyId: data.id,
+      companyName: name,
+      isIndividual: kind.isIndividual,
+      contactName: String(formData.get('contact_name') || ''),
+      email: String(formData.get('contact_email') || ''),
+      phone: String(formData.get('contact_phone') || ''),
+    })
+    if (contactError) {
+      await supabase.from('companies').delete().eq('id', data.id)
+      return { error: contactError }
+    }
   }
 
   const file = formData.get('logo')
@@ -229,7 +277,7 @@ async function createCompanyOnce(formData: FormData) {
     action: 'create',
     entity: 'companies',
     entityId: data.id,
-    next: { name: formData.get('name'), owner_id: ownerId, portal_slug: portalSlug.slug },
+    next: { name, owner_id: ownerId, portal_slug: portalSlug.slug, account_type: kind.accountType },
     userId: user.id,
   })
 
@@ -239,7 +287,53 @@ async function createCompanyOnce(formData: FormData) {
     kickPortalWorker(data.id, portalSlug.slug)
   }
 
+  const back = requirementReturnPath(formData.get('return_to'))
+  if (back) redirect(`${back}?company_id=${data.id}`)
+
+  if (String(formData.get('inline') || '') === '1') {
+    revalidatePath('/crm/companies')
+    revalidatePath('/crm/requirements/new')
+    return { success: true, company: { id: data.id, name } }
+  }
+
   redirect(`/crm/companies/${data.id}`)
+}
+
+async function insertDirectPrimaryContact(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  input: {
+    companyId: string
+    companyName: string
+    isIndividual: boolean
+    contactName: string
+    email: string
+    phone: string
+  },
+) {
+  const contactName = (input.isIndividual ? input.companyName : input.contactName).trim()
+  if (!contactName) return null
+  const row = {
+    full_name: contactName,
+    company_id: input.companyId,
+    email: input.email.trim() || null,
+    phone: input.phone.trim() || null,
+    contact_type: 'primary',
+    kind: 'direct',
+  }
+  const inserted = await supabase.from('contacts').insert(row)
+  if (!inserted.error) return null
+  if (!/kind/i.test(inserted.error.message)) {
+    return `Could not save the primary contact: ${inserted.error.message}`
+  }
+  const retried = await supabase.from('contacts').insert({
+    full_name: row.full_name,
+    company_id: row.company_id,
+    email: row.email,
+    phone: row.phone,
+    contact_type: row.contact_type,
+  })
+  if (retried.error) return `Could not save the primary contact: ${retried.error.message}`
+  return null
 }
 export async function updateCompany(companyId: string, formData: FormData) {
   const access = await requireCompanyEditor()
@@ -250,22 +344,29 @@ export async function updateCompany(companyId: string, formData: FormData) {
   if (marginRaw !== '' && (!Number.isFinite(marginPercent) || (marginPercent as number) < 0)) {
     return { error: 'Margin % must be a number ≥ 0' }
   }
-  const allowedEmailDomains = parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
-  const portalSlug = parsePortalSlug(String(formData.get('portal_slug') || ''))
-  if (portalSlug.error) return { error: portalSlug.error }
   const status = parseSalesStatus(formData.get('status'), 'active')
   if (typeof status === 'object') return status
-  const portalStatus = parsePortalStatus(formData.get('portal_status'), 'active')
-  if (typeof portalStatus === 'object') return portalStatus
-  const trialEndsAt = parseTrialEndsAt(formData.get('trial_ends_at'))
-  if (trialEndsAt !== null && typeof trialEndsAt === 'object') return trialEndsAt
 
   const supabase = await createClient()
   const { data: existing } = await supabase
     .from('companies')
-    .select('portal_slug, portal_status, margin_percent')
+    .select('portal_slug, portal_status, margin_percent, account_type')
     .eq('id', companyId)
     .maybeSingle()
+  const direct = existing?.account_type === 'direct'
+  const allowedEmailDomains = direct
+    ? []
+    : parseAllowedEmailDomains(String(formData.get('allowed_email_domains') || ''))
+  const portalSlug = direct
+    ? { slug: null as string | null, error: null as string | null }
+    : parsePortalSlug(String(formData.get('portal_slug') || ''))
+  if (portalSlug.error) return { error: portalSlug.error }
+  const portalStatus = direct
+    ? (existing?.portal_status || 'active')
+    : parsePortalStatus(formData.get('portal_status'), 'active')
+  if (typeof portalStatus === 'object') return portalStatus
+  const trialEndsAt = direct ? null : parseTrialEndsAt(formData.get('trial_ends_at'))
+  if (trialEndsAt !== null && typeof trialEndsAt === 'object') return trialEndsAt
   if (portalSlug.slug && portalSlug.slug !== existing?.portal_slug) {
     const reserved = await assertPortalSlugAvailable(portalSlug.slug)
     if (reserved) return { error: reserved }
@@ -445,6 +546,142 @@ export async function backfillMissingCompanyLogos() {
   return { success: true, scanned: missing.length, inherited }
 }
 
+export async function sendPortalInvitation(formData: FormData) {
+  return withIdempotency('crm.sendPortalInvitation', formData, () => sendPortalInvitationOnce(formData))
+}
+
+async function sendPortalInvitationOnce(formData: FormData) {
+  const profile = await getProfile()
+  if (!profile) return { error: 'Not authenticated' }
+  if (!canSendPortalInvite(profile.role)) {
+    return { error: 'Only sales or an admin can send a portal invitation' }
+  }
+
+  const companyId = String(formData.get('company_id') || '')
+  const email = String(formData.get('email') || '').trim().toLowerCase()
+  const fullName = String(formData.get('full_name') || '').trim()
+  const role = String(formData.get('role') || 'client_user')
+  if (!companyId || !email || !email.includes('@')) return { error: 'A company and email are required' }
+  if (role !== 'client_admin' && role !== 'client_user') return { error: 'Invalid portal role' }
+
+  const supabase = await createClient()
+  const { data: company } = await supabase
+    .from('companies')
+    .select('id, name, account_type, allowed_email_domains, portal_slug')
+    .eq('id', companyId)
+    .maybeSingle()
+  if (!company) return { error: 'Company not found' }
+  if (company.account_type === 'direct') {
+    return { error: 'Direct customers do not get a portal login.' }
+  }
+  if ((company.account_type || 'corporate') === 'business') {
+    return { error: 'Business accounts sign in on the business portal. This invitation is for a company microsite.' }
+  }
+  if (!isEmailAllowedForDomains(email, company.allowed_email_domains)) {
+    const domains = (company.allowed_email_domains || []).join(', ')
+    return {
+      error: domains
+        ? `Portal invitations must use an allowed domain (${domains}).`
+        : 'Portal invitation email is not allowed for this company.',
+    }
+  }
+  if (domainSplitEnabled() && !company.portal_slug) {
+    return { error: 'Add a portal address for this company before sending an invitation.' }
+  }
+
+  const admin = createAdminClient()
+  if (!admin) return { error: SERVICE_ROLE_MISSING }
+
+  const { data: existing } = await admin
+    .from('profiles')
+    .select('id, email, role, company_id, is_active')
+    .ilike('email', email)
+    .maybeSingle()
+
+  let userId = existing?.id || null
+  if (existing) {
+    if (existing.role !== 'client_admin' && existing.role !== 'client_user') {
+      return { error: 'This email already belongs to another account.' }
+    }
+    if (existing.company_id !== companyId) {
+      return { error: 'This email already belongs to another company portal.' }
+    }
+    if (existing.is_active === false) return { error: 'This portal login is inactive.' }
+  } else {
+    if (!fullName) return { error: 'Name is required' }
+    const created = await admin.auth.admin.createUser({
+      email,
+      password: generateTemporaryPassword(),
+      email_confirm: true,
+      app_metadata: { role, company_id: companyId },
+      user_metadata: { full_name: fullName },
+    })
+    if (created.error || !created.data.user) {
+      const message = created.error?.message || 'Could not create the portal login'
+      if (/portal email domain/i.test(message)) {
+        return { error: 'Portal invitations must use an allowed email domain for this company.' }
+      }
+      if (message.toLowerCase().includes('already') || message.toLowerCase().includes('registered')) {
+        return { error: 'A user with this email already exists.' }
+      }
+      return { error: message }
+    }
+    userId = created.data.user.id
+    const { error: profileError } = await admin.from('profiles').upsert({
+      id: userId,
+      full_name: fullName,
+      email,
+      role,
+      company_id: companyId,
+      is_active: true,
+    })
+    if (profileError) {
+      await admin.auth.admin.deleteUser(userId)
+      if (/portal email domain/i.test(profileError.message)) {
+        return { error: 'Portal invitations must use an allowed email domain for this company.' }
+      }
+      return { error: profileError.message }
+    }
+  }
+
+  const origin = confirmOriginForAccount({
+    role: 'client_user',
+    portalSlug: company.portal_slug,
+    fallbackOrigin: await requestOrigin(),
+  })
+  const link = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email,
+    options: { redirectTo: `${origin}/auth/confirm` },
+  })
+  const properties = link.data?.properties
+  const actionLink = portalSetPasswordUrl(origin, {
+    hashedToken: properties?.hashed_token,
+    verificationType: properties?.verification_type,
+    actionLink: properties?.action_link,
+  })
+  if (link.error || !actionLink) {
+    return { error: 'The portal login was saved, but the invitation email could not be prepared. Send it again.' }
+  }
+
+  const sent = await sendEmail({
+    to: email,
+    subject: `Your ${company.name} portal invitation`,
+    html: portalInviteEmailHtml({ companyName: company.name, actionLink }),
+  })
+  if (sent.error) return { error: `${sent.error} The login exists. Send the invitation again.` }
+
+  await writeAudit(supabase, {
+    action: 'invite',
+    entity: 'profiles',
+    entityId: userId,
+    next: { email, company_id: companyId },
+    userId: profile.id,
+  })
+  revalidatePath(`/crm/companies/${companyId}`)
+  return { success: true, message: `Invitation sent to ${email}` }
+}
+
 export async function createPortalClient(formData: FormData) {
   return withIdempotency('crm.createPortalClient', formData, () => createPortalClientOnce(formData))
 }
@@ -475,10 +712,11 @@ async function createPortalClientOnce(formData: FormData) {
   const supabase = await createClient()
   const { data: company } = await supabase
     .from('companies')
-    .select('id, name, allowed_email_domains, portal_slug')
+    .select('id, name, account_type, allowed_email_domains, portal_slug')
     .eq('id', companyId)
     .maybeSingle()
   if (!company) return { error: 'Company not found' }
+  if (company.account_type === 'direct') return { error: 'Direct customers do not get a portal login.' }
 
   if (!isEmailAllowedForDomains(email, company.allowed_email_domains)) {
     const domains = (company.allowed_email_domains || []).join(', ')

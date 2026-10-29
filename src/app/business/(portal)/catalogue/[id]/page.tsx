@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { AddToQuote } from '@/components/business/add-to-quote'
 import { ProductImage } from '@/components/ui/product-image'
-import { getBusinessProduct } from '@/lib/business/catalogue'
+import { getBusinessProduct, readBusinessPriceAccess } from '@/lib/business/catalogue'
+import { businessPriceNotice } from '@/lib/business/price-access'
 import { requireBusiness } from '@/lib/business/session'
 import { formatCurrency, isUuid } from '@/lib/utils'
 
@@ -13,6 +14,7 @@ export default async function BusinessProductPage({ params }: { params: Promise<
   if (!isUuid(id)) notFound()
   const { company, profile } = await requireBusiness()
   const product = await getBusinessProduct(company?.id || profile.company_id, id)
+  const priceNotice = businessPriceNotice(await readBusinessPriceAccess(profile))
   if (!product) notFound()
 
   return (
@@ -32,7 +34,9 @@ export default async function BusinessProductPage({ params }: { params: Promise<
         <div className="border-y border-[#CCC5BD] py-3.5 space-y-1.5">
           <div className="flex items-baseline gap-3">
             <span className="sv2-mono-lg text-2xl font-bold text-[#1C1C18]">
-              {product.indicativePrice == null ? 'Price on quote' : `${formatCurrency(product.indicativePrice)}${product.priceNote ? ` ${product.priceNote}` : ''}`}
+              {product.indicativePrice == null
+                ? (priceNotice || 'Price on quote')
+                : `${formatCurrency(product.indicativePrice)}${product.priceNote ? ` ${product.priceNote}` : ''}`}
             </span>
             <span className="sv2-label text-[10px] text-[#7C766F]">Indicative unit price</span>
           </div>

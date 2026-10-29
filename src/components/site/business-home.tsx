@@ -2,9 +2,10 @@ import Link from 'next/link'
 import { headers } from 'next/headers'
 import { getProfile } from '@/lib/auth'
 import { sessionHintFromHeaders } from '@/lib/auth/session-cookie'
-import { isBusinessRole, isClientRole } from '@/lib/roles'
+import { isBusinessRole, isClientRole, isGiftEmployeeRole } from '@/lib/roles'
 import { landingPathForRole } from '@/lib/safe-next'
-import { getBusinessCatalogue, type BusinessProduct } from '@/lib/business/catalogue'
+import { getBusinessCatalogue, readBusinessPriceAccess, type BusinessProduct } from '@/lib/business/catalogue'
+import { businessPriceNotice } from '@/lib/business/price-access'
 import { minimumOrderQty } from '@/lib/business/lines'
 import { getPublicBrands, getPublicCategories, type PublicProduct } from '@/lib/catalogue/products'
 import { curateTrendingProducts } from '@/lib/catalogue/curate'
@@ -46,17 +47,15 @@ export async function BusinessHome({
   const headerStore = await headers()
   const profile = sessionHintFromHeaders((name) => headerStore.get(name)) ? await getProfile() : null
   const companyId = profile && isBusinessRole(profile.role) ? profile.company_id : null
-  const accountHref = profile
-    ? isClientRole(profile.role)
-      ? '/portal/gifts'
-      : landingPathForRole(profile.role)
-    : null
-  const accountLabel = profile
-    ? isClientRole(profile.role)
-      ? 'Client portal'
-      : isBusinessRole(profile.role)
-        ? 'Business portal'
-        : 'Workspace'
+  const priceAccess = await readBusinessPriceAccess(profile)
+  const priceNotice = businessPriceNotice(priceAccess)
+  const showPrices = priceAccess === 'open'
+  const portalAccount = profile && (isClientRole(profile.role) || isGiftEmployeeRole(profile.role))
+  const accountHref = profile && !portalAccount ? landingPathForRole(profile.role) : null
+  const accountLabel = profile && !portalAccount
+    ? isBusinessRole(profile.role)
+      ? 'Business portal'
+      : 'Workspace'
     : null
 
   const [products, categories, brands, phone] = await Promise.all([
@@ -85,7 +84,8 @@ export async function BusinessHome({
     badge: p.category_name || null,
     leadSla: null, // Lead time omitted because not present in data
     description: p.description || null,
-    price: businessPrice(p),
+    price: showPrices ? businessPrice(p) : null,
+    priceText: showPrices ? null : priceNotice,
     moq: 'moqUnits' in p && typeof (p as BusinessProduct).moqUnits === 'number'
       ? (p as BusinessProduct).moqUnits
       : minimumOrderQty(p.moq),
@@ -179,7 +179,7 @@ export async function BusinessHome({
       moq: minMoq,
       href: item.href,
       imageUrl: firstWithImage?.image_url || item.imageUrl,
-      price: minPrice, // null renders as "Price on quote"
+      price: showPrices ? minPrice : null,
     }
   })
 
@@ -191,7 +191,8 @@ export async function BusinessHome({
     sku: item.sku || null,
     imageUrl: item.image_url,
     description: item.description,
-    price: businessPrice(item),
+    price: showPrices ? businessPrice(item) : null,
+    priceText: showPrices ? null : priceNotice,
     moq: ('moqUnits' in item && typeof (item as BusinessProduct).moqUnits === 'number')
       ? (item as BusinessProduct).moqUnits
       : minimumOrderQty(item.moq),
@@ -219,11 +220,17 @@ export async function BusinessHome({
         {/* Indicative pricing notice & account access bar */}
         <aside
           className="border-b border-[#7C766F] bg-[#1C1B1A] px-4 sm:px-8 lg:px-16 py-2.5"
-          aria-label="Indicative pricing notice"
+          aria-label={priceNotice ? 'Business pricing' : 'Indicative pricing notice'}
         >
           <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
             <p className="text-[#cac6c4] sv2-body-sm">
-              <span className="text-[#FFB690] font-semibold">Note:</span> Prices shown are indicative. Your quotation is the final price.
+              {priceNotice ? (
+                priceNotice
+              ) : (
+                <>
+                  <span className="text-[#FFB690] font-semibold">Note:</span> Prices shown are indicative. Your quotation is the final price.
+                </>
+              )}
             </p>
             <div className="flex items-center gap-3">
               <Link
@@ -395,6 +402,7 @@ export async function BusinessHome({
                   description={kit.description}
                   imageUrl={kit.imageUrl}
                   price={kit.price}
+                  priceText={showPrices ? null : priceNotice}
                   moq={kit.moq}
                   href={kit.href}
                   customisation={kit.customisation}
@@ -433,7 +441,7 @@ export async function BusinessHome({
           <SectionHeader
             numeral="03"
             title="Comprehensive Corporate Catalogue"
-            subtitle="Filter by category, brand, price and occasion. Prices shown here are indicative."
+            subtitle={showPrices ? 'Filter by category, brand, price and occasion. Prices shown here are indicative.' : priceNotice || undefined}
             actionHref="/catalogue"
             actionLabel="View all catalogue products →"
           />
@@ -445,9 +453,10 @@ export async function BusinessHome({
             filters={filters}
             basePath="/business"
             heading="Corporate gift catalogue"
-            priceOf={businessPrice}
+            priceOf={(product) => (showPrices ? businessPrice(product) : null)}
             showSample={false}
-            captionFor={caption}
+            captionFor={showPrices ? caption : undefined}
+            hiddenPriceLabel={priceNotice}
             limit={8}
             channel="business"
             embedded
@@ -530,7 +539,7 @@ export async function BusinessHome({
                   <span className="italic font-normal text-[#FFB690]">&amp; Clients</span>.
                 </>
               }
-              subtitle="Clear indicative pricing, single-unit samples, and complete GST invoicing."
+              subtitle={showPrices ? 'Clear indicative pricing, single-unit samples, and complete GST invoicing.' : priceNotice || undefined}
               dark
             />
 

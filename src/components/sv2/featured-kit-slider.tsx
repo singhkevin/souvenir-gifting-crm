@@ -14,6 +14,7 @@ export interface FeaturedKitItem {
   leadSla?: string | null
   description?: string | null
   price: number | null
+  priceText?: string | null
   moq: number
   imageUrl: string
 }
@@ -96,8 +97,10 @@ export function FeaturedKitSlider({ items }: FeaturedKitSliderProps) {
             <h3 className="sv2-headline-sm text-[#FCF9F2] font-normal">
               {current.name}
             </h3>
-            <span className="sv2-mono-lg text-[#FFB690] whitespace-nowrap">
-              {displayPrice ? (
+            <span className={current.priceText ? 'max-w-[14rem] text-right text-xs font-medium leading-snug text-[#FFB690]' : 'sv2-mono-lg text-[#FFB690] whitespace-nowrap'}>
+              {current.priceText ? (
+                current.priceText
+              ) : displayPrice ? (
                 <>
                   {formatCurrency(current.price)}{' '}
                   <span className="sv2-body-sm text-xs font-normal text-[#7C766F]">/ unit</span>
