@@ -358,6 +358,22 @@ export default async function DashboardPage({
     </div>
   )
 
+  let pendingBusiness: number | null = null
+  let freeEmailBusiness: number | null = null
+  if (profile.role === 'admin' || profile.role === 'sales' || profile.role === 'management') {
+    const pending = await applyCompanyScope(
+      supabase
+        .from('companies')
+        .select('id', { count: 'exact', head: true })
+        .eq('account_type', 'business')
+        .or('business_verification.is.null,business_verification.eq.unverified'),
+      profile,
+    )
+    if (!pending.error) pendingBusiness = pending.count || 0
+    const reviewed = await supabase.from('business_free_email_review').select('profile_id', { count: 'exact', head: true })
+    if (!reviewed.error) freeEmailBusiness = reviewed.count || 0
+  }
+
   return (
     <div
       className="space-y-6 sm:space-y-8 text-[#1C1B1A]"
@@ -421,6 +437,22 @@ export default async function DashboardPage({
               {canSeeFinance(profile.role) && <Card label="Payables" value={formatCurrency(payableTotal)} href="/crm/payables" />}
               {canSeeFinance(profile.role) && <Card label="Gross margin" value={formatCurrency(margin)} />}
               <Card label="Clients" value={companies.count || 0} href="/crm/companies" />
+              {pendingBusiness != null && (
+                <Card
+                  label="Pending business"
+                  value={pendingBusiness}
+                  href="/crm/companies?type=business&verification=pending"
+                  warn={pendingBusiness > 0}
+                />
+              )}
+              {freeEmailBusiness != null && (
+                <Card
+                  label="Free-email review"
+                  value={freeEmailBusiness}
+                  href="/crm/companies?review=free-email"
+                  warn={freeEmailBusiness > 0}
+                />
+              )}
               <Card label="Catalogs" value={campaigns.count || 0} href="/crm/catalogs" />
               <Card label="Delayed" value={delayed.length} href="/crm/order-management?health=delayed" warn={delayed.length > 0} />
               <Card label="Samples out" value={samplesOut} href="/crm/samples" />
@@ -604,6 +636,22 @@ export default async function DashboardPage({
       {profile.role === 'sales' && (
         <div className="space-y-6 sm:space-y-8">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {pendingBusiness != null && (
+              <Card
+                label="Pending business"
+                value={pendingBusiness}
+                href="/crm/companies?type=business&verification=pending"
+                warn={pendingBusiness > 0}
+              />
+            )}
+            {freeEmailBusiness != null && (
+              <Card
+                label="Free-email review"
+                value={freeEmailBusiness}
+                href="/crm/companies?review=free-email"
+                warn={freeEmailBusiness > 0}
+              />
+            )}
             <Card label="My leads" value={leadRows.length} href="/crm/leads" />
             <Card label="My requirements" value={openReqs.length} href="/crm/requirements" />
             <Card label="My quotations" value={quoteRows.length} href="/crm/quotations?owner=mine" />

@@ -27,6 +27,11 @@ export type EmailDomainRule = {
   rule: EmailDomainRuleName
 }
 
+export function emailDomainRuleChoice(value: string): EmailDomainRuleName | null {
+  if (value === 'allow' || value === 'block_free' || value === 'block_disposable') return value
+  return null
+}
+
 export type EmailDomainFlags = {
   domain: string | null
   freeMail: boolean
@@ -67,6 +72,30 @@ export function classifyBusinessEmail(
     disposable,
     possibleClientName: possible?.name || null,
   }
+}
+
+/**
+ * A microsite client's domain cannot open a business account.
+ * Direct customers (account_type direct) and business accounts are not microsites.
+ */
+export function micrositeDomainConflict(
+  email: string,
+  companies: {
+    name: string
+    domains: string[] | null | undefined
+    account_type?: string | null
+    status?: string | null
+  }[],
+): { name: string } | null {
+  const domain = emailDomain(email)
+  if (!domain) return null
+  const hit = companies.find((company) => {
+    const type = company.account_type || 'corporate'
+    if (type !== 'corporate') return false
+    if (company.status && company.status !== 'active') return false
+    return (company.domains || []).some((entry) => normalizeEmailDomain(entry) === domain)
+  })
+  return hit ? { name: hit.name } : null
 }
 
 /** CRM review flag. An allow rule is an exception and is not flagged. Null rules use the offline lists. */

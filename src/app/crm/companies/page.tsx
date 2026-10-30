@@ -39,7 +39,7 @@ function portalDotClass(status: string | undefined) {
   }
 }
 
-export default async function Companies(props: { searchParams: Promise<{ q?: string; status?: string; type?: string; removed?: string }> }) {
+export default async function Companies(props: { searchParams: Promise<{ q?: string; status?: string; type?: string; verification?: string; review?: string; removed?: string }> }) {
   const profile = await requireStaff()
   const searchParams = await props.searchParams;
   const supabase = await createClient();
@@ -47,6 +47,8 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
   const q = searchParams?.q || '';
   const status = searchParams?.status || '';
   const accountType = searchParams?.type || '';
+  const verification = searchParams?.verification || '';
+  const review = searchParams?.review || '';
   const removed = searchParams?.removed || '';
 
   let query = supabase.from('companies').select('*, owner:profiles!owner_id(full_name)').order('created_at', { ascending: false }).limit(50);
@@ -54,7 +56,23 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
   
   if (q) query = query.ilike('name', `%${q}%`);
   if (status) query = query.eq('status', status);
-  if (accountType === 'business' || accountType === 'corporate') query = query.eq('account_type', accountType);
+  if (accountType === 'business' || accountType === 'corporate' || accountType === 'direct') query = query.eq('account_type', accountType);
+  if (verification === 'pending') {
+    query = query.eq('account_type', 'business').or('business_verification.is.null,business_verification.eq.unverified')
+  } else if (verification === 'verified' || verification === 'rejected') {
+    query = query.eq('business_verification', verification)
+  }
+  let reviewError: string | null = null
+  if (review === 'free-email') {
+    const reviewed = await supabase.from('business_free_email_review').select('company_id')
+    if (reviewed.error) {
+      reviewError = 'Apply supabase/migrations/20261030b_business_email_domains.sql, then retry.'
+      query = query.eq('id', '00000000-0000-0000-0000-000000000000')
+    } else {
+      const ids = [...new Set((reviewed.data || []).map((row) => row.company_id).filter(Boolean))]
+      query = ids.length ? query.in('id', ids) : query.eq('id', '00000000-0000-0000-0000-000000000000')
+    }
+  }
 
   const wildcardDns = portalDnsMode() === 'vercel'
   const listed = await query;
@@ -118,6 +136,8 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
         <form className="flex gap-2">
           {status ? <input type="hidden" name="status" value={status} /> : null}
           {accountType ? <input type="hidden" name="type" value={accountType} /> : null}
+          {verification ? <input type="hidden" name="verification" value={verification} /> : null}
+          {review ? <input type="hidden" name="review" value={review} /> : null}
           <div className="relative min-w-0 flex-1 sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7C766F]" size={16} />
             <input
@@ -136,7 +156,12 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
         </form>
         <MobileFilterBar
           pathname="/crm/companies"
-          preserveParams={{ ...(q ? { q } : {}), ...(accountType ? { type: accountType } : {}) }}
+          preserveParams={{
+            ...(q ? { q } : {}),
+            ...(accountType ? { type: accountType } : {}),
+            ...(verification ? { verification } : {}),
+            ...(review ? { review } : {}),
+          }}
           fields={[
             {
               key: 'status',
@@ -158,11 +183,45 @@ export default async function Companies(props: { searchParams: Promise<{ q?: str
                 { value: '', label: 'All types' },
                 { value: 'corporate', label: 'Corporate' },
                 { value: 'business', label: 'Business' },
+                { value: 'direct', label: 'Direct' },
+              ],
+            },
+            {
+              key: 'verification',
+              label: 'Approval',
+              value: verification,
+              emptyLabel: 'Any approval',
+              options: [
+                { value: '', label: 'Any approval' },
+                { value: 'pending', label: 'Pending approval' },
+                { value: 'verified', label: 'Verified' },
+                { value: 'rejected', label: 'Rejected' },
               ],
             },
           ]}
         />
+        {(profile.role === 'admin' || profile.role === 'sales') && (
+          <p className="text-xs text-[#4A4640]">
+            <Link href="/crm/companies?type=business&verification=pending" className="font-semibold text-[#9E4300] hover:underline">
+              Pending approval
+            </Link>
+            <span className="mx-2 text-[#CCC5BD]">·</span>
+            <Link href="/crm/companies?review=free-email" className="font-semibold text-[#9E4300] hover:underline">
+              Free-email review
+            </Link>
+          </p>
+        )}
       </div>
+
+      {verification === 'pending' ? (
+        <p className="mb-4 text-sm text-[#4A4640]">Pending approval · verify, reject, or block these business accounts.</p>
+      ) : null}
+      {review === 'free-email' ? (
+        <p className="mb-4 text-sm text-[#4A4640]">Free-email business accounts · they still work. Review them before the next renewal.</p>
+      ) : null}
+      {reviewError ? (
+        <p className="mb-4 text-sm text-[#9E4300]">{reviewError}</p>
+      ) : null}
 
       {companyRows.length > 0 ? (
         <>
