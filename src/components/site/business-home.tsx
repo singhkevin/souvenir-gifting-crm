@@ -216,7 +216,7 @@ export async function BusinessHome({
   return (
     <div className="w-full max-w-full min-w-0 pb-16 md:pb-0">
       {/* 1. Utility Bar */}
-      <UtilityBar phone={phone} showMinimumOrder />
+      <UtilityBar phone={phone} showMinimumOrder={showPrices} />
 
       {/* Primary Header */}
       <SV2Header categories={navCategories} accountHref={accountHref} accountLabel={accountLabel} />

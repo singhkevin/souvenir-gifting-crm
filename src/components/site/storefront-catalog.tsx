@@ -106,6 +106,7 @@ export function StorefrontCatalog({
         </div>
       ) : null}
 
+      {hiddenPriceLabel ? null : (
       <div>
         <p className="sv2-label text-[#1C1C18]">Price</p>
         <nav className="mt-2 border-t border-[#CCC5BD] pt-2 space-y-0.5">
@@ -127,6 +128,7 @@ export function StorefrontCatalog({
           })}
         </nav>
       </div>
+      )}
 
       <div>
         <p className="sv2-label text-[#1C1C18]">Occasion</p>
