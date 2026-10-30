@@ -30,8 +30,10 @@ import { FeaturedKitSlider, type FeaturedKitItem } from '@/components/sv2/featur
 import { FadeIn } from '@/components/sv2/fade-in'
 import { SV2Button } from '@/components/sv2/button'
 
-function businessPrice(product: { indicativePrice?: number | null }): number | null {
-  return product.indicativePrice ?? null
+function businessPrice(product: PublicProduct): number | null {
+  if (!('indicativePrice' in product)) return null
+  const price = (product as PublicProduct & { indicativePrice?: number | null }).indicativePrice
+  return price ?? null
 }
 
 function withImage<T extends { image_url: string | null }>(items: T[]): T[] {

@@ -28,7 +28,8 @@ import {
 } from '@/components/companies/company-catalogue-browser'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { BusinessAccountPanel } from '../business-account-panel'
-import { emailDomain, emailReviewFlag, type EmailDomainRule } from '@/lib/business/email-domain'
+import { emailReviewFlag, type EmailDomainRule } from '@/lib/business/email-domain'
+import { emailDomain } from '@/lib/pricing/domains'
 import { CompanySpecialPrices, type SpecialPriceRow } from '../special-prices'
 import type { PickerProduct } from '@/components/products/product-picker-drawer'
 
