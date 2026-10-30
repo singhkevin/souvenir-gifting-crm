@@ -7,6 +7,7 @@ import { SiteProductCard } from '@/components/site/site-product-card'
 import { formatCurrency } from '@/lib/utils'
 import { ProductImage } from '@/components/ui/product-image'
 import type { PublicProduct } from '@/lib/catalogue/products'
+import { retailLineCaption } from '@/lib/catalogue/availability'
 import { purchaseCaption } from '@/lib/catalogue/purchase-path'
 
 const VIEW_KEY = 'giffter.public-catalogue.view'
@@ -129,7 +130,7 @@ export function CatalogueBrowser({
                   {priceLabel?.(product) || (product.price == null ? 'Price on quote' : formatCurrency(product.price))}
                 </p>
                 <p className="mt-0.5 sv2-label text-[10px] text-[#7C766F]">
-                  {captionFor?.(product) || purchaseCaption(product.purchase)}
+                  {captionFor?.(product) || (product.purchase.rfq ? purchaseCaption(product.purchase) : retailLineCaption(product.purchase.stockQty))}
                 </p>
               </div>
             </Link>

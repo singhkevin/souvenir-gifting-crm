@@ -15,6 +15,8 @@ export type CartItem = {
   altQuantities?: number[]
   targetUnitPrice?: number | null
   note?: string
+  /** Sellable units at the time the line was added. Unset on older carts. */
+  stockQty?: number | null
 }
 
 export const STORE_CART_KEY = 'giffter_cart'
@@ -40,6 +42,8 @@ function normalize(item: unknown): CartItem | null {
     : []
   const targetRaw = raw.targetUnitPrice
   const targetUnitPrice = targetRaw == null || targetRaw === '' || !Number.isFinite(Number(targetRaw)) ? null : Number(targetRaw)
+  const stockRaw = Number(raw.stockQty)
+  const stockQty = Number.isInteger(stockRaw) && stockRaw >= 0 ? stockRaw : undefined
   return {
     id: String(raw.id || raw.sku),
     sku: String(raw.sku || raw.id),
@@ -52,6 +56,7 @@ function normalize(item: unknown): CartItem | null {
     maxQuantity,
     surface,
     catalogId: raw.catalogId ? String(raw.catalogId) : null,
+    ...(stockQty == null ? {} : { stockQty }),
     ...(surface === 'business'
       ? { moq, altQuantities, targetUnitPrice, note: raw.note ? String(raw.note).slice(0, 500) : '' }
       : {}),
@@ -79,10 +84,11 @@ export function getCartCount(items?: CartItem[]): number {
   return (items || readCart()).length
 }
 
-export type CartDraft = Omit<CartItem, 'quantity' | 'maxQuantity' | 'surface' | 'catalogId'> & {
+export type CartDraft = Omit<CartItem, 'quantity' | 'maxQuantity' | 'surface' | 'catalogId' | 'stockQty'> & {
   maxQuantity?: number | null
   surface?: CartSurface
   catalogId?: string | null
+  stockQty?: number | null
 }
 
 function sameCheckout(current: CartItem, incoming: CartDraft) {
@@ -113,7 +119,11 @@ export function addToCart(
   }
   const nextQuantity = existing ? existing.quantity + addQty : addQty
   const next = existing
-    ? current.map((row) => (row.id === existing.id ? { ...row, quantity: nextQuantity, maxQuantity } : row))
+    ? current.map((row) =>
+        row.id === existing.id
+          ? { ...row, quantity: nextQuantity, maxQuantity, stockQty: item.stockQty ?? row.stockQty }
+          : row,
+      )
     : [
         ...current,
         {
@@ -126,6 +136,7 @@ export function addToCart(
           maxQuantity,
           surface: item.surface || 'store',
           catalogId: item.catalogId || null,
+          ...(item.stockQty == null ? {} : { stockQty: item.stockQty }),
         },
       ]
   writeCart(next, key)

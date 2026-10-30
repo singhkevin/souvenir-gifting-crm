@@ -26,7 +26,11 @@ export function StitchProductCard({
   const quoteHref = `/request-quote?product=${product.id}`
   const category = product.category_name && !/^other$/i.test(product.category_name) ? product.category_name : null
   const meta = [category, product.brand_name].filter(Boolean).join(' · ')
-  const canBuy = Boolean(showSample && product.purchase.buy)
+  const retail = channel !== 'business'
+  const canBuy = retail
+    ? product.purchase.reason !== 'sample' && product.purchase.buy
+    : Boolean(showSample && product.purchase.buy)
+  const readyToShip = retail ? product.purchase.reason === 'stock' && product.purchase.stockQty > 0 : canBuy
   const moqLine = channel === 'business' ? caption || (product.moq ? `MOQ ${product.moq}` : null) : null
 
   return (
@@ -45,13 +49,13 @@ export function StitchProductCard({
             className="absolute inset-0 h-full w-full bg-transparent"
             imgClassName="scale-[1.04] transition-transform duration-500 group-hover:scale-[1.1] motion-reduce:transition-none motion-reduce:group-hover:scale-[1.04]"
           />
-          {canBuy ? (
+          {readyToShip ? (
             <span className="absolute left-2.5 top-2.5 border border-[#CCC5BD] bg-[#FCF9F2] px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wider text-[#1C1C18]">
               Ready to ship
             </span>
           ) : (
             <span className="absolute left-2.5 top-2.5 border border-[#CCC5BD] bg-[#FCF9F2] px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wider text-[#7C766F]">
-              On quote
+              {retail ? 'To arrange' : 'On quote'}
             </span>
           )}
         </div>
@@ -74,10 +78,25 @@ export function StitchProductCard({
       {/* Button Actions */}
       <div
         className={`mt-auto grid gap-1.5 border-t border-[#CCC5BD] bg-[#F6F3EC] p-2.5 ${
-          canBuy && product.purchase.rfq ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
+          !retail && canBuy && product.purchase.rfq ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
         }`}
       >
-        {canBuy ? (
+        {retail && canBuy ? (
+          <AddToCartButton
+            maxQuantity={null}
+            stockQty={product.purchase.stockQty}
+            label="Add to cart"
+            product={{
+              id: product.id,
+              sku: product.sku,
+              name: product.name,
+              price: amount,
+              image_url: product.image_url,
+            }}
+            className="border border-[#000000] bg-[#000000] hover:bg-[#9E4300] hover:border-[#9E4300] px-2 py-2 text-center sv2-label text-[10px] text-white tracking-wider transition-colors"
+          />
+        ) : null}
+        {!retail && canBuy ? (
           <AddToCartButton
             maxQuantity={product.purchase.maxBuyQty}
             label="Buy 1 sample"
@@ -91,7 +110,7 @@ export function StitchProductCard({
             className="border border-[#000000] bg-[#000000] hover:bg-[#9E4300] hover:border-[#9E4300] px-2 py-2 text-center sv2-label text-[10px] text-white tracking-wider transition-colors"
           />
         ) : null}
-        {!canBuy || product.purchase.rfq ? (
+        {!retail && (!canBuy || product.purchase.rfq) ? (
           <Link
             href={quoteHref}
             className="border border-[#CCC5BD] bg-[#FCF9F2] hover:border-[#9E4300] px-2 py-2 text-center sv2-label text-[10px] text-[#1C1C18] tracking-wider transition-colors"

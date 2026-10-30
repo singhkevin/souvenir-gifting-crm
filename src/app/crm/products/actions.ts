@@ -15,6 +15,7 @@ import { writeAudit } from '@/lib/audit'
 import { isUuid } from '@/lib/utils'
 import { upsertProductCost } from '@/lib/pricing/product-costs'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
+import { dispatchPendingStockAlerts } from '@/lib/catalogue/stock-alerts'
 import { directOrderSchemaHint, parseFulfillmentMode } from '@/lib/catalogue/purchase-path'
 import { withIdempotency } from '@/lib/idempotency'
 import { canonicalCategoryLabel, findCategory } from '@/lib/products/category-plan'
@@ -390,6 +391,13 @@ export async function updateProduct(productId: string, formData: FormData) {
   revalidatePath('/crm/products/' + productId)
   revalidatePath('/crm/products')
   revalidatePath('/portal/catalogue')
+  if ('stock_qty' in update) {
+    try {
+      await dispatchPendingStockAlerts()
+    } catch (err) {
+      console.error('[stock-alert]', err instanceof Error ? err.message : err)
+    }
+  }
   return { success: true }
 }
 

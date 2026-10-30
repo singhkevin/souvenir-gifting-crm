@@ -17,6 +17,7 @@ export function StoreCartPrefill({
     image_url: string | null
     quantity: number
     maxQuantity: number | null
+    stockQty?: number | null
   }[]
   skipped: string[]
 }) {
@@ -34,6 +35,7 @@ export function StoreCartPrefill({
           price: item.price,
           image_url: item.image_url,
           maxQuantity: item.maxQuantity,
+          stockQty: item.stockQty,
           surface: 'store',
         },
         item.quantity,

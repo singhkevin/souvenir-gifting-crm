@@ -1,17 +1,14 @@
 import type { Metadata } from 'next'
 import { siteContent } from '@/config/siteContent'
 import Link from 'next/link'
-import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { SiteShell } from '@/components/site/site-shell'
 import { Breadcrumbs } from '@/components/sv2/breadcrumbs'
 import { ProductImage } from '@/components/ui/product-image'
-import { QuoteModal } from '@/components/site/quote-modal'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
 import { formatCurrency, isUuid } from '@/lib/utils'
 import { getPublicProduct } from '@/lib/catalogue/products'
-import { purchaseCaption } from '@/lib/catalogue/purchase-path'
-import { shopModeFromCookie, SHOP_MODE_COOKIE } from '@/lib/catalogue/storefront'
+import { retailLineCaption } from '@/lib/catalogue/availability'
 import { appName } from '@/lib/brand'
 
 type Props = { params: Promise<{ id: string }> }
@@ -38,41 +35,8 @@ export default async function PublicProductPage({ params }: Props) {
   if (!isUuid(id)) notFound()
   const product = await getPublicProduct(id)
   if (!product) notFound()
-  const jar = await cookies()
-  const corporate = shopModeFromCookie(jar.get(SHOP_MODE_COOKIE)?.value) === 'corporate'
-
-  const buy = product.purchase.buy ? (
-    <AddToCartButton
-      maxQuantity={1}
-      label="Buy 1 sample"
-      product={{
-        id: product.id,
-        sku: product.sku,
-        name: product.name,
-        price: product.price,
-        image_url: product.image_url,
-      }}
-      className={`inline-flex justify-center px-8 py-3.5 sv2-label text-[11px] tracking-wider transition-colors duration-150 ${
-        corporate
-          ? 'border border-[#CCC5BD] bg-[#FCF9F2] text-[#1C1C18] hover:border-[#000000]'
-          : 'bg-[#9E4300] hover:bg-[#853700] text-white'
-      }`}
-    />
-  ) : null
-
-  const quote = product.purchase.rfq ? (
-    <QuoteModal
-      productId={product.id}
-      productName={product.name}
-      triggerClassName={`inline-flex justify-center px-8 py-3.5 sv2-label text-[11px] tracking-wider transition-colors duration-150 ${
-        corporate || !product.purchase.buy
-          ? 'bg-[#000000] hover:bg-[#9E4300] text-white'
-          : 'border border-[#000000] text-[#1C1C18] hover:bg-[#000000] hover:text-white'
-      }`}
-    >
-      Request a Quote
-    </QuoteModal>
-  ) : null
+  const inHand = product.purchase.reason === 'stock' ? product.purchase.stockQty : 0
+  const offered = product.purchase.reason !== 'sample' && product.purchase.buy
 
   return (
     <SiteShell>
@@ -104,7 +68,7 @@ export default async function PublicProductPage({ params }: Props) {
                 imgClassName="catalogue-product-img sv2-img-zoom"
               />
               <span className="absolute top-3 left-3 bg-[#FCF9F2] text-[#1C1C18] border border-[#CCC5BD] px-2.5 py-1 sv2-label text-[10px] font-semibold">
-                {product.purchase.buy ? 'In Stock • Ready to Ship' : 'Available on Quote'}
+                {inHand > 0 ? 'Ready to ship' : 'To arrange'}
               </span>
             </div>
 
@@ -148,14 +112,14 @@ export default async function PublicProductPage({ params }: Props) {
                     {product.price == null ? 'Price on quote' : formatCurrency(product.price)}
                   </span>
                 </div>
-                {product.purchase.buy ? (
+                {inHand > 0 ? (
                   <span className="border border-[#CCC5BD] bg-[#FCF9F2] px-2 py-0.5 font-sans text-[10px] text-[#4A4640] font-semibold uppercase">
                     Standard Delivery
                   </span>
                 ) : null}
               </div>
               <p className="sv2-mono-sm text-[11px] text-[#4A4640]">
-                {purchaseCaption(product.purchase)}
+                {retailLineCaption(inHand)}
               </p>
             </div>
 
@@ -179,7 +143,7 @@ export default async function PublicProductPage({ params }: Props) {
                 </div>
                 <div className="flex justify-between p-3">
                   <dt className="text-[#7C766F]">Availability</dt>
-                  <dd className="text-[#1C1C18]">{product.purchase.buy ? 'Available to buy' : 'Available to quote'}</dd>
+                  <dd className="text-[#1C1C18]">{inHand > 0 ? 'In hand' : 'To arrange'}</dd>
                 </div>
                 {product.category_name ? (
                   <div className="flex justify-between p-3">
@@ -193,8 +157,21 @@ export default async function PublicProductPage({ params }: Props) {
             {/* Call-to-action buttons */}
             <div className="space-y-3 pt-2">
               <div className="flex flex-col sm:flex-row gap-3">
-                {corporate ? quote : buy}
-                {corporate ? buy : quote}
+                {offered ? (
+                  <AddToCartButton
+                    maxQuantity={null}
+                    stockQty={product.purchase.stockQty}
+                    label="Add to cart"
+                    product={{
+                      id: product.id,
+                      sku: product.sku,
+                      name: product.name,
+                      price: product.price,
+                      image_url: product.image_url,
+                    }}
+                    className="inline-flex justify-center bg-[#9E4300] hover:bg-[#853700] px-8 py-3.5 sv2-label text-[11px] tracking-wider text-white transition-colors duration-150"
+                  />
+                ) : null}
               </div>
               <div>
                 <Link

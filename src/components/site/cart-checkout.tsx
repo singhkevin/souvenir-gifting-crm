@@ -12,11 +12,14 @@ export function CartCheckout({
   items,
   kind,
   onDone,
+  arranging = false,
   quoteLock,
 }: {
   items: CartItem[]
   kind: 'store' | 'portal'
   onDone: () => void
+  /** Retail cart has lines that are not in stock. */
+  arranging?: boolean
   quoteLock?: {
     token: string
     quotationNumber: string
@@ -29,13 +32,16 @@ export function CartCheckout({
 }) {
   const { pending, error, run } = useAction()
   const { key, rotate } = useIdempotencyKey()
-  const [order, setOrder] = useState<{ id?: string; number?: string } | null>(null)
+  const [order, setOrder] = useState<{ id?: string; number?: string; arrangement?: boolean; backorderError?: string } | null>(null)
   const [form, setForm] = useState({
     full_name: quoteLock?.fullName || '',
     email: quoteLock?.email || '',
     company_name: quoteLock?.companyName || '',
     phone: quoteLock?.phone || '',
     fax: '',
+    needed_by: '',
+    note: '',
+    notify_stock: false,
   })
 
   const lines = items.map((item) => ({
@@ -63,6 +69,9 @@ export function CartCheckout({
                 phone: form.phone,
                 fax: form.fax,
                 lines,
+                neededBy: arranging ? form.needed_by : undefined,
+                note: arranging ? form.note : undefined,
+                notifyStock: arranging ? form.notify_stock : false,
                 idempotencyKey: key,
               })
           : checkoutPortalCart({ lines, idempotencyKey: key }),
@@ -70,8 +79,8 @@ export function CartCheckout({
         successMessage: 'Order placed',
         onSuccess: (result) => {
           rotate()
-          const r = result as { orderId?: string; orderNumber?: string } | undefined
-          setOrder({ id: r?.orderId, number: r?.orderNumber })
+          const r = result as { orderId?: string; orderNumber?: string; arrangement?: boolean; backorderError?: string } | undefined
+          setOrder({ id: r?.orderId, number: r?.orderNumber, arrangement: r?.arrangement, backorderError: r?.backorderError })
           onDone()
         },
       },
@@ -82,8 +91,21 @@ export function CartCheckout({
     return (
       <div className="border border-[#CCC5BD] bg-[#FCF9F2] p-4 space-y-2 text-[#1C1C18]">
         <div className="font-sans text-[10px] text-[#9E4300] uppercase font-semibold">Order Confirmed</div>
-        <p className="font-serif text-lg font-normal">Order {order.number || 'placed successfully'}.</p>
-        <p className="sv2-body-sm text-xs text-[#4A4640]">Our team will confirm your order and begin fulfilment dispatch.</p>
+        <p className="font-serif text-lg font-normal">
+          {/* TODO(client): checkout confirmation copy */}
+          {order.number
+            ? `Order ${order.number}${order.arrangement ? ' · arrangement requested' : ''}.`
+            : order.arrangement
+              ? 'Arrangement request received.'
+              : 'Order placed successfully.'}
+        </p>
+        <p className="sv2-body-sm text-xs text-[#4A4640]">
+          {order.backorderError
+            ? order.backorderError
+            : order.number
+              ? 'Our team will confirm your order and begin fulfilment dispatch.'
+              : 'Our team will confirm whether these gifts can be arranged.'}
+        </p>
         {kind === 'portal' && order.id ? (
           <Link href={`/portal/orders/${order.id}`} className="inline-flex sv2-label text-[11px] text-[#9E4300] hover:underline pt-1">
             View order in portal &rarr;
@@ -138,6 +160,40 @@ export function CartCheckout({
             aria-hidden="true"
             className="hidden"
           />
+          {arranging ? (
+            <div className="space-y-2 border border-[#CCC5BD] bg-[#FCF9F2] p-3">
+              <p className="sv2-label text-[10px] text-[#9E4300]">To arrange · not charged now</p>
+              <label className="block sv2-mono-sm text-[11px] text-[#4A4640]">
+                Needed by
+                <input
+                  type="date"
+                  value={form.needed_by}
+                  onChange={(event) => setForm({ ...form, needed_by: event.target.value })}
+                  className="mt-1 w-full border border-[#CCC5BD] bg-[#FCF9F2] px-3 py-2 sv2-body-sm text-[#1C1C18] focus:border-[#000000] outline-none"
+                />
+              </label>
+              <label className="block sv2-mono-sm text-[11px] text-[#4A4640]">
+                Note
+                <textarea
+                  value={form.note}
+                  onChange={(event) => setForm({ ...form, note: event.target.value })}
+                  rows={3}
+                  maxLength={2000}
+                  placeholder="Anything we should know"
+                  className="mt-1 w-full border border-[#CCC5BD] bg-[#FCF9F2] px-3 py-2 sv2-body-sm text-[#1C1C18] focus:border-[#000000] outline-none placeholder:text-[#7C766F]"
+                />
+              </label>
+              <label className="flex items-start gap-2 sv2-body-sm text-xs text-[#1C1C18]">
+                <input
+                  type="checkbox"
+                  checked={form.notify_stock}
+                  onChange={(event) => setForm({ ...form, notify_stock: event.target.checked })}
+                  className="mt-0.5"
+                />
+                <span>Email me when this is back in stock</span>
+              </label>
+            </div>
+          ) : null}
         </fieldset>
       ) : null}
       {error ? <p className="sv2-mono-sm text-xs text-[#BA1A1A]">{error}</p> : null}
@@ -155,6 +211,10 @@ export function CartCheckout({
           </span>
         ) : quoteLock ? (
           `Place order · ${quoteLock.quotationNumber}`
+        ) : arranging && items.every((item) => (item.stockQty ?? 1) === 0) ? (
+          'Send arrangement request'
+        ) : arranging ? (
+          'Place order · arrange the rest'
         ) : (
           'Place order'
         )}

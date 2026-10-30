@@ -21,6 +21,7 @@ export function AddToCartButton({
   surface = 'store',
   catalogId = null,
   label = 'Add to cart',
+  stockQty,
 }: {
   product: CartDraft
   className: string
@@ -31,6 +32,8 @@ export function AddToCartButton({
   surface?: CartSurface
   catalogId?: string | null
   label?: string
+  /** Sellable units on hand. Stored on the cart line so the bag can split it. */
+  stockQty?: number | null
 }) {
   const [open, setOpen] = useState(false)
   const [qty, setQty] = useState(1)
@@ -67,6 +70,7 @@ export function AddToCartButton({
         maxQuantity: cap,
         surface: product.surface || surface,
         catalogId: product.catalogId || catalogId,
+        stockQty: stockQty ?? product.stockQty,
       },
       qty,
       cartKey,

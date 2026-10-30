@@ -13,7 +13,6 @@ import {
   normalizeCheckout,
   type CheckoutLineInput,
 } from '@/lib/catalogue/purchase-path'
-import { storeSampleQuantityError } from '@/lib/catalogue/storefront'
 import { pickReusableStoreContact, resolveStoreOrderOwnerId, type StoreContactMatch } from '@/lib/catalogue/store-prospect'
 import { notifyOrderPlaced } from '@/lib/email/order-emails'
 import type { OrderSource } from '@/lib/orders/source'
@@ -160,10 +159,9 @@ export async function placeStoreDirectOrder(input: {
 }): Promise<DirectOrderResult> {
   if (clean(input.fax)) return { success: true }
 
-  const normalizedSample = normalizeCheckout(input.lines.map((line) => ({ ...line, catalogId: null })))
-  if ('error' in normalizedSample) return { error: normalizedSample.error }
-  const sampleError = storeSampleQuantityError(normalizedSample.lines.map((line) => line.quantity))
-  if (sampleError) return { error: sampleError }
+  // In-hand quantity may be more than one. Out-of-stock units are removed before this call.
+  const checked = normalizeCheckout(input.lines.map((line) => ({ ...line, catalogId: null })))
+  if ('error' in checked) return { error: checked.error }
 
   const profile = await getProfile()
   if (profile && isBusinessRole(profile.role) && profile.company_id) {

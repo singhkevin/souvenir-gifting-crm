@@ -35,7 +35,11 @@ export function planStoreCartAdd(requests: CartAddRequest[], products: CartAddPr
   for (const request of limited) {
     const product = byId.get(request.id)
     if (!product || !product.purchase.buy) {
-      skipped.push('A selected item is not available to buy on the store.')
+      skipped.push(
+        product?.purchase.reason === 'sample'
+          ? 'Samples are not sold on the store.'
+          : 'A selected item is not available to buy on the store.',
+      )
       continue
     }
     let quantity = request.quantity
