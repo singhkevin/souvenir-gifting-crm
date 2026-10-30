@@ -23,6 +23,7 @@ import {
 } from '@/lib/business/register-errors'
 import { storePublicOrigin } from '@/lib/site/store-public-origin'
 import { allowRate } from '@/lib/business/rate-limit'
+import { getBusinessAccess } from '@/lib/business/access'
 import { requireBusiness } from '@/lib/business/session'
 import { issueQuoteCheckoutLink } from '@/lib/business/tokens'
 import { businessQuantityError, normaliseBreaks, targetPriceError, MAX_RFQ_LINES } from '@/lib/business/lines'
@@ -214,9 +215,10 @@ async function submitBusinessRfqOnce(formData: FormData) {
   if (!turnstile.ok) return { error: turnstile.error }
 
   const { profile, company } = await requireBusiness()
+  const access = await getBusinessAccess()
   if (!profile.company_id) return { error: 'Company not found' }
-  if (company?.business_verification !== 'verified') {
-    return { error: 'Pending approval. You can browse the catalogue. Quote requests open after sales approves this account.' }
+  if (!access.canSubmitQuote) {
+    return { error: 'Awaiting approval' }
   }
   const limited = await allowRate(`rfq:${profile.company_id}`, 86400, 10)
   if (!limited.ok) return { error: limited.error }
@@ -310,6 +312,10 @@ export async function respondBusinessQuotation(formData: FormData) {
 async function respondBusinessQuotationOnce(formData: FormData) {
   const limitedProfile = await getProfile()
   if (!limitedProfile || !isBusinessRole(limitedProfile.role)) return { error: 'Sign in with your business account' }
+  const access = await getBusinessAccess()
+  if (!access.canSubmitQuote) {
+    return { error: access.state === 'pending' ? 'Awaiting approval' : 'Sign in with your business account' }
+  }
   const limited = await allowRate(`respond:${limitedProfile.id}`, 3600, 30)
   if (!limited.ok) return { error: limited.error }
 

@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { headers } from 'next/headers'
-import { getProfile } from '@/lib/auth'
 import { sessionHintFromHeaders } from '@/lib/auth/session-cookie'
 import { isBusinessRole, isClientRole, isGiftEmployeeRole } from '@/lib/roles'
 import { landingPathForRole } from '@/lib/safe-next'
-import { getBusinessCatalogue, readBusinessPriceAccess, type BusinessProduct } from '@/lib/business/catalogue'
-import { businessPriceNotice } from '@/lib/business/price-access'
+import { getBusinessAccess } from '@/lib/business/access'
+import { resolveBusinessAccess } from '@/lib/business/access-state'
+import { getBusinessCatalogue, type BusinessProduct } from '@/lib/business/catalogue'
 import { minimumOrderQty } from '@/lib/business/lines'
 import { getPublicBrands, getPublicCategories, type PublicProduct } from '@/lib/catalogue/products'
 import { curateTrendingProducts } from '@/lib/catalogue/curate'
@@ -29,9 +29,8 @@ import { FeaturedKitSlider, type FeaturedKitItem } from '@/components/sv2/featur
 import { FadeIn } from '@/components/sv2/fade-in'
 import { SV2Button } from '@/components/sv2/button'
 
-function businessPrice(product: PublicProduct): number | null {
-  if ('indicativePrice' in product) return (product as BusinessProduct).indicativePrice
-  return product.price
+function businessPrice(product: { indicativePrice?: number | null }): number | null {
+  return product.indicativePrice ?? null
 }
 
 function withImage<T extends { image_url: string | null }>(items: T[]): T[] {
@@ -46,11 +45,13 @@ export async function BusinessHome({
 }) {
   const filters = readCatalogueFilters(searchParams)
   const headerStore = await headers()
-  const profile = sessionHintFromHeaders((name) => headerStore.get(name)) ? await getProfile() : null
+  const access = sessionHintFromHeaders((name) => headerStore.get(name))
+    ? await getBusinessAccess()
+    : resolveBusinessAccess({ profile: null, company: null })
+  const profile = access.profile
   const companyId = profile && isBusinessRole(profile.role) ? profile.company_id : null
-  const priceAccess = await readBusinessPriceAccess(profile)
-  const priceNotice = businessPriceNotice(priceAccess)
-  const showPrices = priceAccess === 'open'
+  const priceNotice = access.priceNotice
+  const showPrices = access.canSeePrices
   const portalAccount = profile && (isClientRole(profile.role) || isGiftEmployeeRole(profile.role))
   const accountHref = profile && !portalAccount ? landingPathForRole(profile.role) : null
   const accountLabel = profile && !portalAccount

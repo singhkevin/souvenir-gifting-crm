@@ -1,16 +1,14 @@
 import { StorefrontCatalog } from '@/components/site/storefront-catalog'
-import { getBusinessCatalogue, readBusinessPriceAccess, type BusinessProduct } from '@/lib/business/catalogue'
-import { businessPriceNotice } from '@/lib/business/price-access'
-import { readBusinessSession } from '@/lib/business/session'
+import { getBusinessAccess } from '@/lib/business/access'
+import { getBusinessCatalogue } from '@/lib/business/catalogue'
 import { minimumOrderQty } from '@/lib/business/lines'
-import { getPublicBrands, getPublicCategories, type PublicProduct } from '@/lib/catalogue/products'
+import { getPublicBrands, getPublicCategories } from '@/lib/catalogue/products'
 import { readCatalogueFilters } from '@/lib/catalogue/catalogue-query'
 
 export const dynamic = 'force-dynamic'
 
-function businessPrice(product: PublicProduct): number | null {
-  if ('indicativePrice' in product) return (product as BusinessProduct).indicativePrice
-  return product.price
+function businessPrice(product: { indicativePrice?: number | null }): number | null {
+  return product.indicativePrice ?? null
 }
 
 export default async function BusinessCataloguePage({
@@ -19,16 +17,15 @@ export default async function BusinessCataloguePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const filters = readCatalogueFilters(await searchParams)
-  const session = await readBusinessSession()
-  const companyId = session?.company?.id || session?.profile.company_id || null
-  const [products, categories, brands, priceAccess] = await Promise.all([
+  const access = await getBusinessAccess()
+  const companyId = access.company?.id || access.profile?.company_id || null
+  const [products, categories, brands] = await Promise.all([
     getBusinessCatalogue(companyId),
     getPublicCategories().catch(() => []),
     getPublicBrands().catch(() => []),
-    readBusinessPriceAccess(session?.profile ?? null),
   ])
-  const priceNotice = businessPriceNotice(priceAccess)
-  const showPrices = priceAccess === 'open'
+  const priceNotice = access.priceNotice
+  const showPrices = access.canSeePrices
 
   return (
     <div className="space-y-6">

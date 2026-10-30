@@ -85,7 +85,7 @@ export function BusinessFrame({
         <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-4 py-2.5 text-xs text-[#9E4300] sm:px-6">
           <div className="mx-auto flex max-w-6xl items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-[#FF8843] animate-pulse" />
-            <span>Pending approval. You can browse the catalogue. Quote requests open after sales approves this account.</span>
+            <span>Awaiting approval · prices open after we verify your company</span>
           </div>
         </div>
       ) : null}
