@@ -3,7 +3,6 @@ import test from 'node:test'
 import { businessAudienceRefusal, presentBusinessProduct, resolveBusinessAccess } from '../src/lib/business/access-state.ts'
 import { BUSINESS_PRICE_AWAITING, BUSINESS_PRICE_SIGN_IN, BUSINESS_WRONG_ACCOUNT } from '../src/lib/business/price-access.ts'
 import { businessLoginPath } from '../src/lib/business/portal-paths.ts'
-import { BUSINESS_PRICE_AWAITING, BUSINESS_PRICE_SIGN_IN, BUSINESS_WRONG_ACCOUNT } from '../src/lib/business/price-access.ts'
 
 const company = {
   id: 'c1',
