@@ -23,7 +23,7 @@ export default async function BusinessDashboardPage() {
         <p className="mt-2 text-sm text-[#4A4640] max-w-2xl">
           {company?.business_verification === 'verified'
             ? 'Your account is approved. Indicative prices are not the final quote.'
-            : 'Pending approval. You can browse the catalogue. Quote requests open after sales approves this account. Indicative prices are not the final quote.'}
+            : 'Awaiting approval · you can browse the catalogue. Quote requests open after we verify your company. Indicative prices are not the final quote.'}
         </p>
       </div>
 

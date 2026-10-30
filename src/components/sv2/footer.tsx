@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { siteContent } from '@/config/siteContent'
 import { appName, appShortName } from '@/lib/brand'
-import { BUSINESS_CATALOGUE_PATH, BUSINESS_QUOTE_PATH, BUSINESS_REGISTER_PATH } from '@/lib/business/portal-paths'
+import { BUSINESS_CATALOGUE_PATH, BUSINESS_QUOTE_PATH, BUSINESS_REGISTER_PATH, businessLoginPath } from '@/lib/business/portal-paths'
 
 /**
  * SV2 Footer — 4-column layout with hairline borders,
@@ -116,7 +116,7 @@ export function SV2Footer({ phone }: { phone?: string | null }) {
             </li>
             <li>
               <Link
-                href="/login?next=/business/dashboard"
+                href={businessLoginPath('/business/dashboard')}
                 className="hover:text-[#9E4300] hover:underline underline-offset-4 transition-colors"
               >
                 Corporate Sign In

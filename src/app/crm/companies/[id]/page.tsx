@@ -28,6 +28,8 @@ import {
 } from '@/components/companies/company-catalogue-browser'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { BusinessAccountPanel } from '../business-account-panel'
+import { emailReviewFlag, type EmailDomainRule } from '@/lib/business/email-domain'
+import { emailDomain } from '@/lib/pricing/domains'
 import { CompanySpecialPrices, type SpecialPriceRow } from '../special-prices'
 import type { PickerProduct } from '@/components/products/product-picker-drawer'
 
@@ -86,6 +88,32 @@ export default async function CompanyDetailPage({
   ])
 
   if (!company) notFound()
+
+  let businessEmailFlags: { email: string; review: 'free' | 'disposable' }[] = []
+  let businessPortalMatch: { id: string; name: string } | null = null
+  if (company.account_type === 'business') {
+    const [{ data: businessUsers }, rulesQuery] = await Promise.all([
+      supabase.from('profiles').select('email').eq('company_id', id).eq('role', 'business_user'),
+      supabase.from('email_domain_rules').select('domain, rule'),
+    ])
+    const rules = rulesQuery.error ? null : (rulesQuery.data as EmailDomainRule[])
+    businessEmailFlags = (businessUsers || [])
+      .map((user) => ({ email: user.email as string, review: emailReviewFlag(user.email as string, rules) }))
+      .filter((row): row is { email: string; review: 'free' | 'disposable' } => Boolean(row.email && row.review))
+    const domain = emailDomain(businessEmailFlags[0]?.email || (businessUsers || [])[0]?.email || '')
+    if (domain) {
+      const matches = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('status', 'active')
+        .eq('account_type', 'corporate')
+        .contains('allowed_email_domains', [domain])
+        .neq('id', id)
+        .limit(1)
+      const match = matches.data?.[0]
+      if (match?.id && match.name) businessPortalMatch = { id: match.id, name: match.name }
+    }
+  }
 
   const wildcardDns = portalDnsMode() === 'vercel'
   const hostRows = (portalHosts || []) as PortalHost[]
@@ -328,6 +356,8 @@ export default async function CompanyDetailPage({
       <BusinessAccountPanel
         company={company}
         canAct={profile.role === 'admin' || (profile.role === 'sales' && company.owner_id === profile.id)}
+        emailFlags={businessEmailFlags}
+        portalMatch={businessPortalMatch}
       />
 
       <div className="border-b border-[#CCC5BD]">

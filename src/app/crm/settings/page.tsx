@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { appName } from '@/lib/brand'
-import { addEmailDomainAllowlist, removeEmailDomainAllowlist, updateOrgSettings } from './actions'
+import { removeEmailDomainRule, saveEmailDomainRule, updateOrgSettings } from './actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
 
@@ -23,7 +23,7 @@ export default async function SettingsPage() {
   }
 
   const { data: settings } = await supabase.from('org_settings').select('*').limit(1).maybeSingle()
-  const allowlist = await supabase.from('email_domain_allowlist').select('domain, note').order('domain')
+  const rules = await supabase.from('email_domain_rules').select('domain, rule, note').order('domain')
   const { data: owners } = await supabase
     .from('profiles')
     .select('id, full_name, email, role')
@@ -124,22 +124,25 @@ export default async function SettingsPage() {
       </ActionForm>
 
       <div className="mt-6 border bg-white p-6 text-sm">
-        <h2 className="font-semibold text-gray-900">Work-email allowlist</h2>
+        <h2 className="font-semibold text-gray-900">Email domains</h2>
         <p className="mt-1 text-xs text-gray-500">
-          Business registration blocks free inboxes such as Gmail, Yahoo, and Outlook. Add a domain here to allow it.
+          Business accounts need a work email. Allow is an exception for a company without its own domain. Block free and block disposable stop new sign-ups. Existing accounts on a blocked domain keep working and are flagged for review.
         </p>
-        {allowlist.error ? (
-          <p className="mt-3 text-xs text-amber-800">Apply supabase/migrations/20261018_registration_pricing_samples.sql, then retry.</p>
+        {rules.error ? (
+          <p className="mt-3 text-xs text-amber-800">Apply supabase/migrations/20261030b_business_email_domains.sql, then retry.</p>
         ) : (
           <ul className="mt-3 space-y-2">
-            {(allowlist.data || []).length === 0 && <li className="text-xs text-gray-500">No overrides yet.</li>}
-            {(allowlist.data || []).map((row) => (
+            {(rules.data || []).length === 0 && <li className="text-xs text-gray-500">No domain rules yet.</li>}
+            {(rules.data || []).map((row) => (
               <li key={row.domain} className="flex items-center justify-between gap-3">
                 <span>
                   <span className="font-mono">{row.domain}</span>
+                  <span className="ml-2 text-xs uppercase tracking-wide text-gray-500">
+                    {row.rule === 'allow' ? 'Allow' : row.rule === 'block_disposable' ? 'Block disposable' : 'Block free'}
+                  </span>
                   {row.note ? <span className="ml-2 text-xs text-gray-500">{row.note}</span> : null}
                 </span>
-                <ActionForm action={removeEmailDomainAllowlist}>
+                <ActionForm action={removeEmailDomainRule}>
                   <input type="hidden" name="domain" value={row.domain} />
                   <button type="submit" className="text-xs text-red-700 underline">Remove</button>
                 </ActionForm>
@@ -147,16 +150,24 @@ export default async function SettingsPage() {
             ))}
           </ul>
         )}
-        <ActionForm action={addEmailDomainAllowlist} className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <ActionForm action={saveEmailDomainRule} className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto_1fr_auto] sm:items-end">
           <label className="block text-xs text-gray-500">
             Domain
             <input name="domain" placeholder="acme.com" className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
           <label className="block text-xs text-gray-500">
+            Rule
+            <select name="rule" defaultValue="allow" className="mt-1 w-full border px-3 py-2 text-sm">
+              <option value="allow">Allow</option>
+              <option value="block_free">Block free</option>
+              <option value="block_disposable">Block disposable</option>
+            </select>
+          </label>
+          <label className="block text-xs text-gray-500">
             Note
             <input name="note" placeholder="Optional" className="mt-1 w-full border px-3 py-2 text-sm" />
           </label>
-          <SubmitButton className="bg-[#806A50] px-3 py-2 text-sm text-white" pendingLabel="Adding…">Add domain</SubmitButton>
+          <SubmitButton className="bg-[#806A50] px-3 py-2 text-sm text-white" pendingLabel="Saving…">Save domain</SubmitButton>
         </ActionForm>
       </div>
     </div>

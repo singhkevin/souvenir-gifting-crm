@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { setBusinessVerification } from './business-actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { SubmitButton } from '@/components/ui/submit-button'
@@ -5,6 +6,8 @@ import { SubmitButton } from '@/components/ui/submit-button'
 export function BusinessAccountPanel({
   company,
   canAct,
+  emailFlags = [],
+  portalMatch = null,
 }: {
   company: {
     id: string
@@ -14,6 +17,8 @@ export function BusinessAccountPanel({
     notes?: string | null
   }
   canAct: boolean
+  emailFlags?: { email: string; review: 'free' | 'disposable' }[]
+  portalMatch?: { id: string; name: string } | null
 }) {
   if (company.account_type !== 'business') return null
   return (
@@ -48,6 +53,23 @@ export function BusinessAccountPanel({
           <span className="font-mono text-[#1C1B1A]">{company.gst_number || '—'}</span>
         </p>
         {company.notes ? <p className="whitespace-pre-wrap text-[#4A4640] leading-relaxed">{company.notes}</p> : null}
+        {emailFlags.length > 0 ? (
+          <div className="border border-[#9E4300]/30 bg-[#FFB690]/20 px-3 py-2 text-[#9E4300]">
+            {emailFlags.map((flag) => (
+              <p key={flag.email}>
+                {flag.review === 'disposable' ? 'Disposable email' : 'Free email'} · {flag.email} · this account still works. Review it with the company.
+              </p>
+            ))}
+          </div>
+        ) : null}
+        {portalMatch ? (
+          <p className="border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-[#4A4640]">
+            This email domain matches {portalMatch.name} · employees should use that company portal.{' '}
+            <Link href={`/crm/companies/${portalMatch.id}`} className="font-semibold text-[#9E4300] underline">
+              Open {portalMatch.name}
+            </Link>
+          </p>
+        ) : null}
         {canAct ? (
           <div className="flex flex-wrap gap-2 pt-1">
             {(['verified', 'rejected', 'blocked'] as const).map((verification) => (

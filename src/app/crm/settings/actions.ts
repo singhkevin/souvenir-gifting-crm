@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { writeAudit } from '@/lib/audit'
+import { emailDomainRuleChoice } from '@/lib/business/email-domain'
 import { invalidatePublicCatalogue } from '@/lib/catalogue/public-read'
 import { normalizeEmailDomain } from '@/lib/pricing/domains'
 
@@ -54,7 +56,59 @@ async function requireAdmin() {
   if (!user) return { error: 'Not authenticated' as const }
   const { data: me } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
   if (me?.role !== 'admin') return { error: 'Admin only' as const }
-  return { supabase }
+  return { supabase, userId: user.id }
+}
+
+export async function saveEmailDomainRule(formData: FormData) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+  const domain = normalizeEmailDomain(String(formData.get('domain') || ''))
+  if (!domain) return { error: 'Enter a domain such as acme.com' }
+  const rule = emailDomainRuleChoice(String(formData.get('rule') || ''))
+  if (!rule) return { error: 'Choose allow, block free, or block disposable' }
+  const note = String(formData.get('note') || '').trim() || null
+  const previous = await auth.supabase.from('email_domain_rules').select('domain, rule, note').eq('domain', domain).maybeSingle()
+  const { error } = await auth.supabase.from('email_domain_rules').upsert({
+    domain,
+    rule,
+    note,
+    created_by: auth.userId,
+  })
+  if (error) {
+    if (/email_domain_rules/i.test(error.message)) {
+      return { error: 'Apply supabase/migrations/20261030b_business_email_domains.sql, then retry.' }
+    }
+    return { error: error.message }
+  }
+  await writeAudit(auth.supabase, {
+    action: 'update',
+    entity: 'email_domain_rules',
+    entityId: null,
+    previous: previous.data,
+    next: { domain, rule, note },
+    userId: auth.userId,
+  })
+  revalidatePath('/crm/settings')
+  return { success: true }
+}
+
+export async function removeEmailDomainRule(formData: FormData) {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+  const domain = normalizeEmailDomain(String(formData.get('domain') || ''))
+  if (!domain) return { error: 'Domain not found' }
+  const previous = await auth.supabase.from('email_domain_rules').select('domain, rule, note').eq('domain', domain).maybeSingle()
+  const { error } = await auth.supabase.from('email_domain_rules').delete().eq('domain', domain)
+  if (error) return { error: error.message }
+  await writeAudit(auth.supabase, {
+    action: 'delete',
+    entity: 'email_domain_rules',
+    previous: previous.data,
+    next: null,
+    userId: auth.userId,
+  })
+  revalidatePath('/crm/settings')
+  return { success: true }
 }
 
 export async function addEmailDomainAllowlist(formData: FormData) {

@@ -8,16 +8,24 @@ import { requestOrigin } from '@/lib/auth/request-origin'
 import { validateNewPassword } from '@/lib/auth/password'
 import { getProfile } from '@/lib/auth'
 import { isBusinessRole } from '@/lib/roles'
-import { classifyBusinessEmail, registrationNotes, workEmailBlock } from '@/lib/business/email-domain'
+import {
+  classifyBusinessEmail,
+  micrositeDomainConflict,
+  registrationNotes,
+  workEmailBlock,
+  type EmailDomainRule,
+} from '@/lib/business/email-domain'
 import { gstinError, normaliseGstin } from '@/lib/business/gstin'
 import { businessConfirmUrl } from '@/lib/auth/confirm-landing'
 import {
   mapRegistrationFailure,
   REGISTER_EMAIL_TAKEN,
+  REGISTER_PORTAL_EMAIL,
   REGISTER_SERVER,
 } from '@/lib/business/register-errors'
 import { storePublicOrigin } from '@/lib/site/store-public-origin'
 import { allowRate } from '@/lib/business/rate-limit'
+import { getBusinessAccess } from '@/lib/business/access'
 import { requireBusiness } from '@/lib/business/session'
 import { issueQuoteCheckoutLink } from '@/lib/business/tokens'
 import { businessQuantityError, normaliseBreaks, targetPriceError, MAX_RFQ_LINES } from '@/lib/business/lines'
@@ -34,6 +42,12 @@ import {
 } from '@/lib/email/business'
 import { withIdempotency } from '@/lib/idempotency'
 import { isUuid } from '@/lib/utils'
+
+export async function signOutToBusinessLogin(): Promise<void> {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  redirect('/business/login')
+}
 
 const GENERIC_REGISTER =
   'If this work email can be registered, we sent a confirmation link. If you already have an account, sign in.'
@@ -101,8 +115,14 @@ async function registerBusinessOnce(formData: FormData) {
   const existingProfile = await admin.from('profiles').select('id').ilike('email', email).maybeSingle()
   if (existingProfile.data?.id) return { error: REGISTER_EMAIL_TAKEN }
 
-  const allowlist = await admin.from('email_domain_allowlist').select('domain')
-  const emailBlock = workEmailBlock(email, (allowlist.data || []).map((row) => row.domain as string))
+  const rulesQuery = await admin.from('email_domain_rules').select('domain, rule')
+  const rules = rulesQuery.error ? null : (rulesQuery.data as EmailDomainRule[])
+  let allowlist: string[] = []
+  if (!rules) {
+    const allowRows = await admin.from('email_domain_allowlist').select('domain')
+    allowlist = (allowRows.data || []).map((row) => row.domain as string)
+  }
+  const emailBlock = workEmailBlock(email, allowlist, rules)
   if (emailBlock) return { error: emailBlock }
 
   const { data: corporates } = await admin
@@ -110,11 +130,18 @@ async function registerBusinessOnce(formData: FormData) {
     .select('name, allowed_email_domains, account_type, status')
     .eq('status', 'active')
     .limit(500)
+  const corporateRows = (corporates || []).map((row) => ({
+    name: row.name as string,
+    domains: row.allowed_email_domains as string[] | null,
+    account_type: row.account_type as string | null,
+    status: row.status as string | null,
+  }))
+  const portalConflict = micrositeDomainConflict(email, corporateRows)
+  if (portalConflict) return { error: REGISTER_PORTAL_EMAIL }
   const flags = classifyBusinessEmail(
     email,
-    (corporates || [])
-      .filter((row) => (row.account_type || 'corporate') === 'corporate')
-      .map((row) => ({ name: row.name, domains: row.allowed_email_domains })),
+    corporateRows.filter((row) => (row.account_type || 'corporate') === 'corporate'),
+    rules,
   )
 
   const { data: companyId, error: rpcError } = await admin.rpc('register_business_account', {
@@ -202,9 +229,10 @@ async function submitBusinessRfqOnce(formData: FormData) {
   if (!turnstile.ok) return { error: turnstile.error }
 
   const { profile, company } = await requireBusiness()
+  const access = await getBusinessAccess()
   if (!profile.company_id) return { error: 'Company not found' }
-  if (company?.business_verification !== 'verified') {
-    return { error: 'Pending approval. You can browse the catalogue. Quote requests open after sales approves this account.' }
+  if (!access.canSubmitQuote) {
+    return { error: 'Awaiting approval' }
   }
   const limited = await allowRate(`rfq:${profile.company_id}`, 86400, 10)
   if (!limited.ok) return { error: limited.error }
@@ -298,6 +326,10 @@ export async function respondBusinessQuotation(formData: FormData) {
 async function respondBusinessQuotationOnce(formData: FormData) {
   const limitedProfile = await getProfile()
   if (!limitedProfile || !isBusinessRole(limitedProfile.role)) return { error: 'Sign in with your business account' }
+  const access = await getBusinessAccess()
+  if (!access.canSubmitQuote) {
+    return { error: access.state === 'pending' ? 'Awaiting approval' : 'Sign in with your business account' }
+  }
   const limited = await allowRate(`respond:${limitedProfile.id}`, 3600, 30)
   if (!limited.ok) return { error: limited.error }
 

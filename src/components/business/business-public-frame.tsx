@@ -34,7 +34,7 @@ export async function BusinessPublicFrame({ children }: { children: React.ReactN
     <div
       className={`sv2 ${newsreader.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} min-h-screen bg-[#FCF9F2] text-[#1C1C18]`}
     >
-      <UtilityBar phone={phone} showMinimumOrder />
+      <UtilityBar phone={phone} />
       <SV2Header categories={navCategories} accountHref={accountHref} accountLabel={accountLabel} />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       <SV2Footer phone={phone} />

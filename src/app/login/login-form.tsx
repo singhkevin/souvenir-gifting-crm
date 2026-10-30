@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { signIn } from './actions';
+import { signOutToBusinessLogin } from '@/app/business/actions';
+import { BUSINESS_REGISTER_PATH } from '@/lib/business/portal-paths';
 import { Mail, Loader2 } from 'lucide-react';
 import { PasswordField } from '@/components/auth/password-field';
 import Image from 'next/image';
@@ -30,7 +32,25 @@ function isNextRedirect(err: unknown) {
   return digest.startsWith('NEXT_REDIRECT')
 }
 
-export function LoginForm({ next = '', resetSuccess = false, portalError = false, confirmed = false, branded = false }: { next?: string; resetSuccess?: boolean; portalError?: boolean; confirmed?: boolean; branded?: boolean }) {
+export function LoginForm({
+  next = '',
+  resetSuccess = false,
+  portalError = false,
+  confirmed = false,
+  branded = false,
+  audience,
+  notice = null,
+  showSignOut = false,
+}: {
+  next?: string
+  resetSuccess?: boolean
+  portalError?: boolean
+  confirmed?: boolean
+  branded?: boolean
+  audience?: 'business'
+  notice?: string | null
+  showSignOut?: boolean
+}) {
   const [error, setError] = useState<string | null>(null);
   const [help, setHelp] = useState<{ href: string; label: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,6 +69,7 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
     formData.set('email', loginEmail);
     formData.set('password', loginPassword);
     if (next) formData.set('next', next);
+    if (audience) formData.set('audience', audience);
     try {
       const res = await signIn(formData);
       if (res?.error) {
@@ -87,24 +108,39 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
         </div>
       ) : null}
       <div className="space-y-3 text-center sm:mx-auto sm:w-full sm:max-w-md">
-        <Link href="/home" className="inline-block">
+        <Link href={audience === 'business' ? '/business' : '/home'} className="inline-block">
           <BrandLogo className="mx-auto h-10 w-auto object-contain sm:h-12" />
         </Link>
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7A7267]">
-          Corporate Gifting CRM
+          {audience === 'business' ? 'Business portal' : 'Corporate Gifting CRM'}
         </p>
         <p className="text-xs leading-relaxed text-[#7A7267]">
-          Corporate gifting, from enquiry to payment.
+          {audience === 'business'
+            ? 'Use your work email. Prices open after approval.'
+            : 'Corporate gifting, from enquiry to payment.'}
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
         <div className="bg-white py-8 px-6 border border-[#E5DFD5] sm:px-10">
           <p className="text-sm text-[#5A5248] mb-6 text-center">
-            Sign in to <BrandName />
+            {audience === 'business' ? 'Business sign in · use your work email' : <>Sign in to <BrandName /></>}
           </p>
+          {notice && !error ? (
+            <div className="mb-5 border border-[#CCC5BD] bg-[#F6F3EC] p-3 text-xs text-[#9E4300]">
+              <p>{notice}</p>
+              {showSignOut ? (
+                <form action={signOutToBusinessLogin} className="mt-2">
+                  <button className="font-semibold underline" type="submit">
+                    Sign out
+                  </button>
+                </form>
+              ) : null}
+            </div>
+          ) : null}
           <form onSubmit={handleSubmit} className="space-y-5">
             {next ? <input type="hidden" name="next" value={next} /> : null}
+            {audience ? <input type="hidden" name="audience" value={audience} /> : null}
             {confirmed && !error && (
               <div className="p-3 bg-green-50 text-green-800 text-xs border border-green-200">
                 Email confirmed. Sign in to open your business account.
@@ -174,10 +210,21 @@ export function LoginForm({ next = '', resetSuccess = false, portalError = false
           </form>
 
           <p className="text-xs text-center text-[#7A7267] mt-5">
-            Need a business account?{' '}
-            <Link href="/signup" className="font-semibold text-[#624B32] hover:underline">
-              Register
-            </Link>
+            {audience === 'business' ? (
+              <>
+                Need a business account?{' '}
+                <Link href={BUSINESS_REGISTER_PATH} className="font-semibold text-[#624B32] hover:underline">
+                  Register
+                </Link>
+              </>
+            ) : (
+              <>
+                Business portal?{' '}
+                <Link href="/business/login" className="font-semibold text-[#624B32] hover:underline">
+                  Sign in
+                </Link>
+              </>
+            )}
           </p>
           {branded ? (
             <p className="mt-4 text-center text-xs leading-relaxed text-[#7A7267]">

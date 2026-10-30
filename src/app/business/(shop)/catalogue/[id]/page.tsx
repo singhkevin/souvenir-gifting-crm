@@ -2,9 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { AddToQuote } from '@/components/business/add-to-quote'
 import { ProductImage } from '@/components/ui/product-image'
-import { getBusinessProduct, readBusinessPriceAccess } from '@/lib/business/catalogue'
-import { businessPriceNotice } from '@/lib/business/price-access'
-import { readBusinessSession } from '@/lib/business/session'
+import { getBusinessAccess } from '@/lib/business/access'
+import { getBusinessProduct } from '@/lib/business/catalogue'
 import { formatCurrency, isUuid } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -12,10 +11,10 @@ export const dynamic = 'force-dynamic'
 export default async function BusinessProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const session = await readBusinessSession()
-  const companyId = session?.company?.id || session?.profile.company_id || null
+  const access = await getBusinessAccess()
+  const companyId = access.company?.id || access.profile?.company_id || null
   const product = await getBusinessProduct(companyId, id)
-  const priceNotice = businessPriceNotice(await readBusinessPriceAccess(session?.profile ?? null))
+  const priceNotice = access.priceNotice
   if (!product) notFound()
   const showPrice = product.indicativePrice != null
 

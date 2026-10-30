@@ -2,6 +2,7 @@ export const REGISTER_EMAIL_TAKEN = 'This email is already registered. Sign in i
 export const REGISTER_CAPTCHA = 'Captcha failed. Please try again.'
 export const REGISTER_GSTIN = 'Invalid GSTIN. Check the 15-character number and try again.'
 export const REGISTER_WORK_EMAIL = 'Use a work email. Free inboxes such as Gmail, Yahoo, and Outlook are not accepted.'
+export const REGISTER_PORTAL_EMAIL = 'This email uses a company portal · Find your company portal'
 export const REGISTER_SERVER = 'Server error. Please try again shortly.'
 
 /** Map a provider or database message to one of the four registration messages. */
@@ -23,6 +24,7 @@ export function mapRegistrationFailure(message: string | null | undefined): stri
   if (text.includes('gstin') || text.includes('gst number') || text.includes('gst_number')) {
     return REGISTER_GSTIN
   }
+  if (text.includes('company portal email') || text.includes('company portal')) return REGISTER_PORTAL_EMAIL
   if (text.includes('work email')) return REGISTER_WORK_EMAIL
   return REGISTER_SERVER
 }

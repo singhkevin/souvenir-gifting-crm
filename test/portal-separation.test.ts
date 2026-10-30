@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { confirmLandingForRole, portalSetPasswordUrl } from '../src/lib/auth/confirm-landing.ts'
-import { BUSINESS_PRICE_SIGN_IN, businessPriceNotice, shouldShowBusinessPrompt } from '../src/lib/business/price-access.ts'
+import { BUSINESS_PRICE_AWAITING, BUSINESS_PRICE_SIGN_IN, businessPriceNotice, shouldShowBusinessPrompt } from '../src/lib/business/price-access.ts'
 import { FREE_EMAIL_DOMAINS, workEmailBlock } from '../src/lib/business/email-domain.ts'
 import { canSendPortalInvite, confirmNextAllowed } from '../src/lib/portal/separation.ts'
 
@@ -29,7 +29,7 @@ test('business and microsite confirm links stay on their own product', () => {
 
 test('signed-out visitors do not see a business price', () => {
   assert.equal(businessPriceNotice('anonymous'), BUSINESS_PRICE_SIGN_IN)
-  assert.match(businessPriceNotice('pending') || '', /approved/i)
+  assert.equal(businessPriceNotice('pending'), BUSINESS_PRICE_AWAITING)
   assert.equal(businessPriceNotice('open'), null)
 })
 

@@ -270,7 +270,7 @@ export function QuoteBasket({
           {pendingApproval ? (
             <div className="border border-[#CCC5BD] bg-[#F6F3EC] p-3 text-xs text-[#9E4300] flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-[#FF8843] animate-pulse" />
-              <span>Pending approval. Quote requests open after sales approves this account.</span>
+              <span>Awaiting approval · you can save this basket, and submit after we verify your company.</span>
             </div>
           ) : null}
           <TurnstileWidget />
