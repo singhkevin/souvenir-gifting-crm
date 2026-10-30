@@ -111,3 +111,11 @@ Trial (live, forced rollback, 23 Oct 2026): supabase/tests/role_active_checks_tr
 (every staff, client_admin, business and inactive account); 15 active accounts: identical access before and after.
 Inactive admin: 31 orders · 26 companies · 22 leads · 26 quotations · 29 profiles visible before, 0 after
 (own 13 tasks stay via tasks_write). Rollback restored function and policy md5s and the exact access.
+
+## 61 · 20261030_store_backorders.sql · NOT APPLIED
+
+Retail arrangement requests and back-in-stock alerts. Adds `store_backorder_requests`, `store_backorder_lines`, `store_stock_alerts`, and `store_stock_alert_jobs`. Widens `requirements.source` with `store_backorder` so an out-of-stock store checkout lands in the existing requirement pipeline. Staff (admin, sales, operations, management) can read the queue and update request status. Customers do not write these tables; the server uses the service role. A trigger on `products.stock_qty` enqueues a job when stock increases and a pending alert exists. The app sends each alert once by email and marks it sent. `place_direct_order` is not changed.
+
+Does not depend on step 59 (lifecycle go-live). Apply after step 60, and after step 35 (`requirements.source`) and step 25 (`products.stock_qty`).
+
+Rollback: `supabase/rollbacks/20261030_store_backorders_rollback.sql`. It drops the new tables and trigger, and relabels any `store_backorder` requirements as `website` before restoring the previous source check. Run it before any later migration that adds another `requirements.source` value.

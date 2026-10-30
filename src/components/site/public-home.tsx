@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { Gift, MapPinned, PackageSearch, PenLine, Truck } from 'lucide-react'
 import { ProductImage } from '@/components/ui/product-image'
 import { AddToCartButton } from '@/components/site/add-to-cart-button'
@@ -208,14 +207,12 @@ export async function PublicHome({
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 sm:px-6 lg:px-8">
             <p className="sv2-body-sm text-[#4A4640]">In stock</p>
             <AddToCartButton
-              maxQuantity={1}
-              label="Buy 1 sample"
+              maxQuantity={null}
+              stockQty={4}
+              label="Add to cart"
               product={{ id: '33333333-3333-4333-8333-333333333333', sku: 'BTL-1', name: 'Steel bottle', price: 450, image_url: '/site/home-festive-cane.webp' }}
               className="inline-flex bg-[#000000] px-5 py-2.5 sv2-label text-white uppercase tracking-wider"
             />
-            <Link href="/request-quote" className="inline-flex border border-[#CCC5BD] px-5 py-2.5 sv2-label text-[#1C1C18] uppercase tracking-wider hover:border-[#000000]">
-              Request a Quote
-            </Link>
           </div>
         </section>
       ) : null}

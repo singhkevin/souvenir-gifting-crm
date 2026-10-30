@@ -13,6 +13,7 @@ import {
 } from '@/lib/catalogue/cart'
 import { ProductImage } from '@/components/ui/product-image'
 import { formatCurrency } from '@/lib/utils'
+import { splitRetailCart } from '@/lib/catalogue/availability'
 import { CartCheckout } from '@/components/site/cart-checkout'
 import { siteContent } from '@/config/siteContent'
 import { HEADER_ICON_CLASS, HeaderCountBadge } from '@/components/sv2/header-actions'
@@ -64,7 +65,21 @@ export function CartDrawer({
   }, [open])
 
   const count = getCartCount(items)
-  const subtotal = items.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0)
+  const storeSplit = kind === 'store'
+    ? splitRetailCart(items.map((item) => ({ ...item, stockQty: item.stockQty })), { unknownIsInStock: true })
+    : null
+  const chargedQty = (item: CartItem) => {
+    if (!storeSplit) return item.quantity
+    return storeSplit.inStock.filter((line) => line.id === item.id).reduce((sum, line) => sum + line.quantity, 0)
+  }
+  const arrangedQty = (item: CartItem) => {
+    if (!storeSplit) return 0
+    return storeSplit.backorder.filter((line) => line.id === item.id).reduce((sum, line) => sum + line.quantity, 0)
+  }
+  const subtotal = items.reduce((sum, item) => sum + (item.price || 0) * chargedQty(item), 0)
+  const arranging = storeSplit ? storeSplit.backorder.length > 0 : false
+  const shipping = storeSplit ? storeSplit.inStock.length > 0 : items.length > 0
+  const bagBadge = !arranging ? 'Ready to ship' : shipping ? 'Ready · to arrange' : 'To arrange'
 
   return (
     <>
@@ -109,7 +124,7 @@ export function CartDrawer({
               <div className="flex items-baseline justify-between">
                 <h2 className="font-serif text-2xl font-normal text-[#1C1C18]">Your Bag ({count})</h2>
                 <span className="border border-[#3A4537]/30 bg-[#DAE6D3] text-[#3A4537] px-2 py-0.5 sv2-label text-[10px] font-semibold">
-                  Ready to Ship
+                  {kind === 'store' ? bagBadge : 'Ready to ship'}
                 </span>
               </div>
               {/* Shipping progress note */}
@@ -129,7 +144,7 @@ export function CartDrawer({
                     <p className="mt-3 font-serif text-xl text-[#1C1C18]">Your bag is empty.</p>
                     <p className="mt-1 sv2-body-sm text-xs text-[#7C766F] max-w-xs">
                       {kind === 'store'
-                        ? 'Add gifts or sample items from our live retail catalogue.'
+                        ? 'Add any gift from the catalogue. Out of stock gifts can be arranged.'
                         : 'Add gifts that are ready to buy. Quote-only gifts use Request quote.'}
                     </p>
                   </div>
@@ -164,7 +179,16 @@ export function CartDrawer({
                               </button>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between pt-2 border-t border-[#CCC5BD]/50 mt-1">
+                            {kind === 'store' ? (
+                              <p className="mt-1 sv2-label text-[10px] text-[#7C766F]">
+                                {arrangedQty(item) > 0 && chargedQty(item) > 0
+                                  ? `${chargedQty(item)} ready to ship · ${arrangedQty(item)} to arrange`
+                                  : arrangedQty(item) > 0
+                                    ? 'To arrange'
+                                    : 'Ready to ship'}
+                              </p>
+                            ) : null}
+                            <div className="flex items-center justify-between pt-2 border-t border-[#CCC5BD]/50 mt-1">
                             {/* Stepper */}
                             <div className="inline-flex items-center border border-[#CCC5BD] bg-[#FCF9F2]">
                               <button
@@ -190,7 +214,11 @@ export function CartDrawer({
                             {/* Price */}
                             <div className="text-right">
                               <span className="sv2-mono-md font-bold text-[#1C1C18]">
-                                {item.price != null ? formatCurrency(item.price * item.quantity) : 'On quote'}
+                                {item.price != null && chargedQty(item) > 0
+                                  ? formatCurrency(item.price * chargedQty(item))
+                                  : kind === 'store' && arrangedQty(item) > 0
+                                    ? 'Not charged now'
+                                    : 'On quote'}
                               </span>
                             </div>
                           </div>
@@ -204,7 +232,7 @@ export function CartDrawer({
 
             {/* Bottom Fixed Footer */}
             {items.length > 0 || placed ? (
-              <div className="border-t border-[#CCC5BD] bg-[#F6F3EC] px-6 py-4 flex-shrink-0 space-y-3.5">
+              <div className="max-h-[70%] overflow-y-auto border-t border-[#CCC5BD] bg-[#F6F3EC] px-6 py-4 flex-shrink-0 space-y-3.5">
                 {items.length > 0 && subtotal > 0 ? (
                   <div className="space-y-1.5 sv2-mono-sm text-xs border-b border-[#CCC5BD] pb-3">
                     <div className="flex justify-between text-[#4A4640]">
@@ -221,6 +249,7 @@ export function CartDrawer({
                 <CartCheckout
                   items={items}
                   kind={kind}
+                  arranging={arranging}
                   onDone={() => {
                     clearCart(cartKey)
                     setItems([])

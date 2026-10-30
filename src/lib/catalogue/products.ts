@@ -7,6 +7,7 @@ import { gstPriceNote } from '@/lib/pricing/engine'
 import { readProductCost } from '@/lib/pricing/product-costs'
 import { getPricingSettings, resolveListedPrices } from '@/lib/pricing/server'
 import { type PurchaseOffer } from '@/lib/catalogue/purchase-path'
+import { retailCartOffer, visibleOnRetailStore } from '@/lib/catalogue/availability'
 import { occasionTagList, storefrontSampleOffer } from '@/lib/catalogue/storefront'
 import { cachedPublicRead } from '@/lib/catalogue/public-read'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -82,7 +83,21 @@ function logoOf(brand: Named | Named[] | null | undefined) {
   return trimmed || null
 }
 
-function toPublicProduct(row: PublicRow, sellPrice: number | null, priceNote?: string | null): PublicProduct {
+function toPublicProduct(row: PublicRow, sellPrice: number | null, priceNote: string | null | undefined, channel: Channel): PublicProduct {
+  const hasSellPrice = sellPrice != null && Number.isFinite(Number(sellPrice))
+  const purchase = channel === 'store'
+    ? retailCartOffer({
+        fulfillmentMode: row.fulfillment_mode,
+        stockQty: row.stock_qty,
+        hasSellPrice,
+        sampleOnly: Boolean(row.sample_only),
+      })
+    : storefrontSampleOffer({
+        fulfillmentMode: row.fulfillment_mode,
+        stockQty: row.stock_qty,
+        hasSellPrice,
+        sampleOnly: Boolean(row.sample_only),
+      })
   return {
     id: row.id,
     name: row.name,
@@ -99,12 +114,7 @@ function toPublicProduct(row: PublicRow, sellPrice: number | null, priceNote?: s
     occasion_tags: occasionTagList(row.occasion_tags),
     status: row.status,
     created_at: row.created_at || null,
-    purchase: storefrontSampleOffer({
-      fulfillmentMode: row.fulfillment_mode,
-      stockQty: row.stock_qty,
-      hasSellPrice: sellPrice != null && Number.isFinite(Number(sellPrice)),
-      sampleOnly: Boolean(row.sample_only),
-    }),
+    purchase,
     priceNote: priceNote || null,
   }
 }
@@ -245,7 +255,8 @@ async function publicDbClient(): Promise<SupabaseClient | null> {
 }
 
 async function assembleCatalogue(client: SupabaseClient, channel: Channel): Promise<PublicProduct[]> {
-  const data = await loadPublicRows(client, channel)
+  const loaded = await loadPublicRows(client, channel)
+  const data = channel === 'store' ? visibleOnRetailStore(loaded) : loaded
   if (!data.length) return []
   const settings = await getPricingSettings()
   const rule = settings.portals.store
@@ -253,8 +264,8 @@ async function assembleCatalogue(client: SupabaseClient, channel: Channel): Prom
   const resolved = settings.surfaces.store.showSellPrice
     ? await resolveListedPrices(data.map((row) => ({ id: row.id })), 'store', null, null, settings, client)
     : null
-  if (!settings.surfaces.store.showSellPrice) return data.map((row) => toPublicProduct(row, null))
-  return data.map((row) => toPublicProduct(row, resolved?.get(row.id)?.price ?? null, note))
+  if (!settings.surfaces.store.showSellPrice) return data.map((row) => toPublicProduct(row, null, null, channel))
+  return data.map((row) => toPublicProduct(row, resolved?.get(row.id)?.price ?? null, note, channel))
 }
 
 const readCachedCatalogue = cachedPublicRead('priced-catalogue', async (channel: Channel) => {
@@ -275,8 +286,23 @@ const readCachedNavCategories = cachedPublicRead('nav-categories', async () => {
   return readNavCategories(client)
 })
 
+const PREVIEW_IN_STOCK = '33333333-3333-4333-8333-333333333333'
+const PREVIEW_OUT_OF_STOCK = '44444444-4444-4444-8444-444444444444'
+
+function previewCatalogue(): PublicProduct[] | null {
+  if (process.env.STOREFRONT_UI_PREVIEW !== '1') return null
+  return [PREVIEW_IN_STOCK, PREVIEW_OUT_OF_STOCK].flatMap((id) => {
+    const product = previewPublicProduct(id)
+    return product ? [product] : []
+  })
+}
+
 /** Active products switched on for the retail store (default) or the business portal. */
 export const getPublicCatalogueProducts = cache(async (channel: Channel = 'store'): Promise<PublicProduct[]> => {
+  if (channel === 'store') {
+    const preview = previewCatalogue()
+    if (preview) return preview
+  }
   try {
     if (createAdminClient()) return await readCachedCatalogue(channel)
     const client = await publicDbClient()
@@ -317,7 +343,7 @@ function previewPublicProduct(id: string): PublicProduct | null {
     id,
     name: stock ? 'Steel bottle' : 'Desk diary',
     sku: stock ? 'BTL-1' : 'DRY-1',
-    description: 'One sample from what is on hand. Larger quantities are quoted.',
+    description: 'Preview catalogue product.',
     image_url: '/site/home-welcome-kit.webp',
     price: 450,
     moq: 25,
@@ -329,7 +355,7 @@ function previewPublicProduct(id: string): PublicProduct | null {
     occasion_tags: ['welcome'],
     status: 'active',
     created_at: null,
-    purchase: storefrontSampleOffer({
+    purchase: retailCartOffer({
       fulfillmentMode: 'auto',
       stockQty: stock,
       hasSellPrice: true,

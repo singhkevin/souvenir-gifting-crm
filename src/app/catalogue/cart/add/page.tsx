@@ -26,6 +26,7 @@ export default async function CartAddPage({
       image_url: product.image_url,
       quantity: added.quantity,
       maxQuantity: product.purchase.maxBuyQty,
+      stockQty: product.purchase.stockQty,
     }]
   })
 

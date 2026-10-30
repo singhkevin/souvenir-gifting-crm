@@ -29,6 +29,10 @@ export function SiteProductCard({
     (product.price == null
       ? 'Price on quote'
       : `${formatCurrency(product.price)}${product.priceNote ? ` ${product.priceNote}` : ''}`)
+  const retailCart = !hideQuickAdd
+  const ready = retailCart
+    ? product.purchase.reason === 'stock' && product.purchase.stockQty > 0
+    : product.purchase.buy
 
   return (
     <article className="group flex h-full flex-col border border-[#CCC5BD] bg-[#FCF9F2] transition-colors hover:border-[#000000]">
@@ -49,13 +53,13 @@ export function SiteProductCard({
             fit="contain"
             className="absolute inset-0 h-full w-full bg-transparent sv2-img-zoom"
           />
-          {product.purchase.buy ? (
+          {ready ? (
             <span className="absolute left-2.5 top-2.5 border border-[#CCC5BD] bg-[#FCF9F2] px-2 py-0.5 sv2-mono-sm text-[10px] text-[#1C1C18] font-semibold">
               READY TO SHIP
             </span>
           ) : (
             <span className="absolute left-2.5 top-2.5 border border-[#CCC5BD] bg-[#FCF9F2] px-2 py-0.5 sv2-mono-sm text-[10px] text-[#7C766F]">
-              ON QUOTE
+              {retailCart ? 'TO ARRANGE' : 'ON QUOTE'}
             </span>
           )}
         </div>
@@ -82,17 +86,17 @@ export function SiteProductCard({
               {displayPrice}
             </span>
             <span className="sv2-label text-[10px] text-[#7C766F] truncate">
-              {caption || (product.purchase.buy ? 'Add to bag' : 'Request quote')}
+              {caption || (retailCart ? 'Add to cart' : product.purchase.buy ? 'Add to bag' : 'Request quote')}
             </span>
           </div>
         </div>
       </Link>
 
-      {!hideQuickAdd && product.purchase.buy ? (
+      {retailCart && product.purchase.reason !== 'sample' ? (
         <div className="p-2.5 border-t border-[#CCC5BD] bg-[#F6F3EC]">
           <AddToCartButton
-            compact
-            maxQuantity={product.purchase.maxBuyQty}
+            maxQuantity={null}
+            stockQty={product.purchase.stockQty}
             product={{
               id: product.id,
               sku: product.sku,
@@ -100,7 +104,7 @@ export function SiteProductCard({
               price: product.price,
               image_url: product.image_url,
             }}
-            label="Add to bag"
+            label="Add to cart"
             className="w-full flex items-center justify-center border border-[#000000] bg-[#000000] hover:bg-[#9E4300] hover:border-[#9E4300] py-2 sv2-label text-[10px] text-white tracking-wider transition-colors"
           />
         </div>
