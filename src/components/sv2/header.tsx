@@ -14,7 +14,7 @@ import {
   HeaderSampleCartLink,
   HeaderSearchSubmit,
 } from '@/components/sv2/header-actions'
-import { BUSINESS_CATALOGUE_PATH, BUSINESS_QUOTE_PATH } from '@/lib/business/portal-paths'
+import { BUSINESS_CATALOGUE_PATH, BUSINESS_QUOTE_PATH, businessLoginPath } from '@/lib/business/portal-paths'
 
 interface SV2HeaderProps {
   categories?: CategoryNavItem[]
@@ -23,7 +23,7 @@ interface SV2HeaderProps {
   accountLabel?: string | null
 }
 
-const SIGN_IN_HREF = '/login?next=/business/dashboard'
+const SIGN_IN_HREF = businessLoginPath('/business/dashboard')
 
 const DEFAULT_CATEGORIES: CategoryNavItem[] = [
   { label: 'Welcome Kits', href: '/business/catalogue?q=welcome%20kit', icon: 'package' },

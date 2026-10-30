@@ -11,6 +11,8 @@ import { sendEmail, passwordResetEmailHtml } from '@/lib/email/resend'
 import { isEmailAllowedForDomains } from '@/lib/pricing/domains'
 import { accountKindForRole } from '@/lib/account-kind'
 import { isBusinessRole, isClientRole, isGiftEmployeeRole } from '@/lib/roles'
+import { businessAudienceRefusal } from '@/lib/business/access-state'
+import { finderDestinations } from '@/lib/domain-routing'
 import { giftEmailProblem } from '@/lib/gifts/rules'
 import { domainSplitEnabled } from '@/lib/domain-flag'
 import { confirmOriginForAccount, hostLoginDecision } from '@/lib/domain-routing'
@@ -21,6 +23,7 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
   const email = String(formData.get('email') || '').trim()
   const password = String(formData.get('password') || '')
   const next = formData.get('next') as string | null
+  const audience = String(formData.get('audience') || '')
 
   if (!email || !password) {
     return { error: 'Email and password are required' }
@@ -93,6 +96,19 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
         await supabase.auth.signOut()
         return { error: 'This account cannot sign in on this portal.' }
       }
+    }
+
+    if (audience === 'business' && !isBusiness) {
+      await supabase.auth.signOut()
+      const refusal = businessAudienceRefusal(profile?.role)
+      if (profile && (isClientRole(profile.role) || isGiftEmployeeRole(profile.role))) {
+        return {
+          error: refusal?.error || 'This email uses a company portal · Find your company portal',
+          helpHref: finderDestinations().finder,
+          helpLabel: 'Find your company portal',
+        }
+      }
+      return { error: refusal?.error || 'Sign in with your work email' }
     }
 
     if (domainSplitEnabled()) {

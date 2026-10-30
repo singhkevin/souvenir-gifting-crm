@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { presentBusinessProduct, resolveBusinessAccess } from '../src/lib/business/access-state.ts'
+import { businessAudienceRefusal, presentBusinessProduct, resolveBusinessAccess } from '../src/lib/business/access-state.ts'
+import { BUSINESS_PRICE_AWAITING, BUSINESS_PRICE_SIGN_IN, BUSINESS_WRONG_ACCOUNT } from '../src/lib/business/price-access.ts'
+import { businessLoginPath } from '../src/lib/business/portal-paths.ts'
 import { BUSINESS_PRICE_AWAITING, BUSINESS_PRICE_SIGN_IN, BUSINESS_WRONG_ACCOUNT } from '../src/lib/business/price-access.ts'
 
 const company = {
@@ -91,6 +93,18 @@ test('existing free-email accounts stay usable and a block policy can lock them'
   assert.equal(blocked.state, 'email_not_allowed')
   assert.equal(blocked.canSeePrices, false)
   assert.equal(blocked.canSubmitQuote, false)
+})
+
+test('business login refuses a shop account and does not send it back to the store login', () => {
+  assert.equal(businessAudienceRefusal('business_user'), null)
+  assert.match(businessAudienceRefusal('retail')?.error || '', /shop account/)
+  assert.match(businessAudienceRefusal(null)?.error || '', /shop account/)
+  assert.match(businessAudienceRefusal('sales')?.error || '', /staff account/)
+  assert.match(businessAudienceRefusal('client_user')?.error || '', /company portal/)
+  const login = businessLoginPath('/business/dashboard', 'wrong-account')
+  assert.equal(login.startsWith('/business/login?'), true)
+  assert.equal(login.startsWith('/login'), false)
+  assert.match(login, /error=wrong-account/)
 })
 
 test('catalogue payloads drop retail and business prices unless access is open', () => {

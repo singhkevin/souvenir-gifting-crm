@@ -10,11 +10,12 @@ import { minimumOrderQty } from '@/lib/business/lines'
 import { getPublicBrands, getPublicCategories, type PublicProduct } from '@/lib/catalogue/products'
 import { curateTrendingProducts } from '@/lib/catalogue/curate'
 import { STORE_NAV_CATEGORIES, businessNavCategoryHref } from '@/lib/catalogue/store-nav'
-import { BUSINESS_CATALOGUE_PATH, BUSINESS_QUOTE_PATH } from '@/lib/business/portal-paths'
+import { BUSINESS_CATALOGUE_PATH, BUSINESS_QUOTE_PATH, businessLoginPath } from '@/lib/business/portal-paths'
 import { readCatalogueFilters } from '@/lib/catalogue/catalogue-query'
 import { getPublicContactPhone } from '@/lib/contact/public-phone-server'
 import { siteContent } from '@/config/siteContent'
 
+import { BusinessAccessNotice } from '@/components/business/access-notice'
 import { StorefrontCatalog } from '@/components/site/storefront-catalog'
 import { UtilityBar } from '@/components/sv2/utility-bar'
 import { SV2Header } from '@/components/sv2/header'
@@ -219,6 +220,9 @@ export async function BusinessHome({
       <SV2Header categories={navCategories} accountHref={accountHref} accountLabel={accountLabel} />
 
       <main id="main-content" className="w-full max-w-full min-w-0">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-16">
+          <BusinessAccessNotice access={access} />
+        </div>
         {/* Indicative pricing notice & account access bar */}
         <aside
           className="border-b border-[#7C766F] bg-[#1C1B1A] px-4 sm:px-8 lg:px-16 py-2.5"
@@ -243,7 +247,7 @@ export async function BusinessHome({
               </Link>
               <span className="text-[#7C766F]" aria-hidden="true">|</span>
               <Link
-                href="/login?next=/business/dashboard"
+                href={businessLoginPath('/business/dashboard')}
                 className="text-[#FFB690] hover:text-[#FCF9F2] transition-colors sv2-label text-[11px]"
               >
                 Sign in

@@ -5,6 +5,7 @@ import { redirectToMicrosite } from '@/lib/account-home'
 import type { ProfileSession } from '@/lib/auth'
 import { getBusinessAccess } from '@/lib/business/access'
 import type { BusinessAccessCompany } from '@/lib/business/access-state'
+import { businessLoginPath } from '@/lib/business/portal-paths'
 import { isClientRole, isGiftEmployeeRole, isStaffRole } from '@/lib/roles'
 import { createClient } from '@/lib/supabase/server'
 
@@ -21,11 +22,11 @@ export async function readBusinessSession(): Promise<{ profile: ProfileSession; 
 export async function requireBusiness(): Promise<{ profile: ProfileSession; company: BusinessCompany | null }> {
   const access = await getBusinessAccess()
   const profile = access.profile
-  if (!profile || access.state === 'signed_out') redirect('/login?next=/business/dashboard')
+  if (!profile || access.state === 'signed_out') redirect(businessLoginPath('/business/dashboard'))
   if (!profile.is_active || access.state === 'blocked') {
     const supabase = await createClient()
     await supabase.auth.signOut()
-    redirect('/login')
+    redirect(businessLoginPath('/business/dashboard', 'blocked'))
   }
   if (access.state === 'wrong_account') {
     if (isClientRole(profile.role) || isGiftEmployeeRole(profile.role)) {
@@ -33,12 +34,12 @@ export async function requireBusiness(): Promise<{ profile: ProfileSession; comp
     }
     if (isStaffRole(profile.role)) redirect('/crm/dashboard')
     if (profile.role === 'runner') redirect('/crm/runs')
-    redirect('/login')
+    redirect(businessLoginPath('/business/dashboard', 'wrong-account'))
   }
   if (access.state === 'rejected' || access.state === 'email_not_allowed') {
     const supabase = await createClient()
     await supabase.auth.signOut()
-    redirect('/login?error=business')
+    redirect(businessLoginPath('/business/login', access.state === 'rejected' ? 'rejected' : 'email'))
   }
   return { profile: profile as ProfileSession, company: access.company }
 }

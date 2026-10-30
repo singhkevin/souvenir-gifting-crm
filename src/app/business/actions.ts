@@ -41,6 +41,12 @@ import {
 import { withIdempotency } from '@/lib/idempotency'
 import { isUuid } from '@/lib/utils'
 
+export async function signOutToBusinessLogin(): Promise<void> {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  redirect('/business/login')
+}
+
 const GENERIC_REGISTER =
   'If this work email can be registered, we sent a confirmation link. If you already have an account, sign in.'
 

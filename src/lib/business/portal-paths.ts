@@ -3,6 +3,15 @@ import { minimumOrderQty } from '@/lib/business/lines'
 export const BUSINESS_CATALOGUE_PATH = '/business/catalogue'
 export const BUSINESS_QUOTE_PATH = '/business/quote'
 export const BUSINESS_REGISTER_PATH = '/business/register'
+export const BUSINESS_LOGIN_PATH = '/business/login'
+
+export function businessLoginPath(next?: string | null, error?: string | null) {
+  const params = new URLSearchParams()
+  if (next && next.startsWith('/business') && !next.startsWith('/business/login')) params.set('next', next)
+  if (error) params.set('error', error)
+  const query = params.toString()
+  return query ? `${BUSINESS_LOGIN_PATH}?${query}` : BUSINESS_LOGIN_PATH
+}
 
 export type StoreChannel = 'retail' | 'business'
 
@@ -11,7 +20,7 @@ export function businessProductPath(id: string) {
 }
 
 export function businessQuoteSignInPath() {
-  return `/login?next=${encodeURIComponent(BUSINESS_QUOTE_PATH)}`
+  return businessLoginPath(BUSINESS_QUOTE_PATH)
 }
 
 /** Product page. Business stays under /business. Retail stays on the store catalogue. */

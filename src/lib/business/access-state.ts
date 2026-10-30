@@ -11,6 +11,8 @@ import {
 import { isBusinessRole, isClientRole, isGiftEmployeeRole, isRunnerRole, isStaffRole } from '@/lib/roles'
 import type { PublicProduct } from '@/lib/catalogue/products'
 
+export const BUSINESS_PORTAL_EMAIL = 'This email uses a company portal · Find your company portal'
+
 export type BusinessAccessState =
   | 'signed_out'
   | 'wrong_account'
@@ -144,6 +146,14 @@ export function resolveBusinessAccess(input: {
   if (company.business_verification === 'rejected') return base('rejected', 'rejected')
   if (company.business_verification === 'verified') return base('verified', null)
   return base('pending', 'pending')
+}
+
+/** Refusal when someone signs in on /business/login with another kind of account. */
+export function businessAudienceRefusal(role: string | null | undefined): { error: string } | null {
+  if (isBusinessRole(role)) return null
+  if (isClientRole(role) || isGiftEmployeeRole(role)) return { error: BUSINESS_PORTAL_EMAIL }
+  if (isStaffRole(role) || isRunnerRole(role)) return { error: BUSINESS_WRONG_STAFF }
+  return { error: BUSINESS_WRONG_ACCOUNT }
 }
 
 export function priceAccessFromState(state: BusinessAccessState): BusinessPriceAccess {

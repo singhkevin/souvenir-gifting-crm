@@ -27,7 +27,8 @@ test('business quote actions stay under /business and retail quote stays on the 
   assert.equal(channelCataloguePath('business'), BUSINESS_CATALOGUE_PATH)
   assert.equal(channelCataloguePath('retail'), '/catalogue')
   assert.equal(businessProductPath(mug), `${BUSINESS_CATALOGUE_PATH}/${mug}`)
-  assert.equal(businessQuoteSignInPath(), `/login?next=${encodeURIComponent(BUSINESS_QUOTE_PATH)}`)
+  assert.equal(businessQuoteSignInPath(), `/business/login?next=${encodeURIComponent(BUSINESS_QUOTE_PATH)}`)
+  assert.equal(isPublicSitePath('/business/login'), true)
   assert.equal(BUSINESS_QUOTE_PATH, '/business/quote')
 })
 
