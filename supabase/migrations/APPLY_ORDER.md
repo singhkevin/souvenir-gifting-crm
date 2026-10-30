@@ -128,3 +128,8 @@ Rollback: supabase/rollbacks/20261030_business_access_gate_rollback.sql (run thi
 
 `email_domain_rules` holds `allow`, `block_free`, and `block_disposable`. The block rows are seeded from `src/lib/business/email-domain.ts`. Existing `email_domain_allowlist` rows are copied as `allow` and stay in sync both ways. `is_work_email(email)` is that policy. `register_business_account` calls it instead of the hard-coded list. Trigger `profiles_enforce_business_email_domain` rejects a new `business_user`, a role change to `business_user`, or an email change onto a blocked domain. An update that does not change the email or role is left alone, so current free-email business accounts keep working. `business_free_email_review` lists those accounts for staff. It does not block them. Apply after 62. Not applied to the live database.
 Rollback: supabase/rollbacks/20261030b_business_email_domains_rollback.sql (roll back 64 first if it is applied).
+
+## 64 · 20261030c_business_portal_domain.sql · NOT APPLIED
+
+`enforce_business_email_domain` also rejects a new `business_user`, or an email or role change, when the email domain is on an active `account_type = 'corporate'` company's `allowed_email_domains`. The registration page shows a message that points at the portal finder. An allow rule does not override this. `account_type` `direct` is not a microsite, so a direct customer's domain can still register as a business. Existing business accounts are not updated and keep working. Apply after 63. Not applied to the live database.
+Rollback: supabase/rollbacks/20261030c_business_portal_domain_rollback.sql.

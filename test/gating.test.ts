@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
-import { DISPOSABLE_EMAIL_DOMAINS, FREE_EMAIL_DOMAINS, emailReviewFlag, workEmailBlock } from '../src/lib/business/email-domain.ts'
+import { DISPOSABLE_EMAIL_DOMAINS, FREE_EMAIL_DOMAINS, emailDomainRuleChoice, emailReviewFlag, micrositeDomainConflict, workEmailBlock } from '../src/lib/business/email-domain.ts'
 import { gstinError } from '../src/lib/business/gstin.ts'
 import { businessConfirmUrl, confirmLandingPath } from '../src/lib/auth/confirm-landing.ts'
 import { companyHint, companyListLabel, dedupeById } from '../src/lib/catalogs/company-option.ts'
@@ -35,6 +35,41 @@ test('work email rules prefer the database list and still fall back offline', ()
   assert.equal(emailReviewFlag('owner@gmail.com', rules), 'free')
   assert.equal(emailReviewFlag('owner@gmail.com', [{ domain: 'gmail.com', rule: 'allow' }]), null)
   assert.equal(emailReviewFlag('owner@mailinator.com'), 'disposable')
+})
+
+test('the database rejects a microsite domain on a new business account and leaves direct customers alone', () => {
+  const sql = readFileSync(
+    new URL('../supabase/migrations/20261030c_business_portal_domain.sql', import.meta.url),
+    'utf8',
+  )
+  assert.match(sql, /company portal email/)
+  assert.match(sql, /c\.account_type = 'corporate'/)
+  assert.match(sql, /Grandfather/)
+  assert.doesNotMatch(sql, /account_type = 'direct'/)
+  const rollback = readFileSync(
+    new URL('../supabase/rollbacks/20261030c_business_portal_domain_rollback.sql', import.meta.url),
+    'utf8',
+  )
+  assert.doesNotMatch(rollback, /company portal email/)
+})
+
+test('a microsite client domain cannot register as a business, and a direct customer domain can', () => {
+  const companies = [
+    { name: 'Tata Consultancy', domains: ['tcs.com'], account_type: 'corporate', status: 'active' },
+    { name: 'A person', domains: ['person.example'], account_type: 'direct', status: 'active' },
+    { name: 'Old client', domains: ['old.example'], account_type: 'corporate', status: 'inactive' },
+  ]
+  assert.equal(micrositeDomainConflict('employee@tcs.com', companies)?.name, 'Tata Consultancy')
+  assert.equal(micrositeDomainConflict('person@person.example', companies), null)
+  assert.equal(micrositeDomainConflict('old@old.example', companies), null)
+  assert.equal(micrositeDomainConflict('buyer@gmail.com', companies), null)
+})
+
+test('email domain settings only accept allow, block free, and block disposable', () => {
+  assert.equal(emailDomainRuleChoice('allow'), 'allow')
+  assert.equal(emailDomainRuleChoice('block_free'), 'block_free')
+  assert.equal(emailDomainRuleChoice('block_disposable'), 'block_disposable')
+  assert.equal(emailDomainRuleChoice('block'), null)
 })
 
 test('business sign-up blocks free email unless the domain is allowlisted', () => {

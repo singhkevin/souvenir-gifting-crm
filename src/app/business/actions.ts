@@ -10,6 +10,7 @@ import { getProfile } from '@/lib/auth'
 import { isBusinessRole } from '@/lib/roles'
 import {
   classifyBusinessEmail,
+  micrositeDomainConflict,
   registrationNotes,
   workEmailBlock,
   type EmailDomainRule,
@@ -19,6 +20,7 @@ import { businessConfirmUrl } from '@/lib/auth/confirm-landing'
 import {
   mapRegistrationFailure,
   REGISTER_EMAIL_TAKEN,
+  REGISTER_PORTAL_EMAIL,
   REGISTER_SERVER,
 } from '@/lib/business/register-errors'
 import { storePublicOrigin } from '@/lib/site/store-public-origin'
@@ -128,11 +130,17 @@ async function registerBusinessOnce(formData: FormData) {
     .select('name, allowed_email_domains, account_type, status')
     .eq('status', 'active')
     .limit(500)
+  const corporateRows = (corporates || []).map((row) => ({
+    name: row.name as string,
+    domains: row.allowed_email_domains as string[] | null,
+    account_type: row.account_type as string | null,
+    status: row.status as string | null,
+  }))
+  const portalConflict = micrositeDomainConflict(email, corporateRows)
+  if (portalConflict) return { error: REGISTER_PORTAL_EMAIL }
   const flags = classifyBusinessEmail(
     email,
-    (corporates || [])
-      .filter((row) => (row.account_type || 'corporate') === 'corporate')
-      .map((row) => ({ name: row.name, domains: row.allowed_email_domains })),
+    corporateRows.filter((row) => (row.account_type || 'corporate') === 'corporate'),
     rules,
   )
 
