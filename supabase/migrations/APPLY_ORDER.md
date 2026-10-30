@@ -118,3 +118,8 @@ Portal logins must use the company's allowed email domains when that list is set
 `portal_unit_price` no longer returns business tier prices to a microsite account, or corporate prices to a business account.
 Store prices, the service role, and pricing staff are unchanged. Not applied to the live database.
 Rollback: supabase/rollbacks/20261027_portal_business_separation_rollback.sql.
+
+## 62 · 20261030_business_access_gate.sql · NOT APPLIED
+
+`public.business_access()` returns `none`, `pending`, `verified`, `rejected`, or `blocked` for the signed-in user. `portal_unit_price` on the business portal, `business_submit_rfq`, and `business_respond_quotation` require `verified`. A pending account can no longer read a business price or return an existing quote request id. Store prices, corporate prices, the service role, and pricing staff are unchanged. The price ladder is not rewritten. `account_type` `direct` is not treated as a business portal account. Apply after 61. Not applied to the live database.
+Rollback: supabase/rollbacks/20261030_business_access_gate_rollback.sql (run this before rolling back 61).
