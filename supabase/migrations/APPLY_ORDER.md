@@ -123,3 +123,8 @@ Rollback: supabase/rollbacks/20261027_portal_business_separation_rollback.sql.
 
 `public.business_access()` returns `none`, `pending`, `verified`, `rejected`, or `blocked` for the signed-in user. `portal_unit_price` on the business portal, `business_submit_rfq`, and `business_respond_quotation` require `verified`. A pending account can no longer read a business price or return an existing quote request id. Store prices, corporate prices, the service role, and pricing staff are unchanged. The price ladder is not rewritten. `account_type` `direct` is not treated as a business portal account. Apply after 61. Not applied to the live database.
 Rollback: supabase/rollbacks/20261030_business_access_gate_rollback.sql (run this before rolling back 61).
+
+## 63 · 20261030b_business_email_domains.sql · NOT APPLIED
+
+`email_domain_rules` holds `allow`, `block_free`, and `block_disposable`. The block rows are seeded from `src/lib/business/email-domain.ts`. Existing `email_domain_allowlist` rows are copied as `allow` and stay in sync both ways. `is_work_email(email)` is that policy. `register_business_account` calls it instead of the hard-coded list. Trigger `profiles_enforce_business_email_domain` rejects a new `business_user`, a role change to `business_user`, or an email change onto a blocked domain. An update that does not change the email or role is left alone, so current free-email business accounts keep working. `business_free_email_review` lists those accounts for staff. It does not block them. Apply after 62. Not applied to the live database.
+Rollback: supabase/rollbacks/20261030b_business_email_domains_rollback.sql (roll back 64 first if it is applied).

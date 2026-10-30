@@ -8,7 +8,12 @@ import { requestOrigin } from '@/lib/auth/request-origin'
 import { validateNewPassword } from '@/lib/auth/password'
 import { getProfile } from '@/lib/auth'
 import { isBusinessRole } from '@/lib/roles'
-import { classifyBusinessEmail, registrationNotes, workEmailBlock } from '@/lib/business/email-domain'
+import {
+  classifyBusinessEmail,
+  registrationNotes,
+  workEmailBlock,
+  type EmailDomainRule,
+} from '@/lib/business/email-domain'
 import { gstinError, normaliseGstin } from '@/lib/business/gstin'
 import { businessConfirmUrl } from '@/lib/auth/confirm-landing'
 import {
@@ -101,8 +106,14 @@ async function registerBusinessOnce(formData: FormData) {
   const existingProfile = await admin.from('profiles').select('id').ilike('email', email).maybeSingle()
   if (existingProfile.data?.id) return { error: REGISTER_EMAIL_TAKEN }
 
-  const allowlist = await admin.from('email_domain_allowlist').select('domain')
-  const emailBlock = workEmailBlock(email, (allowlist.data || []).map((row) => row.domain as string))
+  const rulesQuery = await admin.from('email_domain_rules').select('domain, rule')
+  const rules = rulesQuery.error ? null : (rulesQuery.data as EmailDomainRule[])
+  let allowlist: string[] = []
+  if (!rules) {
+    const allowRows = await admin.from('email_domain_allowlist').select('domain')
+    allowlist = (allowRows.data || []).map((row) => row.domain as string)
+  }
+  const emailBlock = workEmailBlock(email, allowlist, rules)
   if (emailBlock) return { error: emailBlock }
 
   const { data: corporates } = await admin
@@ -115,6 +126,7 @@ async function registerBusinessOnce(formData: FormData) {
     (corporates || [])
       .filter((row) => (row.account_type || 'corporate') === 'corporate')
       .map((row) => ({ name: row.name, domains: row.allowed_email_domains })),
+    rules,
   )
 
   const { data: companyId, error: rpcError } = await admin.rpc('register_business_account', {

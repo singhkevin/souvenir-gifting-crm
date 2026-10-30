@@ -12,10 +12,20 @@ export const FREE_EMAIL_DOMAINS = [
 
 const FREE_MAIL = new Set<string>(FREE_EMAIL_DOMAINS)
 
-const DISPOSABLE = new Set([
+/** Offline fallback when email_domain_rules is not applied yet. The migration seeds the same domains. */
+export const DISPOSABLE_EMAIL_DOMAINS = [
   'mailinator.com', 'guerrillamail.com', 'tempmail.com', '10minutemail.com',
   'yopmail.com', 'trashmail.com', 'sharklasers.com', 'dispostable.com',
-])
+] as const
+
+const DISPOSABLE = new Set<string>(DISPOSABLE_EMAIL_DOMAINS)
+
+export type EmailDomainRuleName = 'allow' | 'block_free' | 'block_disposable'
+
+export type EmailDomainRule = {
+  domain: string
+  rule: EmailDomainRuleName
+}
 
 export type EmailDomainFlags = {
   domain: string | null
@@ -24,9 +34,19 @@ export type EmailDomainFlags = {
   possibleClientName: string | null
 }
 
+export function emailDomainRule(
+  domain: string | null,
+  rules: EmailDomainRule[] | null | undefined,
+): EmailDomainRuleName | null {
+  if (!domain || !rules) return null
+  const match = rules.find((rule) => normalizeEmailDomain(rule.domain) === domain)
+  return match?.rule ?? null
+}
+
 export function classifyBusinessEmail(
   email: string,
   corporateDomains: { name: string; domains: string[] | null | undefined }[],
+  rules?: EmailDomainRule[] | null,
 ): EmailDomainFlags {
   const domain = emailDomain(email)
   const possible = domain
@@ -34,21 +54,59 @@ export function classifyBusinessEmail(
         (company.domains || []).some((entry) => normalizeEmailDomain(entry) === domain),
       )
     : null
+  const rule = emailDomainRule(domain, rules)
+  const freeMail = rules
+    ? rule === 'block_free'
+    : Boolean(domain && FREE_MAIL.has(domain))
+  const disposable = rules
+    ? rule === 'block_disposable'
+    : Boolean(domain && DISPOSABLE.has(domain))
   return {
     domain,
-    freeMail: Boolean(domain && FREE_MAIL.has(domain)),
-    disposable: Boolean(domain && DISPOSABLE.has(domain)),
+    freeMail,
+    disposable,
     possibleClientName: possible?.name || null,
   }
+}
+
+/** CRM review flag. An allow rule is an exception and is not flagged. Null rules use the offline lists. */
+export function emailReviewFlag(
+  email: string,
+  rules?: EmailDomainRule[] | null,
+): 'free' | 'disposable' | null {
+  const domain = emailDomain(email)
+  if (!domain) return null
+  const rule = rules
+    ? emailDomainRule(domain, rules)
+    : FREE_MAIL.has(domain)
+      ? 'block_free'
+      : DISPOSABLE.has(domain)
+        ? 'block_disposable'
+        : null
+  if (rule === 'block_free') return 'free'
+  if (rule === 'block_disposable') return 'disposable'
+  return null
 }
 
 /**
  * Business sign-up must use a work email.
  * Free and disposable domains are blocked unless an admin added that domain to the allowlist.
  */
-export function workEmailBlock(email: string, allowlist: string[] | null | undefined): string | null {
+export function workEmailBlock(
+  email: string,
+  allowlist: string[] | null | undefined,
+  rules?: EmailDomainRule[] | null,
+): string | null {
   const domain = emailDomain(email)
   if (!domain) return 'A valid work email is required'
+  if (rules) {
+    const rule = emailDomainRule(domain, rules)
+    if (rule === 'allow') return null
+    if (rule === 'block_free' || rule === 'block_disposable') {
+      return 'Use a work email. Free inboxes such as Gmail, Yahoo, and Outlook are not accepted.'
+    }
+    return null
+  }
   const allowed = new Set(
     (allowlist || []).map((entry) => normalizeEmailDomain(entry)).filter((entry): entry is string => Boolean(entry)),
   )
