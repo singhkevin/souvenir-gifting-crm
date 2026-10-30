@@ -160,8 +160,8 @@ export async function placeStoreDirectOrder(input: {
   if (clean(input.fax)) return { success: true }
 
   // In-hand quantity may be more than one. Out-of-stock units are removed before this call.
-  const normalizedSample = normalizeCheckout(input.lines.map((line) => ({ ...line, catalogId: null })))
-  if ('error' in normalizedSample) return { error: normalizedSample.error }
+  const checked = normalizeCheckout(input.lines.map((line) => ({ ...line, catalogId: null })))
+  if ('error' in checked) return { error: checked.error }
 
   const profile = await getProfile()
   if (profile && isBusinessRole(profile.role) && profile.company_id) {
