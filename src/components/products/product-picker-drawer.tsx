@@ -6,7 +6,7 @@ import { ProductImage } from '@/components/ui/product-image'
 import { formatCurrency } from '@/lib/utils'
 import { useAction } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
-import { filterPickerProducts, PICKER_PAGE_SIZE, slicePickerPage, stockBadge } from '@/lib/products/picker'
+import { filterPickerProducts, PICKER_DENSE_PAGE_SIZE, PICKER_PAGE_SIZE, slicePickerPage, stockBadge } from '@/lib/products/picker'
 
 export type PickerProduct = {
   id: string
@@ -35,7 +35,8 @@ export function ProductPickerDrawer({
   submitLabel = 'Add selected',
   showQuantity = true,
   defaultQuantity,
-  pageSize = PICKER_PAGE_SIZE,
+  density = 'regular',
+  pageSize,
   variant = 'drawer',
   onSubmit,
 }: {
@@ -46,11 +47,14 @@ export function ProductPickerDrawer({
   showQuantity?: boolean
   /** Starting quantity for a newly selected card. Falls back to the product minimum. */
   defaultQuantity?: number
+  /** Compact is the requirement products tab: many small cards per row. */
+  density?: 'regular' | 'compact'
   pageSize?: number
   /** Drawer for the quotation editor. Panel is the catalog product grid. */
   variant?: 'drawer' | 'panel'
   onSubmit: (rows: { id: string; quantity: number }[]) => Promise<unknown>
 }) {
+  const resolvedPageSize = pageSize ?? (density === 'compact' ? PICKER_DENSE_PAGE_SIZE : PICKER_PAGE_SIZE)
   const { pending, error, run } = useAction()
   const [open, setOpen] = useState(variant === 'panel')
   const [query, setQuery] = useState('')
@@ -58,12 +62,12 @@ export function ProductPickerDrawer({
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [rows, setRows] = useState<Record<string, Selection>>({})
-  const [visible, setVisible] = useState(pageSize)
-  const filterKey = `${query}|${category}|${minPrice}|${maxPrice}|${pageSize}`
+  const [visible, setVisible] = useState(resolvedPageSize)
+  const filterKey = `${query}|${category}|${minPrice}|${maxPrice}|${resolvedPageSize}`
   const [visibleFilter, setVisibleFilter] = useState(filterKey)
   if (visibleFilter !== filterKey) {
     setVisibleFilter(filterKey)
-    setVisible(pageSize)
+    setVisible(resolvedPageSize)
   }
 
   const categories = useMemo(() => {
@@ -139,17 +143,41 @@ export function ProductPickerDrawer({
           </div>
         ) : null}
       </div>
-      <div className={variant === 'drawer' ? 'flex-1 overflow-y-auto p-4' : 'max-h-[36rem] overflow-y-auto p-4'}>
-        <p className="mb-3 text-xs text-[#7C766F]">
+      <div className={variant === 'drawer' ? 'flex-1 overflow-y-auto p-4' : density === 'compact' ? 'max-h-[75vh] overflow-y-auto p-2' : 'max-h-[36rem] overflow-y-auto p-4'}>
+        <p className="mb-2 text-xs text-[#7C766F]">
           {page.items.length} of {filtered.length} products · {selectedCount} selected
         </p>
         {filtered.length === 0 ? <p className="text-sm text-[#7C766F]">No products match these filters.</p> : null}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className={density === 'compact' ? '@container' : undefined}>
+        <div className={density === 'compact'
+          ? 'grid grid-cols-2 gap-1.5 @min-[28rem]:grid-cols-3 @min-[40rem]:grid-cols-4 @min-[52rem]:grid-cols-6 @min-[64rem]:grid-cols-8 @min-[68rem]:grid-cols-10'
+          : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4'}>
           {page.items.map((product) => {
             const row = rows[product.id]
             const selected = Boolean(row?.selected)
             const badge = stockBadge(product.stockQty)
             const quantity = Number(row?.quantity || startingQuantity(product))
+            if (density === 'compact') {
+              return (
+                <CompactProductCard
+                  key={product.id}
+                  product={product}
+                  selected={selected}
+                  quantity={quantity}
+                  quantityValue={row?.quantity || startingQuantity(product)}
+                  showQuantity={showQuantity}
+                  badge={badge}
+                  onToggle={() => toggle(product)}
+                  onQuantity={(next) => setQuantity(product, next)}
+                  onQuantityText={(value) => {
+                    setRows((current) => ({
+                      ...current,
+                      [product.id]: { selected: true, quantity: value },
+                    }))
+                  }}
+                />
+              )
+            }
             return (
               <article
                 key={product.id}
@@ -231,10 +259,11 @@ export function ProductPickerDrawer({
             )
           })}
         </div>
+        </div>
         {page.remaining > 0 ? (
           <button
             type="button"
-            onClick={() => setVisible((count) => count + pageSize)}
+            onClick={() => setVisible((count) => count + resolvedPageSize)}
             className="mt-4 min-h-10 w-full rounded-none border border-[#1C1B1A] text-xs font-bold uppercase tracking-[0.12em] text-[#1C1B1A] hover:bg-[#1C1B1A] hover:text-[#FCF9F2]"
           >
             Show more · {page.remaining} left
@@ -282,6 +311,91 @@ export function ProductPickerDrawer({
       </button>
       {open ? <div className="fixed inset-0 z-50 flex justify-end bg-black/40">{body}</div> : null}
     </>
+  )
+}
+
+function CompactProductCard({
+  product,
+  selected,
+  quantity,
+  quantityValue,
+  showQuantity,
+  badge,
+  onToggle,
+  onQuantity,
+  onQuantityText,
+}: {
+  product: PickerProduct
+  selected: boolean
+  quantity: number
+  quantityValue: string
+  showQuantity: boolean
+  badge: ReturnType<typeof stockBadge>
+  onToggle: () => void
+  onQuantity: (quantity: number) => void
+  onQuantityText: (value: string) => void
+}) {
+  const stockText = badge == null ? null : badge.tone === 'out' ? 'Out' : String(product.stockQty)
+  return (
+    <article className={`flex flex-col gap-1 border p-1.5 ${selected ? 'border-[#9E4300] bg-[#FFB690]/15' : 'border-[#CCC5BD] bg-[#FCF9F2]'}`}>
+      <div className="flex items-start gap-1">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggle}
+          aria-label={`Select ${product.name}`}
+          className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-[#9E4300]"
+        />
+        <button type="button" onClick={onToggle} className="flex min-w-0 flex-1 items-start gap-1 text-left">
+          <div className="h-8 w-8 shrink-0 overflow-hidden border border-[#CCC5BD] bg-[#F6F3EC]">
+            <ProductImage src={product.imageUrl} alt="" size="xs" fit="cover" className="h-full w-full" />
+          </div>
+          <span className="line-clamp-2 text-[11px] font-semibold leading-tight text-[#1C1C18]">{product.name}</span>
+        </button>
+      </div>
+      <p
+        className="truncate font-mono text-[10px] leading-tight text-[#7C766F]"
+        title={[product.sku, priceLabel(product), badge?.label].filter(Boolean).join(' · ')}
+      >
+        {product.sku} · {priceLabel(product)}
+        {stockText ? <span className={badge?.tone === 'out' ? 'text-[#BA1A1A]' : badge?.tone === 'low' ? 'text-[#9E4300]' : 'text-[#3A4537]'}> · {stockText}</span> : null}
+      </p>
+      {showQuantity ? (
+        <div className="inline-flex items-center self-start border border-[#CCC5BD] bg-[#F6F3EC]">
+          <button
+            type="button"
+            aria-label={`Decrease quantity for ${product.name}`}
+            onClick={() => onQuantity(quantity - 1)}
+            className="inline-flex h-5 w-5 items-center justify-center text-[#1C1C18] hover:bg-[#FCF9F2]"
+          >
+            <Minus size={10} />
+          </button>
+          <input
+            type="number"
+            min="1"
+            aria-label={`Quantity for ${product.name}`}
+            value={quantityValue}
+            onChange={(event) => {
+              const parsed = Number(event.target.value)
+              if (event.target.value.trim() === '') {
+                onQuantityText('')
+                return
+              }
+              if (Number.isFinite(parsed)) onQuantity(parsed)
+            }}
+            className="w-7 border-x border-[#CCC5BD] bg-transparent py-0 text-center text-[10px] font-mono text-[#1C1C18] focus:outline-none"
+          />
+          <button
+            type="button"
+            aria-label={`Increase quantity for ${product.name}`}
+            onClick={() => onQuantity(quantity + 1)}
+            className="inline-flex h-5 w-5 items-center justify-center text-[#1C1C18] hover:bg-[#FCF9F2]"
+          >
+            <Plus size={10} />
+          </button>
+        </div>
+      ) : null}
+    </article>
   )
 }
 

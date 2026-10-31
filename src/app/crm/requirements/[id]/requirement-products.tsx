@@ -1,6 +1,7 @@
 'use client'
 
 import { ProductPickerDrawer, type PickerProduct } from '@/components/products/product-picker-drawer'
+import { PICKER_DENSE_PAGE_SIZE } from '@/lib/products/picker'
 import { addProductsToRequirement } from '../actions'
 
 export function RequirementProducts({
@@ -15,6 +16,8 @@ export function RequirementProducts({
   return (
     <ProductPickerDrawer
       variant="panel"
+      density="compact"
+      pageSize={PICKER_DENSE_PAGE_SIZE}
       products={products}
       defaultQuantity={defaultQuantity}
       title="Add products"

@@ -3,7 +3,7 @@ import test from 'node:test'
 import { costingFieldsDirty, costingStatusLabel } from '../src/lib/quotes/costing-draft.ts'
 import { emptyLiveAhead, reconcileLiveQuote } from '../src/lib/quotes/live-quote.ts'
 import { estimateTickedLines, quoteLineTotal } from '../src/lib/quotes/flow.ts'
-import { filterPickerProducts, slicePickerPage, stockBadge } from '../src/lib/products/picker.ts'
+import { filterPickerProducts, PICKER_DENSE_PAGE_SIZE, PICKER_PAGE_SIZE, slicePickerPage, stockBadge } from '../src/lib/products/picker.ts'
 
 test('a sell-price edit is unsaved until it matches the last save', () => {
   const saved = { offerId: '', cost: '650', margin: '50', unit: '975' }
@@ -69,4 +69,9 @@ test('product grid filters by search and category, then pages the rest', () => {
   assert.deepEqual(stockBadge(3), { label: '3 in stock', tone: 'low' })
   assert.deepEqual(stockBadge(12), { label: '12 in stock', tone: 'in' })
   assert.equal(stockBadge(null), null)
+  assert.equal(PICKER_PAGE_SIZE, 24)
+  assert.ok(PICKER_DENSE_PAGE_SIZE >= 60)
+  const dense = slicePickerPage(Array.from({ length: 80 }, (_, index) => index), PICKER_DENSE_PAGE_SIZE)
+  assert.equal(dense.items.length, PICKER_DENSE_PAGE_SIZE)
+  assert.equal(dense.remaining, 80 - PICKER_DENSE_PAGE_SIZE)
 })

@@ -94,7 +94,7 @@ export default async function RequirementDetailPage({
   const hasOrder = Boolean(order)
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className={`mx-auto space-y-6 ${tab === 'products' ? 'max-w-none' : 'max-w-5xl'}`}>
       <BackButton href="/crm/requirements" label="Back to Requirements" />
       {removed === 'archived' && (
         <div className="rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 p-3 text-xs text-[#9E4300]">

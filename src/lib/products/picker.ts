@@ -1,4 +1,6 @@
 export const PICKER_PAGE_SIZE = 24
+/** Compact requirement grid: about 8–10 cards per row, so one load should fill several rows. */
+export const PICKER_DENSE_PAGE_SIZE = 60
 
 export type PickerFilterProduct = {
   id: string
