@@ -119,58 +119,92 @@ export async function convertToOrder(quotationId: string) {
   await notifyOrderPlaced(String(data), { includeStaff: false })
   redirect(`/crm/orders/${data}`)
 }
+type LinePriceInput = {
+  itemId: string
+  offerId: string
+  cost: number | null
+  margin: number | null
+  unitPrice: number
+}
+
+function optionalAmount(raw: string, emptyMessage: string): { error: string } | { value: number | null } {
+  const trimmed = raw.trim()
+  if (trimmed === '') return { value: null }
+  const amount = Number(trimmed)
+  if (!Number.isFinite(amount)) return { error: emptyMessage }
+  return { value: amount }
+}
+
 export async function applyQuotationItemPrice(formData: FormData) {
+  const cost = optionalAmount(String(formData.get('supplier_cost') ?? ''), 'Enter a supplier cost of zero or more')
+  if ('error' in cost) return cost
+  if (cost.value != null && cost.value < 0) return { error: 'Enter a supplier cost of zero or more' }
+  const margin = optionalAmount(String(formData.get('margin_percent') ?? ''), 'Enter a margin percent')
+  if ('error' in margin) return margin
+  const unit = Number(formData.get('unit_price'))
+  if (!Number.isFinite(unit) || unit < 0) return { error: 'Enter a sell price of zero or more' }
+  return saveQuotationLinePrices(String(formData.get('quotation_id') || ''), [{
+    itemId: String(formData.get('item_id') || ''),
+    offerId: String(formData.get('supplier_offer_id') || ''),
+    cost: cost.value,
+    margin: margin.value,
+    unitPrice: unit,
+  }])
+}
+
+/** Save one or more draft line prices, then recalculate the quotation once. */
+export async function saveQuotationLinePrices(quotationId: string, lines: LinePriceInput[]) {
   const profile = await getProfile()
   if (!profile) return { error: 'Not authenticated' }
   if (!['admin', 'sales', 'management', 'accounts'].includes(profile.role)) {
     return { error: 'Not permitted to cost quotations' }
   }
-
-  const quotationId = String(formData.get('quotation_id') || '')
-  const itemId = String(formData.get('item_id') || '')
-  const offerId = String(formData.get('supplier_offer_id') || '')
-  const costRaw = String(formData.get('supplier_cost') ?? '').trim()
-  const cost = costRaw === '' ? null : Number(costRaw)
-  const marginRaw = String(formData.get('margin_percent') ?? '').trim()
-  const margin = marginRaw === '' ? null : Number(marginRaw)
-  const unit = Number(formData.get('unit_price'))
-  if (!isUuid(quotationId) || !isUuid(itemId)) return { error: 'Quotation line not found' }
-  if (cost != null && (!Number.isFinite(cost) || cost < 0)) return { error: 'Enter a supplier cost of zero or more' }
-  if (margin != null && !Number.isFinite(margin)) return { error: 'Enter a margin percent' }
-  if (!Number.isFinite(unit) || unit < 0) return { error: 'Enter a sell price of zero or more' }
+  if (!isUuid(quotationId)) return { error: 'Quotation line not found' }
+  if (!lines.length) return { error: 'Nothing to save' }
+  for (const line of lines) {
+    if (!isUuid(line.itemId)) return { error: 'Quotation line not found' }
+    if (line.cost != null && (!Number.isFinite(line.cost) || line.cost < 0)) {
+      return { error: 'Enter a supplier cost of zero or more' }
+    }
+    if (line.margin != null && !Number.isFinite(line.margin)) return { error: 'Enter a margin percent' }
+    if (!Number.isFinite(line.unitPrice) || line.unitPrice < 0) return { error: 'Enter a sell price of zero or more' }
+  }
 
   const supabase = await createClient()
   const { data: quote } = await supabase.from('quotations').select('id, status, discount_percent').eq('id', quotationId).maybeSingle()
   if (!quote) return { error: 'Quotation not found' }
   if (quote.status !== 'draft') return { error: 'Only a draft quotation can be repriced' }
 
-  const { data: item } = await supabase
+  const { data: items, error: itemError } = await supabase
     .from('quotation_items')
     .select('id, quantity')
-    .eq('id', itemId)
     .eq('quotation_id', quotationId)
-    .maybeSingle()
-  if (!item) return { error: 'Quotation line not found' }
+    .in('id', lines.map((line) => line.itemId))
+  if (itemError) return { error: itemError.message }
+  const quantityById = new Map((items || []).map((item) => [item.id, Number(item.quantity) || 1]))
+  if (lines.some((line) => !quantityById.has(line.itemId))) return { error: 'Quotation line not found' }
 
-  const quantity = Number(item.quantity) || 1
-  const lineTotal = quoteLineTotal(quantity, unit, Number(quote.discount_percent) || 0)
-  const locked = await supabase
-    .from('quotation_items')
-    .update({ unit_price: unit, line_total: lineTotal, price_locked: true })
-    .eq('id', itemId)
-  const priceError = locked.error && /price_locked/i.test(locked.error.message)
-    ? (await supabase.from('quotation_items').update({ unit_price: unit, line_total: lineTotal }).eq('id', itemId)).error
-    : locked.error
-  if (priceError) return { error: priceError.message }
+  for (const line of lines) {
+    const quantity = quantityById.get(line.itemId) || 1
+    const lineTotal = quoteLineTotal(quantity, line.unitPrice, Number(quote.discount_percent) || 0)
+    const locked = await supabase
+      .from('quotation_items')
+      .update({ unit_price: line.unitPrice, line_total: lineTotal, price_locked: true })
+      .eq('id', line.itemId)
+    const priceError = locked.error && /price_locked/i.test(locked.error.message)
+      ? (await supabase.from('quotation_items').update({ unit_price: line.unitPrice, line_total: lineTotal }).eq('id', line.itemId)).error
+      : locked.error
+    if (priceError) return { error: priceError.message }
 
-  const { error: costError } = await supabase.from('quotation_item_costs').upsert({
-    quotation_item_id: itemId,
-    supplier_offer_id: isUuid(offerId) ? offerId : null,
-    supplier_cost: cost,
-    margin_percent: margin,
-    updated_at: new Date().toISOString(),
-  })
-  if (costError) return { error: supplierSchemaHint(costError.message) }
+    const { error: costError } = await supabase.from('quotation_item_costs').upsert({
+      quotation_item_id: line.itemId,
+      supplier_offer_id: isUuid(line.offerId) ? line.offerId : null,
+      supplier_cost: line.cost,
+      margin_percent: line.margin,
+      updated_at: new Date().toISOString(),
+    })
+    if (costError) return { error: supplierSchemaHint(costError.message) }
+  }
 
   const { error: recalcError } = await supabase.rpc('recalc_quotation_totals', { p_quotation_id: quotationId })
   if (recalcError) return { error: recalcError.message }
@@ -280,6 +314,7 @@ export async function saveQuotationDraft(quotationId: string, patch: {
   notes?: string | null
   lineId?: string
   quantity?: number
+  lines?: { lineId: string; quantity: number }[]
 }) {
   if (!isUuid(quotationId)) return { error: 'Quotation not found' }
   const draft = await assertDraft(quotationId)
@@ -302,20 +337,29 @@ export async function saveQuotationDraft(quotationId: string, patch: {
     header.valid_until = value
   }
   if (patch.notes !== undefined) header.notes = patch.notes?.slice(0, 8000) || null
+  const qtyLines = patch.lines?.length
+    ? patch.lines
+    : patch.lineId
+      ? [{ lineId: patch.lineId, quantity: Number(patch.quantity) }]
+      : []
+  const quantities: { lineId: string; quantity: number }[] = []
+  for (const line of qtyLines) {
+    if (!isUuid(line.lineId)) return { error: 'Quotation line not found' }
+    const quantity = Math.round(Number(line.quantity))
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100000) {
+      return { error: 'Quantity must be a whole number from 1 to 100000' }
+    }
+    quantities.push({ lineId: line.lineId, quantity })
+  }
   if (Object.keys(header).length) {
     const { error } = await supabase.from('quotations').update(header).eq('id', quotationId).eq('status', 'draft')
     if (error) return { error: error.message }
   }
-  if (patch.lineId) {
-    if (!isUuid(patch.lineId)) return { error: 'Quotation line not found' }
-    const quantity = Math.round(Number(patch.quantity))
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100000) {
-      return { error: 'Quantity must be a whole number from 1 to 100000' }
-    }
+  for (const line of quantities) {
     const { error } = await supabase
       .from('quotation_items')
-      .update({ quantity })
-      .eq('id', patch.lineId)
+      .update({ quantity: line.quantity })
+      .eq('id', line.lineId)
       .eq('quotation_id', quotationId)
     if (error) return { error: error.message }
   }

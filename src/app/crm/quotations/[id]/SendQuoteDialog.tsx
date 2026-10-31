@@ -6,10 +6,10 @@ import { useAction, useIdempotencyKey } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { SendRecipient } from '@/lib/quotes/flow'
+import { useQuotationLive } from './quotation-live'
 
 export function SendQuoteDialog({
   quotationId,
-  total,
   validUntil,
   clientUrl,
   recipients,
@@ -17,13 +17,13 @@ export function SendQuoteDialog({
   warnings,
 }: {
   quotationId: string
-  total: number
   validUntil: string | null
   clientUrl: string
   recipients: SendRecipient[]
   defaultRecipientKey: string | null
   warnings: string[]
 }) {
+  const { totals } = useQuotationLive()
   const [open, setOpen] = useState(false)
   const [recipientKey, setRecipientKey] = useState(defaultRecipientKey || '')
   const { pending, error, run, clearError } = useAction()
@@ -48,7 +48,7 @@ export function SendQuoteDialog({
             <div className="space-y-2 border border-[#CCC5BD] bg-[#F6F3EC] p-3 text-xs text-[#4A4640]">
               <div className="flex justify-between items-center">
                 <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Total incl. GST</span>
-                <span className="font-mono font-semibold text-[#1C1C18]">{formatCurrency(total)}</span>
+                <span className="font-mono font-semibold text-[#1C1C18]">{formatCurrency(totals.total)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Valid until</span>
