@@ -9,7 +9,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { businessQuoteSentEmailHtml } from '@/lib/email/business'
 import { sendEmail } from '@/lib/email/resend'
 import { absoluteClientQuoteUrl } from '@/lib/quotes/client-link'
-import { clientQuotePath, negativeMarginBlock, quoteLineTotal } from '@/lib/quotes/flow'
+import { negativeMarginBlock, quoteLineTotal } from '@/lib/quotes/flow'
 import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/server'
 import { isUuid } from '@/lib/utils'
 import { supplierSchemaHint } from '@/lib/pricing/surfaces'
@@ -542,11 +542,19 @@ async function sendQuotationToClientOnce(quotationId: string, recipientKey: stri
   const recipient = await resolveSendRecipient(supabase, quote.company_id, recipientKey)
   if (!recipient) return { error: 'Choose a recipient' }
 
+  const origin = await requestOrigin()
+  const quoteUrl = absoluteClientQuoteUrl({
+    accountType: company?.account_type,
+    portalSlug: company?.portal_slug,
+    quotationId,
+    origin,
+  })
+  if (!quoteUrl) return { error: 'Could not build a customer link for this quotation' }
+
   const marked = await updateQuotationStatus(quotationId, 'sent')
   if (marked && typeof marked === 'object' && 'error' in marked && marked.error) return marked
 
   const admin = createAdminClient()
-  const link = clientQuotePath(company?.account_type, quotationId)
   if (admin) {
     const { data: users } = await admin
       .from('profiles')
@@ -560,7 +568,7 @@ async function sendQuotationToClientOnce(quotationId: string, recipientKey: stri
         audience: 'client',
         title: 'Quotation ready',
         body: `${quote.quotation_number || 'A quotation'} is ready to review.`,
-        link,
+        link: quoteUrl,
       })
     }
   }
@@ -569,13 +577,6 @@ async function sendQuotationToClientOnce(quotationId: string, recipientKey: stri
     await supabase.from('quotations').update({ contact_id: recipient.contactId }).eq('id', quotationId)
   }
 
-  const origin = await requestOrigin()
-  const quoteUrl = absoluteClientQuoteUrl({
-    accountType: company?.account_type,
-    portalSlug: company?.portal_slug,
-    quotationId,
-    origin,
-  })
   const sent = await sendEmail({
     to: recipient.email,
     subject: `Quotation ${quote.quotation_number || ''}`.trim(),

@@ -55,8 +55,12 @@ export function SendQuoteDialog({
                 <span className="text-[#1C1C18]">{validUntil ? formatDate(validUntil) : 'Not set'}</span>
               </div>
               <div className="pt-2 border-t border-[#CCC5BD]">
-                <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Portal link</span>
-                <a href={clientUrl} className="break-all font-mono text-[11px] text-[#9E4300] underline hover:text-[#7A3400] transition-colors">{clientUrl}</a>
+                <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1">Customer link</span>
+                {clientUrl ? (
+                  <a href={clientUrl} className="break-all font-mono text-[11px] text-[#9E4300] underline hover:text-[#7A3400] transition-colors">{clientUrl}</a>
+                ) : (
+                  <span className="text-[#7C766F]">No customer link is available for this quotation.</span>
+                )}
               </div>
             </div>
             <label className="block">

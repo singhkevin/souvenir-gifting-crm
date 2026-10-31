@@ -172,6 +172,11 @@ export default async function OrderDetailPage({
             <span className="inline-flex items-center px-2 py-0.5 text-[11px] uppercase border border-[#CCC5BD] text-[#4A4640] bg-[#F6F3EC] rounded-none">
               {isOrderSource(sourceValue) ? ORDER_SOURCE_LABELS[sourceValue] : 'CRM'}
             </span>
+            {order.without_quotation ? (
+              <span className="inline-flex items-center px-2 py-0.5 text-[11px] uppercase border border-[#9E4300]/40 bg-[#FFB690]/30 text-[#9E4300] rounded-none">
+                Created without a quotation
+              </span>
+            ) : null}
             {healthChip}
           </div>
 
@@ -360,7 +365,9 @@ export default async function OrderDetailPage({
                   </div>
                   <div className="sm:col-span-2">
                     <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Quote</span>
-                    <span className="mt-0.5 block font-mono text-[#1C1C18]">{quotation?.quotation_number || '—'}</span>
+                    <span className="mt-0.5 block font-mono text-[#1C1C18]">
+                      {order.without_quotation ? 'Created without a quotation' : (quotation?.quotation_number || '—')}
+                    </span>
                   </div>
                 </div>
               </div>

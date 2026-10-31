@@ -111,3 +111,16 @@ Trial (live, forced rollback, 23 Oct 2026): supabase/tests/role_active_checks_tr
 (every staff, client_admin, business and inactive account); 15 active accounts: identical access before and after.
 Inactive admin: 31 orders · 26 companies · 22 leads · 26 quotations · 29 profiles visible before, 0 after
 (own 13 tasks stay via tasks_write). Rollback restored function and policy md5s and the exact access.
+
+## 61 · 20261031_order_without_quotation.sql · NOT APPLIED
+
+Staff can create an order from a requirement without a quotation. Adds `orders.without_quotation`
+(default false; true only when `quotation_id` is null) and `create_order_from_requirement(uuid, jsonb)`.
+The function is security definer, granted to authenticated, revoked from public and anon, and allows
+only admin, sales, and management. It copies the requirement's products and quantities, takes the
+confirmed ex-GST sell price per line, adds GST once at 18%, and inserts the same order, line, history,
+assignment, and task rows as a converted quotation (`source` stays `crm`). Fulfilment (`plan_order_line`
+and the rest) is unchanged. The app shows "Created without a quotation" on the order. Until this file
+is applied, the button returns an error and the quotation path still works.
+Rollback: `supabase/rollbacks/20261031_order_without_quotation_rollback.sql` (drops the function and the
+column; existing orders remain). No begin/commit in either file.

@@ -325,7 +325,7 @@ async function respondBusinessQuotationOnce(formData: FormData) {
   let checkoutUrl: string | null = null
   let pendingVerification = false
   if (action === 'accept') {
-    const link = await issueQuoteCheckoutLink(quotationId, origin)
+    const link = await issueQuoteCheckoutLink(quotationId)
     if (link?.url) checkoutUrl = link.url
     else if (!link?.orderId) pendingVerification = company?.business_verification !== 'verified'
     const admin = createAdminClient()

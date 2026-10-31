@@ -3,6 +3,7 @@ import 'server-only'
 import { redirect } from 'next/navigation'
 import { getProfile, type ProfileSession } from '@/lib/auth'
 import { isBusinessRole, isClientRole, isStaffRole } from '@/lib/roles'
+import { isSafeNext } from '@/lib/safe-next'
 import { createClient } from '@/lib/supabase/server'
 
 export type BusinessCompany = {
@@ -18,9 +19,10 @@ export type BusinessCompany = {
   notes: string | null
 }
 
-export async function requireBusiness(): Promise<{ profile: ProfileSession; company: BusinessCompany | null }> {
+export async function requireBusiness(nextPath = '/business/dashboard'): Promise<{ profile: ProfileSession; company: BusinessCompany | null }> {
   const profile = await getProfile()
-  if (!profile) redirect('/login?next=/business/dashboard')
+  const next = isSafeNext(nextPath) ? nextPath : '/business/dashboard'
+  if (!profile) redirect(`/login?next=${encodeURIComponent(next)}`)
   if (!profile.is_active) {
     const supabase = await createClient()
     await supabase.auth.signOut()

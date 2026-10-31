@@ -19,6 +19,7 @@ import { ConfirmAction } from '@/components/ui/confirm-action'
 import { ActionForm } from '@/components/ui/action-form'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { DirectOrderForm } from './direct-order-form'
 
 export default async function RequirementDetailPage({
   params,
@@ -92,6 +93,22 @@ export default async function RequirementDetailPage({
   const hasProducts = productRows.length > 0
   const hasQuotes = quoteRows.length > 0
   const hasOrder = Boolean(order)
+  const directLines = (productRows as {
+    product_id?: string | null
+    quantity?: number | null
+    product?: { id?: string; name?: string; sku?: string | null } | null
+  }[]).flatMap((item) => {
+    const productId = item.product_id || item.product?.id
+    if (!productId) return []
+    const suggested = linePrices?.get(productId)
+    return [{
+      productId,
+      name: item.product?.name || 'Product',
+      sku: item.product?.sku || null,
+      quantity: Number(item.quantity) || Number(req.quantity) || 1,
+      unitPrice: suggested == null ? null : Number(suggested),
+    }]
+  })
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -237,6 +254,14 @@ export default async function RequirementDetailPage({
                 </button>
               </ActionForm>
             )}
+            {hasProducts && !hasOrder && (
+              <a
+                href="#create-order-directly"
+                className="inline-flex items-center rounded-none border border-[#1C1B1A] bg-transparent px-3.5 py-2 text-xs font-bold uppercase tracking-[0.12em] text-[#1C1B1A] hover:bg-[#FCF9F2] transition-colors"
+              >
+                Create order directly
+              </a>
+            )}
             {hasQuotes && latestQuote && (
               <Link
                 href={`/crm/quotations/${latestQuote.id}`}
@@ -264,6 +289,10 @@ export default async function RequirementDetailPage({
           </div>
         </div>
       </div>
+
+      {hasProducts && !hasOrder ? (
+        <DirectOrderForm requirementId={req.id} lines={directLines} />
+      ) : null}
 
       <div className="border-b border-[#CCC5BD]">
         <nav className="flex space-x-6">

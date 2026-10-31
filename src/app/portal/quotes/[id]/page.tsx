@@ -41,7 +41,7 @@ export default async function PortalQuotationDetailPage({ params }: { params: Pr
   if (!isUuid(id)) notFound()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return redirect('/login')
+  if (!user) return redirect(`/login?next=${encodeURIComponent(`/portal/quotes/${id}`)}`)
 
   const { data: companyId } = await supabase.rpc('client_company_id')
 
