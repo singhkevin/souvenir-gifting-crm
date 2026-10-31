@@ -5,6 +5,7 @@ import { PortalLayout } from '@/components/layout/portal-layout'
 import { getRequestTabId } from '@/lib/auth/tab-server'
 import { TabSessionRevive } from '@/components/auth/tab-session-revive'
 import { headers } from 'next/headers'
+import { TAB_URL_HEADER } from '@/lib/auth/tab'
 import { readTenantFromHeaders } from '@/lib/portal-host'
 import { isBusinessRole, isClientRole, isGiftEmployeeRole } from '@/lib/roles'
 import '@/app/sv2.css'
@@ -22,11 +23,19 @@ export default async function PortalLayoutWrapper({ children }: { children: Reac
     redirect('/login')
   }
 
-  const { data: profile } = await supabase
+  let profileQuery = await supabase
     .from('profiles')
-    .select('id, full_name, email, role, company_id, is_active')
+    .select('id, full_name, email, role, company_id, is_active, portal_approval')
     .eq('id', user.id)
     .maybeSingle()
+  if (profileQuery.error && /portal_approval|schema cache|does not exist/i.test(profileQuery.error.message)) {
+    profileQuery = await supabase
+      .from('profiles')
+      .select('id, full_name, email, role, company_id, is_active')
+      .eq('id', user.id)
+      .maybeSingle()
+  }
+  const profile = profileQuery.data
 
   if (!profile) {
     redirect('/login')
@@ -59,6 +68,17 @@ export default async function PortalLayoutWrapper({ children }: { children: Reac
     redirect('/crm/dashboard')
   }
 
+  const pending = profile.portal_approval === 'pending'
+  const rejected = profile.portal_approval === 'rejected'
+  if (rejected) {
+    await supabase.auth.signOut()
+    redirect('/login?error=portal')
+  }
+  if (pending) {
+    const path = (headerStore.get(TAB_URL_HEADER) || '').split('?')[0]
+    if (path !== '/portal/awaiting') redirect('/portal/awaiting')
+  }
+
   // Get company name
   let companyName = 'Your Company'
   if (profile.company_id) {
@@ -74,7 +94,11 @@ export default async function PortalLayoutWrapper({ children }: { children: Reac
 
   return (
     <div className={`sv2 ${newsreader.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} min-h-screen bg-[#FCF9F2] text-[#1C1C18]`}>
-      <PortalLayout user={{ name: displayName, company_name: companyName }}>
+      <PortalLayout
+        user={{ name: displayName, company_name: companyName }}
+        pending={pending}
+        showPeople={!pending && profile.role === 'client_admin'}
+      >
         {children}
       </PortalLayout>
     </div>

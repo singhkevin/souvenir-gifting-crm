@@ -140,7 +140,22 @@ export default async function NewCompanyPage() {
               { value: 'cancelled', label: 'Cancelled' },
             ]}
           />
+          <MobileSheetSelect
+            name="portal_signup_mode"
+            label="Portal sign-up"
+            showDesktopLabel
+            defaultValue="manual"
+            options={[
+              { value: 'off', label: 'Off · no self sign-up' },
+              { value: 'manual', label: 'Manual · approve each person' },
+              { value: 'auto_domain', label: 'Auto · allowed domain after email confirmation' },
+              { value: 'auto_all', label: 'Auto all · also staff and admin invites' },
+            ]}
+          />
         </div>
+        <p className="text-[11px] text-gray-500">
+          Manual is the default. Someone with a listed domain can register and waits for approval. Free inboxes are refused unless you list that domain.
+        </p>
 
         <div>
           <label className="block text-sm font-medium mb-1">Trial ends</label>

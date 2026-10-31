@@ -96,6 +96,9 @@ export async function placeClientDirectOrder(input: {
   const profile = await getProfile()
   const isClient = profile?.role === 'client_admin' || profile?.role === 'client_user'
   if (!profile || !isClient) return { error: 'Sign in with your company account to buy' }
+  const { pendingPortalBlock } = await import('@/lib/portal/signup-server')
+  const blocked = await pendingPortalBlock()
+  if (blocked) return { error: blocked }
 
   const supabase = await createClient()
   const { data: companyId } = await supabase.rpc('client_company_id')

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authCookieOptions, localCookieWriteOptions } from '@/lib/auth/cookie-options'
 import { RECOVERY_COOKIE_NAME } from '@/lib/auth/tab'
 import { confirmLandingForRole, isAccountConfirmType } from '@/lib/auth/confirm-landing'
+import { settlePortalSignup } from '@/lib/portal/signup-server'
 import { domainSplitEnabled } from '@/lib/domain-flag'
 import { hostLoginDecision } from '@/lib/domain-routing'
 import { isClientRole, isGiftEmployeeRole } from '@/lib/roles'
@@ -129,6 +130,7 @@ export async function GET(request: NextRequest) {
     const rejected = await rejectForeignSession(request, supabase, pendingCookies)
     if (rejected) return rejected
     const { data: { user } } = await supabase.auth.getUser()
+    if (user && isAccountConfirmType(rawType)) await settlePortalSignup(user.id)
     const { data: profile } = user
       ? await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
       : { data: null }
@@ -144,6 +146,7 @@ export async function GET(request: NextRequest) {
   const rejected = await rejectForeignSession(request, supabase, pendingCookies)
   if (rejected) return rejected
   const { data: { user } } = await supabase.auth.getUser()
+  if (user && isAccountConfirmType(rawType)) await settlePortalSignup(user.id)
   const { data: profile } = user
     ? await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
     : { data: null }

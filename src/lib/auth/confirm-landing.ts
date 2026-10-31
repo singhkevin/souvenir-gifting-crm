@@ -38,6 +38,19 @@ export function portalSetPasswordUrl(
   return url.toString()
 }
 
+export function portalConfirmUrl(
+  origin: string,
+  link: { hashedToken?: string | null; verificationType?: string | null; actionLink?: string | null },
+) {
+  const token = String(link.hashedToken || '').trim()
+  if (!token) return String(link.actionLink || '')
+  const url = new URL('/auth/confirm', origin)
+  url.searchParams.set('token_hash', token)
+  url.searchParams.set('type', link.verificationType || 'magiclink')
+  url.searchParams.set('next', '/portal/awaiting')
+  return url.toString()
+}
+
 export function businessConfirmUrl(
   origin: string,
   link: { hashedToken?: string | null; verificationType?: string | null; actionLink?: string | null },

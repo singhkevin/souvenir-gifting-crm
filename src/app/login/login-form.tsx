@@ -41,6 +41,8 @@ export function LoginForm({
   audience,
   notice = null,
   showSignOut = false,
+  signupHref = null,
+  companyName = null,
 }: {
   next?: string
   resetSuccess?: boolean
@@ -50,6 +52,8 @@ export function LoginForm({
   audience?: 'business'
   notice?: string | null
   showSignOut?: boolean
+  signupHref?: string | null
+  companyName?: string | null
 }) {
   const [error, setError] = useState<string | null>(null);
   const [help, setHelp] = useState<{ href: string; label: string } | null>(null);
@@ -210,7 +214,14 @@ export function LoginForm({
           </form>
 
           <p className="text-xs text-center text-[#7A7267] mt-5">
-            {audience === 'business' ? (
+            {signupHref ? (
+              <>
+                New to {companyName || 'this company'}?{' '}
+                <Link href={signupHref} className="font-semibold text-[#624B32] hover:underline">
+                  Create an account
+                </Link>
+              </>
+            ) : audience === 'business' ? (
               <>
                 Need a business account?{' '}
                 <Link href={BUSINESS_REGISTER_PATH} className="font-semibold text-[#624B32] hover:underline">

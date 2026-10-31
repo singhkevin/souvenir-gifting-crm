@@ -19,6 +19,7 @@ import { HIDDEN_CATALOG_LINE_ERROR, selectionIncludesHiddenLine } from '@/lib/ca
 import { displayableLineIds } from '@/lib/catalogs/visibility-data'
 import { emailQuotationOwner } from '@/lib/quotes/notify-owner'
 import { requestOrigin } from '@/lib/auth/request-origin'
+import { pendingPortalBlock } from '@/lib/portal/signup-server'
 
 async function createPortalRequirementOnce(formData: {
   name: string
@@ -31,6 +32,9 @@ async function createPortalRequirementOnce(formData: {
   products: string[]
   lines?: { sku: string; quantity: number }[]
 }) {
+  const blocked = await pendingPortalBlock()
+  if (blocked) return { error: blocked }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -136,6 +140,9 @@ async function requestCatalogQuotationOnce(input: {
   notes: string
   lines: { id: string; quantity: number }[]
 }) {
+  const blocked = await pendingPortalBlock()
+  if (blocked) return { error: blocked }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -256,6 +263,9 @@ async function respondToQuotationOnce(
   comment?: string,
   acceptedItemIds?: string[],
 ) {
+  const blocked = await pendingPortalBlock()
+  if (blocked) return { error: blocked }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -321,6 +331,9 @@ export async function requestQuotationChanges(quotationId: string, comment: stri
 }
 
 async function requestQuotationChangesOnce(quotationId: string, comment: string) {
+  const blocked = await pendingPortalBlock()
+  if (blocked) return { error: blocked }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }

@@ -9,7 +9,7 @@ import { IDEMPOTENCY_FIELD, useAction, useIdempotencyKey } from '@/lib/use-actio
 const fieldClass =
   'w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1B1A] placeholder:text-[#7C766F] focus:border-[#1C1B1A] focus:outline-none focus:ring-0'
 
-export function PortalInviteForm({ companyId }: { companyId: string }) {
+export function PortalInviteForm({ companyId, allowException = false }: { companyId: string; allowException?: boolean }) {
   return (
     <ActionForm
       action={sendPortalInvitation}
@@ -36,6 +36,12 @@ export function PortalInviteForm({ companyId }: { companyId: string }) {
           { value: 'client_admin', label: 'Client admin' },
         ]}
       />
+      {allowException ? (
+        <label className="flex items-start gap-2 text-xs text-[#4A4640] md:col-span-2">
+          <input type="checkbox" name="domain_exception" value="1" className="mt-0.5" />
+          <span>Allow this email even though the domain is not on the company list. This is an explicit exception.</span>
+        </label>
+      ) : null}
       <div className="flex items-end">
         <SubmitButton
           pendingLabel="Sending…"

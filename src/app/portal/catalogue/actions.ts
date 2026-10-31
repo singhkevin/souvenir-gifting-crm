@@ -5,12 +5,17 @@ import { revalidatePath } from 'next/cache'
 import { placeClientDirectOrder } from '@/lib/catalogue/direct-order'
 import { withIdempotency } from '@/lib/idempotency'
 import type { CheckoutLineInput } from '@/lib/catalogue/purchase-path'
+import { pendingPortalBlock } from '@/lib/portal/signup-server'
 
 export async function checkoutPortalCart(input: { lines: CheckoutLineInput[]; idempotencyKey?: string }) {
+  const blocked = await pendingPortalBlock()
+  if (blocked) return { error: blocked }
   return withIdempotency('portal.checkout', input.idempotencyKey, () => placeClientDirectOrder({ lines: input.lines }))
 }
 
 export async function toggleOfferingSelection(formData: FormData) {
+  const blocked = await pendingPortalBlock()
+  if (blocked) return { error: blocked }
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }

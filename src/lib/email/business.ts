@@ -89,3 +89,24 @@ export function businessResponseOwnerEmailHtml(input: { title: string; detail: s
 export function businessCheckoutDoneEmailHtml(input: { number: string; orderUrl: string }) {
   return shell('Quote checkout completed', `${paragraph(`An order was placed from quotation ${input.number}.`)}${button(input.orderUrl, 'Open order')}`)
 }
+
+export function portalSignupConfirmEmailHtml(input: { companyName: string; actionLink: string }) {
+  return shell(
+    `Confirm your ${input.companyName} portal account`,
+    `${paragraph(`Confirm your email to finish signing up for the ${input.companyName} portal.`)}${button(input.actionLink, 'Confirm email')}${paragraph('If you were not expecting this, you can ignore this email.')}`,
+  )
+}
+
+export function portalSignupPendingEmailHtml(input: { companyName: string; person: string; reviewUrl: string }) {
+  return shell(
+    `Portal sign-up waiting · ${input.companyName}`,
+    `${paragraph(`${input.person} is waiting for approval on the ${input.companyName} portal.`)}${button(input.reviewUrl, 'Review sign-up')}`,
+  )
+}
+
+export function portalSignupApprovedEmailHtml(input: { companyName: string; portalUrl: string }) {
+  return shell(
+    `Your ${input.companyName} portal is open`,
+    `${paragraph('Your account is approved. You can sign in and use the company portal.')}${button(input.portalUrl, 'Open portal')}`,
+  )
+}

@@ -3,13 +3,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LogOut, PackageSearch, Heart, FileText, ShoppingBag, LayoutDashboard } from 'lucide-react';
+import { Menu, X, LogOut, PackageSearch, Heart, FileText, ShoppingBag, LayoutDashboard, Users } from 'lucide-react';
 import { signOut } from '@/app/login/actions';
 import { CompanyAvatar } from '../ui/avatar';
 import { BrandLogo } from '@/components/brand/brand-logo';
 
 interface PortalLayoutProps {
   children: React.ReactNode;
+  pending?: boolean;
+  showPeople?: boolean;
   user?: {
     name: string;
     company_name: string;
@@ -67,8 +69,18 @@ const navItems: PortalNavItem[] = [
 
 const SCROLL_KEY = 'giffter.portal.nav.scrollTop';
 
-export function PortalLayout({ children, user }: PortalLayoutProps) {
+export function PortalLayout({ children, user, pending = false, showPeople = false }: PortalLayoutProps) {
   const pathname = usePathname();
+  const items = pending
+    ? []
+    : showPeople
+      ? [...navItems, {
+          label: 'People',
+          href: '/portal/people',
+          icon: Users,
+          active: (path: string) => path.startsWith('/portal/people'),
+        }]
+      : navItems
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navRef = useRef<HTMLDivElement | null>(null);
   const activeRef = useRef<HTMLAnchorElement | null>(null);
@@ -132,7 +144,7 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
 
           {/* Nav links: Jakarta 14px with active one underlined/black, saffron accents */}
           <nav aria-label="Portal" className="hidden min-w-0 items-center gap-4 lg:flex xl:gap-6">
-            {navItems.map((item) => {
+            {items.map((item) => {
               const active = item.active(pathname);
               const Icon = item.icon;
               return (
@@ -210,6 +222,14 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
             </button>
           </div>
         </div>
+        {pending ? (
+          <div className="border-t border-[#CCC5BD] bg-[#F6F3EC] px-4 py-2.5 text-xs text-[#9E4300]">
+            <div className="mx-auto flex max-w-[1440px] items-center gap-2">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#FF8843]" />
+              <span>Awaiting approval</span>
+            </div>
+          </div>
+        ) : null}
 
         {/* Mobile Navigation Drawer */}
         <div
@@ -233,7 +253,7 @@ export function PortalLayout({ children, user }: PortalLayoutProps) {
               ref={navRef}
               className="max-h-[calc(100dvh-3.5rem)] space-y-1 overflow-y-auto overscroll-contain px-3 py-4 sm:max-h-[calc(100dvh-4rem)]"
             >
-              {navItems.map((item) => {
+              {items.map((item) => {
                 const active = item.active(pathname);
                 const Icon = item.icon;
                 return (
