@@ -1,13 +1,15 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { applyQuotationItemPrice } from '../actions'
+import { useEffect, useMemo, useState } from 'react'
+import { saveQuotationLinePrices } from '../actions'
 import { formatCurrency } from '@/lib/utils'
 import { useAction } from '@/lib/use-action'
 import { Spinner } from '@/components/ui/submit-button'
 import { liveMarginPercent, marginWarningText, marginWarnings, syncCostingFields } from '@/lib/quotes/flow'
+import { costingFieldsDirty, costingStatusLabel, type CostingDraftFields } from '@/lib/quotes/costing-draft'
 import type { SupplierOffer } from '@/lib/pricing/offers'
 import { ProductThumb } from '@/components/ui/product-thumb'
+import { useQuotationLive } from './quotation-live'
 
 type Line = {
   id: string
@@ -27,7 +29,7 @@ type SavedCost = {
   margin_percent: number | null
 }
 
-type Draft = { offerId: string; cost: string; margin: string; unit: string }
+type Draft = CostingDraftFields
 
 function parseAmount(value: string): number | null {
   if (value.trim() === '') return null
@@ -37,6 +39,33 @@ function parseAmount(value: string): number | null {
 
 function money(value: number | null) {
   return value == null ? '' : String(value)
+}
+
+function initialDraft(
+  line: Line,
+  savedByItem: Map<string, SavedCost>,
+  offers: SupplierOffer[],
+  bestByItem: Record<string, string | null>,
+  defaultMargin: number,
+): Draft {
+  const row = savedByItem.get(line.id)
+  const offerId = row?.supplier_offer_id || bestByItem[line.id] || ''
+  const offer = offers.find((item) => item.id === offerId)
+  const cost = row?.supplier_cost ?? offer?.cost ?? line.catalogCost
+  const hasCost = cost != null && Number.isFinite(Number(cost))
+  const margin = hasCost ? (row?.margin_percent ?? defaultMargin) : null
+  const synced = syncCostingFields({
+    cost: hasCost ? Number(cost) : null,
+    margin,
+    sell: line.unitPrice,
+    edited: 'sell',
+  })
+  return {
+    offerId,
+    cost: money(synced.cost),
+    margin: money(synced.margin),
+    unit: money(synced.sell ?? line.unitPrice),
+  }
 }
 
 export function QuotationCosting({
@@ -57,94 +86,181 @@ export function QuotationCosting({
   defaultMargin: number
 }) {
   const { pending, run } = useAction()
+  const { commitPrice, registerSaver } = useQuotationLive()
   const savedByItem = useMemo(() => new Map(saved.map((row) => [row.quotation_item_id, row])), [saved])
   const [drafts, setDrafts] = useState<Record<string, Draft>>(() => {
     const initial: Record<string, Draft> = {}
-    for (const line of lines) {
-      const row = savedByItem.get(line.id)
-      const offerId = row?.supplier_offer_id || bestByItem[line.id] || ''
-      const offer = offers.find((item) => item.id === offerId)
-      const cost = row?.supplier_cost ?? offer?.cost ?? line.catalogCost
-      const hasCost = cost != null && Number.isFinite(Number(cost))
-      const margin = hasCost ? (row?.margin_percent ?? defaultMargin) : null
-      const synced = syncCostingFields({
-        cost: hasCost ? Number(cost) : null,
-        margin,
-        sell: line.unitPrice,
-        edited: 'sell',
-      })
-      initial[line.id] = {
-        offerId,
-        cost: money(synced.cost),
-        margin: money(synced.margin),
-        unit: money(synced.sell ?? line.unitPrice),
-      }
-    }
+    for (const line of lines) initial[line.id] = initialDraft(line, savedByItem, offers, bestByItem, defaultMargin)
     return initial
   })
+  const [baselines, setBaselines] = useState<Record<string, Draft>>(() => {
+    const initial: Record<string, Draft> = {}
+    for (const line of lines) initial[line.id] = initialDraft(line, savedByItem, offers, bestByItem, defaultMargin)
+    return initial
+  })
+  const [savingIds, setSavingIds] = useState<string[]>([])
+  const lineKey = lines.map((line) => line.id).join('|')
+  const [seenLines, setSeenLines] = useState(lineKey)
+  if (seenLines !== lineKey) {
+    setSeenLines(lineKey)
+    const missing = lines.filter((line) => !drafts[line.id])
+    if (missing.length) {
+      setDrafts((current) => {
+        const next = { ...current }
+        for (const line of missing) {
+          if (!next[line.id]) next[line.id] = initialDraft(line, savedByItem, offers, bestByItem, defaultMargin)
+        }
+        return next
+      })
+      setBaselines((current) => {
+        const next = { ...current }
+        for (const line of missing) {
+          if (!next[line.id]) next[line.id] = initialDraft(line, savedByItem, offers, bestByItem, defaultMargin)
+        }
+        return next
+      })
+    }
+  }
+
+  const dirtyIds = lines
+    .map((line) => line.id)
+    .filter((id) => drafts[id] && baselines[id] && costingFieldsDirty(drafts[id], baselines[id]))
+  const saving = savingIds.length > 0 || pending
+  const dirty = dirtyIds.length > 0
+
+  function priceInput(draft: Draft) {
+    return {
+      itemId: '',
+      offerId: draft.offerId,
+      cost: parseAmount(draft.cost),
+      margin: parseAmount(draft.margin),
+      unitPrice: parseAmount(draft.unit) ?? Number.NaN,
+    }
+  }
+
+  function persist(rows: { id: string; draft: Draft }[], announce: boolean) {
+    const payload = rows.flatMap((row) => {
+      const baseline = baselines[row.id]
+      if (!baseline || !costingFieldsDirty(row.draft, baseline)) return []
+      return [{ ...row, input: { ...priceInput(row.draft), itemId: row.id } }]
+    })
+    if (!payload.length || !editable) return
+    const started = run(() => saveQuotationLinePrices(quotationId, payload.map((row) => row.input)), {
+      successMessage: announce ? (payload.length > 1 ? 'Prices saved' : 'Sell price saved') : false,
+      onSuccess: () => {
+        setSavingIds((current) => current.filter((id) => !payload.some((row) => row.id === id)))
+        setBaselines((current) => {
+          const next = { ...current }
+          for (const row of payload) next[row.id] = row.draft
+          return next
+        })
+        for (const row of payload) {
+          const unit = parseAmount(row.draft.unit)
+          if (unit != null) commitPrice(row.id, unit)
+        }
+      },
+      onError: () => setSavingIds((current) => current.filter((id) => !payload.some((row) => row.id === id))),
+    })
+    if (started === false) return
+    setSavingIds(payload.map((row) => row.id))
+  }
+
+  useEffect(() => {
+    if (!editable) return
+    const rows = lines.flatMap((line) => {
+      const draft = drafts[line.id]
+      const baseline = baselines[line.id]
+      if (!draft || !baseline || !costingFieldsDirty(draft, baseline)) return []
+      return [{ id: line.id, draft }]
+    })
+    registerSaver('prices', {
+      dirty,
+      saving,
+      save: () => persist(rows, true),
+    })
+  }, [dirty, saving, editable, registerSaver, drafts, baselines, lines]) // eslint-disable-line react-hooks/exhaustive-deps -- persist closes over the drafts and baselines listed here
 
   return (
     <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none shadow-none overflow-hidden space-y-0">
-      <div className="bg-[#F6F3EC] px-4 py-3 border-b border-[#CCC5BD]">
-        <h2 className="font-[family-name:var(--font-newsreader)] text-lg md:text-xl font-normal text-[#1C1C18]">
-          Supplier Cost &amp; Sell Price
-        </h2>
-        <p className="mt-1 text-xs text-[#4A4640]">
-          Change cost, margin, or sell price. The other two update together and save on the line.
-          The client sees only the sell price.
-        </p>
+      <div className="bg-[#F6F3EC] px-4 py-3 border-b border-[#CCC5BD] flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-[family-name:var(--font-newsreader)] text-lg md:text-xl font-normal text-[#1C1C18]">
+            Supplier Cost &amp; Sell Price
+          </h2>
+          <p className="mt-1 text-xs text-[#4A4640]">
+            Change cost, margin, or sell price. The other two update together. Save the line, or leave the field and it saves.
+            The client sees only the sell price.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-[11px] font-bold uppercase tracking-[0.12em] ${dirty || saving ? 'text-[#9E4300]' : 'text-[#3A4537]'}`} aria-live="polite">
+            {costingStatusLabel(saving, dirty)}
+          </span>
+          {editable && dirtyIds.length > 1 ? (
+            <button
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => persist(dirtyIds.flatMap((id) => (drafts[id] ? [{ id, draft: drafts[id] }] : [])), true)}
+              disabled={pending}
+              className="min-h-9 rounded-none bg-[#1C1B1A] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] disabled:opacity-50"
+            >
+              Save all prices
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="p-4 space-y-4">
-        {lines.map((line) => (
+        {lines.map((line) => drafts[line.id] && baselines[line.id] ? (
           <CostLine
             key={line.id}
-            quotationId={quotationId}
             line={line}
             offers={offers.filter((offer) => offer.product_id === line.productId)}
             bestId={bestByItem[line.id] || null}
             defaultMargin={defaultMargin}
             editable={editable}
-            busy={pending}
+            saving={savingIds.includes(line.id)}
             draft={drafts[line.id]}
+            baseline={baselines[line.id]}
             onDraft={(draft) => setDrafts((current) => ({ ...current, [line.id]: draft }))}
-            run={run}
+            onSave={(draft, announce) => persist([{ id: line.id, draft }], announce)}
           />
-        ))}
+        ) : null)}
       </div>
     </div>
   )
 }
 
 function CostLine({
-  quotationId,
   line,
   offers,
   bestId,
   defaultMargin,
   editable,
-  busy,
+  saving,
   draft,
+  baseline,
   onDraft,
-  run,
+  onSave,
 }: {
-  quotationId: string
   line: Line
   offers: SupplierOffer[]
   bestId: string | null
   defaultMargin: number
   editable: boolean
-  busy: boolean
+  saving: boolean
   draft: Draft
+  baseline: Draft
   onDraft: (draft: Draft) => void
-  run: ReturnType<typeof useAction>['run']
+  onSave: (draft: Draft, announce: boolean) => void
 }) {
-  const [saving, setSaving] = useState(false)
   const costValue = parseAmount(draft.cost)
   const sellValue = parseAmount(draft.unit) ?? 0
   const warnings = marginWarnings(costValue, sellValue)
   const marginLive = liveMarginPercent(costValue, sellValue)
+  const dirty = costingFieldsDirty(draft, baseline)
+  const status = costingStatusLabel(saving, dirty)
 
-  function edit(field: 'cost' | 'margin' | 'sell', raw: string, offerId = draft.offerId) {
+  function edited(field: 'cost' | 'margin' | 'sell', raw: string, offerId = draft.offerId): Draft {
     const next = { ...draft, offerId }
     if (field === 'cost') next.cost = raw
     if (field === 'margin') next.margin = raw
@@ -155,29 +271,12 @@ function CostLine({
       sell: parseAmount(next.unit),
       edited: field,
     })
-    onDraft({
+    return {
       offerId,
       cost: field === 'cost' ? raw : money(synced.cost),
       margin: field === 'margin' ? raw : money(synced.margin),
       unit: field === 'sell' ? raw : money(synced.sell),
-    })
-  }
-
-  function save(next = draft) {
-    if (!editable) return
-    const formData = new FormData()
-    formData.set('quotation_id', quotationId)
-    formData.set('item_id', line.id)
-    formData.set('supplier_offer_id', next.offerId)
-    formData.set('supplier_cost', next.cost)
-    formData.set('margin_percent', next.margin)
-    formData.set('unit_price', next.unit || '0')
-    setSaving(true)
-    run(() => applyQuotationItemPrice(formData), {
-      successMessage: false,
-      onSuccess: () => setSaving(false),
-      onError: () => setSaving(false),
-    })
+    }
   }
 
   const cardBorderBg = warnings.some((code) => code === 'above_sell')
@@ -195,12 +294,14 @@ function CostLine({
           <p className="font-mono text-xs text-[#7C766F] mt-0.5">{line.sku} · qty {line.quantity}</p>
         </div>
         <div className="text-right text-[#4A4640]">
-          {saving || busy ? (
+          {saving ? (
             <span className="inline-flex items-center gap-1.5 text-xs text-[#9E4300] font-mono">
-              <Spinner />Saving
+              <Spinner />Saving…
             </span>
           ) : (
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Saved with the line</span>
+            <span className={`text-[11px] font-bold uppercase tracking-[0.12em] ${dirty ? 'text-[#9E4300]' : 'text-[#3A4537]'}`}>
+              {status}
+            </span>
           )}
           <p className="text-xs font-mono font-semibold text-[#1C1C18] mt-0.5">Margin {marginLive == null ? '—' : `${marginLive}%`}</p>
         </div>
@@ -230,7 +331,7 @@ function CostLine({
               })
               const savedDraft = { offerId: next.offerId, cost: money(synced.cost), margin: money(synced.margin), unit: money(synced.sell) }
               onDraft(savedDraft)
-              save(savedDraft)
+              onSave(savedDraft, false)
             }}
             className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 disabled:opacity-60"
           >
@@ -248,45 +349,63 @@ function CostLine({
         </label>
       )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <label className="block">
-          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Cost (₹)</span>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={draft.cost}
-            disabled={!editable}
-            onChange={(event) => edit('cost', event.target.value)}
-            onBlur={() => save()}
-            className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 disabled:opacity-60"
-          />
-        </label>
-        <label className="block">
-          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Margin %</span>
-          <input
-            type="number"
-            step="0.01"
-            value={draft.margin}
-            disabled={!editable || costValue == null || costValue <= 0}
-            onChange={(event) => edit('margin', event.target.value)}
-            onBlur={() => save()}
-            className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 disabled:opacity-60"
-          />
-        </label>
-        <label className="block">
-          <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Sell price (₹)</span>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={draft.unit}
-            disabled={!editable}
-            onChange={(event) => edit('sell', event.target.value)}
-            onBlur={() => save()}
-            className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 disabled:opacity-60"
-          />
-        </label>
+        <PriceField label="Cost (₹)" value={draft.cost} disabled={!editable} onChange={(value) => onDraft(edited('cost', value))} onCommit={(raw, announce) => { const next = edited('cost', raw); onDraft(next); onSave(next, announce) }} />
+        <PriceField
+          label="Margin %"
+          value={draft.margin}
+          disabled={!editable || costValue == null || costValue <= 0}
+          onChange={(value) => onDraft(edited('margin', value))}
+          onCommit={(raw, announce) => { const next = edited('margin', raw); onDraft(next); onSave(next, announce) }}
+        />
+        <PriceField label="Sell price (₹)" value={draft.unit} disabled={!editable} onChange={(value) => onDraft(edited('sell', value))} onCommit={(raw, announce) => { const next = edited('sell', raw); onDraft(next); onSave(next, announce) }} />
       </div>
+      {editable && dirty ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => onSave(draft, true)}
+            className="min-h-9 rounded-none bg-[#1C1B1A] px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300]"
+          >
+            Save
+          </button>
+        </div>
+      ) : null}
     </div>
+  )
+}
+
+function PriceField({
+  label,
+  value,
+  disabled,
+  onChange,
+  onCommit,
+}: {
+  label: string
+  value: string
+  disabled: boolean
+  onChange: (value: string) => void
+  onCommit: (raw: string, announce: boolean) => void
+}) {
+  return (
+    <label className="block">
+      <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">{label}</span>
+      <input
+        type="number"
+        min={label === 'Margin %' ? undefined : '0'}
+        step="0.01"
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        onBlur={(event) => onCommit(event.currentTarget.value, false)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Enter') return
+          event.preventDefault()
+          onCommit(event.currentTarget.value, true)
+        }}
+        className="mt-1 w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1C18] focus:border-[#1C1B1A] focus:outline-none focus:ring-0 disabled:opacity-60"
+      />
+    </label>
   )
 }

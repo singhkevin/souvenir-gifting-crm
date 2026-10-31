@@ -8,6 +8,7 @@ import { updateQuotationStatus, convertToOrder, duplicateQuotation, createQuotat
 import { ActionButton } from '@/components/ui/action-button'
 import { QuotationCosting } from './QuotationCosting'
 import { QuotationDraftEditor } from './QuotationDraftEditor'
+import { QuotationLiveProvider, QuotationSaveBar, QuotationTotals, QuoteSendGuard } from './quotation-live'
 import { QuoteContactPicker } from './QuoteContactPicker'
 import { SendQuoteDialog } from './SendQuoteDialog'
 import { offersByProduct, pickBestOffer } from '@/lib/pricing/offers'
@@ -132,7 +133,18 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
     }
   })()
 
+  const liveLines = quoteItems.map((item) => ({
+    id: item.id,
+    quantity: Number(item.quantity) || 1,
+    unitPrice: Number(item.unit_price) || 0,
+  }))
+
   return (
+    <QuotationLiveProvider
+      lines={liveLines}
+      discountPercent={Number(quote.discount_percent) || 0}
+      taxPercent={quote.tax_percent == null ? 0 : Number(quote.tax_percent)}
+    >
     <div className="max-w-5xl mx-auto space-y-6">
       <BackButton href="/crm/quotations" label="Back to Quotations" />
 
@@ -174,10 +186,9 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           {quote.status === 'draft' && (
-            <>
+            <QuoteSendGuard>
               <SendQuoteDialog
                 quotationId={quote.id}
-                total={Number(quote.total) || 0}
                 validUntil={quote.valid_until}
                 clientUrl={absoluteClientQuoteUrl({
                   accountType: company?.account_type,
@@ -214,7 +225,7 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
               >
                 Mark sent (offline)
               </ActionButton>
-            </>
+            </QuoteSendGuard>
           )}
           <Link
             href={`/crm/quotations/${quote.id}/preview`}
@@ -413,26 +424,28 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
           </div>
         )}
 
-        <div className="bg-[#F6F3EC] p-4 border-t border-[#CCC5BD] flex flex-col items-end space-y-2 text-xs">
-          <div className="flex justify-between w-64 text-[#4A4640]">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Subtotal ex-GST</span>
-            <span className="font-mono text-xs text-[#1C1C18]">{formatCurrency(quote.subtotal)}</span>
-          </div>
-          {Number(quote.discount_amount) > 0 && (
-            <div className="flex justify-between w-64 text-[#3A4537]">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#3A4537]">Discount ({quote.discount_percent}%)</span>
-              <span className="font-mono text-xs text-[#3A4537]">-{formatCurrency(quote.discount_amount)}</span>
+        {quote.status === 'draft' ? <QuotationTotals /> : (
+          <div className="bg-[#F6F3EC] p-4 border-t border-[#CCC5BD] flex flex-col items-end space-y-2 text-xs">
+            <div className="flex justify-between w-64 text-[#4A4640]">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Subtotal ex-GST</span>
+              <span className="font-mono text-xs text-[#1C1C18]">{formatCurrency(quote.subtotal)}</span>
             </div>
-          )}
-          <div className="flex justify-between w-64 text-[#4A4640]">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">GST ({quote.tax_percent || 0}%)</span>
-            <span className="font-mono text-xs text-[#1C1C18]">{formatCurrency(quote.tax_amount)}</span>
+            {Number(quote.discount_amount) > 0 && (
+              <div className="flex justify-between w-64 text-[#3A4537]">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#3A4537]">Discount ({quote.discount_percent}%)</span>
+                <span className="font-mono text-xs text-[#3A4537]">-{formatCurrency(quote.discount_amount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between w-64 text-[#4A4640]">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">GST ({quote.tax_percent || 0}%)</span>
+              <span className="font-mono text-xs text-[#1C1C18]">{formatCurrency(quote.tax_amount)}</span>
+            </div>
+            <div className="flex justify-between w-64 text-sm font-semibold text-[#1C1C18] pt-2 border-t border-[#CCC5BD] mt-1">
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#1C1C18]">Total incl. GST</span>
+              <span className="font-mono text-sm font-bold text-[#9E4300]">{formatCurrency(quote.total)}</span>
+            </div>
           </div>
-          <div className="flex justify-between w-64 text-sm font-semibold text-[#1C1C18] pt-2 border-t border-[#CCC5BD] mt-1">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#1C1C18]">Total incl. GST</span>
-            <span className="font-mono text-sm font-bold text-[#9E4300]">{formatCurrency(quote.total)}</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Internal Costing Panel */}
@@ -464,6 +477,53 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
           defaultMargin={Number(pricing?.b2b_margin_percent ?? pricing?.default_margin_percent ?? 35)}
         />
       )}
+      {quote.status === 'draft' ? (
+        <QuotationSaveBar
+          send={
+            <SendQuoteDialog
+              quotationId={quote.id}
+              validUntil={quote.valid_until}
+              clientUrl={absoluteClientQuoteUrl({
+                accountType: company?.account_type,
+                portalSlug: company?.portal_slug,
+                quotationId: quote.id,
+                origin: await requestOrigin(),
+              })}
+              recipients={quoteSendRecipients({
+                contacts: contacts || [],
+                users: companyUsers || [],
+              })}
+              defaultRecipientKey={defaultQuoteRecipientKey({
+                contactId: quote.contact_id,
+                recipients: quoteSendRecipients({ contacts: contacts || [], users: companyUsers || [] }),
+              })}
+              warnings={sendQuoteWarnings(quoteItems.map((item) => {
+                const product = oneRelation(item.product)
+                const saved = savedCosts.find((row) => row.quotation_item_id === item.id)
+                const catalogCost = item.product_id ? catalogCostByProduct.get(item.product_id) ?? null : null
+                return {
+                  name: product?.name || 'Item',
+                  unitPrice: Number(item.unit_price) || 0,
+                  cost: saved?.supplier_cost == null ? catalogCost : Number(saved.supplier_cost),
+                  applied: Boolean(saved),
+                }
+              }))}
+            />
+          }
+          markSent={
+            <ActionButton
+              action={markQuotationSentOffline.bind(null, quote.id)}
+              pendingLabel="Marking…"
+              successMessage="Marked as sent"
+              title="Records the quotation as sent without emailing the client"
+              className="px-3.5 py-2 bg-transparent hover:bg-[#1C1B1A] text-[#1C1B1A] hover:text-[#FCF9F2] border border-[#1C1B1A] rounded-none text-xs font-bold uppercase tracking-[0.12em] transition-colors shadow-none"
+            >
+              Mark sent offline
+            </ActionButton>
+          }
+        />
+      ) : null}
     </div>
+    </QuotationLiveProvider>
   )
 }

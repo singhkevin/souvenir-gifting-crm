@@ -11,15 +11,23 @@ const PICKER_LIMIT = 1000
  */
 export async function listCatalogPickerProducts(companyId: string | null): Promise<PickerProduct[]> {
   const supabase = await createClient()
-  const [{ data: products }, companyMargin] = await Promise.all([
+  const [productQuery, companyMargin] = await Promise.all([
     supabase
       .from('products')
-      .select('id, name, sku, moq, image_url, category:categories(name)')
+      .select('id, name, sku, moq, stock_qty, image_url, category:categories(name)')
       .eq('status', 'active')
       .order('name')
       .limit(PICKER_LIMIT),
     companyId ? getCompanyMarginPercent(companyId) : Promise.resolve(null),
   ])
+  const products = productQuery.error && /stock_qty/i.test(productQuery.error.message)
+    ? (await supabase
+        .from('products')
+        .select('id, name, sku, moq, image_url, category:categories(name)')
+        .eq('status', 'active')
+        .order('name')
+        .limit(PICKER_LIMIT)).data
+    : productQuery.data
 
   const rows = products || []
   // Shared pricer: company special, fixed price, cost + margins. Falls back to this session's
@@ -31,6 +39,8 @@ export async function listCatalogPickerProducts(companyId: string | null): Promi
   return rows.map((row) => {
     const category = oneRelation(row.category as { name?: string | null } | { name?: string | null }[] | null)
     const price = resolved?.get(row.id)?.price ?? null
+    const stockRaw = (row as { stock_qty?: number | null }).stock_qty
+    const stock = stockRaw == null ? null : Number(stockRaw)
     return {
       id: row.id,
       name: row.name,
@@ -38,7 +48,9 @@ export async function listCatalogPickerProducts(companyId: string | null): Promi
       imageUrl: row.image_url,
       category: category?.name || null,
       price: price == null ? 0 : price,
+      priced: price != null,
       moq: row.moq && row.moq > 0 ? row.moq : 1,
+      stockQty: stock != null && Number.isFinite(stock) ? stock : null,
     }
   })
 }

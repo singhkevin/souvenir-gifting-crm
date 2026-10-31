@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { isUuid } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { writeAudit } from '@/lib/audit'
@@ -236,6 +237,44 @@ export async function addProductToRequirement(formData: FormData) {
 
   revalidatePath(`/crm/requirements/${requirementId}`)
   redirect(`/crm/requirements/${requirementId}?tab=products`)
+}
+
+export async function addProductsToRequirement(
+  requirementId: string,
+  lines: { productId: string; quantity: number }[],
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+  if (!isUuid(requirementId)) return { error: 'Requirement is required' }
+  if (!lines.length) return { error: 'Choose at least one product' }
+
+  for (const line of lines) {
+    if (!isUuid(line.productId)) return { error: 'Product is required' }
+    const quantity = Number(line.quantity)
+    const qty = Number.isFinite(quantity) && quantity > 0 ? Math.round(quantity) : 1
+    const { data: existing } = await supabase
+      .from('requirement_products')
+      .select('id')
+      .eq('requirement_id', requirementId)
+      .eq('product_id', line.productId)
+      .maybeSingle()
+    if (existing) {
+      const { error } = await supabase.from('requirement_products').update({ quantity: qty }).eq('id', existing.id)
+      if (error) return { error: error.message }
+    } else {
+      const { error } = await supabase.from('requirement_products').insert({
+        requirement_id: requirementId,
+        product_id: line.productId,
+        quantity: qty,
+      })
+      if (error) return { error: error.message }
+    }
+  }
+
+  revalidatePath(`/crm/requirements/${requirementId}`)
+  const count = lines.length
+  return { success: true, message: count === 1 ? 'Product added' : `Added ${count} products` }
 }
 
 export async function removeProductFromRequirement(formData: FormData) {

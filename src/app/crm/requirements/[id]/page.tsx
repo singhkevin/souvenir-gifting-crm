@@ -10,7 +10,6 @@ import { getCompanyMarginPercent, sellPricesForSurface } from '@/lib/pricing/ser
 import {
   updateRequirementForm,
   removeRequirement,
-  addProductToRequirement,
   removeProductFromRequirement,
   updateRequirementProductQty,
   createQuotationFromRequirement,
@@ -19,6 +18,8 @@ import { ConfirmAction } from '@/components/ui/confirm-action'
 import { ActionForm } from '@/components/ui/action-form'
 import { MobileSheetSelect, SheetDateField } from '@/components/ui/mobile-filter-sheet'
 import { SubmitButton } from '@/components/ui/submit-button'
+import { listCatalogPickerProducts } from '@/lib/catalogs/picker-products'
+import { RequirementProducts } from './requirement-products'
 
 export default async function RequirementDetailPage({
   params,
@@ -39,7 +40,6 @@ export default async function RequirementDetailPage({
     { data: quotations },
     { data: activities },
     { data: relatedOrders },
-    { data: catalogueProducts },
   ] = await Promise.all([
     supabase
       .from('requirements')
@@ -65,7 +65,6 @@ export default async function RequirementDetailPage({
       .eq('requirement_id', id)
       .order('created_at', { ascending: false })
       .limit(1),
-    supabase.from('products').select('id, name, sku, status').eq('status', 'active').order('name'),
   ])
 
   if (!req) notFound()
@@ -87,14 +86,15 @@ export default async function RequirementDetailPage({
   const acceptedQuote =
     quoteRows.find((q: { status?: string | null }) => q.status === 'accepted') || null
   const attachedIds = new Set(productRows.map((p: { product_id: string }) => p.product_id))
-  const assignableProducts = (catalogueProducts || []).filter((p) => !attachedIds.has(p.id))
+  const pickerProducts = tab === 'products' ? await listCatalogPickerProducts(companyId || null) : []
+  const assignableProducts = pickerProducts.filter((product) => !attachedIds.has(product.id))
 
   const hasProducts = productRows.length > 0
   const hasQuotes = quoteRows.length > 0
   const hasOrder = Boolean(order)
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className={`mx-auto space-y-6 ${tab === 'products' ? 'max-w-none' : 'max-w-5xl'}`}>
       <BackButton href="/crm/requirements" label="Back to Requirements" />
       {removed === 'archived' && (
         <div className="rounded-none border border-[#9E4300]/30 bg-[#FFB690]/30 p-3 text-xs text-[#9E4300]">
@@ -450,52 +450,21 @@ export default async function RequirementDetailPage({
 
       {tab === 'products' && (
         <div className="space-y-4">
-          <div className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-4">
-            {assignableProducts.length > 0 ? (
-              <ActionForm action={addProductToRequirement}
-                className="flex flex-col gap-3 sm:flex-row sm:items-end"
-              >
-                <input type="hidden" name="requirement_id" value={req.id} />
-                <MobileSheetSelect
-                  name="product_id"
-                  label="Product"
-                  required
-                  className="w-full sm:flex-1"
-                  emptyLabel="Select product to add..."
-                  options={[
-                    { value: '', label: 'Select product to add...' },
-                    ...assignableProducts.map((p) => ({
-                      value: p.id,
-                      label: `${p.name} (${p.sku})`,
-                    })),
-                  ]}
-                />
-                <label className="block w-full sm:w-28">
-                  <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F] mb-1.5">
-                    Qty
-                  </span>
-                  <input
-                    name="quantity"
-                    type="number"
-                    min="1"
-                    defaultValue={req.quantity || 1}
-                    className="w-full rounded-none border border-[#CCC5BD] bg-[#F6F3EC] px-3 py-2 text-xs font-mono text-[#1C1B1A] focus:border-[#1C1B1A] focus:outline-none focus:ring-0"
-                  />
-                </label>
-                <SubmitButton
-                  className="inline-flex min-h-10 items-center justify-center gap-1 rounded-none bg-[#1C1B1A] px-4 text-xs font-bold uppercase tracking-[0.12em] text-[#FCF9F2] hover:bg-[#9E4300] transition-colors"
-                  pendingLabel="Adding…">
-                  <Plus size={14} /> Add product
-                </SubmitButton>
-              </ActionForm>
-            ) : (
-              <p className="text-xs text-[#7C766F]">
-                {catalogueProducts?.length
-                  ? 'All active catalogue products are already on this brief.'
-                  : 'No active catalogue products available to add.'}
-              </p>
-            )}
-          </div>
+          {pickerProducts.length === 0 ? (
+            <p className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-4 text-xs text-[#7C766F]">
+              No active catalogue products available to add.
+            </p>
+          ) : assignableProducts.length === 0 ? (
+            <p className="rounded-none border border-[#CCC5BD] bg-[#FCF9F2] p-4 text-xs text-[#7C766F]">
+              All active catalogue products are already on this brief.
+            </p>
+          ) : (
+            <RequirementProducts
+              requirementId={req.id}
+              products={assignableProducts}
+              defaultQuantity={Number(req.quantity) || 1}
+            />
+          )}
 
           <div className="overflow-x-auto rounded-none border border-[#CCC5BD] bg-[#FCF9F2]">
             <table className="w-full border-collapse text-left text-xs">
