@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createHash, randomBytes } from 'node:crypto'
 import { quoteCheckoutExpiry } from '@/lib/business/checkout-window'
+import { customerQuoteCheckoutUrl } from '@/lib/quotes/public-link'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export function hashCheckoutToken(token: string) {
@@ -12,7 +13,7 @@ export function newCheckoutToken() {
   return randomBytes(32).toString('base64url')
 }
 
-export async function issueQuoteCheckoutLink(quotationId: string, origin: string) {
+export async function issueQuoteCheckoutLink(quotationId: string) {
   const admin = createAdminClient()
   if (!admin) return null
   const { data: quote, error } = await admin
@@ -50,7 +51,7 @@ export async function issueQuoteCheckoutLink(quotationId: string, origin: string
     return null
   }
   return {
-    url: `${origin}/catalogue/checkout?quote=${encodeURIComponent(token)}`,
+    url: customerQuoteCheckoutUrl(token),
     orderId: null,
   }
 }

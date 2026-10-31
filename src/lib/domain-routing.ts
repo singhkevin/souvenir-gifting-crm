@@ -84,6 +84,12 @@ function isStaffPath(pathname: string) {
 
 const ORDER_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+/** View-only quotation on the store: /quotes/<quotation uuid>. The page checks ?t=. */
+export function isGuestQuotePath(pathname: string) {
+  const match = /^\/quotes\/([^/]+)$/.exec(pathname)
+  return Boolean(match && ORDER_UUID.test(match[1]))
+}
+
 /** Guest store status page: /orders/<order number>?t=<token>. UUID paths stay CRM aliases. */
 export function isGuestOrderStatusPath(pathname: string, search = '') {
   const match = /^\/orders\/([^/]+)$/.exec(pathname)
@@ -161,6 +167,7 @@ export function decideHostRoute(host: ResolvedHost, pathname: string, search = '
       return redirect(302, portalRootOrigin(null), '/')
     }
     if (isGuestOrderStatusPath(pathname, search)) return redirect(301, storeOrigin(null), pathname, search)
+    if (isGuestQuotePath(pathname)) return redirect(301, storeOrigin(null), pathname, search)
     if (isStaffPath(pathname)) return redirect(301, adminOrigin(null), pathname, search)
     return redirect(301, storeOrigin(null), pathname, search)
   }
@@ -168,6 +175,7 @@ export function decideHostRoute(host: ResolvedHost, pathname: string, search = '
   if (host.kind === 'tenant') {
     if (isInternalApiPath(pathname)) return { action: 'not-found' }
     if (isGuestOrderStatusPath(pathname, search)) return redirect(301, storeOrigin(null), pathname, search)
+    if (isGuestQuotePath(pathname)) return redirect(301, storeOrigin(null), pathname, search)
     if (isStaffPath(pathname)) return redirect(301, adminOrigin(null), pathname, search)
     if (matches(pathname, '/business')) return redirect(301, storeOrigin(null), pathname, search)
     return { action: 'continue' }
@@ -177,6 +185,7 @@ export function decideHostRoute(host: ResolvedHost, pathname: string, search = '
     if (pathname === '/api/internal/quotes/expire') return { action: 'continue' }
     if (isInternalApiPath(pathname)) return { action: 'not-found' }
     if (isGuestOrderStatusPath(pathname, search)) return { action: 'continue' }
+    if (isGuestQuotePath(pathname)) return { action: 'continue' }
     if (isStaffPath(pathname)) return redirect(301, adminOrigin(null), pathname, search)
     if (isStorePath(pathname)) return { action: 'continue' }
     return { action: 'not-found' }
@@ -184,6 +193,7 @@ export function decideHostRoute(host: ResolvedHost, pathname: string, search = '
 
   if (host.kind === 'admin') {
     if (isGuestOrderStatusPath(pathname, search)) return redirect(301, storeOrigin(null), pathname, search)
+    if (isGuestQuotePath(pathname)) return redirect(301, storeOrigin(null), pathname, search)
     if (pathname === '/') {
       if (hasAuthCallback(search)) return { action: 'continue' }
       return redirect(302, adminOrigin(null), '/crm/dashboard')

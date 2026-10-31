@@ -64,6 +64,7 @@ export function isPublicSitePath(pathname: string) {
   if (guestOrder && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(guestOrder[1])) {
     return true
   }
+  if (/^\/quotes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pathname)) return true
   const prefixes = [
     '/home',
     '/catalogue',

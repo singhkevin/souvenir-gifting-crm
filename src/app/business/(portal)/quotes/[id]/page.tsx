@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 export default async function BusinessQuotePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const { company, profile } = await requireBusiness()
+  const { company, profile } = await requireBusiness(`/business/quotes/${id}`)
   await markBusinessQuotationViewed(id)
   const supabase = await createClient()
   const { data: quote } = await supabase

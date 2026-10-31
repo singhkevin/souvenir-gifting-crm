@@ -3,8 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { getProfile } from '@/lib/auth'
 import { writeAudit } from '@/lib/audit'
-import { requestOrigin } from '@/lib/auth/request-origin'
 import { issueQuoteCheckoutLink } from '@/lib/business/tokens'
+import { storePublicOrigin } from '@/lib/site/store-public-origin'
 import { businessRejectedEmailHtml, businessVerifiedEmailHtml, businessQuoteSentEmailHtml } from '@/lib/email/business'
 import { sendEmail } from '@/lib/email/resend'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -82,7 +82,7 @@ export async function setBusinessVerification(formData: FormData) {
   })
 
   const admin = createAdminClient()
-  const origin = await requestOrigin()
+  const store = storePublicOrigin(null)
   if (admin) {
     const { data: users } = await admin.from('profiles').select('email').eq('company_id', companyId).eq('role', 'business_user').eq('is_active', true)
     for (const user of users || []) {
@@ -90,7 +90,7 @@ export async function setBusinessVerification(formData: FormData) {
       await sendEmail({
         to: user.email,
         subject: next === 'verified' ? 'Your business account is verified' : 'Business account update',
-        html: next === 'verified' ? businessVerifiedEmailHtml(`${origin}/business/dashboard`) : businessRejectedEmailHtml(),
+        html: next === 'verified' ? businessVerifiedEmailHtml(`${store}/business/dashboard`) : businessRejectedEmailHtml(),
       })
     }
     if (next === 'verified') {
@@ -100,7 +100,7 @@ export async function setBusinessVerification(formData: FormData) {
         .eq('company_id', companyId)
         .eq('status', 'accepted')
       for (const quote of quotes || []) {
-        const link = await issueQuoteCheckoutLink(quote.id, origin)
+        const link = await issueQuoteCheckoutLink(quote.id)
         if (!link?.url || !quote.contact_id) continue
         const { data: contact } = await admin.from('contacts').select('email').eq('id', quote.contact_id).maybeSingle()
         if (!contact?.email) continue
