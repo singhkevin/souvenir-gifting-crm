@@ -15,6 +15,8 @@ import { createContact } from '@/app/crm/contacts/actions'
 import { ActionForm } from '@/components/ui/action-form'
 import { PortalClientForm } from '../portal-client-form'
 import { PortalInviteButton, PortalInviteForm } from '../portal-invite-button'
+import { PortalApprovalQueue } from '@/components/portal/approval-queue'
+import { PORTAL_SIGNUP_MODE_OPTIONS, signupSourceLabel } from '@/lib/portal/signup'
 import { ManageClientLogin } from '../manage-client-login'
 import { canSendPortalInvite } from '@/lib/portal/separation'
 import { PortalHostCard } from '../portal-host-card'
@@ -81,13 +83,30 @@ export default async function CompanyDetailPage({
       .eq('status', 'active')
       .order('name'),
     supabase.from('company_product_exclusions').select('product_id, created_at').eq('company_id', id),
-    supabase.from('profiles').select('id, full_name, email, role, is_active').eq('company_id', id).in('role', ['client_admin', 'client_user']).order('full_name'),
+    supabase.from('profiles').select('id, full_name, email, role, is_active, portal_approval, portal_signup_source, created_at').eq('company_id', id).in('role', ['client_admin', 'client_user']).order('full_name'),
     supabase.from('tasks').select('id, title, status, due_at, assigned_to, order_id, priority, assignee:profiles!assigned_to(full_name)').eq('company_id', id).order('due_at', { ascending: true }),
     supabase.from('portal_hosts').select('*').eq('company_id', id).neq('status', 'removed').order('created_at', { ascending: false }),
     supabase.from('company_product_prices').select('product_id, price, valid_until').eq('company_id', id),
   ])
 
   if (!company) notFound()
+
+  let clientRows = clients
+  if (!clientRows) {
+    const fallback = await supabase
+      .from('profiles')
+      .select('id, full_name, email, role, is_active')
+      .eq('company_id', id)
+      .in('role', ['client_admin', 'client_user'])
+      .order('full_name')
+    clientRows = (fallback.data || []).map((row) => ({
+      ...row,
+      portal_approval: null,
+      portal_signup_source: null,
+      created_at: null,
+    }))
+  }
+  const pendingClients = (clientRows || []).filter((client) => client.portal_approval === 'pending')
 
   let businessEmailFlags: { email: string; review: 'free' | 'disposable' }[] = []
   let businessPortalMatch: { id: string; name: string } | null = null
@@ -237,7 +256,7 @@ export default async function CompanyDetailPage({
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
-    { id: 'clients', label: `Portal logins (${clients?.length || 0})` },
+    { id: 'clients', label: `Portal logins (${clientRows?.length || 0})` },
     { id: 'catalogue', label: `Catalogue (${visibleCatalogueCount})` },
     ...(canSetPrices ? [{ id: 'prices', label: `Special prices (${specialRows.length})` }] : []),
     { id: 'contacts', label: `Contacts (${contacts?.length || 0})` },
@@ -519,6 +538,15 @@ export default async function CompanyDetailPage({
                     { value: 'cancelled', label: 'Cancelled' },
                   ]}
                 />
+                {(company.account_type || 'corporate') === 'corporate' ? (
+                  <MobileSheetSelect
+                    name="portal_signup_mode"
+                    label="Portal sign-up"
+                    showDesktopLabel
+                    defaultValue={company.portal_signup_mode || 'manual'}
+                    options={PORTAL_SIGNUP_MODE_OPTIONS}
+                  />
+                ) : null}
                 <label className="block space-y-1">
                   <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Trial ends</span>
                   <input
@@ -533,6 +561,11 @@ export default async function CompanyDetailPage({
                   />
                   <span className="mt-1 block text-[11px] text-[#7C766F]">Used when portal status is Trial.</span>
                 </label>
+                {(company.account_type || 'corporate') === 'corporate' ? (
+                  <p className="text-[11px] text-[#7C766F] md:col-span-2">
+                    Manual is the default. A listed email domain can register, and stays pending until you or the company admin approves them. Auto opens the portal after they confirm that email. Auto all also approves people you or a company admin add. Off hides self sign-up. Free inboxes stay refused unless you list that domain, or staff record an exception.
+                  </p>
+                ) : null}
                 <label className="block space-y-1 md:col-span-2">
                   <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#7C766F]">Address</span>
                   <textarea
@@ -677,9 +710,9 @@ export default async function CompanyDetailPage({
                   : ' No email domain is set, so any address can be invited. Add domains on Overview to restrict logins.'}
               </p>
             </div>
-            {canInvite && (company.account_type || 'corporate') !== 'business' && (
+            {canInvite && (company.account_type || 'corporate') === 'corporate' && (
               <div className="border-b border-[#CCC5BD] p-6">
-                <PortalInviteForm companyId={company.id} />
+                <PortalInviteForm companyId={company.id} allowException />
               </div>
             )}
             {profile.role === 'admin' && (
@@ -690,12 +723,31 @@ export default async function CompanyDetailPage({
             )}
           </div>
 
+          {(profile.role === 'admin' || profile.role === 'sales') && (company.account_type || 'corporate') === 'corporate' ? (
+            <div className="overflow-hidden border border-[#CCC5BD] bg-[#FCF9F2]">
+              <div className="border-b border-[#CCC5BD] bg-[#F6F3EC] px-4 py-3">
+                <h3 className="font-[family-name:var(--font-newsreader)] text-lg font-normal text-[#1C1B1A]">Awaiting approval</h3>
+              </div>
+              <PortalApprovalQueue
+                companyId={company.id}
+                rows={pendingClients.map((client) => ({
+                  id: client.id,
+                  full_name: client.full_name,
+                  email: client.email,
+                  role: String(client.role),
+                  source: client.portal_signup_source || null,
+                  created_at: client.created_at || null,
+                }))}
+              />
+            </div>
+          ) : null}
+
           <div className="bg-[#FCF9F2] border border-[#CCC5BD] rounded-none shadow-none overflow-hidden">
             <div className="bg-[#F6F3EC] px-4 py-2.5 border-b border-[#CCC5BD] flex items-center justify-between">
               <h3 className="font-[family-name:var(--font-newsreader)] text-lg font-normal text-[#1C1B1A]">
                 Portal logins
               </h3>
-              <span className="font-mono text-xs text-[#7C766F]">[ {clients?.length || 0} ]</span>
+              <span className="font-mono text-xs text-[#7C766F]">[ {clientRows?.length || 0} ]</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
@@ -711,13 +763,19 @@ export default async function CompanyDetailPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#CCC5BD]">
-                  {clients?.map((client) => (
+                  {clientRows?.map((client) => (
                     <tr key={client.id} className="hover:bg-[#F6F3EC] transition-colors">
                       <td className="px-4 py-2.5 font-semibold text-[#1C1B1A]">{client.full_name}</td>
                       <td className="px-4 py-2.5 text-[#4A4640] font-mono">{client.email}</td>
                       <td className="px-4 py-2.5 capitalize text-[#4A4640]">{String(client.role).replace('_', ' ')}</td>
                       <td className="px-4 py-2.5">
-                        {client.is_active ? (
+                        {client.portal_approval === 'pending' ? (
+                          <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#9E4300]">
+                            Awaiting approval · {signupSourceLabel(client.portal_signup_source)}
+                          </span>
+                        ) : client.portal_approval === 'rejected' ? (
+                          <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#7C766F]">Rejected</span>
+                        ) : client.is_active ? (
                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.08em] bg-[#DAE6D3] text-[#3A4537] border border-[#3A4537]/20 rounded-none">
                             <span className="w-1.5 h-1.5 rounded-full bg-[#3A4537]" />
                             Active
@@ -757,7 +815,7 @@ export default async function CompanyDetailPage({
                       )}
                     </tr>
                   ))}
-                  {(!clients || clients.length === 0) && (
+                  {(!clientRows || clientRows.length === 0) && (
                     <tr>
                       <td colSpan={profile.role === 'admin' || canInvite ? 5 : 4} className="p-6 text-center text-[#7C766F]">
                         No portal logins for this company yet.

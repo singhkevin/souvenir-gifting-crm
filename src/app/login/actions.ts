@@ -40,15 +40,28 @@ export async function signIn(formData: FormData): Promise<{ error?: string; redi
   }
 
   if (data.user) {
-    const { data: profile } = await supabase
+    let profileResult = await supabase
       .from('profiles')
-      .select('role, is_active, company_id')
+      .select('role, is_active, company_id, portal_approval')
       .eq('id', data.user.id)
       .maybeSingle()
+    if (profileResult.error && /portal_approval|schema cache|does not exist/i.test(profileResult.error.message)) {
+      profileResult = await supabase
+        .from('profiles')
+        .select('role, is_active, company_id')
+        .eq('id', data.user.id)
+        .maybeSingle()
+    }
+    const profile = profileResult.data
 
     if (profile && profile.is_active === false) {
       await supabase.auth.signOut()
       return { error: 'This account is inactive' }
+    }
+
+    if (profile && isClientRole(profile.role) && profile.portal_approval === 'rejected') {
+      await supabase.auth.signOut()
+      return { error: 'This portal account was not approved.' }
     }
 
     const isClient = isClientRole(profile?.role)
@@ -184,6 +197,11 @@ export async function signOut(): Promise<void> {
 }
 
 export async function signUp(formData: FormData): Promise<{ error?: string; message?: string; redirectTo?: string }> {
+  const headerStore = await headers()
+  const host = headerStore.get('x-forwarded-host') || headerStore.get('host')
+  if (resolveHost(host).kind === 'tenant') {
+    return { error: 'Create your account from the sign-up page on this company portal.' }
+  }
   const fullName = String(formData.get('full_name') || '').trim()
   const email = String(formData.get('email') || '').trim().toLowerCase()
   const password = String(formData.get('password') || '')

@@ -8,7 +8,7 @@ import {
   Package, Image as ImageIcon, FileText, ShoppingBag, KanbanSquare,
   Truck, Printer, Package2, Receipt, CreditCard, ArrowDownToLine,
   BarChart3, Activity, UserCog, Settings, ShieldCheck, LogOut,
-  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift, Tags, LayoutTemplate, Bike
+  ListTodo, Landmark, BadgeCheck, Megaphone, BookOpen, Target, X, Gift, Tags, LayoutTemplate, Bike, UserPlus
 } from 'lucide-react';
 import { signOut } from '@/app/login/actions';
 import { BrandLogo } from '@/components/brand/brand-logo';
@@ -43,6 +43,7 @@ const navGroups: NavGroup[] = [
     roles: ['admin', 'sales', 'management', 'operations', 'accounts'],
     items: [
       { label: 'Companies', href: '/crm/companies', matchPrefix: '/crm/companies', icon: Building2 },
+      { label: 'Portal sign-ups', href: '/crm/portal-signups', matchPrefix: '/crm/portal-signups', icon: UserPlus, roles: ['admin', 'sales'] },
       { label: 'Contacts', href: '/crm/contacts', matchPrefix: '/crm/contacts', icon: Users, roles: ['admin', 'sales', 'management'] },
     ]
   },

@@ -52,6 +52,8 @@ export interface Company {
   portal_status?: 'trial' | 'active' | 'suspended' | 'cancelled' | null
   /** When portal_status=trial, portal access ends after this timestamp. */
   trial_ends_at?: string | null
+  /** off, manual, auto_domain, or auto_all. Manual until a company changes it. */
+  portal_signup_mode?: 'off' | 'manual' | 'auto_domain' | 'auto_all' | null
   /** Portal hostname bookkeeping. On Vercel this is not a DNS provision step. */
   subdomain_status?: 'none' | 'pending' | 'provisioning' | 'ssl_pending' | 'live' | 'failed' | null
   subdomain_attempts?: number | null

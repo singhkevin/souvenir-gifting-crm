@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { isUuid } from '@/lib/utils'
 import { isMissingSchemaError } from '@/lib/orders/line-lifecycle-server'
+import { pendingPortalBlock } from '@/lib/portal/signup-server'
 
 function cleanError(message: string) {
   return message.replace(/\s+/g, ' ').slice(0, 300)
@@ -17,6 +18,9 @@ export async function decideOrderApproval(formData: FormData) {
   const orderId = String(formData.get('order_id') || '')
   const decision = String(formData.get('decision') || '')
   const note = String(formData.get('note') || '').trim().slice(0, 2000)
+
+  const blocked = await pendingPortalBlock()
+  if (blocked) return { error: blocked }
 
   if (!isUuid(orderId)) return { error: 'Order not found' }
   if (decision !== 'approved' && decision !== 'changes_requested') {

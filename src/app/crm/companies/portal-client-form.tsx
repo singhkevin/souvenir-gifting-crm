@@ -148,6 +148,10 @@ export function PortalClientForm({ companyId }: { companyId: string }) {
           </SubmitButton>
         </div>
       </label>
+      <label className="flex items-start gap-2 text-xs text-[#4A4640] md:col-span-2">
+        <input type="checkbox" name="domain_exception" value="1" className="mt-0.5" />
+        <span>Allow this email even though the domain is not on the company list. This is an explicit exception.</span>
+      </label>
       <p className="md:col-span-2 text-[11px] text-[#7C766F]">
         The password is sent to Supabase Auth only. It is never stored in application tables.
       </p>

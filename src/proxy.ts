@@ -241,11 +241,19 @@ export async function proxy(request: NextRequest) {
       }
       return respond(supabaseResponse)
     }
-    const { data: profile } = await supabase
+    let profileQuery = await supabase
       .from('profiles')
-      .select('role, company_id, is_active')
+      .select('role, company_id, is_active, portal_approval')
       .eq('id', user.id)
       .maybeSingle()
+    if (profileQuery.error && /portal_approval|schema cache|does not exist/i.test(profileQuery.error.message)) {
+      profileQuery = await supabase
+        .from('profiles')
+        .select('role, company_id, is_active')
+        .eq('id', user.id)
+        .maybeSingle()
+    }
+    const profile = profileQuery.data
     const isClient = profile?.role === 'client_admin' || profile?.role === 'client_user'
     const isGiftEmployee = profile?.role === 'gift_employee'
     const matches = Boolean(
@@ -260,6 +268,15 @@ export async function proxy(request: NextRequest) {
     const trialExpired = isTrialExpired(tenant)
     if (trialExpired && (pathname === '/portal' || pathname.startsWith('/portal/'))) {
       return respond(copyCookies(rewriteToTenantPage(request, '/tenant/trial-expired', 200, tabId, tenant)))
+    }
+    if (isClient && profile?.portal_approval === 'rejected') {
+      await supabase.auth.signOut()
+      const login = withTabQuery(new URL('/login', request.url), tabId)
+      login.searchParams.set('error', 'portal')
+      return respond(copyCookies(NextResponse.redirect(login)))
+    }
+    if (isClient && profile?.portal_approval === 'pending' && pathname !== '/portal/awaiting') {
+      return respond(copyCookies(NextResponse.redirect(withTabQuery(new URL('/portal/awaiting', request.url), tabId))))
     }
     const recoveryAttempt =
       request.nextUrl.searchParams.get('type') === 'recovery' ||
